@@ -1,0 +1,69 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Happening Now//Ops Check-Ins//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Happening Now Ops Check-Ins
+X-WR-TIMEZONE:America/New_York
+
+BEGIN:VEVENT
+UID:hn-daily-checkin-20260410@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260410T090000
+DTEND:20260410T090500
+SUMMARY:Daily Site Check-In
+DESCRIPTION:Daily 5-minute check: core pages load, worker endpoint is 200, news data looks fresh.
+RRULE:FREQ=DAILY
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Daily Site Check-In
+TRIGGER:-PT15M
+END:VALARM
+END:VEVENT
+
+BEGIN:VEVENT
+UID:hn-weekly-checkin-20260413@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260413T093000
+DTEND:20260413T095000
+SUMMARY:Weekly Ops Check-In
+DESCRIPTION:Weekly 15-20 minute check: endpoint sweep, TLS/domain check, analytics anomalies, mobile spot-check.
+RRULE:FREQ=WEEKLY;BYDAY=MO
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Weekly Ops Check-In
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+
+BEGIN:VEVENT
+UID:hn-monthly-maintenance-20260504@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260504T100000
+DTEND:20260504T103000
+SUMMARY:Monthly Maintenance Check-In
+DESCRIPTION:Monthly 30-minute maintenance: headers/CSP review, robots+sitemap validation, rollback dry run, API provider review.
+RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=1
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Monthly Maintenance Check-In
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+
+BEGIN:VEVENT
+UID:hn-quarterly-review-20260706@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260706T110000
+DTEND:20260706T120000
+SUMMARY:Quarterly Maintenance Review
+DESCRIPTION:Quarterly 45-60 minute review: full launch checklist, legal review, dependency and Cloudflare config drift review.
+RRULE:FREQ=MONTHLY;INTERVAL=3;BYDAY=MO;BYSETPOS=1
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Quarterly Maintenance Review
+TRIGGER:-P2D
+END:VALARM
+END:VEVENT
+
+END:VCALENDAR
