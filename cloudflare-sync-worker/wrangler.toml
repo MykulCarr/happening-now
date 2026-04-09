@@ -2,9 +2,14 @@ name = "happening-now-sync"
 main = "src/index.js"
 compatibility_date = "2026-03-23"
 
+routes = [
+	{ pattern = "happening-now.net/v1/*", zone_name = "happening-now.net" },
+	{ pattern = "www.happening-now.net/v1/*", zone_name = "happening-now.net" }
+]
+
 [[kv_namespaces]]
 binding = "HN_STATE_DATA"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "e023969612b94b27b89d041e4502be77"
 
 [vars]
 ALLOWED_ORIGINS = "https://happening-now.net,https://www.happening-now.net"
