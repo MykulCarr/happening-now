@@ -2,19 +2,50 @@ function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
 }
 
-function getAllowedOrigin(env) {
-  return normalizeOrigin(env.ALLOWED_ORIGIN || "");
+function getAllowedOrigins(env) {
+  const raw = String(env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || "");
+  if (!raw.trim()) {
+    return [];
+  }
+
+  const unique = new Set();
+  raw.split(",").forEach((value) => {
+    const normalized = normalizeOrigin(value);
+    if (normalized) {
+      unique.add(normalized);
+    }
+  });
+
+  return Array.from(unique);
+}
+
+function getRequestOrigin(request) {
+  return normalizeOrigin(request.headers.get("Origin") || "");
+}
+
+function getCorsAllowOrigin(request, env) {
+  const allowedOrigins = getAllowedOrigins(env);
+  if (allowedOrigins.length === 0) {
+    return "*";
+  }
+
+  const requestOrigin = getRequestOrigin(request);
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+
+  return allowedOrigins[0];
 }
 
 function getCorsHeaders(request, env) {
-  const allowedOrigin = getAllowedOrigin(env);
+  const allowOrigin = getCorsAllowOrigin(request, env);
   const headers = {
-    "Access-Control-Allow-Origin": allowedOrigin || "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
-  if (allowedOrigin) {
+  if (allowOrigin !== "*") {
     headers.Vary = "Origin";
   }
 
@@ -22,18 +53,18 @@ function getCorsHeaders(request, env) {
 }
 
 function isOriginAllowed(request, env) {
-  const allowedOrigin = getAllowedOrigin(env);
-  if (!allowedOrigin) {
+  const allowedOrigins = getAllowedOrigins(env);
+  if (allowedOrigins.length === 0) {
     return true;
   }
 
-  const requestOrigin = normalizeOrigin(request.headers.get("Origin") || "");
+  const requestOrigin = getRequestOrigin(request);
   if (!requestOrigin) {
     // Allow non-browser clients (no Origin header).
     return true;
   }
 
-  return requestOrigin === allowedOrigin;
+  return allowedOrigins.includes(requestOrigin);
 }
 
 function jsonResponse(body, status = 200, request = null, env = {}) {
