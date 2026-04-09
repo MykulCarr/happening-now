@@ -3618,8 +3618,14 @@
       userLocation = String(label || `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`);
       $("#loc").value = userLocation;
       if (window.Celestial) {
-        Celestial.location([userLat, userLon]);
-        Celestial.redraw();
+        if (typeof Celestial.location === "function") {
+          Celestial.location([userLat, userLon]);
+        } else if (typeof Celestial.apply === "function") {
+          Celestial.apply({ location: [userLat, userLon] });
+        }
+        if (typeof Celestial.redraw === "function") {
+          Celestial.redraw();
+        }
       }
       updateSkyPills();
     };
@@ -3768,8 +3774,14 @@
     // Re-apply current observer location after display init so horizon geometry
     // is anchored to the active geo position every time AstroLab loads.
     if (Number.isFinite(userLat) && Number.isFinite(userLon)) {
-      Celestial.location([userLat, userLon]);
-      Celestial.redraw();
+      if (typeof Celestial.location === "function") {
+        Celestial.location([userLat, userLon]);
+      } else if (typeof Celestial.apply === "function") {
+        Celestial.apply({ location: [userLat, userLon] });
+      }
+      if (typeof Celestial.redraw === "function") {
+        Celestial.redraw();
+      }
     }
 
     // Sync the chart to your time control immediately

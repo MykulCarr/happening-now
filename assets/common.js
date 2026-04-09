@@ -1972,6 +1972,11 @@
 
     const base = normalized.includes(":") ? normalized.split(":").pop() : normalized;
 
+    // Finnhub free plans commonly reject many index/futures/forex synthetic symbols.
+    if(base.startsWith("^") || base.includes("=") || base.includes("/")){
+      return true;
+    }
+
     // Mutual funds and similar instruments commonly end in X and usually 403 on Finnhub.
     return base.length >= 5 && base.endsWith("X");
   }
