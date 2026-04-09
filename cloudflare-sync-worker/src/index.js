@@ -142,7 +142,7 @@ function deriveWatchItems(items) {
 }
 
 async function fetchArtemisUpdates(env) {
-  const cached = await env.UM_TIME_DATA.get(ARTEMIS_UPDATES_CACHE_KEY, { type: "json" });
+  const cached = await env.HN_STATE_DATA.get(ARTEMIS_UPDATES_CACHE_KEY, { type: "json" });
   const cachedAt = cached?.cachedAt ? Date.parse(cached.cachedAt) : 0;
   if (cached?.payload && Number.isFinite(cachedAt) && (Date.now() - cachedAt) < ARTEMIS_UPDATES_TTL_MS) {
     return cached.payload;
@@ -172,7 +172,7 @@ async function fetchArtemisUpdates(env) {
     trackUrl: "https://www.nasa.gov/missions/artemis-ii/arow/",
   };
 
-  await env.UM_TIME_DATA.put(ARTEMIS_UPDATES_CACHE_KEY, JSON.stringify({
+  await env.HN_STATE_DATA.put(ARTEMIS_UPDATES_CACHE_KEY, JSON.stringify({
     cachedAt: new Date().toISOString(),
     payload,
   }));
@@ -225,7 +225,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/health") {
-      return jsonResponse({ ok: true, service: "um-time-sync" }, 200, request, env);
+      return jsonResponse({ ok: true, service: "happening-now-sync" }, 200, request, env);
     }
 
     if (url.pathname === "/v1/artemis/updates") {
@@ -253,7 +253,7 @@ export default {
     const storageKey = `state:${namespace}`;
 
     if (request.method === "GET") {
-      const existing = await env.UM_TIME_DATA.get(storageKey, { type: "json" });
+      const existing = await env.HN_STATE_DATA.get(storageKey, { type: "json" });
       if (!existing) {
         return jsonResponse({ ok: false, error: "No data for namespace" }, 404, request, env);
       }
@@ -277,7 +277,7 @@ export default {
         syncedAt: new Date().toISOString(),
       };
 
-      await env.UM_TIME_DATA.put(storageKey, JSON.stringify(wrapped));
+      await env.HN_STATE_DATA.put(storageKey, JSON.stringify(wrapped));
       return jsonResponse({ ok: true, namespace, syncedAt: wrapped.syncedAt }, 200, request, env);
     }
 
