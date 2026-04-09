@@ -1,0 +1,131 @@
+{
+    "recurringEvents": [
+        {
+            "id": "quadrantids",
+            "title": "☄️ Quadrantids Meteor Shower",
+            "month": 1,
+            "day": 3,
+            "dateDisplay": "January 3-4",
+            "type": "meteor",
+            "description": "Annual meteor shower with peak rate of 40-120 meteors per hour. Short, sharp peak lasting only a few hours.",
+            "visibility": "Northern Hemisphere",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/quadrantids.html"
+        },
+        {
+            "id": "lyrids",
+            "title": "☄️ Lyrids Meteor Shower",
+            "month": 4,
+            "day": 22,
+            "dateDisplay": "April 21-23",
+            "type": "meteor",
+            "description": "Annual meteor shower with peak rate of 10-20 meteors per hour. Best viewing after midnight in dark skies.",
+            "visibility": "Global",
+            "peakTime": "April 22, after midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/lyrids.html"
+        },
+        {
+            "id": "eta-aquarids",
+            "title": "☄️ Eta Aquarids Meteor Shower",
+            "month": 5,
+            "day": 6,
+            "dateDisplay": "May 5-7",
+            "type": "meteor",
+            "description": "Meteor shower from Halley's Comet debris. Best viewed from Southern Hemisphere with rates up to 30 meteors/hour.",
+            "visibility": "Best from Southern Hemisphere",
+            "peakTime": "Pre-dawn hours",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/eta-aquarids.html"
+        },
+        {
+            "id": "perseids",
+            "title": "☄️ Perseids Meteor Shower",
+            "month": 8,
+            "day": 12,
+            "dateDisplay": "August 12-13",
+            "type": "meteor",
+            "description": "One of the year's best meteor showers with up to 60 meteors per hour. Known for bright fireballs.",
+            "visibility": "Global - Northern Hemisphere favored",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/perseids.html"
+        },
+        {
+            "id": "orionids",
+            "title": "☄️ Orionids Meteor Shower",
+            "month": 10,
+            "day": 21,
+            "dateDisplay": "October 21-22",
+            "type": "meteor",
+            "description": "Meteor shower from Halley's Comet debris with rates up to 20 meteors per hour.",
+            "visibility": "Global",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/orionids.html"
+        },
+        {
+            "id": "leonids",
+            "title": "☄️ Leonids Meteor Shower",
+            "month": 11,
+            "day": 17,
+            "dateDisplay": "November 17-18",
+            "type": "meteor",
+            "description": "Fast and bright meteors, occasionally producing meteor storms. Average rates of 15 meteors per hour.",
+            "visibility": "Global",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/leonids.html"
+        },
+        {
+            "id": "geminids",
+            "title": "☄️ Geminids Meteor Shower",
+            "month": 12,
+            "day": 14,
+            "dateDisplay": "December 13-14",
+            "type": "meteor",
+            "description": "The best meteor shower of the year with up to 120 meteors per hour. Bright, colorful meteors.",
+            "visibility": "Global",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/geminids.html"
+        },
+        {
+            "id": "ursids",
+            "title": "☄️ Ursids Meteor Shower",
+            "month": 12,
+            "day": 22,
+            "dateDisplay": "December 22-23",
+            "type": "meteor",
+            "description": "Minor meteor shower with rates around 10 meteors per hour. Coincides with the winter solstice period.",
+            "visibility": "Northern Hemisphere",
+            "peakTime": "After midnight",
+            "url": "https://www.timeanddate.com/astronomy/meteor-shower/ursids.html"
+        }
+    ],
+    "events": [
+        {
+            "id": "lunar-eclipse-2026-03",
+            "title": "🌑 Total Lunar Eclipse",
+            "date": "2026-03-03",
+            "dateDisplay": "March 3-4, 2026",
+            "type": "eclipse",
+            "description": "Total lunar eclipse visible across North America. Maximum eclipse at 11:33 UTC. The Moon will turn deep red during totality.",
+            "visibility": "North America, parts of South America",
+            "peakTime": "11:33 UTC",
+            "url": "https://www.timeanddate.com/eclipse/lunar/2026-march-3"
+        },
+        {
+            "id": "solar-eclipse-2026-08",
+            "title": "☀️ Total Solar Eclipse",
+            "date": "2026-08-12",
+            "dateDisplay": "August 12, 2026",
+            "type": "eclipse",
+            "description": "Total solar eclipse with path crossing Greenland, Iceland, and Spain. Duration of totality up to 2 minutes 18 seconds.",
+            "visibility": "Greenland, Iceland, Spain",
+            "peakTime": "17:47 UTC",
+            "url": "https://www.timeanddate.com/eclipse/solar/2026-august-12"
+        }
+    ],
+    "lastUpdated": "2026-03-02",
+    "sources": [
+        "NASA Eclipse Predictions",
+        "International Meteor Organization",
+        "TimeAndDate.com",
+        "In-The-Sky.org"
+    ]
+}

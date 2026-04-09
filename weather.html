@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Weather dashboard with current conditions, forecasts, and alerts" />
+  <title>Happening Now! - Weather</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Weather</h1>
+        <div class="sub" id="weatherSub">—</div>
+        <div class="sub">Update WEATHER criteria in <a class="subLink" href="settings.html#weather">SETTINGS</a></div>
+      </div>
+      <div class="pageHeadActions">
+        <button id="weatherRefreshBtn" class="btn" type="button">Refresh</button>
+      </div>
+    </section>
+    <!-- Top alerts ticker -->
+    <div id="topAlertsBar" class="alertsBar" aria-live="polite">Loading alerts…</div>
+
+    <section class="weatherGrid">
+      <!-- Left column (Current, 24h, 7-day) -->
+      <div class="col leftCol">
+        <div class="card weatherCurrent">
+          <div class="cardHead">
+            <h2>Current Conditions</h2>
+            <span id="weatherCurrentUpdated" class="meta">Updated --</span>
+            <div id="alertIndicator" class="alertIndicator" hidden title="Active weather alerts"></div>
+          </div>
+          <div class="cardBody">
+            <div id="weatherCurrent" class="chip">Loading…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHead"><h2>24 Hour Forecast</h2></div>
+          <div class="cardBody weatherHourlyCardBody">
+            <div id="weatherHourly">Loading…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHead weatherCardHeadInline">
+            <h2 id="forecastTitle" class="weatherHeadTitleGrow">7 Day Forecast</h2>
+            <div class="tabsRow" id="forecastTabs">
+              <button class="tabPill active" data-forecast-days="3" type="button">3 Days</button>
+              <button class="tabPill" data-forecast-days="7" type="button">7 Days</button>
+              <button class="tabPill" data-forecast-days="14" type="button">14 Days</button>
+            </div>
+          </div>
+          <div class="cardBody">
+            <div id="weatherDaily">Loading…</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right column (Map, Alerts, Top Weather News) -->
+      <div class="col rightCol" id="weatherMapSection">
+        <div class="card">
+          <div class="cardHead weatherCardHeadInline">
+            <h2 class="weatherHeadTitleGrow">Weather Map</h2>
+            <button id="radarOpenBtn" class="btn" type="button">NOAA Radar</button>
+            <select id="mapTypeSelect" class="input weatherMapTypeSelect" aria-label="Select weather map layer">
+              <option value="radar" selected>Radar</option>
+              <option value="wind">Wind</option>
+              <option value="temp">Temperature</option>
+              <option value="clouds">Clouds</option>
+              <option value="air">Air Quality</option>
+            </select>
+            <button id="mapLegendBtn" class="btn" type="button" title="Show map legend">📋</button>
+          </div>
+          <div class="cardBody">
+            <div id="weatherMapWrap" class="weatherMapWrap isPending">
+              <div id="weatherMapPlaceholder" class="weatherMapPlaceholder" aria-live="polite">Loading map layer…</div>
+              <iframe
+                id="weatherMapFrame"
+                class="weatherMapFrame"
+                title="Weather Map"
+                width="100%"
+                height="450"
+                frameborder="0"
+                allow="fullscreen"
+                loading="lazy"
+                src="about:blank">
+              </iframe>
+            </div>
+            <div class="weatherMapAttribution">
+              U.S. National Weather Service Radar
+            </div>
+          </div>
+        </div>
+
+        <div class="card weatherAlertsCard">
+          <div class="cardHead weatherCardHeadInline">
+            <h2 class="weatherHeadTitleGrow">Alerts</h2>
+            <div class="tabsRow" id="alertsTabs">
+              <button class="tabPill active" data-scope="local" type="button">Local</button>
+              <button class="tabPill" data-scope="national" type="button">National</button>
+              <button class="tabPill" data-scope="both" type="button">Both</button>
+            </div>
+          </div>
+          <div class="cardBody weatherAlertsBody">
+            <div id="weatherAlerts">Loading…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHead weatherCardHeadInline">
+            <h2 class="weatherHeadTitleGrow">Top Weather News</h2>
+          </div>
+          <div class="cardBody">
+            <div id="weatherNews" class="stack">Loading…</div>
+            <div class="weatherNewsActions">
+              <button id="weatherNewsRetryBtn" class="btn" type="button">Retry now</button>
+              <button id="weatherNewsMoreBtn" class="btn" type="button">More Weather News</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>🌤️ Weather data: Open-Meteo API • Alerts & forecasts: National Weather Service (weather.gov) • Geocoding: Zippopotam.us</p>
+    <p class="pageFooterFinePrint">Hourly and daily forecasts updated automatically • Local and national alerts displayed • Map powered by Windy.com widget</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <!-- Map Legend Modal -->
+  <div id="mapLegendModal" class="modal" aria-hidden="true">
+    <div class="modalContent">
+      <div class="modalHeader">
+        <h3 id="mapLegendTitle">Map Legend</h3>
+        <button id="mapLegendClose" class="btn btn-close" type="button" title="Close legend">✕</button>
+      </div>
+      <div class="modalBody" id="mapLegendBody">
+        <!-- Legend content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+  <script src="assets/weather.js"></script>
+</body>
+</html>

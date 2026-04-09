@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Configure your HAPPENING NOW dashboard settings" />
+  <title>Happening Now! - Settings</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Settings</h1>
+        <div class="sub" id="saveStatus">—</div>
+      </div>
+      <div class="pageHeadActions">
+        <button id="saveBtn" class="btn" type="button">Save Changes</button>
+      </div>
+    </section>
+
+    <!-- Settings Tabs -->
+    <div class="settingsTabsWrap">
+      <div class="settingsTabs" role="tablist" aria-label="Settings sections">
+        <button class="settingsTab active" data-tab="general" role="tab" aria-selected="true">General</button>
+        <button class="settingsTab" data-tab="news" role="tab" aria-selected="false">News</button>
+        <button class="settingsTab" data-tab="weather" role="tab" aria-selected="false">Weather</button>
+        <button class="settingsTab" data-tab="stocks" role="tab" aria-selected="false">Stocks</button>
+        <button class="settingsTab" data-tab="astrolab" role="tab" aria-selected="false">AstroLab</button>
+        <button class="settingsTab" data-tab="appearance" role="tab" aria-selected="false">Appearance</button>
+        <button class="settingsTab" data-tab="system" role="tab" aria-selected="false">System</button>
+      </div>
+
+      <!-- TAB: General -->
+      <div class="settingsTabContent active" data-tab="general">
+        <div class="generalPanelRow">
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="location-weather">
+            Location & Refresh
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">ZIP Code</div>
+                  <div class="settingHint">Fallback location for weather and time zone sync</div>
+                </div>
+                <input id="zipInput" class="input settingsInput100" maxlength="5" placeholder="49201" />
+              </div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Weather Refresh Rate</div>
+                  <div class="settingHint">Minutes between updates (minimum 2)</div>
+                </div>
+                <div class="settingsInlineUnitRow">
+                  <input id="wxRefreshInput" class="input settingsInput70" inputmode="numeric" placeholder="10" />
+                  <span class="settingsUnitSuffix">min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="install-app">
+            Install App (Recommended)
+          </button>
+          <div class="collapsibleBody expanded">
+            <div id="installContainer" class="installContainer">
+              <button id="installAppBtn" class="btn installAppBtnProminent" type="button">
+                <span class="installAppBtnIcon">📲</span> <span id="installBtnText">Install HAPPENING NOW!</span>
+              </button>
+              <div id="installStatus" class="installStatusPanel">
+                <span class="installStatusIcon">✓</span> <span id="installStatusText">App is already installed!</span>
+              </div>
+            </div>
+            <div class="hint hintMt12">
+              Install as a Progressive Web App (PWA) for offline access, home screen icon, and app-like experience.
+            </div>
+          </div>
+        </div>
+        </div><!-- /.generalPanelRow -->
+
+      </div>
+
+      <!-- TAB: Weather -->
+      <div class="settingsTabContent" data-tab="weather">
+        <div class="weatherPanelGrid">
+
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="weather-alerting">
+              Alerting &amp; Forecast
+            </button>
+            <div class="collapsibleBody expanded">
+              <div class="settingRowGroup">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Alert Scope</div>
+                    <div class="settingHint">Which weather alerts are shown</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="local" data-field="weatherAlertScope">Local</button>
+                    <button class="buttonGroupItem" data-value="national" data-field="weatherAlertScope">National</button>
+                    <button class="buttonGroupItem" data-value="both" data-field="weatherAlertScope">Both</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Forecast Length</div>
+                    <div class="settingHint">Daily forecast rows to render</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="3" data-field="forecastLength">3 Days</button>
+                    <button class="buttonGroupItem" data-value="7" data-field="forecastLength">7 Days</button>
+                    <button class="buttonGroupItem" data-value="14" data-field="forecastLength">14 Days</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Stale Warning Threshold</div>
+                    <div class="settingHint">Minutes before weather data is marked stale</div>
+                  </div>
+                  <div class="settingsInlineUnitRow">
+                    <input id="weatherStaleWarnInput" class="input settingsInput70" inputmode="numeric" placeholder="30" />
+                    <span class="settingsUnitSuffix">min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="weather-map">
+              Map &amp; Display
+            </button>
+            <div class="collapsibleBody expanded">
+              <div class="settingRowGroup">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Default Map Layer</div>
+                    <div class="settingHint">Which overlay loads when you open Weather</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="radar" data-field="weatherDefaultMapLayer">Radar</button>
+                    <button class="buttonGroupItem" data-value="wind" data-field="weatherDefaultMapLayer">Wind</button>
+                    <button class="buttonGroupItem" data-value="temp" data-field="weatherDefaultMapLayer">Temp</button>
+                    <button class="buttonGroupItem" data-value="clouds" data-field="weatherDefaultMapLayer">Clouds</button>
+                    <button class="buttonGroupItem" data-value="air" data-field="weatherDefaultMapLayer">Air Quality</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Show Weather Map</div>
+                    <div class="settingHint">Display the Windy radar map widget</div>
+                  </div>
+                  <label class="toggleSwitch">
+                    <input type="checkbox" class="toggleInput" id="weatherShowMapToggle" aria-label="Show weather map" />
+                    <span class="toggleTrack"><span class="toggleThumb"></span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="weather-units">
+              Units
+            </button>
+            <div class="collapsibleBody expanded">
+              <div class="settingRowGroup">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Temperature</div>
+                    <div class="settingHint">Units for temp display and API</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="fahrenheit" data-field="weatherTempUnit">°F</button>
+                    <button class="buttonGroupItem" data-value="celsius" data-field="weatherTempUnit">°C</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Wind Speed</div>
+                    <div class="settingHint">Units for wind and gust display</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="mph" data-field="weatherWindUnit">mph</button>
+                    <button class="buttonGroupItem" data-value="kmh" data-field="weatherWindUnit">km/h</button>
+                    <button class="buttonGroupItem" data-value="ms" data-field="weatherWindUnit">m/s</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Precipitation</div>
+                    <div class="settingHint">Units for rainfall and snow totals</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="inch" data-field="weatherPrecipUnit">in</button>
+                    <button class="buttonGroupItem" data-value="mm" data-field="weatherPrecipUnit">mm</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.weatherPanelGrid -->
+      </div>
+
+      <!-- TAB: News -->
+      <div class="settingsTabContent" data-tab="news">
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="news-sources">
+            <span class="collapsibleHeaderMain">News Sources (Max 9)</span>
+            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
+              <span class="usageGuideIcon">i</span>
+              How to use this editor
+            </span>
+          </button>
+          <div class="collapsibleBody expanded">
+            <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
+              <p>Paste the RSS URL first. If Source Name and Site URL are blank, they auto-fill when possible.</p>
+              <p>Use the grip icon to reorder sources. Use Headlines count to control how many items each source shows.</p>
+            </div>
+            <div id="newsEditor" class="stack newsEditorStack"></div>
+            <button id="addNewsBtn" class="btn" type="button">+ Add News Source</button>
+            <div class="hint hintMt10">
+              Best performance: keep source count lean and headlines between 5 and 8.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Stocks -->
+      <div class="settingsTabContent" data-tab="stocks">
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="stocks-watchlist">
+            <span class="collapsibleHeaderMain">Watchlist</span>
+            <span id="stocksHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
+              <span class="usageGuideIcon">i</span>
+              How to use this editor
+            </span>
+          </button>
+          <div class="collapsibleBody expanded">
+            <div id="stocksHeaderGuide" class="headerGuidePanel" hidden>
+              <p>Drag with the grip icon to reorder cards. The number badge shows display order.</p>
+              <p>Type a symbol first and, if Name is blank, it auto-fills when possible. Click Save Changes to apply.</p>
+            </div>
+            <div id="stocksEditor" class="stack stockEditorStack"></div>
+            <button id="addStockBtn" class="btn btnSettings" type="button">+ Add Stock</button>
+          </div>
+        </div>
+
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="stock-options">
+            Sorting & Indices
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRowPair">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Default Sort</div>
+                    <div class="settingHint">How symbols are ordered on the Stocks page</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="pinned" data-field="stockSortMode">Pinned First</button>
+                    <button class="buttonGroupItem" data-value="az" data-field="stockSortMode">A-Z</button>
+                    <button class="buttonGroupItem" data-value="symbol" data-field="stockSortMode">Symbol</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Open Market Links</div>
+                    <div class="settingHint">Control where index link clicks open</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="new-tab" data-field="marketNewsOpenMode">New Tab</button>
+                    <button class="buttonGroupItem" data-value="same-tab" data-field="marketNewsOpenMode">Same Tab</button>
+                  </div>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Market Index Links</div>
+                    <div class="settingHint">Choose whether index chips open Google News or direct source pages</div>
+                  </div>
+                  <div class="buttonGroup">
+                    <button class="buttonGroupItem" data-value="google" data-field="marketNewsSourceMode">Google News</button>
+                    <button class="buttonGroupItem" data-value="direct" data-field="marketNewsSourceMode">Direct Sources</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settingRow marketStripSettingRow">
+                <div>
+                  <div class="settingLabel">Market Strip</div>
+                  <div class="settingHint">Show or hide markets across large, mid, small-cap, global, commodities, rates, FX, and crypto</div>
+                </div>
+                <div id="marketIndicesCheckboxes" class="checkboxGrid marketIndicesSelector"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: AstroLab -->
+      <div class="settingsTabContent" data-tab="astrolab">
+        <div class="settingsPanelLead">
+          Configure AstroLab settings and preferences. AstroLab is best viewed in landscape mode.
+        </div>
+
+        <div class="astrolabPanelGrid">
+
+        <div class="collapsibleSection astrolabSection astrolabSection--wide">
+          <button class="collapsibleHeader expanded" data-section="astrolab-location-time">
+            Location & Time Defaults
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="astrolabDenseFields">
+              <div class="astrolabDenseField astrolabDenseField--toggle">
+                <div class="settingLabel">Use Device Location by Default</div>
+                <div class="settingHint">Prefers GPS position when AstroLab opens</div>
+                <div class="toggleSwitch astrolabDenseControl">
+                  <input type="checkbox" id="astUseDeviceLocationDefault" class="toggleInput astrolabSetting" aria-label="Use device location by default" />
+                </div>
+              </div>
+
+              <div class="astrolabDenseField astrolabDenseField--toggle">
+                <div class="settingLabel">Remember Last Manual Location</div>
+                <div class="settingHint">Keeps your last typed AstroLab location</div>
+                <div class="toggleSwitch astrolabDenseControl">
+                  <input type="checkbox" id="astRememberLastLocation" class="toggleInput astrolabSetting" aria-label="Remember last manual location" />
+                </div>
+              </div>
+
+              <div class="astrolabDenseField astrolabDenseField--toggle">
+                <div class="settingLabel">Show Location Accuracy Indicator</div>
+                <div class="settingHint">Displays quality hints for current location lock</div>
+                <div class="toggleSwitch astrolabDenseControl">
+                  <input type="checkbox" id="astShowLocationAccuracy" class="toggleInput astrolabSetting" aria-label="Show location accuracy indicator" />
+                </div>
+              </div>
+
+              <div class="astrolabDenseField astrolabDenseField--toggle">
+                <div class="settingLabel">Remember Last Selected Time</div>
+                <div class="settingHint">Restores your previous AstroLab time on reload</div>
+                <div class="toggleSwitch astrolabDenseControl">
+                  <input type="checkbox" id="astRememberLastTime" class="toggleInput astrolabSetting" aria-label="Remember last selected time" />
+                </div>
+              </div>
+
+              <div class="astrolabDenseField astrolabDenseField--wide">
+                <div class="settingLabel">Fallback Location</div>
+                <div class="settingHint">Used when device location is unavailable</div>
+                <input id="astFallbackLocation" class="input astrolabSetting astrolabDenseInput astrolabDenseInput--wide settingsInput240" placeholder="ZIP or City, ST" aria-label="Fallback location" />
+              </div>
+
+              <div class="astrolabDenseField">
+                <div class="settingLabel">Default Time Mode</div>
+                <div class="settingHint">Initial map time mode on AstroLab load</div>
+                <select id="astDefaultTimeMode" class="input astrolabSetting astrolabDenseInput settingsInput170" aria-label="Default time mode">
+                  <option value="now">Now</option>
+                  <option value="sunset">Sunset</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="astrolabDenseField">
+                <div class="settingLabel">Custom Default Time</div>
+                <div class="settingHint">Used when Default Time Mode is set to Custom</div>
+                <input id="astCustomTime" type="time" class="input astrolabSetting astrolabDenseInput settingsInput150" aria-label="Custom default time" />
+              </div>
+
+              <div class="astrolabDenseField">
+                <div class="settingLabel">Time Slider Step</div>
+                <div class="settingHint">Precision for time-scrub interactions</div>
+                <select id="astSliderStepMinutes" class="input astrolabSetting astrolabDenseInput settingsInput150" aria-label="Time slider step">
+                  <option value="15">15 min</option>
+                  <option value="30">30 min</option>
+                  <option value="60">60 min</option>
+                </select>
+              </div>
+
+              <div class="astrolabDenseField astrolabDenseField--toggle">
+                <div class="settingLabel">Auto-Advance Sky Time</div>
+                <div class="settingHint">Automatically moves time slider while viewing sky map</div>
+                <div class="toggleSwitch astrolabDenseControl">
+                  <input type="checkbox" id="astAutoAdvanceTime" class="toggleInput astrolabSetting" aria-label="Auto-advance sky time" />
+                </div>
+              </div>
+
+              <div class="astrolabDenseField">
+                <div class="settingLabel">Auto-Advance Speed</div>
+                <div class="settingHint">Seconds between slider ticks</div>
+                <input id="astAutoAdvanceSpeedSeconds" class="input astrolabSetting astrolabDenseInput astrolabDenseInput--narrow settingsInput90" inputmode="numeric" placeholder="5" aria-label="Auto-advance speed in seconds" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="astrolabPanelColumn astrolabPanelColumn--left">
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-layers">
+            Sky Map Layers
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">Constellation Lines</div><div class="settingHint">Draw line-art for constellation boundaries</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowConstellationLines" class="toggleInput astrolabSetting" aria-label="Show constellation lines" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Constellation Labels</div><div class="settingHint">Show constellation names on the sky map</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowConstellationLabels" class="toggleInput astrolabSetting" aria-label="Show constellation labels" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Planet Labels</div><div class="settingHint">Show names of visible planets</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowPlanetLabels" class="toggleInput astrolabSetting" aria-label="Show planet labels" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Deep Sky Object Labels</div><div class="settingHint">Show nebula/cluster/galaxy labels</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowDsoLabels" class="toggleInput astrolabSetting" aria-label="Show deep sky object labels" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Milky Way Overlay</div><div class="settingHint">Shows Milky Way band in sky projection</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowMilkyWay" class="toggleInput astrolabSetting" aria-label="Show Milky Way overlay" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Horizon Overlay</div><div class="settingHint">Displays horizon line and orientation hints</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowHorizonOverlay" class="toggleInput astrolabSetting" aria-label="Show horizon overlay" /></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-panels">
+            Panels & Layout
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">Show Sky Conditions</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowSkyConditions" class="toggleInput astrolabSetting" aria-label="Show sky conditions" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Calendar</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowCalendar" class="toggleInput astrolabSetting" aria-label="Show calendar" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Tonight Highlights</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowHighlights" class="toggleInput astrolabSetting" aria-label="Show tonight highlights" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Quick Resources</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowResources" class="toggleInput astrolabSetting" aria-label="Show quick resources" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Launches</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowLaunches" class="toggleInput astrolabSetting" aria-label="Show launches" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Astronomy News</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowAstroNews" class="toggleInput astrolabSetting" aria-label="Show astronomy news" /></div></div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Default Card State</div>
+                  <div class="settingHint">Expand/collapse behavior for AstroLab cards</div>
+                </div>
+                <select id="astDefaultCardState" class="input astrolabSetting settingsInput170" aria-label="Default card state">
+                  <option value="expanded">Expanded</option>
+                  <option value="collapsed">Collapsed</option>
+                  <option value="remember">Remember Last</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-alerts">
+            Alerts & Reminders
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">ISS Pass Notifications</div><div class="settingHint">Notify when notable ISS passes are upcoming</div></div><div class="toggleSwitch"><input type="checkbox" id="astNotifyIssPasses" class="toggleInput astrolabSetting" aria-label="Enable ISS pass notifications" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Top Sky Events Notifications</div><div class="settingHint">Notify for tonight highlights and notable events</div></div><div class="toggleSwitch"><input type="checkbox" id="astNotifyTopEvents" class="toggleInput astrolabSetting" aria-label="Enable top sky events notifications" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Launch Window Notifications</div><div class="settingHint">Notify for scheduled launch windows</div></div><div class="toggleSwitch"><input type="checkbox" id="astNotifyLaunchWindows" class="toggleInput astrolabSetting" aria-label="Enable launch window notifications" /></div></div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Quiet Hours Start</div>
+                  <div class="settingHint">Suppress notifications starting at this time</div>
+                </div>
+                <input id="astQuietHoursStart" type="time" class="input astrolabSetting settingsInput140" aria-label="Quiet hours start time" />
+              </div>
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Quiet Hours End</div>
+                  <div class="settingHint">Resume notifications at this time</div>
+                </div>
+                <input id="astQuietHoursEnd" type="time" class="input astrolabSetting settingsInput140" aria-label="Quiet hours end time" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+
+        <div class="astrolabPanelColumn astrolabPanelColumn--right">
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-density">
+            Sky Detail Density
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Star Magnitude Limit</div>
+                  <div class="settingHint">Higher values show more faint stars</div>
+                </div>
+                <div class="settingsInlineRangeRow">
+                  <input id="astMagnitudeLimit" type="range" min="3" max="8" step="0.5" class="astrolabSetting settingsRange160" aria-label="Star magnitude limit" />
+                  <span id="astMagnitudeLimitLabel" class="hint">6.0</span>
+                </div>
+              </div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Label Density</div>
+                  <div class="settingHint">Controls overall text density on the map</div>
+                </div>
+                <select id="astLabelDensity" class="input astrolabSetting settingsInput160" aria-label="Label density">
+                  <option value="minimal">Minimal</option>
+                  <option value="standard">Standard</option>
+                  <option value="dense">Dense</option>
+                </select>
+              </div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Object Highlight Intensity</div>
+                  <div class="settingHint">Brightness of selected-object emphasis</div>
+                </div>
+                <div class="settingsInlineRangeRow">
+                  <input id="astHighlightIntensity" type="range" min="0" max="100" step="5" class="astrolabSetting settingsRange160" aria-label="Object highlight intensity" />
+                  <span id="astHighlightIntensityLabel" class="hint">70%</span>
+                </div>
+              </div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Night-Friendly Label Contrast</div>
+                  <div class="settingHint">Extra contrast for labels in dark sky mode</div>
+                </div>
+                <div class="toggleSwitch">
+                  <input type="checkbox" id="astNightLabelContrast" class="toggleInput astrolabSetting" aria-label="Enable night-friendly label contrast" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-refresh">
+            Data & Refresh
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">AstroLab Refresh Rate</div><div class="settingHint">Minutes between map/data refresh cycles</div></div><input id="astAutoRefreshMinutes" class="input astrolabSetting settingsInput90" inputmode="numeric" aria-label="AstroLab refresh rate in minutes" /></div>
+              <div class="settingRow"><div><div class="settingLabel">Launches Refresh Rate</div><div class="settingHint">Minutes between launch feed updates</div></div><input id="astLaunchRefreshMinutes" class="input astrolabSetting settingsInput90" inputmode="numeric" aria-label="Launches refresh rate in minutes" /></div>
+              <div class="settingRow"><div><div class="settingLabel">Astro News Refresh Rate</div><div class="settingHint">Minutes between astronomy news updates</div></div><input id="astNewsRefreshMinutes" class="input astrolabSetting settingsInput90" inputmode="numeric" aria-label="Astronomy news refresh rate in minutes" /></div>
+              <div class="settingRow"><div><div class="settingLabel">Astro Cache Duration</div><div class="settingHint">Minutes to keep AstroLab API responses cached</div></div><input id="astCacheMinutes" class="input astrolabSetting settingsInput90" inputmode="numeric" aria-label="Astro cache duration in minutes" /></div>
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Clear AstroLab Cache</div>
+                  <div class="settingHint">Removes AstroLab-related cached entries now</div>
+                </div>
+                <button id="astClearCacheBtn" class="btn btnSubtle" type="button">Clear Cache</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-format">
+            Units & Formatting
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">Time Format</div></div><select id="astTimeFormat" class="input astrolabSetting settingsInput140" aria-label="Time format"><option value="12h">12-hour</option><option value="24h">24-hour</option></select></div>
+              <div class="settingRow"><div><div class="settingLabel">Coordinate Format</div></div><select id="astCoordinateFormat" class="input astrolabSetting settingsInput170" aria-label="Coordinate format"><option value="hms">RA/Dec (HMS)</option><option value="decimal">Decimal Degrees</option></select></div>
+              <div class="settingRow"><div><div class="settingLabel">Date Format</div></div><select id="astDateFormat" class="input astrolabSetting settingsInput170" aria-label="Date format"><option value="us">MM/DD/YYYY</option><option value="iso">YYYY-MM-DD</option><option value="eu">DD/MM/YYYY</option></select></div>
+              <div class="settingRow"><div><div class="settingLabel">Show Seconds</div><div class="settingHint">Display seconds in AstroLab time labels</div></div><div class="toggleSwitch"><input type="checkbox" id="astShowSeconds" class="toggleInput astrolabSetting" aria-label="Show seconds in time labels" /></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="astrolabPerformanceSection" class="collapsibleSection astrolabSection">
+          <button class="collapsibleHeader expanded" data-section="astrolab-performance">
+            Performance & Compatibility
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow"><div><div class="settingLabel">Low Power Mode</div><div class="settingHint">Reduces animation and map processing load</div></div><div class="toggleSwitch"><input type="checkbox" id="astLowPowerMode" class="toggleInput astrolabSetting" aria-label="Enable low power mode" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Lightweight Mobile Mode</div><div class="settingHint">Loads simplified AstroLab views on mobile devices</div></div><div class="toggleSwitch"><input type="checkbox" id="astLightweightMobile" class="toggleInput astrolabSetting" aria-label="Enable lightweight mobile mode" /></div></div>
+              <div class="settingRow"><div><div class="settingLabel">Disable Heavy Overlays</div><div class="settingHint">Turns off expensive overlays on slower systems</div></div><div class="toggleSwitch"><input type="checkbox" id="astDisableHeavyOverlays" class="toggleInput astrolabSetting" aria-label="Disable heavy overlays" /></div></div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+
+        </div><!-- /.astrolabPanelGrid -->
+      </div>
+
+      <!-- TAB: Appearance -->
+      <div class="settingsTabContent" data-tab="appearance">
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="theme-density">
+            Theme
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingRowGroup">
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Theme</div>
+                  <div class="settingHint">Choose dark or light mode</div>
+                </div>
+                <select id="themeSel" class="input settingsInput140" aria-label="Theme selection">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: System -->
+      <div class="settingsTabContent" data-tab="system">
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="import-export">
+            Import / Export (Backup)
+          </button>
+          <div class="collapsibleBody expanded">
+            <div class="settingsActionRow">
+              <button id="exportBtn" class="btn btnSubtle" type="button">Export JSON</button>
+              <button id="importBtn" class="btn btnSubtle" type="button">Import JSON</button>
+            </div>
+            <textarea id="jsonBox" class="textarea" rows="6" placeholder="Paste config JSON here to import..."></textarea>
+            <div class="hint hintMt8">
+              Export to create a backup file. Import to restore saved settings.
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="reset">
+            Reset & Defaults
+          </button>
+          <div class="collapsibleBody expanded">
+            <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
+            <div class="hint hintMt12">
+              This restores dashboard preferences to defaults.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    <p>⚙️ All settings stored locally in your browser using localStorage • No server-side storage or tracking</p>
+    <p class="pageFooterFinePrint">💡 Install as a PWA for the best experience • Changes take effect immediately • JSON export/import available for backup</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <!-- Install Instructions Modal -->
+  <div id="installModal" class="modal installModalHidden">
+    <div class="modalContent installModalContent">
+      <div class="modalHead">
+        <h3 class="installModalTitle">📲 Install HAPPENING NOW!</h3>
+        <button class="modalClose" id="installModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modalBody installModalBody">
+        <div class="installModalWhy">
+          <div class="installModalWhyTitle">✨ Why Install?</div>
+          <ul class="installModalWhyList">
+            <li>Works offline - access your dashboard anytime</li>
+            <li>Home screen icon - launch like a native app</li>
+            <li>Faster loading with cached assets</li>
+            <li>Full-screen experience without browser UI</li>
+          </ul>
+        </div>
+
+        <div id="browserSpecificInstructions">
+          <!-- Will be populated by JavaScript based on detected browser -->
+        </div>
+
+        <div class="installModalTip">
+          <div class="installModalTipText">
+            <strong class="installModalTipStrong">💡 Tip:</strong> Once installed, you can launch the app from your home screen, app drawer, or applications folder just like any other app!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+  <script src="assets/settings.js?v=20260307b"></script>
+</body>
+</html>

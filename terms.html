@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Terms of Use for HAPPENING NOW dashboard" />
+  <title>Happening Now! - Terms of Use</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Terms of Use</h1>
+        <div class="sub">Last updated: April 8, 2026</div>
+      </div>
+    </section>
+
+    <section class="card legalCard">
+      <h2>Acceptance</h2>
+      <p class="hint">By using HAPPENING NOW, you agree to these terms.</p>
+
+      <h2 class="legalSectionTitle">Informational Use Only</h2>
+      <p class="hint">Content is provided for general information and convenience only. It is not financial, weather safety, legal, medical, or professional advice.</p>
+
+      <h2 class="legalSectionTitle">No Warranty</h2>
+      <p class="hint">Data may be delayed, incomplete, or inaccurate. The service is provided "as is" and "as available" without guarantees of accuracy, uptime, or fitness for a specific purpose.</p>
+
+      <h2 class="legalSectionTitle">Third-Party Content</h2>
+      <p class="hint">News, weather, market, and space data may come from third-party providers. Their terms, availability, and licensing rules apply to their content and services.</p>
+
+      <h2 class="legalSectionTitle">External Links</h2>
+      <p class="hint">Links may open external sites. We are not responsible for third-party content, policies, or availability.</p>
+
+      <h2 class="legalSectionTitle">Limitation of Liability</h2>
+      <p class="hint">To the maximum extent permitted by law, HAPPENING NOW and its operator are not liable for losses or damages arising from use of the site or reliance on its data.</p>
+
+      <h2 class="legalSectionTitle">Changes</h2>
+      <p class="hint">These terms may be updated over time. Continued use after updates means you accept the revised terms.</p>
+
+      <h2 class="legalSectionTitle">Contact</h2>
+      <p class="hint">For legal notices or terms questions, contact: <a href="mailto:hn-station@protonmail.com">hn-station@protonmail.com</a>. Replace this email with your production legal/support inbox before launch.</p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW legal</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+</body>
+</html>

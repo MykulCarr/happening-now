@@ -1,0 +1,13 @@
+# OS and editor
+.vs/
+
+# Wrangler local cache and state
+.wrangler/
+**/.wrangler/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

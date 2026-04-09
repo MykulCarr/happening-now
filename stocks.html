@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Stock market dashboard with real-time prices and financial news" />
+  <title>Happening Now! - Stocks</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Stocks</h1>
+        <div class="sub" id="stocksSub">Update your WATCHLIST in <a class="subLink" href="settings.html#stocks">SETTINGS</a></div>
+      </div>
+      <div class="pageHeadActions">
+        <button id="stocksRefreshBtn" class="btn" type="button">Refresh</button>
+      </div>
+    </section>
+
+    <!-- Market Indices Bar -->
+    <section id="marketIndices" class="marketIndices">Loading indices...</section>
+
+    <section class="grid2">
+      <div class="card">
+        <div class="cardHead stocksCardHeadRow">
+          <h2>Watchlist</h2>
+          <div class="stocksCardHeadActions">
+            <span id="lastUpdated" class="lastUpdated stocksLastUpdated"></span>
+            <select id="stocksSort" class="select stocksSortSelect" aria-label="Sort watchlist">
+              <option value="pinned">Pinned first (A–Z)</option>
+              <option value="az">A–Z</option>
+              <option value="symbol">Symbol</option>
+            </select>
+          </div>
+        </div>
+        <div class="cardBody">
+          <div id="stocksBody" class="stack">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card stocksNewsCard">
+        <div class="cardHead stocksCardHeadRow">
+          <h2>Market News</h2>
+          <div class="stocksCardHeadActions">
+            <span class="stocksScopeLabel">SCOPE:</span>
+            <div class="tabsRow" id="newsTabs">
+              <button class="tabPill" data-news-mode="watchlist" type="button">Watchlist</button>
+              <button class="tabPill" data-news-mode="major" type="button">Major Headlines</button>
+              <button id="stocksNewsRetryBtn" class="btn" type="button">Refresh</button>
+            </div>
+
+          </div>
+        </div>
+        <div class="cardBody">
+          <div id="stocksNews" class="stack">Loading…………</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <h2>Top Gainers <span id="gainersSourceTag" class="dataSourceTag">Source: Loading</span></h2>
+        </div>
+        <div class="cardBody">
+          <div id="topGainers" class="stack">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <h2>Top Losers <span id="losersSourceTag" class="dataSourceTag">Source: Loading</span></h2>
+        </div>
+        <div class="cardBody">
+          <div id="topLosers" class="stack">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <h2>Trending Stocks <span id="moversSourceTag" class="dataSourceTag">Source: Loading</span></h2>
+        </div>
+        <div class="cardBody">
+          <div id="trendingStocks" class="stack">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <h2>Economic Calendar</h2>
+        </div>
+        <div class="cardBody">
+          <div id="economicCalendar" class="stack">Loading…</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>📈 Stock prices: Google Finance embeds • News headlines: Google News RSS feeds • Symbol pinning stored locally in browser</p>
+    <p class="pageFooterFinePrint">Market data updates in real-time • Pin your favorite stocks for quick access • Sort by symbol, label, or pinned status</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+  <script src="assets/stocks.js"></script>
+</body>
+</html>

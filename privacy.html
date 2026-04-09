@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Privacy Policy for HAPPENING NOW dashboard" />
+  <title>Happening Now! - Privacy Policy</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Privacy Policy</h1>
+        <div class="sub">Last updated: April 8, 2026</div>
+      </div>
+    </section>
+
+    <section class="card legalCard">
+      <h2>Overview</h2>
+      <p class="hint">HAPPENING NOW is a personal dashboard that runs in your browser. We designed it to minimize data collection.</p>
+
+      <h2 class="legalSectionTitle">Data Stored On Your Device</h2>
+      <p class="hint">The app stores your settings and lightweight cached content in browser localStorage so pages load faster and remember your preferences (theme, ZIP code, watchlist, widgets, and similar dashboard settings).</p>
+
+      <h2 class="legalSectionTitle">Data Sent To Third Parties</h2>
+      <p class="hint">When you use dashboard features, your browser requests data from third-party providers, including weather APIs, news feeds, market data providers, and NASA/public space-data services. Your IP address and request metadata may be visible to those providers as part of normal web requests.</p>
+
+      <h2 class="legalSectionTitle">RSS Proxy</h2>
+      <p class="hint">News requests may pass through a Cloudflare Worker RSS proxy for CORS compatibility. The proxy is used to fetch feed data and return it to your browser.</p>
+
+      <h2 class="legalSectionTitle">Cookies And Tracking</h2>
+      <p class="hint">This site does not intentionally use advertising cookies or behavioral tracking scripts. Some third-party embeds or external links you open may use their own cookies under their own policies.</p>
+
+      <h2 class="legalSectionTitle">Data Retention</h2>
+      <p class="hint">Locally stored settings and caches stay in your browser until they expire naturally or you clear site data/reset settings.</p>
+
+      <h2 class="legalSectionTitle">Contact</h2>
+      <p class="hint">For privacy questions, takedown requests, or corrections, contact: <a href="mailto:hn-station@protonmail.com">hn-station@protonmail.com</a>. Replace this email with your public support inbox before production launch.</p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW legal</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+</body>
+</html>

@@ -1,0 +1,4204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Astronomy dashboard with launches, news, and interactive sky chart" />
+  <title>Happening Now! - AstroLab</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/celestial.css">
+  <style>
+    /* AstroLab-specific styles only */
+    .astrolab-controls { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom: 16px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
+    .control-group { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .control-group label { font-size: 12px; color: var(--muted); font-weight: 600; min-width:60px; }
+    .astrolab-controls label { font-size: 12px; color: var(--muted); font-weight: 700; display:block; margin-bottom:6px; }
+    .control-section { padding:12px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:8px; }
+    .control-section label { display:block; margin-bottom:8px; font-size:13px; font-weight:700; color:var(--text); }
+    .astrolab-grid { display:grid; grid-template-columns: 1.8fr 1fr; gap:14px; }
+    .astrolab-sky-card { position: relative; }
+    .astroRightColumn { display: flex; flex-direction: column; gap: 14px; }
+    .zoomControlBar {
+      background: rgba(30, 35, 50, 0.95);
+      padding: 7px 20px;
+      border-bottom: 2px solid var(--link);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .zoomControlLabel {
+      font-size: 10px;
+      color: var(--link);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 45px;
+    }
+    .zoomControlSlider {
+      flex: 1;
+      cursor: pointer;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to right, #3b82f6, #8b5cf6);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .zoomControlValue {
+      font-size: 11px;
+      color: var(--link);
+      font-weight: 900;
+      min-width: 40px;
+      text-align: right;
+      letter-spacing: 0.5px;
+    }
+    .skySearchRow { display:flex; gap:8px; margin-top:-2px; margin-bottom:6px; align-items:center; }
+    .skySearchInput { flex:1; box-sizing:border-box; }
+    .skySectionLabel {
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+      margin-bottom:4px;
+    }
+    .solarObjectsLabel,
+    .stellarObjectsLabel,
+    .tonightHighlightsLabel,
+    .quickResourcesLabel {
+      padding-left: 12px;
+    }
+    .skyJumpGrid { display:grid; grid-template-columns: repeat(5, 1fr); gap:4px; }
+    .skyJumpGrid.mb3 { margin-bottom:3px; }
+    .skyJumpGrid.mb8 { margin-bottom:8px; }
+    .skyJumpGrid.mt4 { margin-top:4px; }
+    .astroCalendarToolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:8px; }
+    .astroCalNavBtn { padding:4px 10px; font-size:12px; }
+    .astroCalendarMonth { font-size:16px; font-weight:700; color:var(--text); }
+    .astroHighlightsCard { min-height: 430px; }
+    .astroHighlightsBody { display:flex; flex-direction:column; gap:14px; height:100%; }
+    .astroSubhead {
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+      margin:0 0 8px 0;
+      text-transform:uppercase;
+      letter-spacing:0.6px;
+    }
+    .astroHighlightsGrid { display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; }
+    .astroHighlightsDivider { padding-top:12px; border-top:1px solid var(--border); }
+    .astroResourcesGrid { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
+    .astrolabSectionGap { margin-top: 28px; }
+    .astroEventsGrid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px; }
+    .astroUpcomingGrid,
+    .astroNewsGrid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
+    @media (max-width: 1400px) { .astrolab-grid { grid-template-columns: 1fr; } .astrolab-right { grid-template-columns: 1fr; } }
+    .astrolab-pill { font-size:10px; padding:3px 6px; border-radius:12px; border:1px solid var(--border); background: var(--card-bg); color: var(--text); white-space: nowrap; flex-shrink: 0; }
+    .astrolab-item { border:1px solid var(--border); border-radius:12px; padding:16px; background: var(--card-bg); }
+    .astrolab-item a { color: var(--link); text-decoration:none; }
+    .astrolab-item a:hover { text-decoration:underline; }
+    .astrolab-item .t { font-weight:600; margin-bottom:6px; line-height:1.4; }
+    .astrolab-item .s { color: var(--muted); font-size:13px; line-height:1.5; }
+    .astrolab-item[data-url] { cursor:pointer; transition:all 0.2s ease; }
+    .astrolab-item[data-url]:hover { background:var(--border); border-color:var(--link); box-shadow:0 4px 12px rgba(0,0,0,0.2); transform:translateY(-2px); }
+    /* Align AstroLab card titles with safe insets so text never clips on left edge. */
+    .card > h2 {
+      margin: 0;
+      padding: 12px 16px 11px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      line-height: 1.25;
+    }
+    .card > h2 > span:first-child {
+      min-width: 0;
+      padding-left: 1px;
+    }
+    .card > h2 .meta {
+      flex-shrink: 0;
+    }
+    #astronomicalEvents .astrolab-item[data-url]:hover { 
+      transform: translateY(-3px) scale(1.01); 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); 
+      filter: brightness(1.1);
+    }
+    .skyChart {
+      height: 520px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #000;
+      overflow: hidden;
+    }
+    .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:700; margin-right:6px; }
+    .badge.scheduled { background:#fbbf24; color:#78350f; }
+    .badge.confirmed { background:#10b981; color:#fff; }
+    .badge.go-for-launch { background:#22c55e; color:#fff; }
+    .badge.in-flight { background:#3b82f6; color:#fff; }
+    
+    /* Calendar Styles */
+    .astro-calendar { display:grid; grid-template-columns: repeat(7, 1fr); gap:0; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.24); border-radius:10px; overflow:hidden; }
+    .astro-calendar-header { background:rgba(255,255,255,0.06); padding:7px 4px; text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; border-right:1px solid rgba(255,255,255,0.16); border-bottom:1px solid rgba(255,255,255,0.22); }
+    .astro-calendar-day { background:rgba(18,22,36,0.46); min-height:78px; padding:6px 5px; position:relative; display:flex; flex-direction:column; transition:all 0.2s ease; border-right:1px solid rgba(255,255,255,0.12); border-bottom:1px solid rgba(255,255,255,0.14); }
+    .astro-calendar-day:hover { background:rgba(139, 92, 246, 0.1); }
+    .astro-calendar-day.other-month { opacity:0.4; }
+    .astro-calendar-day.today { background:rgba(139, 92, 246, 0.15); border:2px solid #8b5cf6; }
+    .astro-calendar-day-num { font-size:11px; font-weight:700; color:var(--text); margin-bottom:3px; }
+    .astro-calendar-event { font-size:8px; line-height:1.2; padding:2px 4px; margin-bottom:2px; background:rgba(139, 92, 246, 0.24); border:1px solid rgba(168, 139, 250, 0.3); border-radius:3px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:all 0.15s ease; }
+    .astro-calendar-event:hover { background:rgba(139, 92, 246, 0.4); transform:translateX(2px); }
+    .badge.success { background:#8b5cf6; color:#fff; }
+    .badge.failure { background:#ef4444; color:#fff; }
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:currentColor; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-text { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; }
+    [data-jump].active { background:var(--link); color:var(--card-bg); box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+    /* === NEW 5x3 GRID SYSTEM === */
+    .sky-controls {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto auto auto auto;
+      gap: 2px 12px;
+      margin-bottom: 8px;
+      padding: 0;
+      position: relative;
+    }
+    .sky-row-divider {
+      grid-column: 1 / 4;
+      grid-row: 3;
+      align-self: start;
+      border-top: 1px solid rgba(255, 255, 255, 0.45);
+      height: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    
+    /* ROW 1 CELLS */
+    .sky-title {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 2px;
+      padding: 12px 16px;
+    }
+    .sky-title h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
+    .sky-title-status {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+      line-height: 1;
+      margin-top: 10px;
+    }
+    
+    .sky-location-group {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 12px 0 12px;
+      border-left: 1px solid rgba(255, 255, 255, 0.42);
+    }
+    .sky-location-group input {
+      height: 36px;
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 13px;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .skyMapShell {
+      position: relative;
+      margin-bottom: 0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .skyMapShell .skyChart {
+      height: 680px;
+      margin-bottom: 0;
+      display: block;
+    }
+    /* Feature flag: observer-visibility overlay can be disabled by removing this element. */
+    .sky-horizon-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      background:
+        radial-gradient(
+          ellipse at 50% 28%,
+          rgba(110, 204, 255, 0.14) 0%,
+          rgba(110, 204, 255, 0.08) 20%,
+          rgba(110, 204, 255, 0.03) 42%,
+          rgba(110, 204, 255, 0) 62%
+        ),
+        linear-gradient(
+          to bottom,
+          rgba(170, 230, 255, 0.06) 0%,
+          rgba(120, 210, 255, 0.04) 22%,
+          rgba(0, 0, 0, 0) 50%,
+          rgba(4, 10, 24, 0.08) 58%,
+          rgba(4, 10, 24, 0.22) 68%,
+          rgba(4, 10, 24, 0.38) 82%,
+          rgba(2, 5, 14, 0.58) 100%
+        );
+      box-shadow: inset 0 -110px 140px rgba(2, 5, 14, 0.32);
+    }
+    .sky-horizon-note {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: rgba(189, 239, 255, 0.95);
+      background: rgba(3, 10, 24, 0.62);
+      border: 1px solid rgba(108, 228, 255, 0.45);
+      border-radius: 999px;
+      padding: 4px 10px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+      box-shadow: 0 0 12px rgba(76, 221, 255, 0.32);
+      white-space: nowrap;
+    }
+    .sky-horizon-line {
+      position: absolute;
+      left: 3%;
+      right: 3%;
+      top: 66%;
+      height: 0;
+      border-top: 4px solid rgba(251, 191, 36, 0.98);
+      box-shadow: 0 0 18px rgba(251, 191, 36, 0.75), 0 0 30px rgba(245, 158, 11, 0.38);
+    }
+    .sky-horizon-line::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -6px;
+      border-top: 1px solid rgba(253, 224, 71, 0.9);
+    }
+    .sky-horizon-label {
+      position: absolute;
+      top: -18px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: rgba(180, 245, 255, 0.95);
+      text-shadow: 0 0 8px rgba(76, 221, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.8);
+      line-height: 1;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .sky-horizon-label-west {
+      left: 0;
+      transform: translateX(-4px);
+    }
+    .sky-horizon-label-east {
+      right: 0;
+      transform: translateX(4px);
+    }
+    .sky-horizon-label-center {
+      left: 50%;
+      transform: translateX(-50%);
+      top: -20px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      opacity: 0.9;
+    }
+    .sky-location-group button {
+      height: 36px;
+      min-height: 36px;
+      padding: 6px 11px;
+      white-space: nowrap;
+    }
+    
+    .sky-datetime-group {
+      grid-column: 3;
+      grid-row: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 12px 0 12px;
+      border-left: 1px solid rgba(255, 255, 255, 0.42);
+    }
+    .sky-datetime-group input {
+      height: 38px;
+      min-height: 38px;
+      padding: 6px 10px;
+      font-size: 13px;
+      width: 210px;
+      letter-spacing: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      background-position: right 8px center;
+      background-repeat: no-repeat;
+      background-size: 20px 20px;
+    }
+    .sky-datetime-group input::-webkit-datetime-edit,
+    .sky-datetime-group input::-webkit-datetime-edit-fields-wrapper,
+    .sky-datetime-group input::-webkit-datetime-edit-text,
+    .sky-datetime-group input::-webkit-datetime-edit-month-field,
+    .sky-datetime-group input::-webkit-datetime-edit-day-field,
+    .sky-datetime-group input::-webkit-datetime-edit-year-field,
+    .sky-datetime-group input::-webkit-datetime-edit-hour-field,
+    .sky-datetime-group input::-webkit-datetime-edit-minute-field,
+    .sky-datetime-group input::-webkit-datetime-edit-ampm-field {
+      font-size: 13px;
+      line-height: 1;
+    }
+    .sky-datetime-group button {
+      height: 36px;
+      min-height: 36px;
+      padding: 6px 11px;
+      white-space: nowrap;
+    }
+    
+    /* ROW 2 CELLS */
+    .sky-datetime-status {
+      grid-column: 3;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0 12px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1;
+      justify-content: flex-start;
+    }
+    
+    /* ROW 3 CELLS */
+    .sky-conditions-title {
+      grid-column: 1;
+      grid-row: 3;
+      padding: 4px 12px 0 12px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .sky-slider-title {
+      grid-column: 2 / 4;
+      grid-row: 3;
+      padding: 4px 12px 0 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ff7a18;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      z-index: 1;
+    }
+    
+    /* ROW 4 CELLS */
+    .sky-conditions-row1 {
+      grid-column: 1;
+      grid-row: 4;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 12px;
+    }
+    .sky-condition-pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      white-space: nowrap;
+      flex: 0 0 auto;
+      min-width: 190px;
+    }
+    
+    .sky-slider-wrapper {
+      grid-column: 2 / 4;
+      grid-row: 4;
+      display: flex;
+      flex-direction: column;
+      padding: 4px 12px 0 12px;
+      gap: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.42);
+    }
+    
+    .sky-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #ff7a18, #ff6a00);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+      margin: 0;
+      padding: 0;
+    }
+    .sky-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff7a18;
+      border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 0 3px rgba(255,122,24,0.25);
+      cursor: pointer;
+    }
+    .sky-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff7a18;
+      border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 0 3px rgba(255,122,24,0.25);
+      cursor: pointer;
+    }
+    .sky-slider::-moz-range-track {
+      background: transparent;
+      border: none;
+    }
+    .sky-slider::-moz-range-progress {
+      background: linear-gradient(to right, #ff7a18, #ff6a00);
+      height: 8px;
+      border-radius: 4px;
+    }
+    
+    /* ROW 5 CELLS */
+    .sky-conditions-row2 {
+      grid-column: 1;
+      grid-row: 5;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 12px;
+    }
+    
+    .sky-slider-labels {
+      grid-column: 2 / 4;
+      grid-row: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0 12px;
+      margin-top: -2px;
+      font-size: 9px;
+      color: var(--muted);
+      font-weight: 400;
+      border-left: 1px solid rgba(255, 255, 255, 0.42);
+    }
+    .sky-slider-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+    .sky-slider-label-tick {
+      width: 1.5px;
+      height: 4px;
+      background: var(--muted);
+      opacity: 0.5;
+    }
+    .sky-slider-label-major .sky-slider-label-tick {
+      height: 10px;
+      opacity: 0.8;
+    }
+    .sky-slider-label-time {
+      font-size: 9px;
+      text-align: center;
+      min-width: 24px;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .sky-slider-label-major .sky-slider-label-time {
+      font-weight: 500;
+    }
+
+    .artemis-card {
+      overflow: hidden;
+    }
+    .artemis-banner {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at top right, rgba(251, 146, 60, 0.18), transparent 35%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(27, 37, 68, 0.82));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .artemis-banner-copy {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+    .artemis-banner-title {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .artemis-banner-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .artemis-banner-meta {
+      min-width: 180px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .artemis-banner-label {
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-size: 10px;
+      margin-bottom: 4px;
+      opacity: 0.85;
+    }
+    .badge.active-mission { background: #2563eb; color: #fff; }
+    .badge.complete { background: #0f766e; color: #fff; }
+    .badge.profile { background: #475569; color: #fff; }
+    .badge.watch { background: #f97316; color: #1f2937; }
+    .section-spaced { margin-top: 28px; }
+    .artemis-bottom { margin-bottom: 8px; }
+
+    .artemis-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(340px, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .artemis-column {
+      display: grid;
+      gap: 14px;
+    }
+    .artemis-panel {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02)),
+        var(--card-bg);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .artemis-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.45px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .artemis-panel-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .artemis-event-strip-shell {
+      margin-bottom: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+      position: relative;
+    }
+    .artemis-event-strip-shell::before,
+    .artemis-event-strip-shell::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 42px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .artemis-event-strip-shell::before {
+      left: 0;
+      background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(15,23,42,0));
+    }
+    .artemis-event-strip-shell::after {
+      right: 0;
+      background: linear-gradient(270deg, rgba(15,23,42,0.95), rgba(15,23,42,0));
+    }
+    .artemis-event-strip {
+      display: flex;
+      gap: 12px;
+      padding: 10px 16px;
+      width: max-content;
+      min-width: 100%;
+      animation: artemisTicker 34s linear infinite;
+    }
+    .artemis-event-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.82);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1;
+    }
+    .artemis-event-pill strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .artemis-event-pill span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+    }
+    @keyframes artemisTicker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .artemis-phase-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .artemis-phase-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .artemis-phase-chip.complete {
+      color: #d1fae5;
+      border-color: rgba(16, 185, 129, 0.34);
+      background: rgba(6, 78, 59, 0.42);
+    }
+    .artemis-phase-chip.active {
+      color: #ffedd5;
+      border-color: rgba(249, 115, 22, 0.46);
+      background: rgba(124, 45, 18, 0.46);
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.18);
+    }
+
+    .artemis-trajectory-stage {
+      position: relative;
+      min-height: 500px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(59, 130, 246, 0.18), transparent 34%),
+        radial-gradient(circle at 82% 22%, rgba(244, 114, 182, 0.16), transparent 26%),
+        linear-gradient(180deg, #020617 0%, #081023 58%, #101c35 100%);
+    }
+    .artemis-trajectory-graphic {
+      width: 100%;
+      min-height: 500px;
+    }
+    .artemis-command-panel {
+      display: grid;
+      gap: 12px;
+    }
+    .artemis-video-frame {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(2, 6, 23, 0.9);
+    }
+    .artemis-video-frame video {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16 / 9;
+      background: #020617;
+    }
+    .artemis-video-caption {
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      background: rgba(2, 6, 23, 0.85);
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .artemis-scrubber-wrap {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .artemis-scrubber-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--muted);
+    }
+    .artemis-scrubber-meta {
+      font-size: 12px;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+      text-align: right;
+    }
+    .artemis-scrubber {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(96,165,250,0.55), rgba(249,115,22,0.8), rgba(251,191,36,0.8));
+      cursor: pointer;
+      outline: none;
+    }
+    .artemis-scrubber::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff7ed;
+      border: 2px solid #f97316;
+      box-shadow: 0 0 0 4px rgba(249,115,22,0.18);
+    }
+    .artemis-scrubber::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff7ed;
+      border: 2px solid #f97316;
+      box-shadow: 0 0 0 4px rgba(249,115,22,0.18);
+    }
+    .artemis-scrubber-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+    }
+    .artemis-command-links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .artemis-command-link {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .artemis-command-link strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 13px;
+    }
+    .artemis-command-link span {
+      color: var(--muted);
+    }
+    .artemis-reference-card {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+    .artemis-reference-card img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .artemis-reference-kicker {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.65px;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 4px;
+    }
+    .artemis-reference-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .artemis-reference-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .artemis-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .artemis-stat {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      min-height: 92px;
+    }
+    .artemis-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.65px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .artemis-stat-value {
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .artemis-stat-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .artemis-timeline {
+      display: grid;
+      gap: 10px;
+    }
+    .artemis-timeline-item {
+      position: relative;
+      padding: 12px 12px 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+    .artemis-timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: rgba(148, 163, 184, 0.35);
+    }
+    .artemis-timeline-item.active::before {
+      background: linear-gradient(180deg, #f97316, #fb7185);
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+    }
+    .artemis-timeline-item.complete::before {
+      background: linear-gradient(180deg, #14b8a6, #22c55e);
+    }
+    .artemis-timeline-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .artemis-timeline-label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .artemis-timeline-window {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .artemis-timeline-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .artemis-timeline-bar {
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(148, 163, 184, 0.18);
+    }
+    .artemis-timeline-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f97316, #fb7185);
+    }
+
+    .artemis-updates,
+    .artemis-alerts {
+      display: grid;
+      gap: 10px;
+    }
+    .artemis-update-item,
+    .artemis-alert-item,
+    .artemis-empty {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(255,255,255,0.03);
+    }
+    .artemis-update-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px 14px;
+      align-items: start;
+    }
+    .artemis-update-title,
+    .artemis-alert-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+    .artemis-update-title a,
+    .artemis-alert-title a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .artemis-update-title a:hover,
+    .artemis-alert-title a:hover {
+      color: var(--link);
+    }
+    .artemis-update-meta,
+    .artemis-alert-meta {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      white-space: nowrap;
+    }
+    .artemis-update-summary,
+    .artemis-alert-summary,
+    .artemis-empty {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .artemis-alert-badge-row {
+      margin-bottom: 8px;
+    }
+    .artemis-alert-summary {
+      margin-top: 8px;
+    }
+    .artemis-empty strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1180px) {
+      .artemis-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 760px) {
+      .artemis-banner {
+        flex-direction: column;
+      }
+      .artemis-banner-meta {
+        text-align: left;
+        min-width: 0;
+      }
+      .artemis-reference-card,
+      .artemis-update-item,
+      .artemis-stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .artemis-command-links {
+        grid-template-columns: 1fr;
+      }
+      .artemis-trajectory-stage,
+      .artemis-trajectory-graphic {
+        min-height: 320px;
+      }
+    }
+    
+    @media (max-width: 1200px) {
+      .sky-controls {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+      .sky-title {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .sky-location-group {
+        grid-column: 1;
+        grid-row: auto;
+        border-left: none;
+      }
+      .sky-datetime-group {
+        grid-column: 1;
+        grid-row: auto;
+        border-left: none;
+      }
+      .sky-datetime-status {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .sky-conditions-title {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .sky-slider-title {
+        grid-column: 1;
+        grid-row: auto;
+        border-left: none;
+      }
+      .sky-conditions-row1 {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .sky-slider-wrapper {
+        grid-column: 1;
+        grid-row: auto;
+        border-left: none;
+      }
+      .sky-conditions-row2 {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .sky-slider-labels {
+        grid-column: 1;
+        grid-row: auto;
+        border-left: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<header id="topbar"></header>
+
+<main class="container">
+  <section class="pageHead">
+    <div>
+      <h1>AstroLab</h1>
+      <div class="sub">Events + News + Resources</div>
+      <div class="sub">Update the ASTROLAB in <a class="subLink" href="settings.html#astrolab">SETTINGS</a></div>
+    </div>
+    <div class="pageHeadActions">
+      <button id="refresh" class="btn" type="button">Refresh</button>
+    </div>
+  </section>
+
+  <div class="astrolab-grid">
+    <!-- LEFT: SKY MAP -->
+    <section class="card astrolab-sky-card">
+      
+      <!-- SKY CONTROLS: 5x3 GRID -->
+      <div class="sky-controls">
+        
+        <!-- ROW 1-2, COL 1: Title Section -->
+        <div class="sky-title">
+          <h2>🌌 The Sky Now</h2>
+          <div class="sky-title-status">As of <span id="loadTime">9:21:51 PM</span></div>
+        </div>
+        
+        <!-- ROW 1, COL 2: Location Group -->
+        <div class="sky-location-group">
+          <input id="loc" class="input" placeholder="Current location" aria-label="Location" />
+          <button id="useGeo" class="btn" type="button">GPS</button>
+        </div>
+        
+        <!-- ROW 1, COL 3: DateTime Group -->
+        <div class="sky-datetime-group">
+          <input id="time" class="input" type="datetime-local" aria-label="Date and time" />
+          <button id="now" class="btn" type="button">NOW</button>
+        </div>
+        
+        <!-- ROW 2, COL 3: DateTime Status -->
+        <div class="sky-datetime-status">
+          <div><span id="tzDisplay">—</span></div>
+        </div>
+
+        <!-- FULL-WIDTH DIVIDER: between upper controls and lower controls -->
+        <div class="sky-row-divider" aria-hidden="true"></div>
+        
+        <!-- ROW 3, COL 1: Conditions Title -->
+        <div class="sky-conditions-title">SKY CONDITIONS</div>
+        
+        <!-- ROW 3, COL 2: Slider Title -->
+        <div class="sky-slider-title">SKY MAP TIME-SLIDER</div>
+        
+        <!-- ROW 4, COL 1: Conditions Row 1 (Moon + Visibility) -->
+        <div class="sky-conditions-row1">
+          <span class="sky-condition-pill" id="moonPill">🌙 Moon Illumination: —</span>
+        </div>
+        
+        <!-- ROW 4, COL 2-3: Time Slider -->
+        <div class="sky-slider-wrapper">
+          <input id="hourSlider" class="sky-slider" type="range" min="0" max="23" value="12" step="1" aria-label="Hour slider" />
+        </div>
+        
+        <!-- ROW 5, COL 1: Conditions Row 2 (Visibility) -->
+        <div class="sky-conditions-row2">
+          <span class="sky-condition-pill" id="seeingPill">👁️ Visibility: —</span>
+        </div>
+        
+        <!-- ROW 5, COL 2-3: Slider Hour Labels -->
+        <div class="sky-slider-labels">
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">00:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">04:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">08:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">12:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">16:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">20:00</div>
+          </div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label"><div class="sky-slider-label-tick"></div></div>
+          <div class="sky-slider-label sky-slider-label-major">
+            <div class="sky-slider-label-tick"></div>
+            <div class="sky-slider-label-time">24:00</div>
+          </div>
+        </div>
+        
+      </div>
+
+      <!-- Sky Map (below top section) -->
+      <div class="skyMapShell">
+        <div id="celestial-map" class="skyChart"></div>
+        <div class="sky-horizon-overlay" aria-hidden="true">
+          <span class="sky-horizon-note">Geometric horizon only · Terrain not included</span>
+        </div>
+      </div>
+
+      <!-- Zoom Control Bar -->
+      <div class="zoomControlBar">
+        <span class="zoomControlLabel">Zoom</span>
+        <input id="zoomSlider" class="zoomControlSlider" type="range" min="0.5" max="10" step="0.1" value="1" aria-label="Sky chart zoom level" title="Sky chart zoom level" />
+        <span id="zoomLabel" class="zoomControlValue">1.0x</span>
+      </div>
+
+      <style>
+        #zoomSlider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          cursor: pointer;
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 4px rgba(255,255,255,0.3);
+          border: 2px solid rgba(255,255,255,0.2);
+        }
+        #zoomSlider::-moz-range-thumb {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          cursor: pointer;
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 4px rgba(255,255,255,0.3);
+          border: 2px solid rgba(255,255,255,0.2);
+        }
+      </style>
+
+      <div class="sky-nav-area">
+        <!-- Sky Search Bar -->
+        <div class="skySearchRow">
+          <input id="skySearch" class="input skySearchInput" type="text" placeholder="Search sky objects (e.g., Betelgeuse, NGC 224)" />
+        </div>
+
+        <!-- Solar System Objects Section -->
+        <div class="skySectionLabel solarObjectsLabel">Solar System Objects</div>
+        
+        <!-- Row 1: Sun & Inner Planets -->
+        <div class="skyJumpGrid mb3">
+          <button data-jump="sun" class="btn small">☀️ Sun</button>
+          <button data-jump="mercury" class="btn small">☿ Mercury</button>
+          <button data-jump="venus" class="btn small">♀ Venus</button>
+          <button data-jump="moon" class="btn small">🌙 Moon</button>
+          <button data-jump="mars" class="btn small">♂ Mars</button>
+        </div>
+
+        <!-- Row 2: Outer Planets -->
+        <div class="skyJumpGrid mb8">
+          <button data-jump="jupiter" class="btn small">♃ Jupiter</button>
+          <button data-jump="saturn" class="btn small">♄ Saturn</button>
+          <button data-jump="uranus" class="btn small">♅ Uranus</button>
+          <button data-jump="neptune" class="btn small">♆ Neptune</button>
+          <button data-jump="pluto" class="btn small">♇ Pluto</button>
+        </div>
+
+        <!-- Stellar Objects Section -->
+        <div class="skySectionLabel stellarObjectsLabel">Stellar Objects</div>
+        
+        <!-- Row 3: Deep Sky Objects - First Set -->
+        <div class="skyJumpGrid">
+          <button data-jump="orion" class="btn small">🔭 Orion</button>
+          <button data-jump="andromeda" class="btn small">🌀 Andromeda</button>
+          <button data-jump="pleiades" class="btn small">⭐ Pleiades</button>
+          <button data-jump="hercules" class="btn small">✨ M13</button>
+          <button data-jump="sirius" class="btn small">💫 Sirius</button>
+        </div>
+        
+        <!-- Row 4: More Deep Sky Objects -->
+        <div class="skyJumpGrid mt4">
+          <button data-jump="crab" class="btn small">🔴 Crab (M1)</button>
+          <button data-jump="dumbbell" class="btn small">💎 Dumbbell (M27)</button>
+          <button data-jump="whirlpool" class="btn small">🌀 Whirlpool (M51)</button>
+          <button data-jump="ringnebula" class="btn small">⭕ Ring (M57)</button>
+          <button data-jump="phantom" class="btn small">👻 Phantom (M74)</button>
+        </div>
+        
+        <!-- Row 5: Even More Deep Sky Objects -->
+        <div class="skyJumpGrid mt4">
+          <button data-jump="bodes" class="btn small">🌌 Bode's (M81)</button>
+          <button data-jump="pinwheel" class="btn small">🌀 Pinwheel (M101)</button>
+          <button data-jump="owl" class="btn small">🦉 Owl (M97)</button>
+          <button data-jump="sombrero" class="btn small">🎩 Sombrero (M104)</button>
+          <button data-jump="horsehead" class="btn small">🐴 Horsehead</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN -->
+    <div class="astroRightColumn">
+      <!-- ASTRONOMICAL CALENDAR -->
+      <section class="card">
+        <h2>
+          <span>📅 Astronomical Events Calendar</span>
+          <span class="meta" id="calendarMeta"></span>
+        </h2>
+        <div class="astroCalendarToolbar">
+          <button class="btn small astroCalNavBtn" id="prevMonth">◄ Prev</button>
+          <div id="calendarMonthYear" class="astroCalendarMonth"></div>
+          <button class="btn small astroCalNavBtn" id="nextMonth">Next ►</button>
+        </div>
+        <div id="astronomicalCalendar"></div>
+      </section>
+      
+      <!-- HIGHLIGHTS & RESOURCES (COMBINED) -->
+      <section class="card astroHighlightsCard">
+        <h2>
+          <span>✨ Tonight's Highlights & Resources</span>
+          <span class="meta" id="hlMeta">Local</span>
+        </h2>
+        <div class="astroHighlightsBody">
+          <div>
+            <h3 class="astroSubhead tonightHighlightsLabel">Tonight's Highlights</h3>
+            <div class="list astroHighlightsGrid" id="tonightHighlightsGrid"></div>
+          </div>
+          <div class="astroHighlightsDivider">
+            <h3 class="astroSubhead quickResourcesLabel">Quick Resources</h3>
+            <div class="list astroResourcesGrid" id="astroResourcesGrid"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ASTRONOMICAL EVENTS (FULL WIDTH) -->
+  <section class="card astrolabSectionGap">
+      <h2>
+        <span>🌌 Upcoming Astronomical Events (Next 8)</span>
+        <span class="meta" id="eventsMeta"></span>
+      </h2>
+        <div class="list astroEventsGrid" id="astronomicalEvents"></div>
+  </section>
+
+  <!-- LAUNCHES (FULL WIDTH) -->
+  <section class="card astrolabSectionGap">
+      <h2>
+        <span>🚀 Space Launches (Next 8)</span>
+        <span class="meta" id="lnMeta"></span>
+      </h2>
+        <div class="list astroUpcomingGrid" id="upcoming"></div>
+  </section>
+
+  <!-- NEWS (FULL WIDTH) -->
+  <section class="card astrolabSectionGap">
+      <h2>
+        <span>📰 Latest Headlines (8)</span>
+        <span class="meta">Spaceflight News</span>
+      </h2>
+        <div class="list astroNewsGrid" id="news"></div>
+  </section>
+
+  <section class="card artemis-card section-spaced artemis-bottom">
+    <h2>
+      <span>🌕 Artemis II Mission Tracker</span>
+      <span class="meta" id="artemisMeta">Bottom deck • official NASA feed • 15m refresh</span>
+    </h2>
+    <div class="artemis-banner">
+      <div class="artemis-banner-copy">
+        <span id="artemisStatusBadge" class="badge profile">PROFILE</span>
+        <div>
+          <div class="artemis-banner-title" id="artemisStatusHeadline">Loading Artemis II mission tracker...</div>
+          <div class="artemis-banner-note" id="artemisStatusNote">Projected position updates every minute from mission elapsed time. External updates refresh every 15 minutes.</div>
+        </div>
+      </div>
+      <div class="artemis-banner-meta">
+        <div class="artemis-banner-label">Last mission feed update</div>
+        <div id="artemisLastUpdated">—</div>
+      </div>
+    </div>
+
+    <div class="artemis-event-strip-shell">
+      <div class="artemis-event-strip" id="artemisEventStrip"></div>
+    </div>
+
+    <div class="artemis-phase-chips" id="artemisPhaseChips"></div>
+
+    <div class="artemis-layout">
+      <div class="artemis-column">
+        <section class="artemis-panel">
+          <div class="artemis-panel-head">
+            <span>Projected Flight Path</span>
+            <div class="artemis-panel-links">
+              <a class="btn small" id="artemisEyesLink" href="https://eyes.nasa.gov/apps/solar-system/#/sc_artemis_2?lighting=flood&surfaceMapTiling=true" target="_blank" rel="noopener">NASA Eyes</a>
+              <a class="btn small" id="artemisPathLink" href="https://svs.gsfc.nasa.gov/20412/" target="_blank" rel="noopener">Flight Path</a>
+              <a class="btn small" id="artemisTrackLink" href="https://www.nasa.gov/missions/artemis-ii/arow/" target="_blank" rel="noopener">Track Orion</a>
+            </div>
+          </div>
+          <div class="artemis-trajectory-stage">
+            <div id="artemisTrajectoryGraphic" class="artemis-trajectory-graphic" aria-live="polite"></div>
+          </div>
+          <div class="artemis-reference-card">
+            <img id="artemisReferenceImage" src="https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/Artemis-II-Trajectory-Thumbnail_Small.jpg" alt="NASA Artemis II nominal mission flight path illustration" loading="lazy" />
+            <div>
+              <div class="artemis-reference-kicker">Official NASA reference</div>
+              <div class="artemis-reference-title">Earth orbits, translunar injection, lunar flyby, Earth return</div>
+              <div class="artemis-reference-note">The marker in the tracker above is a projected live position based on NASA's published 10-day Artemis II profile and the mission clock.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="artemis-panel artemis-command-panel">
+          <div class="artemis-panel-head">
+            <span>Mission Control Feed</span>
+            <span class="meta" id="artemisCommandMeta">Official video</span>
+          </div>
+          <div class="artemis-video-frame">
+            <video id="artemisFlightVideo" controls muted preload="metadata" poster="https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/Artemis-II-Trajectory-Thumbnail_Small.jpg">
+              <source src="https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/jsc2025m000169_Artemis_II_Mission_Map_720.mp4" type="video/mp4" />
+            </video>
+            <div class="artemis-video-caption">NASA SVS mission path animation. The scrubber below stays synchronized to the live projected mission fraction and can be dragged to preview other phases.</div>
+          </div>
+          <div class="artemis-scrubber-wrap">
+            <div class="artemis-scrubber-top">
+              <span>Mission progress scrubber</span>
+              <span class="artemis-scrubber-meta" id="artemisScrubberMeta">Live mission clock</span>
+            </div>
+            <input id="artemisProgressScrubber" class="artemis-scrubber" type="range" min="0" max="100" value="0" step="0.1" aria-label="Artemis II mission progress scrubber" />
+            <div class="artemis-scrubber-labels">
+              <span>Launch</span>
+              <span>Earth orbit</span>
+              <span>Lunar flyby</span>
+              <span>Return</span>
+              <span>Splashdown</span>
+            </div>
+          </div>
+          <div class="artemis-command-links">
+            <a class="artemis-command-link" id="artemisMissionLink" href="https://www.nasa.gov/mission/artemis-ii/" target="_blank" rel="noopener">
+              <strong>Mission page</strong>
+              <span>Official NASA Artemis II overview and multimedia</span>
+            </a>
+            <a class="artemis-command-link" id="artemisCoverageLink" href="https://www.nasa.gov/missions/artemis/artemis-2/nasa-sets-coverage-for-artemis-ii-moon-mission/" target="_blank" rel="noopener">
+              <strong>Coverage schedule</strong>
+              <span>Launch, downlinks, lunar flyby, and splashdown coverage plan</span>
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <div class="artemis-column">
+        <section class="artemis-panel">
+          <div class="artemis-panel-head">
+            <span>Mission Updates</span>
+            <span class="meta" id="artemisUpdatesMeta">Official NASA + external</span>
+          </div>
+          <div id="artemisUpdates" class="artemis-updates"></div>
+        </section>
+
+        <section class="artemis-panel">
+          <div class="artemis-panel-head">
+            <span>Trajectory Stats</span>
+            <span class="meta" id="artemisPhaseMeta">Loading</span>
+          </div>
+          <div id="artemisStats" class="artemis-stats-grid"></div>
+        </section>
+
+        <section class="artemis-panel">
+          <div class="artemis-panel-head">
+            <span>Mission Timeline</span>
+            <span class="meta">Nominal</span>
+          </div>
+          <div id="artemisTimeline" class="artemis-timeline"></div>
+        </section>
+
+        <section class="artemis-panel">
+          <div class="artemis-panel-head">
+            <span>Watch Items</span>
+            <span class="meta">Flight notes</span>
+          </div>
+          <div id="artemisAlerts" class="artemis-alerts"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+  </main>
+
+<footer class="page-footer">
+  <p>📡 Data sources: Launch Library 2 (The Space Devs) • Spaceflight News API (SNAPI) • NASA Artemis II / SVS • Cloudflare worker mission feed • D3-Celestial (BSD)</p>
+  <p class="pageFooterFinePrint">Sky view powered by open astronomy data • All external links open in new window</p>
+  <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/lib/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/lib/d3.geo.projection.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/lib/d3.geo.zoom.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/lib/d3-queue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/lib/topojson.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/celestial.min.js"></script>
+
+<script>
+  // -----------------------
+  // Config
+  // -----------------------
+  const LL2_BASE = "https://ll.thespacedevs.com/2.3.0";
+  const SNAPI_ARTICLES = "https://api.spaceflightnewsapi.net/v4/articles/";
+  
+  // Load settings from window.App if available
+  let appCfg = window.App?.cfg || {};
+  
+  // Apply theme, density, and font size on page load
+  if (window.App?.applyThemeDensity) {
+    window.App.applyThemeDensity(appCfg);
+  }
+  
+  let userLat = null, userLon = null, userLocation = "Not set", userTz = "UTC";
+  let artemisTrackerData = null;
+  let artemisPreviewFraction = null;
+  let artemisPreviewResetTimer = null;
+
+  const CACHE = {
+    upcoming: { key: "cache_upcoming_v1", ttlMs: 15 * 60 * 1000 },
+    previous: { key: "cache_previous_v1", ttlMs: 60 * 60 * 1000 },
+    news:     { key: "cache_news_v1",     ttlMs: 30 * 60 * 1000 },
+    artemis:  { key: "cache_artemis_v1",  ttlMs: 15 * 60 * 1000 },
+  };
+  const SKY_VISIBILITY_TTL_MS = 10 * 60 * 1000;
+  const ARTEMIS_PROFILE = Object.freeze({
+    mission: "Artemis II",
+    type: "Crewed lunar flyby",
+    crew: ["Reid Wiseman", "Victor Glover", "Christina Koch", "Jeremy Hansen"],
+    vehicle: "SLS Block 1 + Orion",
+    launchSite: "Kennedy Space Center LC-39B",
+    launchTime: "2026-04-01T22:35:00Z",
+    durationDays: 10,
+    meanEarthMoonDistanceMi: 238855,
+    lunarFlybyAltitudeMi: [3000, 9000],
+    officialImage: "https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/Artemis-II-Trajectory-Thumbnail_Small.jpg",
+    officialVideo: "https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/jsc2025m000169_Artemis_II_Mission_Map_720.mp4",
+    officialPathUrl: "https://svs.gsfc.nasa.gov/20412/",
+    nasaEyesUrl: "https://eyes.nasa.gov/apps/solar-system/#/sc_artemis_2?lighting=flood&surfaceMapTiling=true",
+    missionUrl: "https://www.nasa.gov/mission/artemis-ii/",
+    coverageUrl: "https://www.nasa.gov/missions/artemis/artemis-2/nasa-sets-coverage-for-artemis-ii-moon-mission/",
+    trackUrl: "https://www.nasa.gov/missions/artemis-ii/arow/",
+    phases: [
+      {
+        key: "launch",
+        label: "Launch + Earth orbit",
+        start: 0,
+        end: 0.08,
+        speedMph: [0, 17500],
+        distanceFromEarthMi: [0, 22000],
+        note: "Ascent, two Earth orbits, systems checkout, and departure setup."
+      },
+      {
+        key: "translunar",
+        label: "Outbound translunar coast",
+        start: 0.08,
+        end: 0.4,
+        speedMph: [17500, 24500],
+        distanceFromEarthMi: [22000, 232000],
+        note: "Perigee and apogee raise burns lead into the translunar injection arc."
+      },
+      {
+        key: "flyby",
+        label: "Lunar flyby window",
+        start: 0.4,
+        end: 0.58,
+        speedMph: [7800, 5200],
+        distanceFromEarthMi: [232000, 247500],
+        note: "Figure-eight swing around the Moon with a far-side pass and closest approach band."
+      },
+      {
+        key: "return",
+        label: "Return coast",
+        start: 0.58,
+        end: 0.94,
+        speedMph: [5200, 20500],
+        distanceFromEarthMi: [247500, 82000],
+        note: "Outbound momentum reverses into the Earth-return corridor and re-entry targeting."
+      },
+      {
+        key: "reentry",
+        label: "Re-entry + splashdown",
+        start: 0.94,
+        end: 1,
+        speedMph: [20500, 25000],
+        distanceFromEarthMi: [82000, 0],
+        note: "Final approach, atmospheric entry, and Pacific splashdown."
+      }
+    ],
+    pathPoints: [
+      [182, 220], [215, 158], [154, 148], [128, 218], [155, 286], [225, 282], [182, 220],
+      [260, 205], [350, 178], [470, 146], [610, 126], [730, 136],
+      [792, 150], [830, 198], [812, 252], [748, 246], [710, 188], [760, 116], [840, 122], [886, 188], [860, 278], [762, 302],
+      [660, 300], [548, 308], [430, 300], [302, 274], [208, 250], [150, 276], [172, 324], [230, 286], [185, 220]
+    ]
+  });
+  const skyVisibilityCache = {
+    key: "",
+    fetchedAt: 0,
+    data: null,
+    inflight: null
+  };
+
+  // -----------------------
+  // Utilities
+  // -----------------------
+  const $ = (sel) => document.querySelector(sel);
+  const fmt = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle:"medium", timeStyle:"short" });
+  const parseDateOnlyLocal = (value) => {
+    const appParsed = window.App?.parseDateOnlyLocal?.(value);
+    if (appParsed) return appParsed;
+
+    if (typeof value !== 'string') return null;
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+    return new Date(year, month - 1, day);
+  };
+  const escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  };
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const lerp = (start, end, amount) => start + (end - start) * amount;
+  const easeInOut = (amount) => 0.5 - (Math.cos(Math.PI * clamp(amount, 0, 1)) / 2);
+
+  function decodeHtmlToText(value) {
+    const div = document.createElement("div");
+    div.innerHTML = String(value || "");
+    return div.textContent.replace(/\s+/g, " ").trim();
+  }
+
+  function formatCompactDuration(ms) {
+    const totalSeconds = Math.max(0, Math.round(ms / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
+  function formatAbbrevRelative(ms) {
+    if (!Number.isFinite(ms) || ms < 0) return "now";
+    const minutes = Math.round(ms / 60000);
+    if (minutes < 60) return `${Math.max(1, minutes)}m ago`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 48) return `${hours}h ago`;
+    const days = Math.round(hours / 24);
+    return `${days}d ago`;
+  }
+
+  function formatNumber(value) {
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(value));
+  }
+
+  function uniqueBy(items, keyFn) {
+    const seen = new Set();
+    return (Array.isArray(items) ? items : []).filter((item) => {
+      const key = keyFn(item);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function summarizeText(text, maxLength = 160) {
+    const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+    if (cleaned.length <= maxLength) return cleaned;
+    return `${cleaned.slice(0, maxLength - 1).trimEnd()}…`;
+  }
+
+  function readCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
+  }
+
+  function writeCache(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ t: Date.now(), data }));
+    } catch {}
+  }
+
+  function isFresh(entry, ttlMs) {
+    if (!entry || !entry.t) return false;
+    return (Date.now() - entry.t) < ttlMs;
+  }
+
+  function setMeta(el, text) {
+    if (!el) return;
+    el.textContent = text;
+  }
+
+  function formatTimezoneDisplay(tz) {
+    const zone = String(tz || "UTC");
+    const city = zone.includes("/") ? zone.split("/").pop().replace(/_/g, " ") : zone;
+    let abbr = zone;
+    let offsetText = "UTC";
+
+    try {
+      const now = new Date();
+      const shortParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
+        timeZoneName: "short"
+      }).formatToParts(now);
+      const shortName = shortParts.find((p) => p.type === "timeZoneName")?.value || "";
+      if (shortName) abbr = shortName;
+      if (zone === "America/Detroit") abbr = "EST";
+
+      const offsetParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
+        timeZoneName: "shortOffset"
+      }).formatToParts(now);
+      const rawOffset = offsetParts.find((p) => p.type === "timeZoneName")?.value || "";
+      const match = rawOffset.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+      if (match) {
+        const sign = match[1] === "-" ? "+" : "-";
+        const hour = match[2];
+        const mins = match[3] || "00";
+        offsetText = mins === "00" ? `UTC ${sign}${hour}` : `UTC ${sign}${hour}:${mins}`;
+      } else {
+        const normalized = rawOffset.replace("GMT", "UTC ");
+        offsetText = normalized || "UTC";
+      }
+    } catch {
+      offsetText = "UTC";
+    }
+
+    return `${abbr} ${city} (${offsetText})`;
+  }
+
+  function itemHTML({ title, subtitle, url }) {
+    const safeUrl = url ? ` <a href="${url}" target="_blank" rel="noopener">Open</a>` : "";
+    return `
+      <div class="astrolab-item">
+        <div class="t">${title}${safeUrl}</div>
+        <div class="s">${subtitle || ""}</div>
+      </div>`;
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+    return res.json();
+  }
+
+  // -----------------------
+  // Render: Combined Highlights & Resources
+  // -----------------------
+  function loadHighlightsResources() {
+    const highlights = [
+      { title: "🪐 Planets", subtitle: "Visibility tonight", url: "https://in-the-sky.org/solarsystem.php" },
+      { title: "☄️ Meteors", subtitle: "Active showers", url: "https://in-the-sky.org/newscal.php" },
+      { title: "🛰️ ISS", subtitle: "Overhead passes", url: "https://www.heavens-above.com/" },
+      { title: "🌙 Moon Phases", subtitle: "Lunar calendar", url: "https://www.timeanddate.com/moon/phases" }
+    ];
+
+    const resources = [
+      { title: "🌍 In-The-Sky", subtitle: "Sky events", url: "https://in-the-sky.org/" },
+      { title: "🔭 Heavens-Above", subtitle: "Satellites", url: "https://www.heavens-above.com/" },
+      { title: "📡 Sky & Telescope", subtitle: "News & guides", url: "https://www.skyandtelescope.org/" },
+      { title: "🪐 NASA APOD", subtitle: "Daily picture", url: "https://apod.nasa.gov/" },
+      { title: "📚 Stellarium", subtitle: "Planetarium", url: "https://stellarium.org/" },
+      { title: "☀️ Space Weather", subtitle: "Auroras & solar", url: "https://spaceweather.com/" },
+      { title: "🌎 EarthSky", subtitle: "Tonight's sky", url: "https://earthsky.org/tonight" },
+      { title: "🌟 ClearDarkSky", subtitle: "Viewing forecast", url: "https://www.cleardarksky.com/" },
+      { title: "🛰️ N2YO", subtitle: "Live satellites", url: "https://www.n2yo.com/" }
+    ];
+
+    const highlightMount = $("#tonightHighlightsGrid");
+    const resourceMount = $("#astroResourcesGrid");
+    if (!highlightMount || !resourceMount) return;
+
+    const renderItems = (items, minHeight) => items.map(item => `
+      <div class="astrolab-item" style="cursor:pointer; padding:8px; min-height:${minHeight}px; display:flex; flex-direction:column; justify-content:center; transition:all 0.15s ease;"
+           data-url="${escapeHtml(item.url)}"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'"
+           onmouseout="this.style.transform=''; this.style.boxShadow=''">
+        <div class="t" style="font-size:12px; margin-bottom:2px; font-weight:600;">${item.title}</div>
+        <div class="s" style="font-size:10px; line-height:1.3;">${item.subtitle}</div>
+      </div>`).join("");
+
+    highlightMount.innerHTML = renderItems(highlights, 62);
+    resourceMount.innerHTML = renderItems(resources, 60);
+
+    document.querySelectorAll("#tonightHighlightsGrid .astrolab-item[data-url], #astroResourcesGrid .astrolab-item[data-url]").forEach(el => {
+      el.addEventListener("click", () => {
+        const url = el.dataset.url;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
+    });
+  }
+
+  function buildArtemisSnapshot(missionFraction, statusKey, nowMs = Date.now()) {
+    const launchMs = Date.parse(ARTEMIS_PROFILE.launchTime);
+    const missionDurationMs = ARTEMIS_PROFILE.durationDays * 24 * 60 * 60 * 1000;
+    const splashdownMs = launchMs + missionDurationMs;
+    const safeFraction = clamp(missionFraction, 0, 1);
+    const phase = ARTEMIS_PROFILE.phases.find((entry) => missionFraction >= entry.start && missionFraction <= entry.end)
+      || ARTEMIS_PROFILE.phases[ARTEMIS_PROFILE.phases.length - 1];
+    const phaseFraction = phase.end > phase.start
+      ? clamp((safeFraction - phase.start) / (phase.end - phase.start), 0, 1)
+      : 1;
+    const easedFraction = easeInOut(phaseFraction);
+    const speedMph = statusKey === "scheduled"
+      ? 0
+      : statusKey === "complete"
+        ? 0
+        : lerp(phase.speedMph[0], phase.speedMph[1], easedFraction);
+    const distanceFromEarthMi = statusKey === "scheduled"
+      ? 0
+      : statusKey === "complete"
+        ? 0
+        : lerp(phase.distanceFromEarthMi[0], phase.distanceFromEarthMi[1], easedFraction);
+    const elapsedMs = safeFraction * missionDurationMs;
+    const timeToLaunchMs = statusKey === "scheduled" ? Math.max(0, launchMs - nowMs) : 0;
+    const timeToSplashdownMs = statusKey === "scheduled"
+      ? missionDurationMs
+      : Math.max(0, missionDurationMs - elapsedMs);
+    const flightDay = statusKey === "scheduled"
+      ? 0
+      : Math.min(ARTEMIS_PROFILE.durationDays, Math.floor(elapsedMs / 86400000) + 1);
+
+    return {
+      statusKey,
+      missionFraction: safeFraction,
+      phase,
+      phaseFraction,
+      speedMph,
+      distanceFromEarthMi,
+      moonOffsetMi: Math.abs(ARTEMIS_PROFILE.meanEarthMoonDistanceMi - distanceFromEarthMi),
+      timeToLaunchMs,
+      elapsedMs,
+      timeToSplashdownMs,
+      launchMs,
+      splashdownMs,
+      flightDay
+    };
+  }
+
+  function getArtemisSnapshot(now = new Date()) {
+    const launchMs = Date.parse(ARTEMIS_PROFILE.launchTime);
+    const missionDurationMs = ARTEMIS_PROFILE.durationDays * 24 * 60 * 60 * 1000;
+    const splashdownMs = launchMs + missionDurationMs;
+    const nowMs = now.getTime();
+
+    let statusKey = "scheduled";
+    if (nowMs >= splashdownMs) statusKey = "complete";
+    else if (nowMs >= launchMs) statusKey = "active";
+
+    const missionFraction = clamp((nowMs - launchMs) / missionDurationMs, 0, 1);
+    const snapshot = buildArtemisSnapshot(missionFraction, statusKey, nowMs);
+    snapshot.timeToLaunchMs = Math.max(0, launchMs - nowMs);
+    snapshot.timeToSplashdownMs = Math.max(0, splashdownMs - nowMs);
+    return snapshot;
+  }
+
+  function getArtemisPreviewSnapshot(fraction) {
+    if (!Number.isFinite(fraction)) return getArtemisSnapshot(new Date());
+    const safeFraction = clamp(fraction, 0, 1);
+    const statusKey = safeFraction <= 0 ? "scheduled" : safeFraction >= 1 ? "complete" : "active";
+    return buildArtemisSnapshot(safeFraction, statusKey, Date.now());
+  }
+
+  function getPathPointAtFraction(points, fraction) {
+    const safeFraction = clamp(fraction, 0, 1);
+    if (!Array.isArray(points) || points.length < 2) return { x: 0, y: 0 };
+
+    let total = 0;
+    const segments = [];
+    for (let index = 1; index < points.length; index++) {
+      const [x1, y1] = points[index - 1];
+      const [x2, y2] = points[index];
+      const length = Math.hypot(x2 - x1, y2 - y1);
+      total += length;
+      segments.push({ x1, y1, x2, y2, length });
+    }
+
+    let remaining = total * safeFraction;
+    for (const segment of segments) {
+      if (remaining <= segment.length || segment === segments[segments.length - 1]) {
+        const ratio = segment.length > 0 ? remaining / segment.length : 0;
+        return {
+          x: lerp(segment.x1, segment.x2, ratio),
+          y: lerp(segment.y1, segment.y2, ratio)
+        };
+      }
+      remaining -= segment.length;
+    }
+
+    const [x, y] = points[points.length - 1];
+    return { x, y };
+  }
+
+  function buildPathString(points) {
+    if (!Array.isArray(points) || points.length === 0) return "";
+    return points.map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x} ${y}`).join(" ");
+  }
+
+  function getArtemisStatusCopy(snapshot, payload) {
+    const latestTitle = payload?.latestArticle?.title || "";
+    if (snapshot.statusKey === "scheduled") {
+      return {
+        badgeClass: "profile",
+        badgeText: "SCHEDULED",
+        headline: `Artemis II launch window opens in ${formatCompactDuration(snapshot.timeToLaunchMs)}`,
+        note: `Nominal lunar flyby profile is staged and ready. Mission feeds will populate automatically when coverage appears.`
+      };
+    }
+    if (snapshot.statusKey === "complete") {
+      return {
+        badgeClass: "complete",
+        badgeText: "COMPLETE",
+        headline: `Artemis II completed its nominal ${ARTEMIS_PROFILE.durationDays}-day mission window`,
+        note: latestTitle
+          ? `Latest tracked headline: ${latestTitle}`
+          : `Trajectory stats remain available from the published NASA reference profile.`
+      };
+    }
+
+    return {
+      badgeClass: "active-mission",
+      badgeText: "ACTIVE",
+      headline: `Flight day ${snapshot.flightDay}: ${snapshot.phase.label}`,
+      note: payload?.watchItems?.length
+        ? `Watch item: ${payload.watchItems[0].title}`
+        : latestTitle || `Following NASA's published nominal figure-eight lunar flyby profile.`
+    };
+  }
+
+  function getArtemisPhaseWindow(phase) {
+    const startDay = (phase.start * ARTEMIS_PROFILE.durationDays).toFixed(1);
+    const endDay = (phase.end * ARTEMIS_PROFILE.durationDays).toFixed(1);
+    return `Day ${startDay} - ${endDay}`;
+  }
+
+  function buildArtemisStats(snapshot) {
+    const missionClockValue = snapshot.statusKey === "scheduled"
+      ? `T-${formatCompactDuration(snapshot.timeToLaunchMs)}`
+      : snapshot.statusKey === "complete"
+        ? `${ARTEMIS_PROFILE.durationDays}d nominal`
+        : formatCompactDuration(snapshot.elapsedMs);
+    const missionClockNote = snapshot.statusKey === "scheduled"
+      ? `Launch target ${fmt(ARTEMIS_PROFILE.launchTime)}`
+      : snapshot.statusKey === "complete"
+        ? `Splashdown window ${fmt(snapshot.splashdownMs)}`
+        : `${formatCompactDuration(snapshot.timeToSplashdownMs)} remaining in nominal profile`;
+
+    const flightDayValue = snapshot.statusKey === "scheduled"
+      ? "Prelaunch"
+      : snapshot.statusKey === "complete"
+        ? "Returned"
+        : `Day ${snapshot.flightDay}`;
+
+    return [
+      {
+        label: "Mission state",
+        value: snapshot.statusKey === "scheduled" ? "Profile staged" : snapshot.statusKey === "complete" ? "Returned" : "In flight",
+        note: snapshot.phase.label
+      },
+      {
+        label: "Mission clock",
+        value: missionClockValue,
+        note: missionClockNote
+      },
+      {
+        label: "Flight day",
+        value: flightDayValue,
+        note: getArtemisPhaseWindow(snapshot.phase)
+      },
+      {
+        label: "Projected speed",
+        value: snapshot.statusKey === "active" ? `${formatNumber(snapshot.speedMph)} mph` : "Awaiting flight",
+        note: "Modeled from nominal phase timing"
+      },
+      {
+        label: "Range from Earth",
+        value: snapshot.statusKey === "active" ? `${formatNumber(snapshot.distanceFromEarthMi)} mi` : "On pad",
+        note: "Projected along NASA reference trajectory"
+      },
+      {
+        label: "Moon flyby band",
+        value: `${formatNumber(ARTEMIS_PROFILE.lunarFlybyAltitudeMi[0])}-${formatNumber(ARTEMIS_PROFILE.lunarFlybyAltitudeMi[1])} mi`,
+        note: "Approximate altitude above lunar surface"
+      },
+      {
+        label: "Crew",
+        value: `${ARTEMIS_PROFILE.crew.length} astronauts`,
+        note: ARTEMIS_PROFILE.crew.join(" • ")
+      },
+      {
+        label: "Vehicle",
+        value: ARTEMIS_PROFILE.vehicle,
+        note: ARTEMIS_PROFILE.launchSite
+      }
+    ];
+  }
+
+  function renderArtemisStats(snapshot) {
+    const mount = $("#artemisStats");
+    if (!mount) return;
+    const stats = buildArtemisStats(snapshot);
+    mount.innerHTML = stats.map((stat) => `
+      <div class="artemis-stat">
+        <div class="artemis-stat-label">${escapeHtml(stat.label)}</div>
+        <div class="artemis-stat-value">${escapeHtml(stat.value)}</div>
+        <div class="artemis-stat-note">${escapeHtml(stat.note)}</div>
+      </div>
+    `).join("");
+    setMeta($("#artemisPhaseMeta"), snapshot.phase.label);
+  }
+
+  function renderArtemisTimeline(snapshot) {
+    const mount = $("#artemisTimeline");
+    if (!mount) return;
+
+    mount.innerHTML = ARTEMIS_PROFILE.phases.map((phase) => {
+      let stateClass = "";
+      let fillPercent = 0;
+      if (snapshot.missionFraction > phase.end) {
+        stateClass = "complete";
+        fillPercent = 100;
+      } else if (snapshot.missionFraction >= phase.start && snapshot.missionFraction <= phase.end && snapshot.statusKey === "active") {
+        stateClass = "active";
+        fillPercent = clamp(((snapshot.missionFraction - phase.start) / (phase.end - phase.start)) * 100, 0, 100);
+      } else if (snapshot.statusKey === "complete") {
+        stateClass = "complete";
+        fillPercent = 100;
+      }
+
+      return `
+        <div class="artemis-timeline-item ${stateClass}">
+          <div class="artemis-timeline-top">
+            <div class="artemis-timeline-label">${escapeHtml(phase.label)}</div>
+            <div class="artemis-timeline-window">${escapeHtml(getArtemisPhaseWindow(phase))}</div>
+          </div>
+          <div class="artemis-timeline-note">${escapeHtml(phase.note)}</div>
+          <div class="artemis-timeline-bar"><div class="artemis-timeline-fill" style="width:${fillPercent.toFixed(1)}%"></div></div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderArtemisPhaseChips(snapshot) {
+    const mount = $("#artemisPhaseChips");
+    if (!mount) return;
+    mount.innerHTML = ARTEMIS_PROFILE.phases.map((phase) => {
+      let stateClass = "";
+      if (snapshot.statusKey === "complete" || snapshot.missionFraction > phase.end) {
+        stateClass = "complete";
+      } else if (snapshot.missionFraction >= phase.start && snapshot.missionFraction <= phase.end && snapshot.statusKey === "active") {
+        stateClass = "active";
+      }
+      return `<span class="artemis-phase-chip ${stateClass}">${escapeHtml(phase.label)}</span>`;
+    }).join("");
+  }
+
+  function renderArtemisEventStrip(payload) {
+    const mount = $("#artemisEventStrip");
+    if (!mount) return;
+
+    const items = Array.isArray(payload?.stripItems) && payload.stripItems.length
+      ? payload.stripItems
+      : [{ title: "Awaiting official NASA Artemis II update feed", label: "Mission control" }];
+    const stripMarkup = [...items, ...items].map((item) => `
+      <div class="artemis-event-pill">
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${escapeHtml(item.label || "Mission")}${item.when ? ` • ${escapeHtml(item.when)}` : ""}</span>
+      </div>
+    `).join("");
+    mount.innerHTML = stripMarkup;
+  }
+
+  function buildTrajectoryStars() {
+    return [
+      [54, 48, 1.4], [132, 82, 1.1], [248, 46, 1.2], [316, 104, 1.6], [428, 72, 1.2],
+      [540, 58, 1.5], [620, 96, 1.3], [720, 52, 1.8], [854, 84, 1.2], [920, 46, 1.1],
+      [110, 162, 1.2], [196, 118, 1.0], [374, 174, 1.4], [508, 132, 1.0], [628, 184, 1.3],
+      [846, 152, 1.5], [920, 204, 1.3], [80, 290, 1.1], [236, 338, 1.4], [422, 352, 1.2],
+      [566, 308, 1.0], [704, 340, 1.4], [874, 312, 1.2]
+    ].map(([cx, cy, radius]) => `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="rgba(255,255,255,0.78)" />`).join("");
+  }
+
+  function buildArtemisTrajectorySvg(snapshot) {
+    const points = ARTEMIS_PROFILE.pathPoints;
+    const progress = snapshot.statusKey === "scheduled"
+      ? 0.01
+      : snapshot.statusKey === "complete"
+        ? 1
+        : snapshot.missionFraction;
+    const marker = getPathPointAtFraction(points, progress);
+    const pathD = buildPathString(points);
+    const labelX = clamp(marker.x + 16, 24, 820);
+    const labelY = clamp(marker.y - 18, 38, 386);
+    const milestoneDots = ARTEMIS_PROFILE.phases.map((phase) => {
+      const point = getPathPointAtFraction(points, phase.end);
+      return `
+        <circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4.5" fill="#f8fafc" stroke="rgba(15,23,42,0.75)" stroke-width="2"></circle>
+      `;
+    }).join("");
+
+    return `
+      <svg viewBox="0 0 980 420" role="img" aria-label="Artemis II projected Earth-Moon flight path">
+        <defs>
+          <linearGradient id="artemisPathBase" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#60a5fa"></stop>
+            <stop offset="45%" stop-color="#f97316"></stop>
+            <stop offset="100%" stop-color="#fbbf24"></stop>
+          </linearGradient>
+          <radialGradient id="artemisEarthGrad" cx="36%" cy="32%">
+            <stop offset="0%" stop-color="#bfdbfe"></stop>
+            <stop offset="55%" stop-color="#2563eb"></stop>
+            <stop offset="100%" stop-color="#0f172a"></stop>
+          </radialGradient>
+          <radialGradient id="artemisMoonGrad" cx="34%" cy="28%">
+            <stop offset="0%" stop-color="#f8fafc"></stop>
+            <stop offset="55%" stop-color="#cbd5e1"></stop>
+            <stop offset="100%" stop-color="#475569"></stop>
+          </radialGradient>
+          <filter id="artemisGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="980" height="420" fill="transparent"></rect>
+        ${buildTrajectoryStars()}
+        <circle cx="182" cy="220" r="58" fill="url(#artemisEarthGrad)" stroke="rgba(191,219,254,0.55)" stroke-width="2.5"></circle>
+        <circle cx="792" cy="196" r="34" fill="url(#artemisMoonGrad)" stroke="rgba(248,250,252,0.35)" stroke-width="2"></circle>
+        <text x="126" y="300" fill="rgba(191,219,254,0.92)" font-size="13" font-weight="700">Earth</text>
+        <text x="758" y="248" fill="rgba(248,250,252,0.92)" font-size="13" font-weight="700">Moon</text>
+        <text x="36" y="36" fill="rgba(148,163,184,0.9)" font-size="12" font-weight="700" letter-spacing="1.1px">PROJECTED LIVE POSITION</text>
+        <path d="${pathD}" fill="none" stroke="rgba(148,163,184,0.24)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="${pathD}" pathLength="100" fill="none" stroke="url(#artemisPathBase)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="${pathD}" pathLength="100" fill="none" stroke="#fde68a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${Math.max(1, progress * 100).toFixed(2)} 100" opacity="0.7"></path>
+        ${milestoneDots}
+        <circle cx="${marker.x.toFixed(1)}" cy="${marker.y.toFixed(1)}" r="14" fill="rgba(251,146,60,0.22)" filter="url(#artemisGlow)"></circle>
+        <circle cx="${marker.x.toFixed(1)}" cy="${marker.y.toFixed(1)}" r="8" fill="#f97316" stroke="#fff7ed" stroke-width="3"></circle>
+        <rect x="${labelX}" y="${labelY - 18}" rx="10" ry="10" width="140" height="34" fill="rgba(15,23,42,0.84)" stroke="rgba(251,146,60,0.4)"></rect>
+        <text x="${labelX + 12}" y="${labelY + 4}" fill="#fed7aa" font-size="12" font-weight="700">${escapeHtml(snapshot.phase.label)}</text>
+        <text x="36" y="388" fill="rgba(148,163,184,0.95)" font-size="11">Launch: ${escapeHtml(fmt(ARTEMIS_PROFILE.launchTime))}</text>
+        <text x="624" y="388" fill="rgba(148,163,184,0.95)" font-size="11">Projected tracker based on NASA's published nominal 10-day profile</text>
+      </svg>
+    `;
+  }
+
+  function renderArtemisTrajectory(snapshot) {
+    const mount = $("#artemisTrajectoryGraphic");
+    if (!mount) return;
+    mount.innerHTML = buildArtemisTrajectorySvg(snapshot);
+  }
+
+  function normalizeArtemisArticles(input) {
+    const items = Array.isArray(input) ? input : [];
+    return items
+      .filter((item) => /artemis\s*ii/i.test(`${item?.title || ""} ${item?.summary || ""}`))
+      .sort((left, right) => new Date(right.published_at || 0) - new Date(left.published_at || 0));
+  }
+
+  function normalizeOfficialArtemisEntries(input, sourceLabel) {
+    const items = Array.isArray(input) ? input : [];
+    return items.map((item) => {
+      const rawTitle = typeof item?.title === "string" ? item.title : item?.title?.rendered;
+      const rawSummary = typeof item?.summary === "string"
+        ? item.summary
+        : typeof item?.excerpt === "string"
+          ? item.excerpt
+          : item?.excerpt?.rendered;
+      const publishedAt = item?.published_at || item?.publishedAt || item?.date_gmt || item?.date;
+      const dateValue = typeof publishedAt === "string" && /Z$/.test(publishedAt) ? publishedAt : publishedAt ? `${publishedAt}Z` : "";
+      return {
+        id: item?.id || item?.link || rawTitle,
+        title: decodeHtmlToText(rawTitle || "Artemis II update"),
+        summary: decodeHtmlToText(rawSummary || ""),
+        url: item?.url || item?.link || ARTEMIS_PROFILE.missionUrl,
+        published_at: dateValue,
+        news_site: item?.news_site || item?.source || sourceLabel
+      };
+    }).filter((item) => /artemis\s*(ii|2)/i.test(`${item.title} ${item.summary}`));
+  }
+
+  function deriveArtemisWatchItems(articles) {
+    const cautionPattern = /(troubleshoot|issue|warning|problem|fault|anomaly|hold|delay|scrub|abort|leak|comm|communication|toilet|concern)/i;
+    return articles
+      .filter((article) => cautionPattern.test(`${article.title || ""} ${article.summary || ""}`))
+      .slice(0, 4);
+  }
+
+  function buildArtemisPayload({ officialUpdates = [], officialBriefings = [], externalArticles = [], fetchedAt = Date.now(), source = "direct" } = {}) {
+    const nasaBlogs = normalizeOfficialArtemisEntries(officialUpdates, "NASA Blog");
+    const nasaPosts = normalizeOfficialArtemisEntries(officialBriefings, "NASA");
+    const external = normalizeArtemisArticles(externalArticles).slice(0, 8);
+    const updates = uniqueBy(
+      [...nasaBlogs, ...nasaPosts, ...external]
+        .sort((left, right) => new Date(right.published_at || 0) - new Date(left.published_at || 0)),
+      (item) => item.url || item.title
+    ).slice(0, 10);
+    const watchItems = deriveArtemisWatchItems(uniqueBy([...nasaBlogs, ...nasaPosts, ...external], (item) => item.url || item.title));
+    const stripItems = updates.slice(0, 7).map((item) => ({
+      title: summarizeText(item.title, 74),
+      label: item.news_site || "Mission feed",
+      when: item.published_at ? formatAbbrevRelative(Date.now() - new Date(item.published_at).getTime()) : ""
+    }));
+    return {
+      officialUpdates: nasaBlogs,
+      officialBriefings: nasaPosts,
+      externalArticles: external,
+      updates,
+      watchItems,
+      stripItems,
+      latestArticle: updates[0] || nasaBlogs[0] || nasaPosts[0] || external[0] || null,
+      fetchedAt,
+      source,
+      missionUrl: ARTEMIS_PROFILE.missionUrl,
+      coverageUrl: ARTEMIS_PROFILE.coverageUrl,
+      trackUrl: ARTEMIS_PROFILE.trackUrl
+    };
+  }
+
+  async function fetchArtemisOfficialPayload() {
+    const configuredBase = String(window.App?.ARTEMIS_PROXY_BASE || localStorage.getItem("jas_artemis_worker_base") || "").trim().replace(/\/+$/, "");
+    const candidates = [];
+    if (configuredBase) candidates.push(`${configuredBase}/v1/artemis/updates`);
+    candidates.push("/v1/artemis/updates");
+
+    for (const candidate of uniqueBy(candidates, (item) => item)) {
+      try {
+        const payload = await fetchJSON(candidate);
+        if (payload?.officialUpdates || payload?.officialBriefings || payload?.ok) {
+          return {
+            officialUpdates: payload.officialUpdates || payload.updates || [],
+            officialBriefings: payload.officialBriefings || payload.briefings || [],
+            fetchedAt: payload.fetchedAt || Date.now(),
+            source: payload.source || "worker"
+          };
+        }
+      } catch {}
+    }
+
+    const [blogs, posts] = await Promise.all([
+      fetchJSON("https://www.nasa.gov/wp-json/wp/v2/nasa-blog?categories=2918&per_page=8&_fields=id,date_gmt,link,title,excerpt"),
+      fetchJSON("https://www.nasa.gov/wp-json/wp/v2/posts?categories=2918&per_page=6&_fields=id,date_gmt,link,title,excerpt,modified_gmt")
+    ]);
+    return {
+      officialUpdates: blogs,
+      officialBriefings: posts,
+      fetchedAt: Date.now(),
+      source: "direct"
+    };
+  }
+
+  function syncArtemisMedia(snapshot) {
+    const scrubber = $("#artemisProgressScrubber");
+    const scrubberMeta = $("#artemisScrubberMeta");
+    const video = $("#artemisFlightVideo");
+    const fractionPercent = clamp(snapshot.missionFraction * 100, 0, 100);
+
+    if (scrubber) scrubber.value = fractionPercent.toFixed(1);
+    if (scrubberMeta) {
+      scrubberMeta.textContent = artemisPreviewFraction == null
+        ? (snapshot.statusKey === "active" ? `Live: ${snapshot.phase.label}` : snapshot.statusKey === "scheduled" ? `T-${formatCompactDuration(snapshot.timeToLaunchMs)}` : "Mission complete")
+        : `Preview: ${snapshot.phase.label}`;
+    }
+
+    if (video) {
+      if (video.getAttribute("src") !== ARTEMIS_PROFILE.officialVideo) {
+        video.setAttribute("src", ARTEMIS_PROFILE.officialVideo);
+      }
+      const syncVideoPosition = () => {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+        const targetTime = clamp(snapshot.missionFraction * video.duration, 0, Math.max(0, video.duration - 0.25));
+        if (Math.abs(video.currentTime - targetTime) > 1.4) {
+          video.currentTime = targetTime;
+        }
+      };
+      if (video.readyState >= 1) {
+        syncVideoPosition();
+      } else {
+        video.onloadedmetadata = syncVideoPosition;
+      }
+    }
+
+    if ($("#artemisMissionLink")) $("#artemisMissionLink").href = ARTEMIS_PROFILE.missionUrl;
+    if ($("#artemisCoverageLink")) $("#artemisCoverageLink").href = ARTEMIS_PROFILE.coverageUrl;
+    if ($("#artemisTrackLink")) $("#artemisTrackLink").href = ARTEMIS_PROFILE.trackUrl;
+    if ($("#artemisPathLink")) $("#artemisPathLink").href = ARTEMIS_PROFILE.officialPathUrl;
+    if ($("#artemisEyesLink")) $("#artemisEyesLink").href = ARTEMIS_PROFILE.nasaEyesUrl;
+    if ($("#artemisCommandMeta")) $("#artemisCommandMeta").textContent = artemisPreviewFraction == null ? "Official video" : "Preview mode";
+  }
+
+  function renderArtemisUpdates(payload) {
+    const updatesMount = $("#artemisUpdates");
+    const alertsMount = $("#artemisAlerts");
+    if (!updatesMount || !alertsMount) return;
+
+    const articles = payload?.updates || [];
+    const watchItems = payload?.watchItems || [];
+
+    if (!articles.length) {
+      updatesMount.innerHTML = `
+        <div class="artemis-empty">
+          <strong>Live Artemis coverage is still warming up.</strong>
+          Official NASA mission updates and external reporting will appear here as soon as the feed returns results for Artemis II.
+        </div>`;
+    } else {
+      updatesMount.innerHTML = articles.slice(0, 6).map((article) => `
+        <div class="artemis-update-item">
+          <div>
+            <div class="artemis-update-title"><a href="${escapeHtml(article.url || ARTEMIS_PROFILE.missionUrl)}" target="_blank" rel="noopener">${escapeHtml(article.title || "Artemis II update")}</a></div>
+            <div class="artemis-update-summary">${escapeHtml(summarizeText(article.summary || "No summary available."))}</div>
+          </div>
+          <div class="artemis-update-meta">${escapeHtml(article.news_site || "Mission feed")}<br>${escapeHtml(article.published_at ? fmt(article.published_at) : "")}</div>
+        </div>
+      `).join("");
+    }
+
+    if (!watchItems.length) {
+      alertsMount.innerHTML = `
+        <div class="artemis-empty">
+          <strong>No active caution items detected.</strong>
+          Recent Artemis II headlines look nominal. This panel will surface troubleshooting or anomaly-style updates when they appear.
+        </div>`;
+    } else {
+      alertsMount.innerHTML = watchItems.map((item) => `
+        <div class="artemis-alert-item">
+          <div class="artemis-alert-badge-row"><span class="badge watch">WATCH</span></div>
+          <div class="artemis-alert-title"><a href="${escapeHtml(item.url || ARTEMIS_PROFILE.missionUrl)}" target="_blank" rel="noopener">${escapeHtml(item.title || "Flight note")}</a></div>
+          <div class="artemis-alert-meta">${escapeHtml(item.news_site || "Mission feed")} • ${escapeHtml(item.published_at ? fmt(item.published_at) : "")}</div>
+          <div class="artemis-alert-summary">${escapeHtml(summarizeText(item.summary || "No summary available.", 180))}</div>
+        </div>
+      `).join("");
+    }
+
+    const updatesMeta = payload?.fetchedAt ? `${payload.source === "worker" ? "Worker" : payload.source === "direct" ? "NASA direct" : "Feed"} • ${formatAbbrevRelative(Date.now() - new Date(payload.fetchedAt).getTime())}` : "Feed offline";
+    setMeta($("#artemisUpdatesMeta"), updatesMeta);
+  }
+
+  function renderArtemisTracker(payload) {
+    const snapshot = artemisPreviewFraction == null
+      ? getArtemisSnapshot(new Date())
+      : getArtemisPreviewSnapshot(artemisPreviewFraction);
+    const statusCopy = getArtemisStatusCopy(snapshot, payload || {});
+    const badge = $("#artemisStatusBadge");
+    if (badge) {
+      badge.className = `badge ${statusCopy.badgeClass}`;
+      badge.textContent = statusCopy.badgeText;
+    }
+    if ($("#artemisStatusHeadline")) $("#artemisStatusHeadline").textContent = statusCopy.headline;
+    if ($("#artemisStatusNote")) $("#artemisStatusNote").textContent = statusCopy.note;
+    if ($("#artemisLastUpdated")) {
+      $("#artemisLastUpdated").textContent = payload?.fetchedAt
+        ? `${fmt(payload.fetchedAt)} • ${formatAbbrevRelative(Date.now() - new Date(payload.fetchedAt).getTime())}`
+        : "Static profile";
+    }
+    if ($("#artemisMeta")) {
+      $("#artemisMeta").textContent = artemisPreviewFraction == null
+        ? `Bottom deck • ${payload?.source === "worker" ? "worker-backed official NASA feed" : payload?.source === "direct" ? "official NASA direct feed" : "nominal profile"} • 15m refresh`
+        : `Preview mode • day ${(snapshot.missionFraction * ARTEMIS_PROFILE.durationDays).toFixed(1)} • drag scrubber again to inspect another phase`;
+    }
+    renderArtemisTrajectory(snapshot);
+    renderArtemisPhaseChips(snapshot);
+    renderArtemisEventStrip(payload || { stripItems: [] });
+    renderArtemisStats(snapshot);
+    renderArtemisTimeline(snapshot);
+    syncArtemisMedia(snapshot);
+    renderArtemisUpdates(payload || { articles: [], watchItems: [], fetchedAt: 0 });
+  }
+
+  function initArtemisControls() {
+    const scrubber = $("#artemisProgressScrubber");
+    if (!scrubber || scrubber.dataset.ready === "1") return;
+    scrubber.dataset.ready = "1";
+
+    const applyPreview = () => {
+      artemisPreviewFraction = clamp(Number(scrubber.value) / 100, 0, 1);
+      renderArtemisTracker(artemisTrackerData || { updates: [], watchItems: [], stripItems: [], fetchedAt: 0 });
+      if (artemisPreviewResetTimer) clearTimeout(artemisPreviewResetTimer);
+      artemisPreviewResetTimer = setTimeout(() => {
+        artemisPreviewFraction = null;
+        renderArtemisTracker(artemisTrackerData || { updates: [], watchItems: [], stripItems: [], fetchedAt: 0 });
+      }, 8000);
+    };
+
+    scrubber.addEventListener("input", applyPreview);
+    scrubber.addEventListener("change", applyPreview);
+  }
+
+  async function loadArtemisTracker(forceRefresh = false) {
+    const cached = readCache(CACHE.artemis.key);
+    if (cached?.data) {
+      artemisTrackerData = cached.data;
+      renderArtemisTracker(artemisTrackerData);
+    } else {
+      renderArtemisTracker({ articles: [], watchItems: [], fetchedAt: 0 });
+    }
+
+    if (!forceRefresh && isFresh(cached, CACHE.artemis.ttlMs)) {
+      return;
+    }
+
+    try {
+      const missionQuery = encodeURIComponent("Artemis II");
+      const articlesUrl = `${SNAPI_ARTICLES}?limit=10&search=${missionQuery}`;
+      const [official, result] = await Promise.all([
+        fetchArtemisOfficialPayload(),
+        fetchJSON(articlesUrl)
+      ]);
+      const payload = buildArtemisPayload({
+        officialUpdates: official.officialUpdates,
+        officialBriefings: official.officialBriefings,
+        externalArticles: result.results || result,
+        fetchedAt: official.fetchedAt || Date.now(),
+        source: official.source || "direct"
+      });
+      artemisTrackerData = payload;
+      writeCache(CACHE.artemis.key, payload);
+      renderArtemisTracker(payload);
+    } catch (error) {
+      if (!cached?.data) {
+        renderArtemisTracker({ updates: [], watchItems: [], stripItems: [], fetchedAt: 0 });
+      }
+    }
+  }
+
+  // -----------------------
+  // Render: Calendar View
+  // -----------------------
+  let currentCalendarDate = new Date();
+  let calendarEventsCache = null;
+  
+  function parseIcalDateToIso(raw) {
+    if (!raw) return "";
+    const m = String(raw).match(/(\d{4})(\d{2})(\d{2})/);
+    if (!m) return "";
+    return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+
+  function parseIcalText(icalText, fallbackUrl) {
+    const out = [];
+    if (!icalText || typeof icalText !== "string") return out;
+
+    // Unfold folded iCal lines: CRLF followed by space/tab is a continuation.
+    const unfolded = icalText.replace(/\r?\n[ \t]/g, "");
+    const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
+
+    blocks.forEach((block) => {
+      const body = block.split("END:VEVENT")[0] || "";
+      const lines = body.split(/\r?\n/);
+      let summary = "";
+      let dtStart = "";
+      let url = "";
+      let uid = "";
+
+      lines.forEach((line) => {
+        const idx = line.indexOf(":");
+        if (idx <= 0) return;
+        const keyPart = line.slice(0, idx).toUpperCase();
+        const value = line.slice(idx + 1).trim();
+        const key = keyPart.split(";")[0];
+
+        if (key === "SUMMARY") summary = value;
+        if (key === "DTSTART") dtStart = value;
+        if (key === "URL") url = value;
+        if (key === "UID") uid = value;
+      });
+
+      const date = parseIcalDateToIso(dtStart);
+      if (!summary || !date) return;
+
+      const cleanTitle = summary
+        .replace(/\\n/g, " ")
+        .replace(/\\,/g, ",")
+        .replace(/\\;/g, ";")
+        .trim();
+
+      out.push({
+        id: uid || `its-${date}-${cleanTitle.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+        title: cleanTitle,
+        date,
+        type: "external",
+        url: url || fallbackUrl,
+        source: "In-The-Sky"
+      });
+    });
+
+    return out;
+  }
+
+  // Fetch events from In-The-Sky iCalendar feed via the existing RSS proxy.
+  async function fetchInTheSkyEvents() {
+    try {
+      const proxyBase = window.App?.RSS_PROXY_BASE || "https://news-rss-proxy.mykulcarr.workers.dev/raw?url=";
+      const currentYear = new Date().getFullYear();
+      const allEvents = [];
+
+      for (let yearOffset = 0; yearOffset <= 1; yearOffset++) {
+        const year = currentYear + yearOffset;
+        const icalUrl = `https://in-the-sky.org/newscalyear_ical.php?year=${year}&maxdiff=7`;
+        const proxied = `${proxyBase}${encodeURIComponent(icalUrl)}`;
+        const response = await fetch(proxied, { cache: "no-store" });
+        if (!response.ok) {
+          console.warn(`Failed to fetch In-The-Sky iCal for ${year}: ${response.status}`);
+          continue;
+        }
+
+        const icalText = await response.text();
+        const parsed = parseIcalText(icalText, "https://in-the-sky.org/newscal.php");
+        allEvents.push(...parsed);
+      }
+
+      console.info(`Fetched ${allEvents.length} iCal events from In-The-Sky.org`);
+      return allEvents;
+    } catch (error) {
+      console.error("Error fetching In-The-Sky iCal events:", error);
+      return [];
+    }
+  }
+  
+  async function loadAstronomicalCalendar(forceRefresh = false) {
+    // Generate events if not cached or force refresh
+    if (!calendarEventsCache || forceRefresh) {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const generatedEvents = [];
+      
+      // Generate recurring events for this year + next 2 years
+      for (let yearOffset = 0; yearOffset <= 2; yearOffset++) {
+        const year = currentYear + yearOffset;
+        ASTRONOMY_EVENTS_DATA.recurringEvents.forEach(evt => {
+          const eventDate = new Date(year, evt.month - 1, evt.day);
+          generatedEvents.push({
+            id: `${evt.id}-${year}`,
+            title: evt.title.replace(/^[^\s]+\s+/, ''), // Remove emoji (first word)
+            date: eventDate.toISOString().split('T')[0],
+            type: evt.type,
+            url: evt.url,
+            source: 'Local'
+          });
+        });
+      }
+      
+      // Add one-time events
+      const oneTimeEvents = ASTRONOMY_EVENTS_DATA.events.map(evt => ({
+        id: evt.id,
+        title: evt.title.replace(/^[^\s]+\s+/, ''), // Remove emoji (first word)
+        date: evt.date,
+        type: evt.type,
+        url: evt.url,
+        source: 'Local'
+      }));
+      
+      // Fetch events from In-The-Sky RSS feed
+      const rssEvents = await fetchInTheSkyEvents();
+      
+      // Combine all events and deduplicate by date+title similarity
+      const allEvents = [...generatedEvents, ...oneTimeEvents, ...rssEvents];
+      const uniqueEvents = [];
+      const seen = new Set();
+      
+      allEvents.forEach(evt => {
+        const normalizedTitle = evt.title.toLowerCase().replace(/[^\w\s]/g, '').trim().substring(0, 40);
+        const key = `${evt.date}-${normalizedTitle}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueEvents.push(evt);
+        }
+      });
+      
+      calendarEventsCache = uniqueEvents;
+    }
+    
+    renderCalendar();
+  }
+  
+  function renderCalendar() {
+    const mount = document.getElementById('astronomicalCalendar');
+    const monthYearEl = document.getElementById('calendarMonthYear');
+    const metaEl = document.getElementById('calendarMeta');
+    
+    if (!mount) return;
+    
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    // Set month/year display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    monthYearEl.textContent = `${monthNames[month]} ${year}`;
+    
+    // Calculate calendar grid
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+    const daysInMonth = lastDay.getDate();
+    
+    // Get events for this month
+    const monthEvents = {};
+    if (calendarEventsCache) {
+      calendarEventsCache.forEach(evt => {
+        const evtDate = new Date(evt.date + 'T00:00:00');
+        if (evtDate.getFullYear() === year && evtDate.getMonth() === month) {
+          const day = evtDate.getDate();
+          if (!monthEvents[day]) monthEvents[day] = [];
+          monthEvents[day].push(evt);
+        }
+      });
+    }
+    
+    // Build calendar HTML
+    let html = '<div class=\"astro-calendar\">';
+    
+    // Day headers
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayNames.forEach(name => {
+      html += `<div class=\"astro-calendar-header\">${name}</div>`;
+    });
+    
+    // Get today for highlighting
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+    const todayDate = today.getDate();
+    
+    // Days from previous month (padding)
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthLastDay - i;
+      html += `<div class=\"astro-calendar-day other-month\"><div class=\"astro-calendar-day-num\">${day}</div></div>`;
+    }
+    
+    // Days of current month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isTodayCell = isCurrentMonth && day === todayDate;
+      const todayClass = isTodayCell ? ' today' : '';
+      html += `<div class=\"astro-calendar-day${todayClass}\">`;
+      html += `<div class=\"astro-calendar-day-num\">${day}</div>`;
+      
+      // Add events for this day
+      if (monthEvents[day]) {
+        monthEvents[day].slice(0, 3).forEach(evt => { // Limit to 3 events per day
+          const shortTitle = evt.title.length > 15 ? evt.title.substring(0, 13) + '...' : evt.title;
+          html += `<div class=\"astro-calendar-event\" data-url=\"${escapeHtml(evt.url)}\" title=\"${escapeHtml(evt.title)}\">${escapeHtml(shortTitle)}</div>`;
+        });
+        if (monthEvents[day].length > 3) {
+          html += `<div class=\"astro-calendar-event\" style=\"background:rgba(139, 92, 246, 0.3); font-weight:700;\">+${monthEvents[day].length - 3} more</div>`;
+        }
+      }
+      
+      html += '</div>';
+    }
+    
+    // Days from next month (padding)
+    const totalCells = startDayOfWeek + daysInMonth;
+    const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let day = 1; day <= remainingCells; day++) {
+      html += `<div class=\"astro-calendar-day other-month\"><div class=\"astro-calendar-day-num\">${day}</div></div>`;
+    }
+    
+    html += '</div>';
+    mount.innerHTML = html;
+    
+    // Attach click handlers to events
+    mount.querySelectorAll('.astro-calendar-event[data-url]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const url = el.dataset.url;
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      });
+    });
+    
+    // Update meta with event count
+    const eventCount = Object.keys(monthEvents).reduce((sum, day) => sum + monthEvents[day].length, 0);
+    setMeta(metaEl, eventCount > 0 ? `${eventCount} events` : 'No events');
+  }
+  
+  function setupCalendarNavigation() {
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+        renderCalendar();
+      });
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+        renderCalendar();
+      });
+    }
+  }
+
+  // -----------------------
+  // Render: Astronomical Events
+  // -----------------------
+  
+  // Embedded astronomy events data (inline to avoid CORS issues with file:// protocol)
+  const ASTRONOMY_EVENTS_DATA = {
+    "recurringEvents": [
+      {
+        "id": "quadrantids",
+        "title": "☄️ Quadrantids Meteor Shower",
+        "month": 1,
+        "day": 3,
+        "dateDisplay": "January 3-4",
+        "type": "meteor",
+        "description": "Annual meteor shower with peak rate of 40-120 meteors per hour. Short, sharp peak lasting only a few hours.",
+        "visibility": "Northern Hemisphere",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/quadrantids.html"
+      },
+      {
+        "id": "lyrids",
+        "title": "☄️ Lyrids Meteor Shower",
+        "month": 4,
+        "day": 22,
+        "dateDisplay": "April 21-23",
+        "type": "meteor",
+        "description": "Annual meteor shower with peak rate of 10-20 meteors per hour. Best viewing after midnight in dark skies.",
+        "visibility": "Global",
+        "peakTime": "April 22, after midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/lyrids.html"
+      },
+      {
+        "id": "eta-aquarids",
+        "title": "☄️ Eta Aquarids Meteor Shower",
+        "month": 5,
+        "day": 6,
+        "dateDisplay": "May 5-7",
+        "type": "meteor",
+        "description": "Meteor shower from Halley's Comet debris. Best viewed from Southern Hemisphere with rates up to 30 meteors/hour.",
+        "visibility": "Best from Southern Hemisphere",
+        "peakTime": "Pre-dawn hours",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/eta-aquarids.html"
+      },
+      {
+        "id": "perseids",
+        "title": "☄️ Perseids Meteor Shower",
+        "month": 8,
+        "day": 12,
+        "dateDisplay": "August 12-13",
+        "type": "meteor",
+        "description": "One of the year's best meteor showers with up to 60 meteors per hour. Known for bright fireballs.",
+        "visibility": "Global - Northern Hemisphere favored",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/perseids.html"
+      },
+      {
+        "id": "orionids",
+        "title": "☄️ Orionids Meteor Shower",
+        "month": 10,
+        "day": 21,
+        "dateDisplay": "October 21-22",
+        "type": "meteor",
+        "description": "Meteor shower from Halley's Comet debris with rates up to 20 meteors per hour.",
+        "visibility": "Global",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/orionids.html"
+      },
+      {
+        "id": "leonids",
+        "title": "☄️ Leonids Meteor Shower",
+        "month": 11,
+        "day": 17,
+        "dateDisplay": "November 17-18",
+        "type": "meteor",
+        "description": "Fast and bright meteors, occasionally producing meteor storms. Average rates of 15 meteors per hour.",
+        "visibility": "Global",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/leonids.html"
+      },
+      {
+        "id": "geminids",
+        "title": "☄️ Geminids Meteor Shower",
+        "month": 12,
+        "day": 14,
+        "dateDisplay": "December 13-14",
+        "type": "meteor",
+        "description": "The best meteor shower of the year with up to 120 meteors per hour. Bright, colorful meteors.",
+        "visibility": "Global",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/geminids.html"
+      },
+      {
+        "id": "ursids",
+        "title": "☄️ Ursids Meteor Shower",
+        "month": 12,
+        "day": 22,
+        "dateDisplay": "December 22-23",
+        "type": "meteor",
+        "description": "Minor meteor shower with rates around 10 meteors per hour. Coincides with the winter solstice period.",
+        "visibility": "Northern Hemisphere",
+        "peakTime": "After midnight",
+        "url": "https://www.timeanddate.com/astronomy/meteor-shower/ursids.html"
+      }
+    ],
+    "events": [
+      {
+        "id": "lunar-eclipse-2026-03",
+        "title": "🌑 Total Lunar Eclipse",
+        "date": "2026-03-03",
+        "dateDisplay": "March 3-4, 2026",
+        "type": "eclipse",
+        "description": "Total lunar eclipse visible across North America. Maximum eclipse at 11:33 UTC. The Moon will turn deep red during totality.",
+        "visibility": "North America, parts of South America",
+        "peakTime": "11:33 UTC",
+        "url": "https://www.timeanddate.com/eclipse/lunar/2026-march-3"
+      },
+      {
+        "id": "solar-eclipse-2026-08",
+        "title": "☀️ Total Solar Eclipse",
+        "date": "2026-08-12",
+        "dateDisplay": "August 12, 2026",
+        "type": "eclipse",
+        "description": "Total solar eclipse with path crossing Greenland, Iceland, and Spain. Duration of totality up to 2 minutes 18 seconds.",
+        "visibility": "Greenland, Iceland, Spain",
+        "peakTime": "17:47 UTC",
+        "url": "https://www.timeanddate.com/eclipse/solar/2026-august-12"
+      }
+    ],
+    "lastUpdated": "2026-03-02"
+  };
+  
+  // Helper: Detect event type from title/description
+  function detectEventType(title, description) {
+    const text = (title + ' ' + description).toLowerCase();
+    if (text.includes('meteor') || text.includes('shower')) return 'meteor';
+    if (text.includes('eclipse')) return 'eclipse';
+    if (text.includes('opposition') || text.includes('conjunction') || text.includes('elongation')) return 'planet';
+    if (text.includes('equinox') || text.includes('solstice')) return 'season';
+    if (text.includes('moon') && (text.includes('full') || text.includes('new') || text.includes('super'))) return 'moon';
+    return 'general';
+  }
+
+  // Helper: Add icons to event titles
+  function mapEventIcon(title) {
+    if (/meteor|shower/i.test(title)) return '☄️ ' + title;
+    if (/eclipse/i.test(title) && /solar/i.test(title)) return '☀️ ' + title;
+    if (/eclipse/i.test(title) && /lunar/i.test(title)) return '🌑 ' + title;
+    if (/mercury/i.test(title)) return '☿ ' + title;
+    if (/venus/i.test(title)) return '♀ ' + title;
+    if (/mars/i.test(title)) return '♂ ' + title;
+    if (/jupiter/i.test(title)) return '♃ ' + title;
+    if (/saturn/i.test(title)) return '♄ ' + title;
+    if (/moon/i.test(title)) return '🌙 ' + title;
+    if (/equinox|solstice/i.test(title)) return '🌍 ' + title;
+    return '🌌 ' + title;
+  }
+
+  // Helper: Strip HTML tags
+  function stripTags(html) {
+    if (!html) return '';
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  }
+  
+  // Fetch astronomical events from multiple sources
+  async function fetchAstronomicalEventsFromAPIs() {
+    const allEvents = [];
+    
+    // Source 1: TimeAndDate.com astronomy RSS feeds (meteor showers, eclipses)
+    try {
+      const rssUrl = 'https://www.timeanddate.com/scripts/rss.php?type=astronomy';
+      const proxyUrl = `https://rss-proxy.jasonandrews.workers.dev/?url=${encodeURIComponent(rssUrl)}&limit=20`;
+      const res = await fetch(proxyUrl, { cache: 'no-store' });
+      if (res.ok) {
+        const text = await res.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        
+        items.forEach(item => {
+          const title = item.querySelector('title')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          // Parse date and create event
+          const eventDate = pubDate ? new Date(pubDate) : null;
+          if (eventDate && eventDate > new Date()) {
+            allEvents.push({
+              id: `timeanddate-${Date.now()}-${Math.random()}`,
+              title: mapEventIcon(title),
+              date: eventDate.toISOString().split('T')[0],
+              dateDisplay: eventDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+              type: detectEventType(title, description),
+              description: description.substring(0, 240),
+              visibility: 'Check source for details',
+              peakTime: 'See event details',
+              url: link,
+              source: 'TimeAndDate'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch from TimeAndDate:', err);
+    }
+
+    // Source 2: In-The-Sky.org RSS feed
+    try {
+      const rssUrl = 'https://in-the-sky.org/rss.php?feed=dfan';
+      const proxyUrl = `https://rss-proxy.jasonandrews.workers.dev/?url=${encodeURIComponent(rssUrl)}&limit=20`;
+      const res = await fetch(proxyUrl, { cache: 'no-store' });
+      if (res.ok) {
+        const text = await res.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        
+        items.forEach(item => {
+          const title = item.querySelector('title')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          const eventDate = pubDate ? new Date(pubDate) : null;
+          if (eventDate && eventDate > new Date()) {
+            allEvents.push({
+              id: `inthesky-${Date.now()}-${Math.random()}`,
+              title: mapEventIcon(title),
+              date: eventDate.toISOString().split('T')[0],
+              dateDisplay: eventDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+              type: detectEventType(title, description),
+              description: stripTags(description).substring(0, 240),
+              visibility: 'Check source for details',
+              peakTime: 'See event details',
+              url: link,
+              source: 'In-The-Sky'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch from In-The-Sky:', err);
+    }
+    
+    return allEvents;
+  }
+
+  async function loadAstronomicalEvents() {
+    const mount = $("#astronomicalEvents");
+    const metaEl = $("#eventsMeta");
+
+    try {
+      // Try to fetch from multiple live sources first
+      let apiEvents = [];
+      try {
+        apiEvents = await fetchAstronomicalEventsFromAPIs();
+        console.info(`Fetched ${apiEvents.length} events from APIs`);
+      } catch (apiErr) {
+        console.warn('Failed to fetch from APIs, using local data', apiErr);
+      }
+
+      // Also load local data as supplement/fallback
+      let data = ASTRONOMY_EVENTS_DATA;
+      try {
+        const res = await fetch('data/astronomy-events.json');
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (fetchErr) {
+        console.info('Using embedded event data');
+      }
+      
+      const recurringEvents = data.recurringEvents || [];
+      const oneTimeEvents = data.events || [];
+      
+      // Generate instances of recurring events for current year + next 3 years
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const generatedEvents = [];
+      
+      for (let yearOffset = 0; yearOffset <= 3; yearOffset++) {
+        const year = currentYear + yearOffset;
+        recurringEvents.forEach(evt => {
+          const eventDate = new Date(year, evt.month - 1, evt.day);
+          generatedEvents.push({
+            id: `${evt.id}-${year}`,
+            title: evt.title,
+            date: eventDate.toISOString().split('T')[0],
+            dateDisplay: `${evt.dateDisplay}, ${year}`,
+            type: evt.type,
+            description: evt.description,
+            visibility: evt.visibility,
+            peakTime: evt.peakTime,
+            url: evt.url,
+            source: 'Local'
+          });
+        });
+      }
+      
+      // Combine all events (API + local)
+      const allEvents = [...apiEvents, ...oneTimeEvents, ...generatedEvents];
+      
+      if (allEvents.length === 0) {
+        mount.innerHTML = '<div class="astrolab-item"><div class="s" style="text-align:center; padding:20px;">No upcoming events available.</div></div>';
+        setMeta(metaEl, 'No data');
+        return;
+      }
+
+      // Filter to future events only & deduplicate by date+title similarity
+      today.setHours(0, 0, 0, 0);
+      
+      const futureEvents = allEvents.filter(evt => {
+        const eventDate = parseDateOnlyLocal(evt.date);
+        if (!eventDate) return false;
+        return eventDate >= today;
+      });
+      
+      // Deduplicate similar events (same date and similar titles)
+      const uniqueEvents = [];
+      const seen = new Set();
+      
+      futureEvents.forEach(evt => {
+        const normalizedTitle = evt.title.toLowerCase().replace(/[^\w\s]/g, '').trim();
+        const key = `${evt.date}-${normalizedTitle.substring(0, 30)}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueEvents.push(evt);
+        }
+      });
+      
+      // Sort and limit to 8
+      const displayEvents = uniqueEvents.sort((a, b) => {
+        const dateA = parseDateOnlyLocal(a.date);
+        const dateB = parseDateOnlyLocal(b.date);
+        if (!dateA || !dateB) return 0;
+        return dateA - dateB;
+      }).slice(0, 8);
+
+      if (displayEvents.length === 0) {
+        mount.innerHTML = '<div class="astrolab-item"><div class="s" style="text-align:center; padding:20px;">No upcoming events found.</div></div>';
+        setMeta(metaEl, 'Up to date');
+        return;
+      }
+
+      // Render events
+      mount.innerHTML = displayEvents.map(evt => {
+        const eventDate = parseDateOnlyLocal(evt.date);
+        if (!eventDate) return '';
+        const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+        const daysText = daysUntil === 0 ? 'Today!' : 
+                         daysUntil === 1 ? 'Tomorrow!' :
+                         daysUntil <= 7 ? `In ${daysUntil} days` :
+                         daysUntil <= 30 ? `In ${Math.ceil(daysUntil / 7)} weeks` :
+                         `In ${Math.ceil(daysUntil / 30)} months`;
+
+        // Color-code by event type
+        const typeColors = {
+          eclipse: 'background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;',
+          meteor: 'background: linear-gradient(135deg, #f59e0b, #ef4444); color: white;',
+          planet: 'background: linear-gradient(135deg, #10b981, #3b82f6); color: white;',
+          moon: 'background: linear-gradient(135deg, #64748b, #475569); color: white;',
+          season: 'background: linear-gradient(135deg, #06b6d4, #0891b2); color: white;',
+          general: 'background: linear-gradient(135deg, #6b7280, #4b5563); color: white;'
+        };
+        const bgStyle = typeColors[evt.type] || typeColors.general;
+
+        return `
+          <div class="astrolab-item" style="cursor:pointer; ${bgStyle} border: 1px solid rgba(255,255,255,0.2);" data-url="${escapeHtml(evt.url)}">
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;">
+              <div class="t" style="font-size:15px; flex:1;">${evt.title}</div>
+              <div style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; background:rgba(0,0,0,0.3); white-space:nowrap; margin-left:8px;">${daysText}</div>
+            </div>
+            <div class="s" style="margin-bottom:8px; opacity:0.9;">${evt.description}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:11px; opacity:0.85;">
+              <span>📅 ${evt.dateDisplay}</span>
+              ${evt.peakTime ? `<span>⏰ ${evt.peakTime}</span>` : ''}
+              ${evt.visibility ? `<span>🌍 ${evt.visibility}</span>` : ''}
+              ${evt.source ? `<span style="opacity:0.7;">📡 ${evt.source}</span>` : ''}
+            </div>
+          </div>`;
+      }).join("");
+
+      // Attach click handlers
+      mount.querySelectorAll(".astrolab-item[data-url]").forEach(el => {
+        el.addEventListener("click", () => {
+          const url = el.dataset.url;
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+      });
+
+      // Update metadata to show sources
+      const sources = [...new Set(displayEvents.map(e => e.source).filter(Boolean))];
+      const sourceText = sources.length > 0 ? ` from ${sources.join(', ')}` : '';
+      setMeta(metaEl, `${displayEvents.length} events${sourceText}`);
+
+    } catch (err) {
+      console.error('Failed to load astronomical events:', err);
+      mount.innerHTML = `<div class="astrolab-item"><div class="s" style="text-align:center; padding:20px; color:var(--muted);">Failed to load events. <button class="btn small" onclick="loadAstronomicalEvents()">Retry</button></div></div>`;
+      setMeta(metaEl, 'Error');
+    }
+  }
+
+  function applySkyDateFromInput() {
+    if (!window.Celestial) return;
+    const v = $("#time")?.value;
+    if (!v) return;
+
+    // datetime-local is local time; Date(...) will interpret it in local TZ
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return;
+
+    Celestial.date(d);   // updates the map's time
+    Celestial.redraw();
+  }
+
+  // Calculate lunar cycle phase fraction (0..1), where 0 = new moon and 0.5 = full moon.
+  function getMoonPhaseFraction(date) {
+    const knownNewMoon = new Date(2000, 0, 6);
+    const lunarMonth = 29.530588861;
+    const days = (date - knownNewMoon) / (1000 * 60 * 60 * 24);
+    const phase = (days % lunarMonth) / lunarMonth;
+    return phase < 0 ? phase + 1 : phase;
+  }
+
+  function getMoonPhaseDetails(phaseFraction) {
+    const illum = 0.5 * (1 - Math.cos(2 * Math.PI * phaseFraction));
+    const waxing = phaseFraction < 0.5;
+    const trend = waxing ? "Waxing" : "Waning";
+
+    let phaseName = "Crescent";
+    let emoji = waxing ? "🌒" : "🌘";
+
+    if (phaseFraction < 0.03 || phaseFraction > 0.97) {
+      phaseName = "New";
+      emoji = "🌑";
+    } else if (phaseFraction >= 0.22 && phaseFraction <= 0.28) {
+      phaseName = "Quarter";
+      emoji = "🌓";
+    } else if (phaseFraction >= 0.47 && phaseFraction <= 0.53) {
+      phaseName = "Full";
+      emoji = "🌕";
+    } else if (phaseFraction >= 0.72 && phaseFraction <= 0.78) {
+      phaseName = "Quarter";
+      emoji = "🌗";
+    } else if (phaseFraction > 0.28 && phaseFraction < 0.47) {
+      phaseName = "Gibbous";
+      emoji = "🌔";
+    } else if (phaseFraction > 0.53 && phaseFraction < 0.72) {
+      phaseName = "Gibbous";
+      emoji = "🌖";
+    }
+
+    const descriptor = (phaseName === "New" || phaseName === "Full")
+      ? phaseName
+      : `${trend} ${phaseName}`;
+
+    return { illumination: illum, descriptor, emoji };
+  }
+
+  function classifyVisibility(score) {
+    if (score >= 85) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Fair";
+    return "Poor";
+  }
+
+  async function fetchSkyVisibilityInputs(lat, lon) {
+    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    const nowMs = Date.now();
+
+    if (skyVisibilityCache.data && skyVisibilityCache.key === key && (nowMs - skyVisibilityCache.fetchedAt) < SKY_VISIBILITY_TTL_MS) {
+      return skyVisibilityCache.data;
+    }
+
+    if (skyVisibilityCache.inflight && skyVisibilityCache.key === key) {
+      return skyVisibilityCache.inflight;
+    }
+
+    skyVisibilityCache.key = key;
+    skyVisibilityCache.inflight = (async () => {
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${encodeURIComponent(lat)}` +
+        `&longitude=${encodeURIComponent(lon)}` +
+        `&current=cloud_cover,relative_humidity_2m` +
+        `&timezone=auto`;
+
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("Sky visibility weather fetch failed");
+      const j = await res.json();
+
+      const cloudCover = Number(j?.current?.cloud_cover);
+      const humidity = Number(j?.current?.relative_humidity_2m);
+
+      const payload = {
+        cloudCover: Number.isFinite(cloudCover) ? Math.max(0, Math.min(100, cloudCover)) : null,
+        humidity: Number.isFinite(humidity) ? Math.max(0, Math.min(100, humidity)) : null
+      };
+
+      skyVisibilityCache.data = payload;
+      skyVisibilityCache.fetchedAt = Date.now();
+      return payload;
+    })();
+
+    try {
+      return await skyVisibilityCache.inflight;
+    } finally {
+      skyVisibilityCache.inflight = null;
+    }
+  }
+
+  async function computeVisibilityText() {
+    if (!Number.isFinite(userLat) || !Number.isFinite(userLon)) {
+      return "👁️ Visibility: --";
+    }
+
+    try {
+      const wx = await fetchSkyVisibilityInputs(userLat, userLon);
+      const cloud = Number.isFinite(wx.cloudCover) ? wx.cloudCover : 50;
+      const humidity = Number.isFinite(wx.humidity) ? wx.humidity : 60;
+
+      // Heuristic score: cloud cover has stronger impact than humidity.
+      const cloudPenalty = cloud * 0.72;
+      const humidityPenalty = Math.max(0, humidity - 45) * 0.55;
+      const rawScore = 100 - cloudPenalty - humidityPenalty;
+      const score = Math.max(5, Math.min(99, Math.round(rawScore)));
+      const rating = classifyVisibility(score);
+
+      return `👁️ Visibility: ${score}% (${rating})`;
+    } catch {
+      return "👁️ Visibility: --";
+    }
+  }
+
+  // Update sky pills with computed values
+  async function updateSkyPills() {
+    const dateStr = $("#time")?.value;
+    if (!dateStr) return;
+    
+    const date = new Date(dateStr);
+    const phaseFraction = getMoonPhaseFraction(date);
+    const moon = getMoonPhaseDetails(phaseFraction);
+    const pctStr = (moon.illumination * 100).toFixed(0);
+    
+    $("#moonPill").textContent = `🌙 Moon Illumination: ${moon.emoji} ${pctStr}% (${moon.descriptor})`;
+    const visibilityText = await computeVisibilityText();
+    $("#seeingPill").textContent = visibilityText;
+  }
+
+  // -----------------------
+  // Render: Launches
+  // -----------------------
+  function getLaunchStatus(launch) {
+    if (!launch.status) return { status: "scheduled", label: "SCHEDULED" };
+    
+    const status = launch.status.name?.toLowerCase() || "";
+    if (status.includes("success")) return { status: "success", label: "✓ SUCCESS" };
+    if (status.includes("failure")) return { status: "failure", label: "✗ FAILED" };
+    if (status.includes("in flight")) return { status: "in-flight", label: "🚀 IN-FLIGHT" };
+    if (status.includes("go for")) return { status: "go-for-launch", label: "🟢 GO" };
+    if (status.includes("confirmed")) return { status: "confirmed", label: "✓ CONFIRMED" };
+    return { status: "scheduled", label: "⏱️ SCHEDULED" };
+  }
+
+  function getMissionTypeEmoji(launch) {
+    const name = (launch.name || "").toLowerCase();
+    const payload = (launch.mission?.name || "").toLowerCase();
+    const type = (launch.mission?.mission_type || "").toLowerCase();
+    
+    if (payload.includes("crew") || type.includes("crewed")) return "👨‍🚀";
+    if (payload.includes("satellite") || type.includes("satellite")) return "🛰️";
+    if (payload.includes("cargo") || name.includes("cargo")) return "📦";
+    if (payload.includes("resupply")) return "📦";
+    if (name.includes("falcon heavy")) return "🔥";
+    if (name.includes("starship")) return "🚢";
+    return "🚀";
+  }
+
+  function renderLaunchList(mountSel, launches) {
+    const mount = $(mountSel);
+    if (!mount) return; // Element doesn't exist, skip rendering
+    if (!launches?.length) {
+      mount.innerHTML = `<div class="small">No items returned.</div>`;
+      return;
+    }
+    mount.innerHTML = launches.slice(0, 8).map(l => {
+      const provider = l.launch_service_provider?.name || "Unknown provider";
+      const pad = l.pad?.name ? ` • ${l.pad.name}` : "";
+      const when = l.net ? fmt(l.net) : "TBD";
+      const vid = l.vidURLs?.[0] || l.webcast_live ? l.webcast_live : null;
+      const url = l.url || vid || null;
+      const statusInfo = getLaunchStatus(l);
+      const missionEmoji = getMissionTypeEmoji(l);
+      const statusBadge = `<span class="badge ${statusInfo.status}">${statusInfo.label}</span>`;
+      
+      return `
+        <div class="astrolab-item" style="cursor:pointer;" ${url ? `data-url="${escapeHtml(url)}"` : ""}>
+          <div class="t">${missionEmoji} ${escapeHtml(l.name || "Launch")}</div>
+          <div style="margin:4px 0;">${statusBadge}<span class="small" style="color:var(--muted); margin-left:6px;">${when}</span></div>
+          <div class="s">${provider}${pad}</div>
+        </div>`;
+    }).join("");
+    
+    // Attach click handlers
+    mount.querySelectorAll(".astrolab-item[data-url]").forEach(el => {
+      el.addEventListener("click", () => {
+        const url = el.dataset.url;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
+    });
+  }
+
+  async function loadLaunches() {
+    const meta = $("#lnMeta");
+
+    // Set initial loading state
+    $("#upcoming").innerHTML = `<div class="loading-text"><span class="spinner"></span> Loading launches...</div>`;
+    $("#news").innerHTML = `<div class="loading-text"><span class="spinner"></span> Loading news...</div>`;
+
+    // Render cached immediately (instant feel)
+    const cU = readCache(CACHE.upcoming.key);
+    const cP = readCache(CACHE.previous.key);
+
+    if (cU?.data || cP?.data) {
+      const combinedLaunches = [
+        ...(cU?.data?.results || cU?.data || []),
+        ...(cP?.data?.results || cP?.data || [])
+      ];
+      renderLaunchList("#upcoming", combinedLaunches);
+    }
+
+    const freshU = isFresh(cU, CACHE.upcoming.ttlMs);
+    const freshP = isFresh(cP, CACHE.previous.ttlMs);
+
+    setMeta(meta, `Cache: upcoming ${freshU ? "fresh" : "stale"}, previous ${freshP ? "fresh" : "stale"}`);
+
+    // Background refresh
+    try {
+      const upcomingURL = `${LL2_BASE}/launches/upcoming/?limit=20`;
+      const previousURL = `${LL2_BASE}/launches/previous/?limit=5`;
+
+      const [upcoming, previous] = await Promise.all([
+        fetchJSON(upcomingURL),
+        fetchJSON(previousURL)
+      ]);
+
+      writeCache(CACHE.upcoming.key, upcoming);
+      writeCache(CACHE.previous.key, previous);
+
+      // Combine upcoming and previous launches to ensure we have at least 8
+      const combinedLaunches = [
+        ...(upcoming.results || upcoming),
+        ...(previous.results || previous)
+      ];
+      
+      renderLaunchList("#upcoming", combinedLaunches);
+      // Only render previous if the element exists
+      if ($("#previous")) renderLaunchList("#previous", previous.results || previous);
+
+      setMeta(meta, "");
+    } catch (e) {
+      setMeta(meta, "");
+    }
+  }
+
+  // -----------------------
+  // Render: News (SNAPI v4)
+  // -----------------------
+  function renderNews(articles) {
+    const mount = $("#news");
+    if (!articles?.length) {
+      mount.innerHTML = `<div class="small">No items returned.</div>`;
+      return;
+    }
+    mount.innerHTML = articles.slice(0, 8).map(a => {
+      return `
+        <div class="astrolab-item" style="cursor:pointer;" data-url="${escapeHtml(a.url)}">
+          <div class="t">${escapeHtml(a.title || "Article")}</div>
+          <div class="s">${escapeHtml(a.news_site || "")} • ${a.published_at ? fmt(a.published_at) : ""}</div>
+        </div>`;
+    }).join("");
+    
+    // Attach click handlers
+    mount.querySelectorAll(".astrolab-item[data-url]").forEach(el => {
+      el.addEventListener("click", () => {
+        const url = el.dataset.url;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
+    });
+  }
+
+  async function loadNews() {
+    const cN = readCache(CACHE.news.key);
+    
+    // Initial loading indicator
+    if (!cN?.data) {
+      $("#news").innerHTML = `<div class="loading-text"><span class="spinner"></span> Loading headlines...</div>`;
+    } else {
+      renderNews(cN.data.results || cN.data);
+    }
+
+    try {
+      const url = `${SNAPI_ARTICLES}?limit=8&ordering=-published_at`;
+      const data = await fetchJSON(url);
+      writeCache(CACHE.news.key, data);
+      renderNews(data.results || data);
+    } catch (e) {
+      $("#news").innerHTML = `<div class="small">News load failed: ${e.message}</div>`;
+    }
+  }
+
+  // -----------------------
+  // Header controls
+  // -----------------------
+  function initTimeControls() {
+    const t = $("#time");
+    const slider = $("#hourSlider");
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    
+    // Set initial value to current time
+    const setTimeValue = (d) => {
+      t.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      slider.value = d.getHours();
+    };
+    
+    setTimeValue(now);
+    
+    // Update timezone display from settings
+    userTz = appCfg.timezone || "UTC";
+    $("#tzDisplay").textContent = formatTimezoneDisplay(userTz);
+
+    // Slider changes time
+    slider.addEventListener("input", () => {
+      const d = new Date(t.value);
+      d.setHours(parseInt(slider.value), 0, 0);
+      t.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      applySkyDateFromInput();
+      updateSkyPills();
+    });
+
+    // Now button
+    $("#now").addEventListener("click", () => {
+      const d = new Date();
+      setTimeValue(d);
+      applySkyDateFromInput();
+      updateSkyPills();
+    });
+    
+    t.addEventListener("change", () => {
+      slider.value = new Date(t.value).getHours();
+      applySkyDateFromInput();
+      updateSkyPills();
+    });
+    
+    t.addEventListener("input", applySkyDateFromInput);
+  }
+
+  async function initGeo() {
+    if (window.App?.loadConfig) {
+      appCfg = window.App.loadConfig();
+    }
+
+    const parseCoordsInput = (text) => {
+      const m = String(text || "").trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+      if (!m) return null;
+      const lat = Number(m[1]);
+      const lon = Number(m[2]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+      return { lat, lon };
+    };
+
+    const findTimezoneForCoords = async (lat, lon) => {
+      try {
+        if (window.App?.fetchCurrentWeather) {
+          const wx = await window.App.fetchCurrentWeather(lat, lon);
+          if (wx?.timezone) return wx.timezone;
+        }
+      } catch {}
+      return appCfg.timezone || "UTC";
+    };
+
+    const reverseLabelForCoords = async (lat, lon) => {
+      try {
+        const url =
+          `https://geocoding-api.open-meteo.com/v1/reverse` +
+          `?latitude=${encodeURIComponent(lat)}` +
+          `&longitude=${encodeURIComponent(lon)}` +
+          `&language=en&format=json`;
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return "";
+        const j = await res.json();
+        const row = Array.isArray(j?.results) ? j.results[0] : null;
+        if (!row) return "";
+        const city = String(row.name || "").trim();
+        const state = String(row.admin1 || "").trim();
+        const abbrev = window.App?.abbreviateState ? window.App.abbreviateState(state) : state;
+        return [city, abbrev].filter(Boolean).join(", ");
+      } catch {
+        return "";
+      }
+    };
+
+    const geocodePlaceText = async (query) => {
+      const url =
+        `https://geocoding-api.open-meteo.com/v1/search` +
+        `?name=${encodeURIComponent(query)}` +
+        `&count=1&language=en&format=json`;
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("Location lookup failed");
+      const j = await res.json();
+      const row = Array.isArray(j?.results) ? j.results[0] : null;
+      if (!row) return null;
+
+      const lat = Number(row.latitude);
+      const lon = Number(row.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+      const city = String(row.name || "").trim();
+      const state = String(row.admin1 || "").trim();
+      const country = String(row.country_code || "").trim();
+      const abbrev = window.App?.abbreviateState ? window.App.abbreviateState(state) : state;
+      const label = [city, abbrev || country].filter(Boolean).join(", ");
+
+      return {
+        lat,
+        lon,
+        label: label || `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
+        timezone: String(row.timezone || "").trim()
+      };
+    };
+
+    const persistManualLocation = (lat, lon, label, timezone) => {
+      if (!window.App?.saveConfig) return;
+      const nextCfg = {
+        ...(window.App.loadConfig ? window.App.loadConfig() : appCfg),
+        useDeviceLocation: false,
+        deviceLat: lat,
+        deviceLon: lon,
+        deviceLocationLabel: label,
+        timezone: timezone || appCfg.timezone || "UTC",
+        _geoLocatedAt: Date.now()
+      };
+      appCfg = window.App.saveConfig(nextCfg);
+    };
+
+    const applyLocationToUi = (lat, lon, label) => {
+      userLat = Number(lat);
+      userLon = Number(lon);
+      userLocation = String(label || `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`);
+      $("#loc").value = userLocation;
+      if (window.Celestial) {
+        Celestial.location([userLat, userLon]);
+        Celestial.redraw();
+      }
+      updateSkyPills();
+    };
+
+    const applyManualLocationInput = async () => {
+      const locInput = $("#loc");
+      if (!locInput) return;
+      const raw = String(locInput.value || "").trim();
+      if (!raw) return;
+
+      const priorValue = userLocation;
+      locInput.disabled = true;
+
+      try {
+        const coords = parseCoordsInput(raw);
+        if (coords) {
+          const label = (await reverseLabelForCoords(coords.lat, coords.lon)) || `${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`;
+          const tz = await findTimezoneForCoords(coords.lat, coords.lon);
+          userTz = tz || userTz;
+          $("#tzDisplay").textContent = formatTimezoneDisplay(userTz);
+          applyLocationToUi(coords.lat, coords.lon, label);
+          persistManualLocation(coords.lat, coords.lon, label, userTz);
+          return;
+        }
+
+        const resolved = await geocodePlaceText(raw);
+        if (!resolved) throw new Error("No match");
+        const tz = resolved.timezone || (await findTimezoneForCoords(resolved.lat, resolved.lon));
+        userTz = tz || userTz;
+        $("#tzDisplay").textContent = formatTimezoneDisplay(userTz);
+        applyLocationToUi(resolved.lat, resolved.lon, resolved.label);
+        persistManualLocation(resolved.lat, resolved.lon, resolved.label, userTz);
+      } catch {
+        locInput.value = priorValue;
+      } finally {
+        locInput.disabled = false;
+      }
+    };
+
+    try {
+      if (window.App?.resolvePreferredLocation) {
+        const loc = await window.App.resolvePreferredLocation({ cfg: appCfg, autoDetect: true });
+        if (loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon))) {
+          if (loc.timezone) userTz = loc.timezone;
+          applyLocationToUi(loc.lat, loc.lon, loc.label);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to resolve preferred location:", e);
+    }
+
+    const locInput = $("#loc");
+    if (locInput) {
+      locInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          applyManualLocationInput();
+        }
+      });
+      locInput.addEventListener("change", applyManualLocationInput);
+    }
+    
+    $("#useGeo").addEventListener("click", async () => {
+      try {
+        if (window.App?.resolvePreferredLocation) {
+          const liveLoc = await window.App.resolvePreferredLocation({
+            cfg: appCfg,
+            forcePrompt: true,
+            timeoutMs: 12000,
+            maximumAgeMs: 0
+          });
+          if (liveLoc && Number.isFinite(Number(liveLoc.lat)) && Number.isFinite(Number(liveLoc.lon))) {
+            appCfg = window.App.loadConfig ? window.App.loadConfig() : appCfg;
+            if (appCfg?.timezone) {
+              userTz = appCfg.timezone;
+              $("#tzDisplay").textContent = formatTimezoneDisplay(userTz);
+            }
+            applyLocationToUi(liveLoc.lat, liveLoc.lon, liveLoc.label);
+            return;
+          }
+        }
+
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const label = (await reverseLabelForCoords(latitude, longitude)) || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            const tz = await findTimezoneForCoords(latitude, longitude);
+            userTz = tz || userTz;
+            $("#tzDisplay").textContent = formatTimezoneDisplay(userTz);
+            applyLocationToUi(latitude, longitude, label);
+            persistManualLocation(latitude, longitude, label, userTz);
+          },
+          () => {}
+        );
+      } catch (e) {
+        console.warn("Manual GPS lookup failed:", e);
+      }
+    });
+  }
+
+  // -----------------------
+  // Placeholder: Sky chart hook
+  // -----------------------
+  function initSkyChart() {
+    if (!window.Celestial) {
+      setMeta($("#skyMeta"), "Celestial library not loaded");
+      return;
+    }
+
+    // Core config: set container + CDN datapath
+    const config = {
+      container: "celestial-map",
+      datapath: "https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/data/",
+      width: 0,                 // 0 = full parent width
+      projection: "aitoff",
+      transform: "horizontal",
+      interactive: true,
+      adaptable: true,
+
+      // Start useful defaults
+      stars: { show: true, limit: 6, size: 7, data: "stars.6.json" },
+      dsos:  { show: true, limit: 6, names: true, data: "dsos.bright.json" },
+      constellations: { names: true, lines: true },
+
+      // Enable planet layer when date-time is set
+      planets: { show: true },
+      // Use Celestial's native horizon renderer so the line tracks true sky geometry
+      // through pan/zoom and observer location changes.
+      horizon: {
+        show: true,
+        stroke: "#fbbf24",
+        width: 3,
+        fill: "#020713",
+        opacity: 0.34
+      },
+
+      // Keep built-in forms off for now (clean dashboard)
+      controls: false,
+      form: false
+    };
+
+    // Render
+    Celestial.display(config);
+
+    // Re-apply current observer location after display init so horizon geometry
+    // is anchored to the active geo position every time AstroLab loads.
+    if (Number.isFinite(userLat) && Number.isFinite(userLon)) {
+      Celestial.location([userLat, userLon]);
+      Celestial.redraw();
+    }
+
+    // Sync the chart to your time control immediately
+    applySkyDateFromInput();
+    updateSkyPills();
+
+    // Set load time
+    const loadTimeEl = $("#loadTime");
+    if (loadTimeEl) {
+      loadTimeEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    // Wire up jump buttons
+    // Define jump targets with their celestial coordinates
+    const jumpButtons = {
+      // Sun & Inner Planets
+      sun: { planetId: "sol", cons: null, lon: null, lat: null, label: "Sun", zoomFactor: 2 },
+      mercury: { planetId: "mer", cons: null, lon: null, lat: null, label: "Mercury", zoomFactor: 2.5 },
+      venus: { planetId: "ven", cons: null, lon: null, lat: null, label: "Venus", zoomFactor: 2.5 },
+      moon: { planetId: "lun", cons: null, lon: null, lat: null, label: "Moon", zoomFactor: 3 },
+      mars: { planetId: "mar", cons: null, lon: null, lat: null, label: "Mars", zoomFactor: 2.5 },
+      // Outer Planets
+      jupiter: { planetId: "jup", cons: null, lon: null, lat: null, label: "Jupiter", zoomFactor: 2.5 },
+      saturn: { planetId: "sat", cons: null, lon: null, lat: null, label: "Saturn", zoomFactor: 2.5 },
+      uranus: { planetId: "ura", cons: null, lon: null, lat: null, label: "Uranus", zoomFactor: 2.5 },
+      neptune: { planetId: "nep", cons: null, lon: null, lat: null, label: "Neptune", zoomFactor: 2.5 },
+      pluto: { planetId: "plu", cons: null, lon: null, lat: null, label: "Pluto", zoomFactor: 2 },
+      // Deep Sky Objects
+      orion: { planetId: null, cons: null, lon: 83.85, lat: -5.45, label: "Orion Nebula", zoomFactor: 2.5 },
+      andromeda: { planetId: null, cons: null, lon: 10.5, lat: 41, label: "Andromeda", zoomFactor: 2 },
+      pleiades: { planetId: null, cons: null, lon: 57, lat: 24, label: "Pleiades", zoomFactor: 2.5 },
+      hercules: { planetId: null, cons: null, lon: 250.4, lat: 36.5, label: "M13 (Hercules Cluster)", zoomFactor: 2.5 },
+      sirius: { planetId: null, cons: null, lon: 101.3, lat: -16.7, label: "Sirius", zoomFactor: 2 },
+      crab: { planetId: null, cons: null, lon: 83.6, lat: 22, label: "M1 - Crab Nebula", zoomFactor: 2.5 },
+      dumbbell: { planetId: null, cons: null, lon: 299.9, lat: 22.7, label: "M27 - Dumbbell Nebula", zoomFactor: 2.5 },
+      whirlpool: { planetId: null, cons: null, lon: 202.5, lat: 47.2, label: "M51 - Whirlpool Galaxy", zoomFactor: 2 },
+      ringnebula: { planetId: null, cons: null, lon: 286.5, lat: 33, label: "M57 - Ring Nebula", zoomFactor: 2.5 },
+      phantom: { planetId: null, cons: null, lon: 24.1, lat: 15.7, label: "M74 - Phantom Galaxy", zoomFactor: 2 },
+      bodes: { planetId: null, cons: null, lon: 148.9, lat: 69.3, label: "M81 - Bode's Galaxy", zoomFactor: 2 },
+      pinwheel: { planetId: null, cons: null, lon: 210.8, lat: 54.3, label: "M101 - Pinwheel Galaxy", zoomFactor: 2 },
+      owl: { planetId: null, cons: null, lon: 148.5, lat: 55.0, label: "M97 - Owl Nebula", zoomFactor: 2.5 },
+      sombrero: { planetId: null, cons: null, lon: 190, lat: -11.5, label: "M104 - Sombrero Galaxy", zoomFactor: 2 },
+      horsehead: { planetId: null, cons: null, lon: 85, lat: -2.5, label: "Horsehead Nebula", zoomFactor: 2.5 }
+    };
+
+    // Build searchable catalog from jumpButtons + extensive deep sky objects, stars, and constellations
+    const skySearchCatalog = [
+      // SOLAR SYSTEM
+      { id: "sun", label: "☀️ Sun", aliases: ["sol", "solar"], target: jumpButtons.sun },
+      { id: "mercury", label: "☿ Mercury", aliases: ["mer", "messenger"], target: jumpButtons.mercury },
+      { id: "venus", label: "♀ Venus", aliases: ["ven", "morning star", "evening star"], target: jumpButtons.venus },
+      { id: "moon", label: "🌙 Moon", aliases: ["luna", "earth's moon", "lun"], target: jumpButtons.moon },
+      { id: "mars", label: "♂ Mars", aliases: ["mar", "red planet"], target: jumpButtons.mars },
+      { id: "jupiter", label: "♃ Jupiter", aliases: ["jup", "great red spot"], target: jumpButtons.jupiter },
+      { id: "saturn", label: "♄ Saturn", aliases: ["sat", "ringed planet"], target: jumpButtons.saturn },
+      { id: "uranus", label: "♅ Uranus", aliases: ["ura"], target: jumpButtons.uranus },
+      { id: "neptune", label: "♆ Neptune", aliases: ["nep"], target: jumpButtons.neptune },
+      { id: "pluto", label: "♇ Pluto", aliases: ["plu"], target: jumpButtons.pluto },
+      
+      // BRIGHTEST STARS (Magnitude < 1.5)
+      { id: "sirius", label: "🌟 Sirius (Mag -1.46)", aliases: ["alpha canis majoris", "dog star", "brightest star"], target: { planetId: null, cons: null, lon: 101.3, lat: -16.7, label: "Sirius", zoomFactor: 2 } },
+      { id: "canopus", label: "🌟 Canopus (Mag -0.72)", aliases: ["alpha carinae", "south star"], target: { planetId: null, cons: null, lon: 95.9, lat: -52.7, label: "Canopus", zoomFactor: 2 } },
+      { id: "alphacen", label: "🌟 Alpha Centauri (Mag -0.27)", aliases: ["rigil kentaurus", "closest star"], target: { planetId: null, cons: null, lon: 219.9, lat: -60.8, label: "Alpha Centauri", zoomFactor: 2 } },
+      { id: "arcturus", label: "🌟 Arcturus (Mag -0.04)", aliases: ["alpha boötis", "orange giant"], target: { planetId: null, cons: null, lon: 213.9, lat: 19.1, label: "Arcturus", zoomFactor: 2 } },
+      { id: "vega", label: "🌟 Vega (Mag 0.03)", aliases: ["alpha lyrae", "lyre star"], target: { planetId: null, cons: null, lon: 279.2, lat: 38.8, label: "Vega", zoomFactor: 2 } },
+      { id: "capella", label: "🌟 Capella (Mag 0.08)", aliases: ["alpha aurigae"], target: { planetId: null, cons: null, lon: 79.2, lat: 45.9, label: "Capella", zoomFactor: 2 } },
+      { id: "rigel", label: "🌟 Rigel (Mag 0.13)", aliases: ["beta orionis", "blue hypergiant"], target: { planetId: null, cons: null, lon: 78.6, lat: -8.2, label: "Rigel", zoomFactor: 2 } },
+      { id: "procyon", label: "🌟 Procyon (Mag 0.40)", aliases: ["alpha canis minoris"], target: { planetId: null, cons: null, lon: 114.8, lat: 5.2, label: "Procyon", zoomFactor: 2 } },
+      { id: "betelgeuse", label: "🌟 Betelgeuse (Mag 0.45)", aliases: ["alpha orionis", "red supergiant", "shoulder of orion"], target: { planetId: null, cons: null, lon: 88.8, lat: 7.4, label: "Betelgeuse", zoomFactor: 2 } },
+      { id: "achernar", label: "🌟 Achernar (Mag 0.45)", aliases: ["alpha eridani"], target: { planetId: null, cons: null, lon: 24.4, lat: -57.2, label: "Achernar", zoomFactor: 2 } },
+      { id: "hadar", label: "🌟 Hadar (Mag 0.61)", aliases: ["beta centauri"], target: { planetId: null, cons: null, lon: 210.9, lat: -60.4, label: "Hadar", zoomFactor: 2 } },
+      { id: "altair", label: "🌟 Altair (Mag 0.77)", aliases: ["alpha aquilae", "eagle star"], target: { planetId: null, cons: null, lon: 297.7, lat: 8.9, label: "Altair", zoomFactor: 2 } },
+      { id: "aldebaran", label: "🌟 Aldebaran (Mag 0.87)", aliases: ["alpha tauri", "eye of taurus"], target: { planetId: null, cons: null, lon: 68.9, lat: 16.5, label: "Aldebaran", zoomFactor: 2 } },
+      { id: "spica", label: "🌟 Spica (Mag 0.97)", aliases: ["alpha virginis"], target: { planetId: null, cons: null, lon: 201.3, lat: -11.2, label: "Spica", zoomFactor: 2 } },
+      { id: "polaris", label: "🌟 Polaris (Mag 1.97)", aliases: ["north star", "pole star", "alpha ursae minoris", "lodestar"], target: { planetId: null, cons: null, lon: 37.9, lat: 89, label: "Polaris", zoomFactor: 2 } },
+      { id: "deneb", label: "🌟 Deneb (Mag 1.25)", aliases: ["alpha cygni", "tail of swan"], target: { planetId: null, cons: null, lon: 309.6, lat: 45.3, label: "Deneb", zoomFactor: 2 } },
+      { id: "castor", label: "🌟 Castor (Mag 1.58)", aliases: ["alpha geminorum"], target: { planetId: null, cons: null, lon: 114.2, lat: 31.8, label: "Castor", zoomFactor: 2 } },
+      { id: "pollux", label: "🌟 Pollux (Mag 1.15)", aliases: ["beta geminorum"], target: { planetId: null, cons: null, lon: 117.3, lat: 27.8, label: "Pollux", zoomFactor: 2 } },
+      
+      // MESSIER OBJECTS (Famous deep sky catalog)
+      { id: "m1", label: "🔭 M1 - Crab Nebula", aliases: ["messier 1", "crab nebula", "ngc 1952"], target: { planetId: null, cons: null, lon: 83.6, lat: 22, label: "M1 Crab", zoomFactor: 2.5 } },
+      { id: "horsehead", label: "🐴 Horsehead Nebula", aliases: ["horsehead", "ic 434", "dark nebula"], target: jumpButtons.horsehead },
+      { id: "m2", label: "🔭 M2 - Globular Cluster", aliases: ["messier 2", "ngc 7089"], target: { planetId: null, cons: null, lon: 323.3, lat: -1.2, label: "M2", zoomFactor: 2.5 } },
+      { id: "m3", label: "🔭 M3 - Globular Cluster", aliases: ["messier 3", "ngc 5272"], target: { planetId: null, cons: null, lon: 205.5, lat: 28.4, label: "M3", zoomFactor: 2.5 } },
+      { id: "m4", label: "🔭 M4 - Globular Cluster", aliases: ["messier 4", "ngc 6121"], target: { planetId: null, cons: null, lon: 245.9, lat: -26.5, label: "M4", zoomFactor: 2.5 } },
+      { id: "m5", label: "🔭 M5 - Globular Cluster", aliases: ["messier 5", "ngc 5904"], target: { planetId: null, cons: null, lon: 229.6, lat: 2.1, label: "M5", zoomFactor: 2.5 } },
+      { id: "m6", label: "🔭 M6 - Butterfly Cluster", aliases: ["messier 6", "ngc 6405"], target: { planetId: null, cons: null, lon: 265.1, lat: -32.2, label: "M6", zoomFactor: 2.5 } },
+      { id: "m7", label: "🔭 M7 - Open Cluster", aliases: ["messier 7", "ngc 6475"], target: { planetId: null, cons: null, lon: 268.4, lat: -34.8, label: "M7", zoomFactor: 2.5 } },
+      { id: "m8", label: "🔭 M8 - Lagoon Nebula", aliases: ["messier 8", "lagoon nebula", "ngc 6523"], target: { planetId: null, cons: null, lon: 270.9, lat: -24.4, label: "M8", zoomFactor: 2.5 } },
+      { id: "m9", label: "🔭 M9 - Globular Cluster", aliases: ["messier 9", "ngc 6333"], target: { planetId: null, cons: null, lon: 243.8, lat: -18.5, label: "M9", zoomFactor: 2.5 } },
+      { id: "m10", label: "🔭 M10 - Globular Cluster", aliases: ["messier 10", "ngc 6254"], target: { planetId: null, cons: null, lon: 246.4, lat: -4.1, label: "M10", zoomFactor: 2.5 } },
+      { id: "m11", label: "🔭 M11 - Wild Duck Cluster", aliases: ["messier 11", "wild duck", "ngc 6705"], target: { planetId: null, cons: null, lon: 285.8, lat: -6.3, label: "M11", zoomFactor: 2.5 } },
+      { id: "m12", label: "🔭 M12 - Globular Cluster", aliases: ["messier 12", "ngc 6218"], target: { planetId: null, cons: null, lon: 246.1, lat: -1.9, label: "M12", zoomFactor: 2.5 } },
+      { id: "m13", label: "✨ M13 - Hercules Cluster", aliases: ["messier 13", "hercules cluster", "great globular", "ngc 6205"], target: jumpButtons.hercules },
+      { id: "m14", label: "🔭 M14 - Globular Cluster", aliases: ["messier 14", "ngc 6402"], target: { planetId: null, cons: null, lon: 245.1, lat: -3.2, label: "M14", zoomFactor: 2.5 } },
+      { id: "m15", label: "🔭 M15 - Globular Cluster", aliases: ["messier 15", "ngc 7078"], target: { planetId: null, cons: null, lon: 323.0, lat: 12.2, label: "M15", zoomFactor: 2.5 } },
+      { id: "m16", label: "🔭 M16 - Eagle Nebula", aliases: ["messier 16", "eagle nebula", "ngc 6611"], target: { planetId: null, cons: null, lon: 274.6, lat: -13.8, label: "M16", zoomFactor: 2.5 } },
+      { id: "m17", label: "🔭 M17 - Omega Nebula", aliases: ["messier 17", "swan nebula", "omega nebula", "ngc 6618"], target: { planetId: null, cons: null, lon: 276.8, lat: -16.2, label: "M17", zoomFactor: 2.5 } },
+      { id: "m20", label: "🔭 M20 - Trifid Nebula", aliases: ["messier 20", "trifid", "ngc 6514"], target: { planetId: null, cons: null, lon: 270.2, lat: -23, label: "M20", zoomFactor: 2.5 } },
+      { id: "m22", label: "🔭 M22 - Globular Cluster", aliases: ["messier 22", "ngc 6656"], target: { planetId: null, cons: null, lon: 279.1, lat: -23.9, label: "M22", zoomFactor: 2.5 } },
+      { id: "m27", label: "🔭 M27 - Dumbbell Nebula", aliases: ["messier 27", "dumbbell", "ngc 6853"], target: { planetId: null, cons: null, lon: 299.9, lat: 22.7, label: "M27", zoomFactor: 2.5 } },
+      { id: "m31", label: "🌀 M31 - Andromeda galaxY", aliases: ["messier 31", "andromeda", "ngc 224", "great andromeda"], target: jumpButtons.andromeda },
+      { id: "m33", label: "🔭 M33 - Triangulum Galaxy", aliases: ["messier 33", "triangulum", "ngc 598"], target: { planetId: null, cons: null, lon: 23.5, lat: 30.6, label: "M33", zoomFactor: 2 } },
+      { id: "m35", label: "🔭 M35 - Open Cluster", aliases: ["messier 35", "ngc 2168"], target: { planetId: null, cons: null, lon: 101.2, lat: 24.3, label: "M35", zoomFactor: 2.5 } },
+      { id: "m42", label: "🔭 M42 - Orion Nebula", aliases: ["messier 42", "orion nebula", "ngc 1976"], target: jumpButtons.orion },
+      { id: "m43", label: "🔭 M43 - De Mairan's Nebula", aliases: ["messier 43", "ngc 1982"], target: { planetId: null, cons: null, lon: 83.9, lat: -5.3, label: "M43", zoomFactor: 2.5 } },
+      { id: "m44", label: "🔭 M44 - Beehive Cluster", aliases: ["messier 44", "beehive", "praesepe", "ngc 2632"], target: { planetId: null, cons: null, lon: 130.0, lat: 19.6, label: "M44", zoomFactor: 2 } },
+      { id: "m45", label: "⭐ M45 - Pleiades", aliases: ["messier 45", "seven sisters", "pleiades", "seven sisters"], target: jumpButtons.pleiades },
+      { id: "m51", label: "🔭 M51 - Whirlpool Galaxy", aliases: ["messier 51", "whirlpool", "ngc 5194"], target: { planetId: null, cons: null, lon: 202.5, lat: 47.2, label: "M51", zoomFactor: 2 } },
+      { id: "m57", label: "🔭 M57 - Ring Nebula", aliases: ["messier 57", "ring nebula", "ngc 6720"], target: { planetId: null, cons: null, lon: 286.5, lat: 33, label: "M57", zoomFactor: 2.5 } },
+      { id: "m64", label: "🔭 M64 - Black Eye Galaxy", aliases: ["messier 64", "black eye", "ngc 4826"], target: { planetId: null, cons: null, lon: 194.6, lat: 21.7, label: "M64", zoomFactor: 2 } },
+      { id: "m65", label: "🔭 M65 - Galaxy", aliases: ["messier 65", "ngc 3623"], target: { planetId: null, cons: null, lon: 170.1, lat: 13.1, label: "M65", zoomFactor: 2 } },
+      { id: "m66", label: "🔭 M66 - Galaxy", aliases: ["messier 66", "ngc 3627"], target: { planetId: null, cons: null, lon: 170.1, lat: 12.9, label: "M66", zoomFactor: 2 } },
+      { id: "m67", label: "🔭 M67 - Open Cluster", aliases: ["messier 67", "ngc 2682"], target: { planetId: null, cons: null, lon: 130.0, lat: 11.8, label: "M67", zoomFactor: 2.5 } },
+      { id: "m74", label: "🔭 M74 - Phantom Galaxy", aliases: ["messier 74", "phantom", "ngc 628"], target: { planetId: null, cons: null, lon: 24.1, lat: 15.7, label: "M74", zoomFactor: 2 } },
+      { id: "m76", label: "🔭 M76 - Little Dumbbell", aliases: ["messier 76", "little dumbbell", "ngc 650"], target: { planetId: null, cons: null, lon: 22.4, lat: 51.6, label: "M76", zoomFactor: 2.5 } },
+      { id: "m77", label: "🔭 M77 - Seyfert Galaxy", aliases: ["messier 77", "ngc 1068"], target: { planetId: null, cons: null, lon: 40.7, lat: -0.1, label: "M77", zoomFactor: 2 } },
+      { id: "m81", label: "🔭 M81 - Bode's Galaxy", aliases: ["messier 81", "bodes", "ngc 3031"], target: { planetId: null, cons: null, lon: 148.9, lat: 69.3, label: "M81", zoomFactor: 2 } },
+      { id: "m82", label: "🔭 M82 - Cigar Galaxy", aliases: ["messier 82", "cigar", "ngc 3034"], target: { planetId: null, cons: null, lon: 148.9, lat: 69.7, label: "M82", zoomFactor: 2 } },
+      { id: "m83", label: "🔭 M83 - Southern Pinwheel", aliases: ["messier 83", "pinwheel", "ngc 5236"], target: { planetId: null, cons: null, lon: 204.3, lat: -29.8, label: "M83", zoomFactor: 2 } },
+      { id: "m86", label: "🔭 M86 - Galaxy", aliases: ["messier 86", "ngc 4406"], target: { planetId: null, cons: null, lon: 187.0, lat: 10.9, label: "M86", zoomFactor: 2 } },
+      { id: "m87", label: "🔭 M87 - Giant Elliptical", aliases: ["messier 87", "ngc 4486"], target: { planetId: null, cons: null, lon: 187.7, lat: 12.4, label: "M87", zoomFactor: 2 } },
+      { id: "m94", label: "🔭 M94 - Croc's Eye Galaxy", aliases: ["messier 94", "ngc 4736"], target: { planetId: null, cons: null, lon: 192.7, lat: 41.1, label: "M94", zoomFactor: 2 } },
+      { id: "m95", label: "🔭 M95 - Galaxy", aliases: ["messier 95", "ngc 3351"], target: { planetId: null, cons: null, lon: 161.4, lat: 11.6, label: "M95", zoomFactor: 2 } },
+      { id: "m96", label: "🔭 M96 - Galaxy", aliases: ["messier 96", "ngc 3368"], target: { planetId: null, cons: null, lon: 161.9, lat: 11.8, label: "M96", zoomFactor: 2 } },
+      { id: "m97", label: "🔭 M97 - Owl Nebula", aliases: ["messier 97", "owl nebula", "ngc 3587"], target: { planetId: null, cons: null, lon: 148.5, lat: 55.0, label: "M97", zoomFactor: 2.5 } },
+      { id: "m101", label: "🔭 M101 - Pinwheel Galaxy", aliases: ["messier 101", "pinwheel", "ngc 5457"], target: { planetId: null, cons: null, lon: 210.8, lat: 54.3, label: "M101", zoomFactor: 2 } },
+      { id: "m104", label: "🔭 M104 - Sombrero Galaxy", aliases: ["messier 104", "sombrero", "ngc 4594"], target: { planetId: null, cons: null, lon: 189.9, lat: -11.6, label: "M104", zoomFactor: 2 } },
+      
+      // CALDWELL OBJECTS (Other famous deep sky)
+      { id: "c6", label: "🔭 C6 - Witch Head Nebula", aliases: ["witch head", "ic 2118"], target: { planetId: null, cons: null, lon: 61.0, lat: -8.5, label: "C6", zoomFactor: 2 } },
+      { id: "c11", label: "🔭 C11 - Bubble Nebula", aliases: ["bubble", "ngc 7635"], target: { planetId: null, cons: null, lon: 340.2, lat: 61.2, label: "C11", zoomFactor: 2.5 } },
+      { id: "c39", label: "🔭 C39 - Iris Nebula", aliases: ["iris", "ngc 7023"], target: { planetId: null, cons: null, lon: 335.8, lat: 68.2, label: "C39", zoomFactor: 2.5 } },
+      
+      // MAJOR CONSTELLATIONS
+      { id: "orion", label: "🏹 Orion (The Hunter)", aliases: ["orion constellation", "great hunter"], target: { planetId: null, cons: null, lon: 84.0, lat: 0, label: "Orion", zoomFactor: 1.2 } },
+      { id: "ursa_major", label: "🐻 Ursa Major (Big Bear)", aliases: ["big bear", "big dipper", "plough"], target: { planetId: null, cons: null, lon: 165.0, lat: 60, label: "Ursa Major", zoomFactor: 1.2 } },
+      { id: "ursa_minor", label: "🐻 Ursa Minor (Little Bear)", aliases: ["little bear", "little dipper"], target: { planetId: null, cons: null, lon: 37.9, lat: 80, label: "Ursa Minor", zoomFactor: 1.2 } },
+      { id: "cygnus", label: "🦢 Cygnus (The Swan)", aliases: ["swan", "northern cross"], target: { planetId: null, cons: null, lon: 309.0, lat: 40, label: "Cygnus", zoomFactor: 1.2 } },
+      { id: "lyra", label: "🎸 Lyra (The Lyre)", aliases: ["lyre", "harp"], target: { planetId: null, cons: null, lon: 282.0, lat: 40, label: "Lyra", zoomFactor: 1.2 } },
+      { id: "aquila", label: "🦅 Aquila (The Eagle)", aliases: ["eagle"], target: { planetId: null, cons: null, lon: 297.5, lat: 5, label: "Aquila", zoomFactor: 1.2 } },
+      { id: "canis_major", label: "🐕 Canis Major (Great Dog)", aliases: ["great dog", "canis major"], target: { planetId: null, cons: null, lon: 102.5, lat: -17, label: "Canis Major", zoomFactor: 1.2 } },
+      { id: "leo", label: "🦁 Leo (The Lion)", aliases: ["lion"], target: { planetId: null, cons: null, lon: 152.0, lat: 15, label: "Leo", zoomFactor: 1.2 } },
+      { id: "virgo", label: "👩 Virgo (The Maiden)", aliases: ["maiden", "virgin"], target: { planetId: null, cons: null, lon: 201.0, lat: 0, label: "Virgo", zoomFactor: 1.2 } },
+      { id: "sagittarius", label: "🏹 Sagittarius (The Archer)", aliases: ["archer", "teapot"], target: { planetId: null, cons: null, lon: 268.0, lat: -28, label: "Sagittarius", zoomFactor: 1.2 } },
+      { id: "gemini", label: "👬 Gemini (The Twins)", aliases: ["twins", "castor and pollux"], target: { planetId: null, cons: null, lon: 113.0, lat: 22, label: "Gemini", zoomFactor: 1.2 } },
+      { id: "taurus", label: "🐂 Taurus (The Bull)", aliases: ["bull"], target: { planetId: null, cons: null, lon: 70.0, lat: 15, label: "Taurus", zoomFactor: 1.2 } },
+      { id: "pegasus", label: "🐴 Pegasus (The Winged Horse)", aliases: ["pegasus", "winged horse"], target: { planetId: null, cons: null, lon: 345.0, lat: 20, label: "Pegasus", zoomFactor: 1.2 } },
+      { id: "andromeda_const", label: "👸 Andromeda (The Maiden)", aliases: ["andromeda constellation"], target: { planetId: null, cons: null, lon: 10.0, lat: 40, label: "Andromeda", zoomFactor: 1.2 } },
+      { id: "draco", label: "🐉 Draco (The Dragon)", aliases: ["dragon"], target: { planetId: null, cons: null, lon: 262.0, lat: 70, label: "Draco", zoomFactor: 1.2 } },
+      { id: "bootes", label: "🧑 Boötes (The Herdsman)", aliases: ["herdsman", "bootes"], target: { planetId: null, cons: null, lon: 213.0, lat: 30, label: "Boötes", zoomFactor: 1.2 } },
+      { id: "scorpius", label: "🦂 Scorpius (The Scorpion)", aliases: ["scorpion"], target: { planetId: null, cons: null, lon: 241.0, lat: -30, label: "Scorpius", zoomFactor: 1.2 } },
+      { id: "aquarius", label: "💧 Aquarius (The Water Bearer)", aliases: ["water bearer"], target: { planetId: null, cons: null, lon: 332.0, lat: -10, label: "Aquarius", zoomFactor: 1.2 } },
+      { id: "pisces", label: "🐟 Pisces (The Fishes)", aliases: ["fishes"], target: { planetId: null, cons: null, lon: 1.0, lat: 10, label: "Pisces", zoomFactor: 1.2 } },
+      { id: "aries", label: "🐑 Aries (The Ram)", aliases: ["ram"], target: { planetId: null, cons: null, lon: 47.0, lat: 20, label: "Aries", zoomFactor: 1.2 } },
+      { id: "capricornus", label: "🐐 Capricornus (The Goat)", aliases: ["goat", "sea goat"], target: { planetId: null, cons: null, lon: 312.0, lat: -20, label: "Capricornus", zoomFactor: 1.2 } },
+      { id: "libra", label: "⚖️ Libra (The Scales)", aliases: ["scales", "balance"], target: { planetId: null, cons: null, lon: 228.0, lat: -15, label: "Libra", zoomFactor: 1.2 } },
+      { id: "cancer", label: "🦀 Cancer (The Crab)", aliases: ["crab", "beehive cluster"], target: { planetId: null, cons: null, lon: 130.0, lat: 19.6, label: "Cancer", zoomFactor: 1.2 } }
+    ];
+
+    // Search functionality
+    const skySearch = $("#skySearch");
+    let suggestionsList = null;
+
+    // Create suggestions dropdown
+    function createSuggestionsDropdown() {
+      if (suggestionsList) suggestionsList.remove();
+      suggestionsList = document.createElement("div");
+      suggestionsList.style.cssText = `
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(20, 25, 35, 0.95);
+        border: 2px solid var(--link);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      `;
+      skySearch.parentElement.style.position = "relative";
+      skySearch.parentElement.appendChild(suggestionsList);
+    }
+
+    function showSuggestions(query) {
+      if (!suggestionsList) createSuggestionsDropdown();
+      if (!query.trim()) {
+        suggestionsList.style.display = "none";
+        suggestionsList.innerHTML = "";
+        return;
+      }
+
+      const lowerQuery = query.toLowerCase().trim();
+      const matches = skySearchCatalog.filter(obj => {
+        return obj.label.toLowerCase().includes(lowerQuery) || 
+               obj.id.includes(lowerQuery) ||
+               obj.aliases.some(a => a.includes(lowerQuery));
+      }).slice(0, 8); // Limit to 8 suggestions
+
+      if (matches.length === 0) {
+        suggestionsList.innerHTML = '<div style="padding:12px; color:var(--muted); font-size:12px;">No objects found</div>';
+        suggestionsList.style.display = "block";
+        return;
+      }
+
+      suggestionsList.innerHTML = matches.map((obj, idx) => 
+        `<div data-idx="${idx}" style="padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='transparent'">${obj.label}</div>`
+      ).join("");
+      suggestionsList.style.display = "block";
+
+      // Attach click handlers to suggestions
+      suggestionsList.querySelectorAll("[data-idx]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const idx = parseInt(el.dataset.idx);
+          const selected = matches[idx];
+          skySearch.value = selected.label.replace(/^[^\w\s]+ /, ""); // Remove emoji prefix
+          hideSuggestions();
+          jumpToObject(selected.target, selected.label);
+        });
+      });
+    }
+
+    function hideSuggestions() {
+      if (suggestionsList) {
+        suggestionsList.style.display = "none";
+        suggestionsList.innerHTML = "";
+      }
+    }
+
+    function jumpToObject(target, label) {
+      if (!target) return;
+      
+      try {
+        if (!window.Celestial) {
+          console.warn("Celestial library not ready");
+          return;
+        }
+        
+        const safeCenter = target.lon !== null && target.lat !== null
+          ? [target.lon, target.lat, 0]
+          : null;
+
+        // Get current zoom and calculate new zoom (same logic as button clicks)
+        const currentZoom = Celestial.zoomBy();
+        const baseZoom = Number.isFinite(currentZoom) && currentZoom > 0 ? currentZoom : 1;
+        const zoomFactor = Number.isFinite(target.zoomFactor) && target.zoomFactor > 0 ? target.zoomFactor : 1.5;
+        const targetZoom = Math.min(baseZoom * zoomFactor, 10);
+
+        if (target.planetId) {
+          const timeInput = $("#time")?.value;
+          const now = timeInput ? new Date(timeInput) : new Date();
+          const planet = Celestial.getPlanet(target.planetId, now);
+          if (planet?.ephemeris?.pos) {
+            const center = planet.ephemeris.pos;
+            const safeCenter2 = center.length === 2 ? [center[0], center[1], 0] : center;
+            Celestial.animate([
+              { param: "center", value: safeCenter2, duration: 700 },
+              { param: "zoom", value: targetZoom, duration: 700 }
+            ], false);
+          }
+        } else if (safeCenter) {
+          Celestial.animate([
+            { param: "center", value: safeCenter, duration: 700 },
+            { param: "zoom", value: targetZoom, duration: 700 }
+          ], false);
+        }
+      } catch (err) {
+        console.error("Jump error:", err);
+      }
+    }
+
+    // Search input handler
+    skySearch.addEventListener("input", (e) => {
+      showSuggestions(e.target.value);
+    });
+
+    skySearch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = skySearch.value.toLowerCase().trim();
+        const match = skySearchCatalog.find(obj => 
+          obj.id === query || obj.label.toLowerCase().includes(query)
+        );
+        if (match) {
+          jumpToObject(match.target, match.label);
+          hideSuggestions();
+        }
+      }
+    });
+
+    skySearch.addEventListener("blur", () => {
+      setTimeout(hideSuggestions, 150);
+    });
+
+    // Wire up jump buttons (quick nav buttons on the page)
+    const jumpBtns = document.querySelectorAll("[data-jump]");
+    
+    jumpBtns.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const target = btn.dataset.jump;
+        const obj = jumpButtons[target];
+        if (!obj) {
+          console.warn(`Unknown jump target: ${target}`);
+          return;
+        }
+        
+        // Visual feedback
+        btn.classList.add("active");
+        setTimeout(() => btn.classList.remove("active"), 1500);
+        
+        jumpToObject(obj, obj.label);
+      });
+    });
+
+    // Wire up zoom slider
+    const zoomSlider = $("#zoomSlider");
+    const zoomLabel = $("#zoomLabel");
+    let isSliderDragging = false;
+    
+    if (zoomSlider) {
+      zoomSlider.addEventListener("mousedown", () => {
+        isSliderDragging = true;
+      });
+
+      zoomSlider.addEventListener("mouseup", () => {
+        isSliderDragging = false;
+      });
+
+      zoomSlider.addEventListener("input", (e) => {
+        const zoomValue = parseFloat(e.target.value);
+        zoomLabel.textContent = zoomValue.toFixed(1) + "x";
+        
+        if (window.Celestial && isSliderDragging) {
+          // Use animate to smoothly zoom
+          Celestial.animate([
+            { param: "zoom", value: zoomValue, duration: 0 }
+          ], false);
+        }
+      });
+
+      // Periodically sync slider with actual map zoom during interaction
+      let syncInterval;
+      const startSync = () => {
+        syncInterval = setInterval(() => {
+          if (!isSliderDragging && window.Celestial) {
+            const currentZoom = Celestial.zoomBy();
+            if (Number.isFinite(currentZoom) && currentZoom > 0) {
+              const clampedZoom = Math.max(0.5, Math.min(10, currentZoom));
+              zoomSlider.value = clampedZoom.toFixed(1);
+              zoomLabel.textContent = clampedZoom.toFixed(1) + "x";
+            }
+          }
+        }, 100);
+      };
+
+      startSync();
+    }
+  }
+
+    // -----------------------
+    // Boot
+    // -----------------------
+    async function boot() {
+      if (window.App?.loadConfig) {
+        appCfg = window.App.loadConfig();
+      }
+      if (window.App?.applyThemeDensity) {
+        window.App.applyThemeDensity(appCfg);
+      }
+
+      initTimeControls();
+      await initGeo();
+      initSkyChart();
+      initArtemisControls();
+      setupCalendarNavigation();
+      await loadAstronomicalCalendar();
+      loadHighlightsResources();
+      updateSkyPills();
+
+      $("#refresh").addEventListener("click", async () => {
+        const btn = $("#refresh");
+        const originalText = btn.textContent;
+        btn.textContent = "Refreshing...";
+        btn.disabled = true;
+        
+        await Promise.all([
+            loadArtemisTracker(true),
+          loadLaunches(), 
+          loadNews(), 
+          loadAstronomicalEvents(),
+          loadAstronomicalCalendar(true) // Force refresh calendar
+        ]);
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
+
+      loadArtemisTracker();
+      loadLaunches();
+      loadNews();
+      loadAstronomicalEvents();
+
+      if (window.__artemisRenderTimer) clearInterval(window.__artemisRenderTimer);
+      if (window.__artemisFeedTimer) clearInterval(window.__artemisFeedTimer);
+      window.__artemisRenderTimer = setInterval(() => {
+        renderArtemisTracker(artemisTrackerData || { articles: [], watchItems: [], fetchedAt: 0 });
+      }, 60 * 1000);
+      window.__artemisFeedTimer = setInterval(() => {
+        loadArtemisTracker(true);
+      }, CACHE.artemis.ttlMs);
+    }
+
+    // Start the app when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot);
+    } else {
+      boot();
+    }
+
+</script>
+
+<script src="assets/common.js"></script>
+<script src="assets/topbar.js"></script>
+<script src="assets/infobar.js"></script>
+</body>
+</html>

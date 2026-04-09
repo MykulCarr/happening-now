@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Data sources and attribution for HAPPENING NOW dashboard" />
+  <title>Happening Now! - Data Sources</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Data Sources And Attribution</h1>
+        <div class="sub">Last updated: April 8, 2026</div>
+      </div>
+    </section>
+
+    <section class="card legalCard">
+      <h2>News</h2>
+      <p class="hint">RSS feeds from user-configured publishers and search feeds, retrieved directly or through a Cloudflare Worker RSS proxy for compatibility.</p>
+
+      <h2 class="legalSectionTitle">Weather</h2>
+      <p class="hint">Open-Meteo for forecast/current weather and weather.gov (National Weather Service) for alerts and official U.S. weather information.</p>
+
+      <h2 class="legalSectionTitle">Stocks And Markets</h2>
+      <p class="hint">Market views combine embedded/linked quote and news sources, including Google Finance/Google News and other configured providers.</p>
+
+      <h2 class="legalSectionTitle">Space/AstroLab</h2>
+      <p class="hint">Launch Library 2 (The Space Devs), Spaceflight News API, NASA mission resources, and D3-Celestial/open astronomy datasets.</p>
+
+      <h2 class="legalSectionTitle">Licensing And Ownership</h2>
+      <p class="hint">All third-party data, logos, and trademarks remain the property of their respective owners. Use is subject to each provider's terms and licensing rules.</p>
+
+      <h2 class="legalSectionTitle">Provider Terms</h2>
+      <p class="hint">Before production launch, confirm your intended use against each provider's published terms, rate limits, and attribution requirements.</p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW legal</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+</body>
+</html>

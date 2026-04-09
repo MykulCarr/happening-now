@@ -1,0 +1,61 @@
+{
+    "name": "HAPPENING NOW! Dashboard",
+    "short_name": "HAPPENING NOW",
+    "description": "Personal information dashboard with news, weather, stocks, and astronomy data",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1e1b4b",
+    "theme_color": "#2d2a5a",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='96' fill='%232d2a5a'/%3E%3Ccircle cx='96' cy='96' r='40' fill='%238b5cf6'/%3E%3Ctext x='96' y='96' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3E!%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%232d2a5a'/%3E%3Ccircle cx='256' cy='256' r='120' fill='%238b5cf6'/%3E%3Ctext x='256' y='256' font-size='120' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3E!%3C/text%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "news",
+        "weather",
+        "finance",
+        "utilities"
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "News",
+            "short_name": "News",
+            "description": "View latest news headlines",
+            "url": "/index.html",
+            "icons": []
+        },
+        {
+            "name": "Weather",
+            "short_name": "Weather",
+            "description": "Check weather forecast",
+            "url": "/weather.html",
+            "icons": []
+        },
+        {
+            "name": "Stocks",
+            "short_name": "Stocks",
+            "description": "Monitor stock prices",
+            "url": "/stocks.html",
+            "icons": []
+        },
+        {
+            "name": "AstroLab",
+            "short_name": "AstroLab",
+            "description": "View astronomy events",
+            "url": "/AstroLab.html",
+            "icons": []
+        }
+    ]
+}

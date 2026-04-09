@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Personal news dashboard with RSS feed aggregation from multiple sources" />
+  <title>Happening Now! - News</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#2d2a5a";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>News</h1>
+        <div class="sub" id="statusLine">—</div>
+        <div class="sub">Update NEWS sources in <a class="subLink" href="settings.html#news">SETTINGS</a></div>
+      </div>
+      <div class="pageHeadActions">
+        <button id="refreshBtn" class="btn" type="button">Refresh</button>
+      </div>
+    </section>
+    <section id="criticalNewsBar" class="criticalNewsBar" aria-label="Critical world and US headlines">
+      <span class="criticalTickerEmpty">Loading critical headlines...</span>
+    </section>
+    <section id="newsGrid" class="grid"></section>
+  </main>
+
+  <footer class="page-footer">
+    <p>📰 RSS feeds aggregated from multiple news sources • Proxied via Cloudflare Workers for CORS compatibility</p>
+    <p class="pageFooterFinePrint">Headlines refresh automatically • All external links open in new window</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+  </footer>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/topbar.js"></script>
+  <script src="assets/infobar.js"></script>
+  <script src="assets/news.js"></script>
+</body>
+</html>

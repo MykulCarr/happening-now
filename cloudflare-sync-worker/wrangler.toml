@@ -1,0 +1,11 @@
+name = "um-time-sync"
+main = "src/index.js"
+compatibility_date = "2026-03-23"
+
+[[kv_namespaces]]
+binding = "UM_TIME_DATA"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+SYNC_API_TOKEN = "REPLACE_WITH_STRONG_TOKEN"
+ALLOWED_ORIGIN = "https://happening-now.net"
