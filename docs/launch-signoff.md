@@ -42,6 +42,13 @@ Owner: Site operator
 - [ ] Confirm Cloudflare Analytics/Web Analytics enabled.
 - [ ] Confirm Cloudflare alerting notifications route to active email.
 
+## 7) Week 1 SEO Verification
+- [ ] Day 1: Confirm sitemap submission status is healthy in Search Console.
+- [ ] Day 1: Run URL Inspection for homepage and request indexing if needed.
+- [ ] Day 7: Re-check indexing state for core pages and legal pages.
+- [ ] Day 7: Confirm no crawl-blocking errors in Pages/Coverage reports.
+- [ ] Day 7: Re-submit sitemap once only if persistent indexing lag exists.
+
 ## Sign-Off
 - Technical launch criteria: PASS
 - Operational criteria: PENDING manual account actions

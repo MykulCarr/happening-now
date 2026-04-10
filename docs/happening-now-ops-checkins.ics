@@ -66,4 +66,32 @@ TRIGGER:-P2D
 END:VALARM
 END:VEVENT
 
+BEGIN:VEVENT
+UID:hn-seo-day1-20260410@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260410T130000
+DTEND:20260410T131500
+SUMMARY:Day 1 SEO Check (Search Console)
+DESCRIPTION:Confirm sitemap status is healthy and inspect homepage URL in Search Console. Request indexing if needed.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Day 1 SEO Check
+TRIGGER:-PT2H
+END:VALARM
+END:VEVENT
+
+BEGIN:VEVENT
+UID:hn-seo-day7-20260416@happening-now.net
+DTSTAMP:20260409T200000Z
+DTSTART:20260416T130000
+DTEND:20260416T132000
+SUMMARY:Day 7 SEO Check (Indexing Review)
+DESCRIPTION:Re-check indexing status for core and legal pages. Confirm no crawl-blocking errors. Re-submit sitemap once only if needed.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: Day 7 SEO Check
+TRIGGER:-PT4H
+END:VALARM
+END:VEVENT
+
 END:VCALENDAR
