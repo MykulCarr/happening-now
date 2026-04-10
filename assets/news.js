@@ -2,6 +2,7 @@
   "use strict";
 
   const { cfg, fetchNewsItems, escapeHtml, createCardHeader, handleError, showError, applyThemeDensity } = window.App;
+  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
 
   // Apply theme, density, and font size on page load
   applyThemeDensity(cfg);
@@ -365,6 +366,63 @@ function restoreNewsFromCache(){
     }
   }
 
+  async function probeRssProxy(){
+    try{
+      const signal = (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
+        ? AbortSignal.timeout(4500)
+        : undefined;
+      const res = await fetch(RSS_PROXY_PROBE_URL, {
+        cache: "no-store",
+        signal
+      });
+      return res.ok;
+    }catch{
+      return false;
+    }
+  }
+
+  function summarizeRssRouteHealth(widgets){
+    let totalRoutes = 0;
+    let routesOnCooldown = 0;
+    let bestSuccessAgeMs = Infinity;
+
+    widgets.forEach((widget) => {
+      const source = String(widget?.rss || "").trim();
+      if(!source) return;
+
+      const status = window.App.getRssCooldownStatus(source);
+      totalRoutes += Number(status?.totalRoutes || 0);
+      routesOnCooldown += Number(status?.routesOnCooldown || 0);
+
+      const lastAgeMs = window.App.getRssLastSuccessAgeMs(source);
+      if(Number.isFinite(lastAgeMs)){
+        bestSuccessAgeMs = Math.min(bestSuccessAgeMs, lastAgeMs);
+      }
+    });
+
+    const lastSuccessLabel = Number.isFinite(bestSuccessAgeMs)
+      ? `${window.App.formatAge(bestSuccessAgeMs)} ago`
+      : "none yet";
+
+    return {
+      totalRoutes,
+      routesOnCooldown,
+      lastSuccessLabel
+    };
+  }
+
+  async function appendRssDiagnostics(baseMessage, widgets, isError=false){
+    if(!statusLine) return;
+
+    const proxyOk = await probeRssProxy();
+    const route = summarizeRssRouteHealth(widgets);
+    const health = proxyOk ? "reachable" : "unreachable";
+    const detail =
+      `RSS proxy ${health} • last success ${route.lastSuccessLabel} • cooldowns ${route.routesOnCooldown}/${route.totalRoutes}`;
+
+    updateStatus(`${baseMessage} • ${detail}`, isError || !proxyOk);
+  }
+
   function createRssItem(item){
     const container = document.createElement("a");
     container.className = "rssItem";
@@ -466,8 +524,10 @@ function restoreNewsFromCache(){
     newsGrid.setAttribute("aria-busy", "false");
     
     let statusMsg = "";
+    let isErrorStatus = false;
     if(errorCount > 0 && successCount === 0){
       statusMsg = `Failed to load news (${errorCount} errors)`;
+      isErrorStatus = true;
       updateStatus(statusMsg, true);
     }else if(errorCount > 0){
       statusMsg = `Loaded with ${errorCount} error${errorCount > 1 ? 's' : ''}`;
@@ -476,6 +536,8 @@ function restoreNewsFromCache(){
       statusMsg = `Ready • ${successCount} source${successCount > 1 ? 's' : ''} loaded`;
       updateStatus(statusMsg);
     }
+
+    await appendRssDiagnostics(statusMsg, widgets, isErrorStatus);
 
     // Update stats widget if available
     if(typeof window.updateNewsStats === "function"){

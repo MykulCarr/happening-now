@@ -56,6 +56,73 @@
   const STOCKS_NEWS_CACHE_MAX_AGE_MS = 8 * 60 * 60 * 1000;
   const STOCKS_NEWS_ARTICLE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
   const WATCHLIST_NEWS_SYMBOL_LIMIT = 6;
+  const MAJOR_NEWS_QUERY_URL = `https://news.google.com/rss/search?q=${encodeURIComponent("stock market when:2d")}&hl=en-US&gl=US&ceid=US:en`;
+  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
+  const stocksDiag = document.getElementById("stocksDiag");
+
+  async function probeEndpoint(url, timeoutMs = 4500){
+    try{
+      const signal = (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
+        ? AbortSignal.timeout(timeoutMs)
+        : undefined;
+      const res = await fetch(url, { cache: "no-store", signal });
+      return res.ok;
+    }catch{
+      return false;
+    }
+  }
+
+  function getNewsDiagnosticQueries(){
+    if(newsMode === "watchlist"){
+      const watchlist = Array.isArray(cfg.stocks) ? cfg.stocks.slice(0, WATCHLIST_NEWS_SYMBOL_LIMIT) : [];
+      return watchlist.map((stock) => googleNewsRssQueryForSymbol(stock.symbol, stock.label));
+    }
+    return [MAJOR_NEWS_QUERY_URL];
+  }
+
+  async function updateStocksDiagnostics(){
+    if(!stocksDiag) return;
+
+    const [backendOk, proxyOk] = await Promise.all([
+      probeEndpoint("/v1/health"),
+      probeEndpoint(RSS_PROXY_PROBE_URL)
+    ]);
+
+    const queries = getNewsDiagnosticQueries();
+    let routesOnCooldown = 0;
+    let totalRoutes = 0;
+    let bestSuccessAgeMs = Infinity;
+
+    if(typeof getRssCooldownStatus === "function"){
+      queries.forEach((query) => {
+        const status = getRssCooldownStatus(query);
+        routesOnCooldown += Number(status?.routesOnCooldown || 0);
+        totalRoutes += Number(status?.totalRoutes || 0);
+      });
+    }
+
+    if(typeof getRssLastSuccessAgeMs === "function"){
+      queries.forEach((query) => {
+        const ageMs = getRssLastSuccessAgeMs(query);
+        if(Number.isFinite(ageMs)) bestSuccessAgeMs = Math.min(bestSuccessAgeMs, ageMs);
+      });
+    }
+
+    const successLabel = Number.isFinite(bestSuccessAgeMs)
+      ? `${formatAge(bestSuccessAgeMs)} ago`
+      : "none yet";
+
+    const status = (backendOk && proxyOk)
+      ? "healthy"
+      : (backendOk || proxyOk)
+        ? "partial"
+        : "down";
+    const proxyLabel = proxyOk ? "reachable" : "unreachable";
+
+    stocksDiag.className = `sub diagLine ${status === "healthy" ? "isHealthy" : status === "partial" ? "isPartial" : "isDown"}`;
+    stocksDiag.textContent =
+      `Backend ${status} • RSS proxy ${proxyLabel} • last RSS success ${successLabel} • cooldowns ${routesOnCooldown}/${totalRoutes}`;
+  }
 
   const LEGACY_MARKET_INDEX_NAME_TO_KEY = {
     "DOW": "dow",
@@ -1145,8 +1212,7 @@
       } else {
         // Major headlines - top 18 only
         try {
-          const majorQuery = encodeURIComponent("stock market when:2d");
-          const googleNewsUrl = `https://news.google.com/rss/search?q=${majorQuery}&hl=en-US&gl=US&ceid=US:en`;
+          const googleNewsUrl = MAJOR_NEWS_QUERY_URL;
           const items = await withTimeout(
             fetchRssItems(googleNewsUrl, 18, true),
             NEWS_FETCH_TIMEOUT_MS,
@@ -1733,14 +1799,15 @@
       newsTabs.querySelectorAll(".tabPill").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.newsMode === newsMode);
         
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
           newsMode = btn.dataset.newsMode;
           localStorage.setItem(NEWS_MODE_KEY, newsMode);
           
           newsTabs.querySelectorAll(".tabPill").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           
-          renderNews();
+          await renderNews();
+          await updateStocksDiagnostics();
         });
       });
     }
@@ -1762,6 +1829,7 @@
         try {
           if (typeof clearRssCache === "function") clearRssCache();
           await renderNews();
+          await updateStocksDiagnostics();
         } finally {
           retryNewsBtn.textContent = originalLabel || "Retry now";
           retryNewsBtn.disabled = false;
@@ -1782,6 +1850,7 @@
     renderCalendar();
     console.log("Calendar rendered");
     await renderNews();
+    await updateStocksDiagnostics();
     console.log("News rendered - refresh complete");
   }
 

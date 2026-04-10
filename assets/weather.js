@@ -7,6 +7,7 @@
   applyThemeDensity(cfg);
 
   const weatherSub = document.getElementById("weatherSub");
+  const weatherDiag = document.getElementById("weatherDiag");
   const weatherCurrent = document.getElementById("weatherCurrent");
   const weatherCurrentUpdated = document.getElementById("weatherCurrentUpdated");
   const weatherHourly = document.getElementById("weatherHourly");
@@ -42,6 +43,49 @@
   const NATIONAL_ALERTS_CACHE_KEY = "jas_weather_alerts_national_v1";
   const WEATHER_NEWS_CACHE_KEY = "jas_weather_news_cache_v1";
   const WEATHER_NEWS_ARTICLE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+  const WEATHER_NEWS_PRIMARY_QUERY = "https://news.google.com/rss/search?q=weather+climate+environment+when:2d&hl=en-US&gl=US&ceid=US:en";
+  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
+
+  async function probeEndpoint(url, timeoutMs = 4500){
+    try{
+      const signal = (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
+        ? AbortSignal.timeout(timeoutMs)
+        : undefined;
+      const res = await fetch(url, { cache: "no-store", signal });
+      return res.ok;
+    }catch{
+      return false;
+    }
+  }
+
+  async function updateWeatherDiagnostics(rssUrl = WEATHER_NEWS_PRIMARY_QUERY){
+    if(!weatherDiag) return;
+
+    const [backendOk, proxyOk] = await Promise.all([
+      probeEndpoint("/v1/health"),
+      probeEndpoint(RSS_PROXY_PROBE_URL)
+    ]);
+
+    const status = (backendOk && proxyOk)
+      ? "healthy"
+      : (backendOk || proxyOk)
+        ? "partial"
+        : "down";
+    const proxyLabel = proxyOk ? "reachable" : "unreachable";
+    const cooldown = (typeof getRssCooldownStatus === "function")
+      ? getRssCooldownStatus(rssUrl)
+      : { routesOnCooldown: 0, totalRoutes: 0 };
+    const successAgeMs = (typeof getRssLastSuccessAgeMs === "function")
+      ? getRssLastSuccessAgeMs(rssUrl)
+      : null;
+    const successLabel = Number.isFinite(successAgeMs)
+      ? `${formatAge(successAgeMs)} ago`
+      : "none yet";
+
+    weatherDiag.className = `sub diagLine ${status === "healthy" ? "isHealthy" : status === "partial" ? "isPartial" : "isDown"}`;
+    weatherDiag.textContent =
+      `Backend ${status} • RSS proxy ${proxyLabel} • last RSS success ${successLabel} • cooldowns ${Number(cooldown?.routesOnCooldown || 0)}/${Number(cooldown?.totalRoutes || 0)}`;
+  }
 
   function staleWarnMs(){
     const mins = Number(cfg.weatherStaleWarnMinutes || 30);
@@ -1110,7 +1154,7 @@
       scheduleSlowNotice();
 
       const newsQueries = [
-        `https://news.google.com/rss/search?q=weather+climate+environment+when:2d&hl=en-US&gl=US&ceid=US:en`,
+        WEATHER_NEWS_PRIMARY_QUERY,
         `https://news.google.com/rss/search?q=storm+forecast+NOAA+when:2d&hl=en-US&gl=US&ceid=US:en`,
         `https://news.google.com/rss/search?q=hurricane+tornado+flood+wildfire+weather+when:2d&hl=en-US&gl=US&ceid=US:en`
       ];
@@ -1202,19 +1246,19 @@
       });
 
       setWidgetFreshness(weatherNews, "News: live, just now", false);
-      return { usedFallback: false, stale: false };
+      return { usedFallback: false, stale: false, rssQuery: WEATHER_NEWS_PRIMARY_QUERY };
     } catch {
       clearSlowNotice();
       const cached = loadCachedWeatherNews();
       if(renderWeatherNewsFromCache(cached, "Live feed unavailable. Showing last loaded headlines.")){
-        const newsUrl = `https://news.google.com/rss/search?q=weather+climate+environment+when:2d&hl=en-US&gl=US&ceid=US:en`;
+        const newsUrl = WEATHER_NEWS_PRIMARY_QUERY;
         appendWeatherNewsCooldownNote(newsUrl);
-        return { usedFallback: true, stale: true };
+        return { usedFallback: true, stale: true, rssQuery: newsUrl };
       }
       renderWeatherNewsFallback("feed-error");
-      const newsUrl = `https://news.google.com/rss/search?q=weather+climate+environment+when:2d&hl=en-US&gl=US&ceid=US:en`;
+      const newsUrl = WEATHER_NEWS_PRIMARY_QUERY;
       appendWeatherNewsCooldownNote(newsUrl);
-      return { usedFallback: true, stale: true };
+      return { usedFallback: true, stale: true, rssQuery: newsUrl };
     } finally {
       clearSlowNotice();
     }
@@ -1231,7 +1275,8 @@
     weatherNewsRetryBtn.textContent = "Retrying...";
     try{
       if(typeof clearRssCache === "function") clearRssCache();
-      await renderWeatherNews();
+      const meta = await renderWeatherNews();
+      await updateWeatherDiagnostics(meta?.rssQuery || WEATHER_NEWS_PRIMARY_QUERY);
     }finally{
       weatherNewsRetryBtn.textContent = originalLabel || "Retry now";
       weatherNewsRetryBtn.disabled = false;
@@ -1592,7 +1637,14 @@
       }
       
       // Fetch and render weather news
-      try{ await renderWeatherNews(); }catch(e){ console.error('[weather] renderWeatherNews error', e); }
+      let weatherNewsMeta = { rssQuery: WEATHER_NEWS_PRIMARY_QUERY };
+      try{
+        weatherNewsMeta = await renderWeatherNews();
+      }catch(e){
+        console.error('[weather] renderWeatherNews error', e);
+      }
+
+      await updateWeatherDiagnostics(weatherNewsMeta?.rssQuery || WEATHER_NEWS_PRIMARY_QUERY);
 
       // schedule periodic refresh
       if(intervalId) clearInterval(intervalId);
@@ -1600,6 +1652,10 @@
     }catch(error){
       console.error("[weather] refresh error", error);
       weatherSub.textContent = "—";
+      if(weatherDiag){
+        weatherDiag.className = "sub diagLine isDown";
+        weatherDiag.textContent = "Backend down • weather data unavailable";
+      }
       if(weatherCurrentUpdated) weatherCurrentUpdated.textContent = "Updated --";
       weatherCurrent.innerHTML = `<div class="hint">Weather unavailable. Check ZIP in Settings.</div>`;
       weatherHourly.innerHTML = `<div class="hint">Hourly unavailable.</div>`;

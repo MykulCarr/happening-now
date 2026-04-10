@@ -4,12 +4,10 @@
   const LS_KEY = "jas_cfg_v3";
   const GEO_PREF_KEY = "jas_geo_pref_v1";
 
-  // Worker RSS proxy (keep your own URL here)
-  const RSS_PROXY_BASE = "https://news-rss-proxy.mykulcarr.workers.dev/raw?url=";
+  // First-party RSS proxy route served by cloudflare-sync-worker.
+  const RSS_PROXY_BASE = "/v1/rss/raw?url=";
   const RSS_PROXY_FALLBACKS = [
     RSS_PROXY_BASE,
-    "https://api.allorigins.win/raw?url=",
-    "https://corsproxy.io/?",
     "https://api.codetabs.com/v1/proxy?quest="
   ];
   

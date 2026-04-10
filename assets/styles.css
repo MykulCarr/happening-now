@@ -105,6 +105,59 @@ h2{margin:0;font-size: calc(16px * var(--font-multiplier, 1));font-weight:700;le
 .sub{margin-top:6px;color:var(--muted);font-size: calc(13px * var(--font-multiplier, 1));font-weight:600;line-height:1.4}
 .hint{color:var(--muted);font-size: calc(12px * var(--font-multiplier, 1));font-weight:600;line-height:1.5}
 
+.diagLine{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--panel);
+}
+
+.diagLine::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:rgba(245,158,11,0.95);
+  box-shadow:0 0 0 2px rgba(245,158,11,0.20);
+}
+
+.diagLine.isHealthy{
+  color:var(--text);
+  border-color:rgba(16,185,129,0.45);
+  background:rgba(16,185,129,0.10);
+}
+
+.diagLine.isHealthy::before{
+  background:rgba(16,185,129,0.95);
+  box-shadow:0 0 0 2px rgba(16,185,129,0.25);
+}
+
+.diagLine.isPartial{
+  color:var(--text);
+  border-color:rgba(245,158,11,0.50);
+  background:rgba(245,158,11,0.10);
+}
+
+.diagLine.isPartial::before{
+  background:rgba(245,158,11,0.95);
+  box-shadow:0 0 0 2px rgba(245,158,11,0.22);
+}
+
+.diagLine.isDown{
+  color:var(--text);
+  border-color:rgba(239,68,68,0.48);
+  background:rgba(239,68,68,0.10);
+}
+
+.diagLine.isDown::before{
+  background:rgba(239,68,68,0.95);
+  box-shadow:0 0 0 2px rgba(239,68,68,0.22);
+}
+
 
 .header#topbar{
   position:fixed;
