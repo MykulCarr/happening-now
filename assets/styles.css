@@ -3633,6 +3633,11 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   opacity:0.5;
 }
 
+.statMissing{
+  color:var(--muted);
+  opacity:0.9;
+}
+
 .stockSparkline{
   display:flex;
   align-items:center;
@@ -3677,11 +3682,38 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 }
 
 @media (max-width:720px){
+  .watchlistItem{
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+
   .watchlistItem .stockItemLeft{
+    width:100%;
     flex-wrap:wrap;
+    align-items:flex-start;
+    gap:8px;
+  }
+
+  .watchlistItem .stockItemRight{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  .watchlistItem .stockItemPrice{
+    align-items:flex-start;
+  }
+
+  .watchlistItem .stockItemName{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:1.25;
   }
 
   .watchSparkline{
+    width:100%;
+    justify-content:flex-start;
     min-width:110px;
     padding:4px 6px;
     margin-left:0;

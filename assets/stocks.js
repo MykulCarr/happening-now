@@ -1028,20 +1028,28 @@
           ? watchSpark
           : `<div class="sparklineEmpty">No Data: ${escapeHtml(reasonText)}</div>`;
 
+        const candleValues = Array.isArray(candles)
+          ? candles.map((value) => Number(value)).filter((value) => Number.isFinite(value) && value > 0)
+          : [];
+        const fallbackLow = candleValues.length ? Math.min(...candleValues) : null;
+        const fallbackHigh = candleValues.length ? Math.max(...candleValues) : null;
+        const rangeLow = Number.isFinite(price.low) && price.low > 0 ? price.low : fallbackLow;
+        const rangeHigh = Number.isFinite(price.high) && price.high > 0 ? price.high : fallbackHigh;
+        const hasRange = Number.isFinite(rangeLow) && Number.isFinite(rangeHigh);
+        const rangeMarkup = hasRange
+          ? `<span class="statLow">L $${rangeLow.toFixed(2)}</span><span class="statSep">•</span><span class="statHigh">H $${rangeHigh.toFixed(2)}</span>`
+          : `<span class="statMissing">Range unavailable</span>`;
+
         return `
           <div class="stockItem watchlistItem" data-symbol="${escapeHtml(stock.symbol)}" data-label="${escapeHtml(stock.label)}">
             <div class="stockItemLeft">
               <div class="stockItemInfo">
                 <div class="stockItemSymbol">${escapeHtml(stock.symbol)}</div>
                 <div class="stockItemName">${escapeHtml(stock.label)}</div>
-                ${price.high && price.low ? `
-                  <div class="stockItemStats">
-                    <span class="statLabel">Range:</span>
-                    <span class="statLow">L $${(price.low).toFixed(2)}</span>
-                    <span class="statSep">•</span>
-                    <span class="statHigh">H $${(price.high).toFixed(2)}</span>
-                  </div>
-                ` : ''}
+                <div class="stockItemStats">
+                  <span class="statLabel">Range:</span>
+                  ${rangeMarkup}
+                </div>
               </div>
               <div class="watchSparkline ${watchSpark ? "" : "isEmpty"}">
                 ${sparkMarkup}
