@@ -82,6 +82,14 @@ const ARTEMIS_UPDATES_TTL_MS = 5 * 60 * 1000;
 const NASA_WP_BASE = "https://www.nasa.gov/wp-json/wp/v2";
 const ARTEMIS_CATEGORY_ID = 2918;
 
+const RSS_PROXY_ALLOWED_PROTOCOLS = new Set(["http:", "https:"]);
+const RSS_PROXY_BLOCKED_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "::1",
+]);
+
 async function fetchJson(url) {
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -212,6 +220,75 @@ function isAuthorized(request, env) {
   return parts[1] === expected;
 }
 
+function parseRssProxyTarget(url) {
+  const raw = String(url.searchParams.get("url") || "").trim();
+  if (!raw) {
+    return { ok: false, error: "Missing url parameter" };
+  }
+
+  let target;
+  try {
+    target = new URL(raw);
+  } catch {
+    return { ok: false, error: "Invalid target URL" };
+  }
+
+  if (!RSS_PROXY_ALLOWED_PROTOCOLS.has(target.protocol)) {
+    return { ok: false, error: "Unsupported URL protocol" };
+  }
+
+  const host = String(target.hostname || "").toLowerCase();
+  if (!host || RSS_PROXY_BLOCKED_HOSTS.has(host) || host.endsWith(".local")) {
+    return { ok: false, error: "Blocked target host" };
+  }
+
+  return { ok: true, target: target.toString() };
+}
+
+async function fetchRssThroughProxy(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
+  }
+
+  const parsed = parseRssProxyTarget(url);
+  if (!parsed.ok) {
+    return jsonResponse({ ok: false, error: parsed.error }, 400, request, env);
+  }
+
+  let upstream;
+  try {
+    upstream = await fetch(parsed.target, {
+      headers: {
+        Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+        "User-Agent": "HAPPENING-NOW/1.0 RSS Proxy",
+      },
+      cf: {
+        cacheEverything: true,
+        cacheTtl: 120,
+      },
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Failed to fetch target feed" }, 502, request, env);
+  }
+
+  if (!upstream.ok) {
+    return jsonResponse({ ok: false, error: `Target feed error: ${upstream.status}` }, 502, request, env);
+  }
+
+  const xmlText = await upstream.text();
+  const contentType = upstream.headers.get("Content-Type") || "application/xml; charset=utf-8";
+
+  return new Response(xmlText, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=120",
+      "X-RSS-Proxy": "happening-now-sync",
+      ...getCorsHeaders(request, env),
+    },
+  });
+}
+
 export default {
   async fetch(request, env) {
     if (!isOriginAllowed(request, env)) {
@@ -224,8 +301,14 @@ export default {
 
     const url = new URL(request.url);
 
-    if (url.pathname === "/health") {
-      return jsonResponse({ ok: true, service: "happening-now-sync" }, 200, request, env);
+    if (url.pathname === "/health" || url.pathname === "/v1/health") {
+      return jsonResponse({
+        ok: true,
+        service: "happening-now-sync",
+        version: "v1",
+        rssProxyRoute: "/v1/rss/raw",
+        timestamp: new Date().toISOString(),
+      }, 200, request, env);
     }
 
     if (url.pathname === "/v1/artemis/updates") {
@@ -239,6 +322,10 @@ export default {
       } catch (error) {
         return jsonResponse({ ok: false, error: error instanceof Error ? error.message : "Failed to fetch Artemis updates" }, 502, request, env);
       }
+    }
+
+    if (url.pathname === "/v1/rss/raw") {
+      return fetchRssThroughProxy(request, env, url);
     }
 
     const namespace = getNamespaceFromPath(url.pathname);
