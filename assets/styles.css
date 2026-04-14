@@ -2297,6 +2297,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   border:1px solid var(--border);
   background:rgba(255,255,255,.06);
   color:var(--text);
+  caret-color:var(--text);
   border-radius:14px;
   padding:12px 16px;
   font-weight:500;
@@ -2304,10 +2305,70 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   outline:none;
   transition:all 0.2s ease;
 }
+.select::placeholder, .input::placeholder, .textarea::placeholder{
+  color:var(--muted);
+  opacity:1;
+}
 .select:focus, .input:focus, .textarea:focus{
   border-color:var(--accent);
   background:rgba(255,255,255,.10);
   box-shadow:0 0 0 3px rgba(139,92,246,.1);
+}
+.select:disabled, .input:disabled, .textarea:disabled{
+  cursor:not-allowed;
+  opacity:0.72;
+  color:var(--muted);
+  background:rgba(255,255,255,.04);
+}
+
+select.select,
+select.input,
+.selectInline,
+.weatherMapTypeSelect,
+.stocksSortSelect,
+.timeWidgetSelect{
+  color-scheme:dark;
+}
+
+[data-theme="light"] select.select,
+[data-theme="light"] select.input,
+[data-theme="light"] .selectInline,
+[data-theme="light"] .weatherMapTypeSelect,
+[data-theme="light"] .stocksSortSelect,
+[data-theme="light"] .timeWidgetSelect{
+  color-scheme:light;
+}
+
+select.select option,
+select.input option,
+select.select optgroup,
+select.input optgroup,
+.selectInline option,
+.selectInline optgroup,
+.weatherMapTypeSelect option,
+.weatherMapTypeSelect optgroup,
+.stocksSortSelect option,
+.stocksSortSelect optgroup,
+.timeWidgetSelect option,
+.timeWidgetSelect optgroup{
+  background-color:var(--bg);
+  color:var(--text);
+}
+
+[data-theme="light"] select.select option,
+[data-theme="light"] select.input option,
+[data-theme="light"] select.select optgroup,
+[data-theme="light"] select.input optgroup,
+[data-theme="light"] .selectInline option,
+[data-theme="light"] .selectInline optgroup,
+[data-theme="light"] .weatherMapTypeSelect option,
+[data-theme="light"] .weatherMapTypeSelect optgroup,
+[data-theme="light"] .stocksSortSelect option,
+[data-theme="light"] .stocksSortSelect optgroup,
+[data-theme="light"] .timeWidgetSelect option,
+[data-theme="light"] .timeWidgetSelect optgroup{
+  background-color:#ffffff;
+  color:rgba(0,0,0,.9);
 }
 .textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;resize:vertical}
 .label{color:var(--muted);font-size:13px;font-weight:600;margin-bottom:4px}
@@ -2411,10 +2472,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 
 .newsManualWrap{
   margin-top:12px;
-  padding:10px 12px;
-  border:1px dashed rgba(255,255,255,.2);
+  padding:12px 14px;
+  border:1px dashed rgba(255,255,255,.22);
   border-radius:12px;
-  background:rgba(255,255,255,.02);
+  background:rgba(255,255,255,.025);
 }
 
 .newsManualToggle{
@@ -2432,10 +2493,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   display:grid;
   gap:10px;
   margin:0 0 12px;
-  padding:14px;
-  border:1px solid var(--border);
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+  padding:16px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
 }
 
 .newsDiscoveryIntro{
@@ -2632,10 +2693,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
     "drag  fields del";
   align-items:stretch;
   gap:8px;
-  padding:9px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  background:rgba(255,255,255,.03);
+  padding:11px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
   position:relative;
 }
 
@@ -2779,9 +2840,9 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 .newsDelIcon::after{ rotate:-38deg; }
 
 .newsEditorRow .input{
-  padding:9px 11px;
-  border-radius:10px;
-  font-size:13px;
+  padding:11px 12px;
+  border-radius:12px;
+  font-size:14px;
 }
 
 .newsEditorRow.drag-over{
@@ -2883,10 +2944,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   display:grid;
   gap:10px;
   margin:0 0 12px;
-  padding:14px;
-  border:1px solid var(--border);
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+  padding:16px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
 }
 
 .stockLookupForm{
@@ -2909,7 +2970,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 .stockLookupAssignLabel{
   font-size:12px;
   font-weight:700;
-  color:var(--muted);
+  color:rgba(255,255,255,.82);
   letter-spacing:.04em;
   text-transform:uppercase;
 }
@@ -2986,10 +3047,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
     "drag  fields del";
   align-items:stretch;
   gap:8px;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.03);
+  padding:11px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
   position:relative;
 }
 
@@ -3036,9 +3097,9 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 }
 
 .stockEditorRow .input{
-  padding:9px 12px;
-  border-radius:10px;
-  font-size:13px;
+  padding:11px 12px;
+  border-radius:12px;
+  font-size:14px;
 }
 
 .stockEditorSymbolInput{
@@ -4600,38 +4661,39 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 /* Settings Enhancements */
 .settingsTabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 6px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  gap: 10px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
   overflow-x: auto;
 }
 
 .settingsTab {
-  padding: 9px 13px;
-  border: 1px solid transparent;
-  background: transparent;
+  padding: 10px 15px;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.01);
   color: var(--muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
 .settingsTab:hover {
   color: var(--text);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(255,255,255,0.08);
 }
 
 .settingsTab.active {
   color: var(--text);
-  border-color: rgba(255,255,255,0.16);
-  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.22));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+  border-color: rgba(139,92,246,0.38);
+  background: linear-gradient(180deg, rgba(139,92,246,0.22), rgba(139,92,246,0.14));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 6px 18px rgba(0,0,0,0.12);
 }
 
 .settingsTabContent {
@@ -4644,12 +4706,12 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 
 .settingsPanelLead {
   margin-bottom: 12px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+  padding: 13px 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
 }
@@ -4790,10 +4852,11 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 }
 
 .collapsibleSection {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  margin-bottom: 12px;
   overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
 }
 
 .generalPanelRow {
@@ -4852,21 +4915,21 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
-  background: var(--panel);
+  padding: 13px 16px;
+  background: rgba(255,255,255,0.04);
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
   border: none;
   width: 100%;
   color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  transition: background 0.2s ease;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .collapsibleHeader:hover {
-  background: var(--panel2);
+  background: rgba(255,255,255,0.065);
 }
 
 .collapsibleHeader::after {
@@ -4887,7 +4950,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   max-width: min(46vw, 420px);
   font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
+  color: rgba(255,255,255,0.78);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4935,13 +4998,13 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   opacity: 0;
   transform: translateY(-4px);
   margin-bottom: 0;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: rgba(255,255,255,.04);
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.45;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,0.82);
+  font-size: 13px;
+  line-height: 1.5;
   transition: max-height .22s ease, opacity .18s ease, transform .22s ease, padding .22s ease, margin .22s ease;
 }
 
@@ -4949,8 +5012,8 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   max-height: 180px;
   opacity: 1;
   transform: translateY(0);
-  margin-bottom: 8px;
-  padding: 10px 12px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
 }
 
 .headerGuidePanel p{
@@ -4969,9 +5032,9 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 
 .collapsibleBody {
   display: none;
-  padding: 12px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--panel);
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
 }
 
 .collapsibleBody.expanded {
@@ -5719,26 +5782,96 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 
 .settingRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .settingRow:last-child {
   border-bottom: none;
 }
 
+.settingRow > :first-child {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.settingRow > .input,
+.settingRow > .select,
+.settingRow > select,
+.settingRow > .buttonGroup,
+.settingRow > .toggleSwitch,
+.settingRow > .settingsInlineUnitRow,
+.settingRow > .settingsInlineRangeRow {
+  flex: 0 0 auto;
+}
+
 .settingLabel {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .settingHint {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.settingsTabContent .input,
+.settingsTabContent .select,
+.settingsTabContent select,
+.settingsTabContent textarea {
+  min-height: 48px;
+  padding: 12px 15px;
+  font-size: 15px;
+  line-height: 1.35;
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.075);
+}
+
+.settingsTabContent textarea {
+  min-height: 120px;
+}
+
+.settingsTabContent .input:focus,
+.settingsTabContent .select:focus,
+.settingsTabContent select:focus,
+.settingsTabContent textarea:focus {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(139,92,246,0.70);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.14);
+}
+
+.settingsTabContent .settingsInlineUnitRow .input,
+.settingsTabContent .settingsInlineRangeRow .input,
+.settingsTabContent .settingsInlineUnitRow select,
+.settingsTabContent .settingsInlineRangeRow select {
+  min-height: 44px;
+}
+
+@media (max-width: 980px) {
+  .settingRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .settingRow > :first-child,
+  .settingRow > .input,
+  .settingRow > .select,
+  .settingRow > select,
+  .settingRow > .buttonGroup,
+  .settingRow > .toggleSwitch,
+  .settingRow > .settingsInlineUnitRow,
+  .settingRow > .settingsInlineRangeRow {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .presetButtons {
