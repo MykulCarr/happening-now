@@ -164,6 +164,7 @@
   const DEFAULTS = {
     theme: "dark",
     density: "compact",
+    renderMode: "smooth",
     zipCode: "49201",
     weatherRefreshMinutes: 10,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York",
@@ -231,6 +232,9 @@
 
     out.theme = out.theme === "light" ? "light" : "dark";
     out.density = ["compact","cozy","comfortable"].includes(out.density) ? out.density : "comfortable";
+    out.renderMode = ["smooth", "stable"].includes(String(out.renderMode || "").toLowerCase())
+      ? String(out.renderMode).toLowerCase()
+      : DEFAULTS.renderMode;
 
     out.zipCode = String(out.zipCode || "").trim();
     if(!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;
@@ -266,7 +270,7 @@
       rss:  String(w?.rss  || "").trim(),
       site: String(w?.site || "").trim(),
       headlinesCount: Math.max(1, Math.min(20, Number(w?.headlinesCount || 6)))
-    })).filter(w => w.rss).slice(0, 9); // Max 9 sources
+    })).filter(w => w.rss).slice(0, 15); // Max 15 sources
 
     if(!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
     out.stocks = out.stocks.map(s => ({
@@ -740,6 +744,7 @@
   function applyThemeDensity(cfg){
     document.documentElement.setAttribute("data-theme", cfg.theme);
     document.documentElement.setAttribute("data-density", cfg.density);
+    document.documentElement.setAttribute("data-render-mode", cfg.renderMode || "smooth");
     document.documentElement.setAttribute("data-font-size", "normal");
   }
 
@@ -1721,10 +1726,21 @@
     return m ? m[1] : full;                         // => "ET"
   }
   
+  function maybeRenderLegacyTopbar(cfg){
+    const topbar = document.getElementById("topbar");
+    if(!topbar) return;
+    if(topbar.classList.contains("hn-topbar")) return;
+    renderTopbar(cfg);
+  }
+
   // Global App API
   const cfg = loadConfig();
   applyThemeDensity(cfg);
-  renderTopbar(cfg);
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once:true });
+  }else{
+    maybeRenderLegacyTopbar(cfg);
+  }
 
   function cacheSet(key, value){
     try{
@@ -2666,10 +2682,31 @@
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
           console.log('[SW] Service Worker registered:', registration.scope);
+
+          // Proactively check for updates on each load.
+          registration.update().catch(() => {});
+
+          // If an update is found, ask it to install immediately.
+          registration.addEventListener('updatefound', () => {
+            const worker = registration.installing;
+            if (!worker) return;
+            worker.addEventListener('statechange', () => {
+              if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                worker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
         })
         .catch(error => {
           console.warn('[SW] Service Worker registration failed:', error);
         });
+
+      // Reload once when a newly installed service worker takes control.
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (window.__hnSwReloaded) return;
+        window.__hnSwReloaded = true;
+        window.location.reload();
+      });
     });
   }
 })();

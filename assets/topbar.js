@@ -70,8 +70,6 @@
 
   const root = mount;
 
-  let isNavigating = false;
-
   function normalizePageFromPath(pathname) {
     // Extract filename from pathname, handle edge cases
     let filename = (pathname.split('/').pop() || '').trim();
@@ -187,155 +185,13 @@
   // Initialize mobile menu
   setupMobileMenu();
   syncTopbarSectionSpacing();
-  function removeDynamicPageAssets() {
-    document.querySelectorAll('[data-hn-page-head="1"]').forEach(node => node.remove());
-    document.querySelectorAll('[data-hn-page-script="1"]').forEach(node => node.remove());
-  }
-
-  function markInitialNonCoreHeadAssets() {
-    document.head.querySelectorAll('style, link[rel="stylesheet"]').forEach(node => {
-      if (node.tagName === 'LINK') {
-        const href = node.getAttribute('href') || '';
-        if (/assets\/styles\.css(?:\?|$)/i.test(href)) return;
-      }
-      if (!node.hasAttribute('data-hn-page-head')) {
-        node.setAttribute('data-hn-page-head', '1');
-      }
-    });
-  }
-
-  function syncPageHead(doc) {
-    removeDynamicPageAssets();
-
-    const headNodes = doc.head.querySelectorAll('style, link[rel="stylesheet"]');
-    headNodes.forEach(node => {
-      if (node.tagName === 'LINK') {
-        const href = node.getAttribute('href') || '';
-        if (/assets\/styles\.css(?:\?|$)/i.test(href)) return;
-      }
-
-      const clone = node.cloneNode(true);
-      clone.setAttribute('data-hn-page-head', '1');
-      document.head.appendChild(clone);
-    });
-  }
-
-  function loadExternalScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = false;
-      script.setAttribute('data-hn-page-script', '1');
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed loading script: ${src}`));
-      document.body.appendChild(script);
-    });
-  }
-
-  function runInlineScript(code) {
-    const script = document.createElement('script');
-    script.setAttribute('data-hn-page-script', '1');
-    script.textContent = `(() => {\n${code}\n})();`;
-    document.body.appendChild(script);
-  }
-
-  async function runPageScripts(doc) {
-    const scripts = doc.querySelectorAll('body script');
-    for (const node of scripts) {
-      const src = node.getAttribute('src');
-      if (src) {
-        const abs = new URL(src, window.location.href).href;
-        if (/\/assets\/(common|topbar|infobar)\.js(?:\?|$)/i.test(abs)) continue;
-        await loadExternalScript(abs);
-      } else {
-        const code = node.textContent || '';
-        if (code.trim()) runInlineScript(code);
-      }
-    }
-  }
-
-  function replaceMainAndFooter(doc) {
-    const nextMain = doc.querySelector('main.container');
-    const currentMain = document.querySelector('main.container');
-    if (!nextMain || !currentMain) return false;
-
-    currentMain.replaceWith(nextMain);
-
-    document.querySelectorAll('.page-footer').forEach(el => el.remove());
-    const nextFooter = doc.querySelector('.page-footer');
-    if (nextFooter) {
-      const main = document.querySelector('main.container');
-      if (main) main.insertAdjacentElement('afterend', nextFooter);
-    }
-
-    return true;
-  }
-
-  async function navigatePartial(targetHref, pushHistory = true) {
-    if (isNavigating) return;
-    const targetUrl = new URL(targetHref, window.location.href);
-    if (targetUrl.origin !== window.location.origin) {
-      window.location.href = targetUrl.href;
-      return;
-    }
-
-    isNavigating = true;
-    try {
-      const response = await fetch(targetUrl.href, { cache: 'no-store' });
-      if (!response.ok) {
-        window.location.href = targetUrl.href;
-        return;
-      }
-
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-
-      const replaced = replaceMainAndFooter(doc);
-      if (!replaced) {
-        window.location.href = targetUrl.href;
-        return;
-      }
-
-      syncPageHead(doc);
-      document.title = doc.title || document.title;
-      if (pushHistory) {
-        window.history.pushState({ partial: true }, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
-      }
-
-      setActiveNav(targetUrl.pathname);
-      await runPageScripts(doc);
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      window.dispatchEvent(new CustomEvent('hn:page-changed', { detail: { path: targetUrl.pathname } }));
-    } catch (err) {
-      console.error('[topbar] partial navigation failed', err);
-      window.location.href = targetHref;
-    } finally {
-      isNavigating = false;
-    }
-  }
-
-  markInitialNonCoreHeadAssets();
   setActiveNav();
 
-  // Click on brand: fully refresh the page
+  // Click on brand: refresh current page data by reloading this page.
   const brand = document.getElementById('hnBrand');
   brand.addEventListener('click', (e) => {
     e.preventDefault();
-    navigatePartial('index.html');
-  });
-
-  mount.addEventListener('click', (event) => {
-    const link = event.target.closest('.hn-nav-link, .hn-settings-link');
-    if (!link) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (link.target === '_blank') return;
-
-    event.preventDefault();
-    navigatePartial(link.getAttribute('href'));
-  });
-
-  window.addEventListener('popstate', () => {
-    navigatePartial(window.location.href, false);
+    window.location.reload();
   });
 
   window.addEventListener('resize', syncTopbarSectionSpacing);
@@ -347,7 +203,7 @@
 
   // Expose a small API on window.App if available
   try {
-    if (window.App) window.App.TopBar = { mount: root, navigatePartial };
+    if (window.App) window.App.TopBar = { mount: root };
   } catch (err) { /* ignore */ }
 
 })();

@@ -46,7 +46,6 @@
         <h1>Weather</h1>
         <div class="sub" id="weatherSub">—</div>
         <div class="sub">Update WEATHER criteria in <a class="subLink" href="settings.html#weather">SETTINGS</a></div>
-        <div class="sub diagLine" id="weatherDiag" aria-live="polite">Backend: checking...</div>
       </div>
       <div class="pageHeadActions">
         <button id="weatherRefreshBtn" class="btn" type="button">Refresh</button>
@@ -156,12 +155,16 @@
         </div>
       </div>
     </section>
+
+    <div class="pageDiagDock">
+      <div class="sub diagLine" id="weatherDiag" aria-live="polite">Backend: checking...</div>
+    </div>
   </main>
 
   <footer class="page-footer">
     <p>🌤️ Weather data: Open-Meteo API • Alerts & forecasts: National Weather Service (weather.gov) • Geocoding: Zippopotam.us</p>
     <p class="pageFooterFinePrint">Hourly and daily forecasts updated automatically • Local and national alerts displayed • Map powered by Windy.com widget</p>
-    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a> • <a href="mailto:hn-station@protonmail.com" target="_blank" rel="noopener noreferrer">Feedback</a></p>
   </footer>
 
   <!-- Map Legend Modal -->

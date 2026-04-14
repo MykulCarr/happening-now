@@ -1,5 +1,6 @@
 // Service Worker for HAPPENING NOW! Dashboard
-const CACHE_NAME = 'happening-now-v2';
+const BUILD_ID = '__BUILD_ID__';
+const CACHE_NAME = `happening-now-${BUILD_ID}`;
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -43,6 +44,12 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Fetch event - network first, fallback to cache

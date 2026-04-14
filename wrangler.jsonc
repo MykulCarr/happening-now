@@ -6,9 +6,15 @@
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".deploy-public"
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "routes": [
+    {
+      "pattern": "happening-now.net/*",
+      "zone_name": "happening-now.net"
+    }
   ]
 }

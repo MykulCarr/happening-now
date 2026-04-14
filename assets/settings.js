@@ -52,6 +52,7 @@
 
   // General inputs
   const themeSel = document.getElementById("themeSel");
+  const renderModeSel = document.getElementById("renderModeSel");
   const zipInput = document.getElementById("zipInput");
   const wxRefreshInput = document.getElementById("wxRefreshInput");
   const weatherStaleWarnInput = document.getElementById("weatherStaleWarnInput");
@@ -74,9 +75,22 @@
 
   // News
   const stocksEditor = document.getElementById("stocksEditor");
-  const addStockBtn = document.getElementById("addStockBtn");
+  const stockLookupForm = document.getElementById("stockLookupForm");
+  const stockLookupInput = document.getElementById("stockLookupInput");
+  const stockLookupBtn = document.getElementById("stockLookupBtn");
+  const stockAssignTarget = document.getElementById("stockAssignTarget");
+  const stockLookupStatus = document.getElementById("stockLookupStatus");
+  const stockLookupResults = document.getElementById("stockLookupResults");
   const newsEditor = document.getElementById("newsEditor");
   const addNewsBtn = document.getElementById("addNewsBtn");
+  const newsManualToggle = document.getElementById("newsManualToggle");
+  const newsManualBody = document.getElementById("newsManualBody");
+  const newsDiscoveryForm = document.getElementById("newsDiscoveryForm");
+  const newsDiscoveryInput = document.getElementById("newsDiscoveryInput");
+  const newsDiscoveryBtn = document.getElementById("newsDiscoveryBtn");
+  const newsDiscoveryBrowse = document.getElementById("newsDiscoveryBrowse");
+  const newsDiscoveryStatus = document.getElementById("newsDiscoveryStatus");
+  const newsDiscoveryResults = document.getElementById("newsDiscoveryResults");
 
   // System
   const exportBtn = document.getElementById("exportBtn");
@@ -557,6 +571,197 @@
     }
   }
 
+  function setStockLookupStatus(message, type = "default"){
+    if(!stockLookupStatus) return;
+    stockLookupStatus.textContent = message || "";
+    stockLookupStatus.className = `stockLookupStatus ${type ? `is-${type}` : ""}`.trim();
+  }
+
+  function setStockLookupBusy(isBusy){
+    if(stockLookupBtn){
+      stockLookupBtn.disabled = isBusy;
+      stockLookupBtn.textContent = isBusy ? "Searching..." : "Search Symbols";
+    }
+    if(stockLookupInput){
+      stockLookupInput.setAttribute("aria-busy", isBusy ? "true" : "false");
+    }
+  }
+
+  function normalizeStockLookupResult(raw){
+    const symbol = String(raw?.symbol || "").trim().toUpperCase();
+    if(!symbol) return null;
+    const label = String(raw?.shortname || raw?.longname || raw?.name || "").trim();
+    const exchange = String(raw?.exchDisp || raw?.exchange || "").trim();
+    const type = String(raw?.typeDisp || raw?.quoteType || "").trim();
+    return { symbol, label, exchange, type };
+  }
+
+  async function searchStockLookupCandidates(rawQuery){
+    const query = String(rawQuery || "").trim();
+    if(!query) return [];
+
+    const proxyBase = String(window.App?.RSS_PROXY_BASE || "").trim();
+    if(!proxyBase) return [];
+
+    const targetUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=24&newsCount=0&lang=en-US&region=US`;
+    const proxyUrl = `${proxyBase}${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl, { cache: "no-store" });
+    if(!res.ok) return [];
+
+    const payload = await res.json();
+    const quotes = Array.isArray(payload?.quotes) ? payload.quotes : [];
+    const seen = new Set();
+    return quotes
+      .map(normalizeStockLookupResult)
+      .filter((row) => {
+        if(!row) return false;
+        if(seen.has(row.symbol)) return false;
+        seen.add(row.symbol);
+        return true;
+      });
+  }
+
+  function renderStockAssignTargetOptions(){
+    if(!stockAssignTarget) return;
+
+    const previousValue = stockAssignTarget.value;
+    stockAssignTarget.innerHTML = "";
+
+    const newOption = document.createElement("option");
+    newOption.value = "new";
+    newOption.textContent = "New row";
+    stockAssignTarget.appendChild(newOption);
+
+    (cfg.stocks || []).forEach((stock, index) => {
+      const option = document.createElement("option");
+      option.value = `idx:${index}`;
+      const symbol = String(stock?.symbol || "").trim() || "(blank symbol)";
+      const label = String(stock?.label || "").trim();
+      option.textContent = `Row ${index + 1}: ${symbol}${label ? ` - ${label}` : ""}`;
+      stockAssignTarget.appendChild(option);
+    });
+
+    const hasPrevious = Array.from(stockAssignTarget.options).some((opt) => opt.value === previousValue);
+    stockAssignTarget.value = hasPrevious ? previousValue : "new";
+  }
+
+  function assignStockLookupResult(result){
+    if(!result) return;
+
+    cfg.stocks = cfg.stocks || [];
+    const targetValue = String(stockAssignTarget?.value || "new");
+    let targetIndex = -1;
+
+    if(targetValue.startsWith("idx:")){
+      const parsedIndex = Number(targetValue.split(":")[1]);
+      if(Number.isInteger(parsedIndex) && parsedIndex >= 0 && parsedIndex < cfg.stocks.length){
+        targetIndex = parsedIndex;
+      }
+    }
+
+    if(targetIndex >= 0){
+      cfg.stocks[targetIndex] = {
+        ...cfg.stocks[targetIndex],
+        symbol: result.symbol,
+        label: result.label || cfg.stocks[targetIndex]?.label || result.symbol
+      };
+      renderStocks();
+      setStatus(`Assigned ${result.symbol} to row ${targetIndex + 1} (not saved yet)`, "unsaved");
+      setStockLookupStatus(`Assigned ${result.symbol} to row ${targetIndex + 1}.`, "success");
+      return;
+    }
+
+    cfg.stocks.push({ symbol: result.symbol, label: result.label || result.symbol });
+    renderStocks();
+    setStatus(`Added ${result.symbol} to watchlist (not saved yet)`, "unsaved");
+    setStockLookupStatus(`Added ${result.symbol} as a new row.`, "success");
+    if(stockAssignTarget) stockAssignTarget.value = "new";
+  }
+
+  function renderStockLookupResults(results){
+    if(!stockLookupResults) return;
+
+    const list = Array.isArray(results) ? results : stockLookupCurrentResults;
+    stockLookupCurrentResults = list.slice();
+    stockLookupResults.innerHTML = "";
+
+    if(list.length === 0) return;
+
+    list.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "stockLookupCard";
+
+      const top = document.createElement("div");
+      top.className = "stockLookupCardTop";
+
+      const symbol = document.createElement("div");
+      symbol.className = "stockLookupSymbol";
+      symbol.textContent = item.symbol;
+
+      const name = document.createElement("div");
+      name.className = "stockLookupName";
+      name.textContent = item.label || "Unnamed listing";
+
+      top.appendChild(symbol);
+      top.appendChild(name);
+
+      const meta = document.createElement("div");
+      meta.className = "stockLookupMeta";
+      const parts = [item.exchange, item.type].filter(Boolean);
+      meta.textContent = parts.length ? parts.join(" · ") : "Exchange info unavailable";
+
+      const actions = document.createElement("div");
+      actions.className = "stockLookupActions";
+      const assignBtn = document.createElement("button");
+      assignBtn.type = "button";
+      assignBtn.className = "btn stockLookupAssignBtn";
+      assignBtn.textContent = "Assign";
+      assignBtn.addEventListener("click", () => assignStockLookupResult(item));
+      actions.appendChild(assignBtn);
+
+      card.appendChild(top);
+      card.appendChild(meta);
+      card.appendChild(actions);
+      stockLookupResults.appendChild(card);
+    });
+  }
+
+  async function runStockLookup(rawQuery){
+    const query = String(rawQuery || "").trim();
+    if(!query){
+      setStockLookupStatus("Enter a ticker or company name first.", "error");
+      if(stockLookupResults) stockLookupResults.innerHTML = "";
+      return;
+    }
+
+    const runId = ++stockLookupRunId;
+    setStockLookupBusy(true);
+    setStockLookupStatus(`Searching symbols for "${query}"...`, "loading");
+    if(stockLookupResults) stockLookupResults.innerHTML = "";
+
+    try{
+      const results = await searchStockLookupCandidates(query);
+      if(runId !== stockLookupRunId) return;
+
+      renderStockLookupResults(results);
+      if(results.length === 0){
+        setStockLookupStatus("No symbols matched that search. Try ticker, company name, or exchange-prefixed symbol.", "error");
+      }else{
+        const noun = results.length === 1 ? "match" : "matches";
+        setStockLookupStatus(`Found ${results.length} ${noun}. Choose one and click Assign.`, "success");
+      }
+    }catch(error){
+      window.App?.handleError?.(error, "Stock Symbol Lookup");
+      if(runId !== stockLookupRunId) return;
+      if(stockLookupResults) stockLookupResults.innerHTML = "";
+      setStockLookupStatus("Stock lookup is unavailable right now. Please try again shortly.", "error");
+    }finally{
+      if(runId === stockLookupRunId){
+        setStockLookupBusy(false);
+      }
+    }
+  }
+
   const WELL_KNOWN_SOURCE_NAMES = {
     // Major US news
     "apnews.com": "AP News",       "ap.org": "AP News",
@@ -618,6 +823,1164 @@
     "news.google.com": "Google News",
     "yahoo.com": "Yahoo News",
   };
+
+  const NEWS_DISCOVERY_COMMON_PATHS = [
+    "/feed",
+    "/rss",
+    "/rss.xml",
+    "/feed.xml",
+    "/atom.xml",
+    "/index.xml",
+    "/feeds/posts/default?alt=rss",
+    "/news/rss.xml",
+    "/news/feed"
+  ];
+  const NEWS_DISCOVERY_MAX_RESULTS = 24;
+  const NEWS_DISCOVERY_MAX_SITE_PROBES = 5;
+  const NEWS_SOURCE_LIMIT = 15;
+  const NEWS_DISCOVERY_CACHE_PREFIX = "jas_news_discovery_v2:";
+  const NEWS_DISCOVERY_TOPIC_PRESETS = [
+    { key: "top", label: "Top Stories", query: "latest news" },
+    { key: "world", label: "World", query: "world news" },
+    { key: "politics", label: "Politics", query: "politics" },
+    { key: "business", label: "Business", query: "business" },
+    { key: "markets", label: "Markets", query: "markets finance" },
+    { key: "technology", label: "Technology", query: "technology" },
+    { key: "science", label: "Science", query: "science" },
+    { key: "health", label: "Health", query: "health" },
+    { key: "sports", label: "Sports", query: "sports" },
+    { key: "culture", label: "Culture", query: "culture arts entertainment" },
+    { key: "lifestyle", label: "Lifestyle", query: "lifestyle travel food" },
+    { key: "opinion", label: "Opinion", query: "opinion analysis editorials" }
+  ];
+  const NEWS_DISCOVERY_SOURCE_PRESETS = [
+    {
+      publisher: "BBC",
+      site: "https://www.bbc.com/news",
+      domain: "bbc.com",
+      aliases: ["bbc", "bbc news", "bbc.com", "bbc.co.uk"],
+      entries: [
+        { category: "Top Stories", rss: "https://feeds.bbci.co.uk/news/rss.xml", site: "https://www.bbc.com/news", type: "direct" },
+        { category: "World", rss: "https://feeds.bbci.co.uk/news/world/rss.xml", site: "https://www.bbc.com/news/world", type: "direct" },
+        { category: "Business", rss: "https://feeds.bbci.co.uk/news/business/rss.xml", site: "https://www.bbc.com/news/business", type: "direct" },
+        { category: "Technology", rss: "https://feeds.bbci.co.uk/news/technology/rss.xml", site: "https://www.bbc.com/news/technology", type: "direct" },
+        { category: "Sports", rss: "https://feeds.bbci.co.uk/sport/rss.xml?edition=uk", site: "https://www.bbc.com/sport", type: "direct" },
+        { category: "Culture", rss: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", site: "https://www.bbc.com/news/entertainment_and_arts", type: "direct" }
+      ]
+    },
+    {
+      publisher: "NPR",
+      site: "https://www.npr.org",
+      domain: "npr.org",
+      aliases: ["npr", "npr.org", "national public radio"],
+      entries: [
+        { category: "Top Stories", rss: "https://feeds.npr.org/1001/rss.xml", site: "https://www.npr.org", type: "direct" }
+      ],
+      topicKeys: ["world", "politics", "business", "technology", "science", "culture", "opinion"]
+    },
+    {
+      publisher: "Reuters",
+      site: "https://www.reuters.com",
+      domain: "reuters.com",
+      aliases: ["reuters", "reuters.com"],
+      topicKeys: ["top", "world", "politics", "business", "markets", "technology", "sports", "opinion"]
+    },
+    {
+      publisher: "The Guardian",
+      site: "https://www.theguardian.com",
+      domain: "theguardian.com",
+      aliases: ["guardian", "the guardian", "theguardian.com", "guardian.com"],
+      entries: [
+        { category: "US News", rss: "https://www.theguardian.com/us-news/rss", site: "https://www.theguardian.com/us-news", type: "direct" }
+      ],
+      topicKeys: ["world", "politics", "business", "technology", "science", "sports", "culture", "opinion"]
+    },
+    {
+      publisher: "PBS NewsHour",
+      site: "https://www.pbs.org/newshour",
+      domain: "pbs.org",
+      aliases: ["pbs", "pbs newshour", "pbs.org"],
+      entries: [
+        { category: "Top Stories", rss: "https://www.pbs.org/newshour/feeds/rss/headlines", site: "https://www.pbs.org/newshour", type: "direct" }
+      ],
+      topicKeys: ["world", "politics", "science", "health", "culture"]
+    },
+    {
+      publisher: "Al Jazeera",
+      site: "https://www.aljazeera.com",
+      domain: "aljazeera.com",
+      aliases: ["al jazeera", "aljazeera", "aljazeera.com"],
+      entries: [
+        { category: "Top Stories", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", type: "direct" }
+      ],
+      topicKeys: ["world", "politics", "business", "technology", "sports", "opinion"]
+    },
+    {
+      publisher: "Deutsche Welle",
+      site: "https://www.dw.com",
+      domain: "dw.com",
+      aliases: ["deutsche welle", "dw", "dw.com"],
+      entries: [
+        { category: "Top Stories", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", type: "direct" }
+      ],
+      topicKeys: ["world", "politics", "business", "technology", "science", "sports", "culture", "opinion"]
+    },
+    {
+      publisher: "AP News",
+      site: "https://apnews.com",
+      domain: "apnews.com",
+      aliases: ["ap", "associated press", "apnews", "apnews.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "science", "health", "sports"]
+    },
+    {
+      publisher: "ABC News",
+      site: "https://abcnews.go.com",
+      domain: "abcnews.go.com",
+      aliases: ["abc", "abc news", "abcnews", "abcnews.go.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "health", "sports"]
+    },
+    {
+      publisher: "CBS News",
+      site: "https://www.cbsnews.com",
+      domain: "cbsnews.com",
+      aliases: ["cbs", "cbs news", "cbsnews", "cbsnews.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "health"]
+    },
+    {
+      publisher: "NBC News",
+      site: "https://www.nbcnews.com",
+      domain: "nbcnews.com",
+      aliases: ["nbc", "nbc news", "nbcnews", "nbcnews.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "health"]
+    },
+    {
+      publisher: "CNN",
+      site: "https://www.cnn.com",
+      domain: "cnn.com",
+      aliases: ["cnn", "cnn.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "health", "sports"]
+    },
+    {
+      publisher: "Fox News",
+      site: "https://www.foxnews.com",
+      domain: "foxnews.com",
+      aliases: ["fox", "fox news", "foxnews", "foxnews.com"],
+      topicKeys: ["top", "world", "politics", "business", "health", "sports", "opinion"]
+    },
+    {
+      publisher: "The New York Times",
+      site: "https://www.nytimes.com",
+      domain: "nytimes.com",
+      aliases: ["new york times", "nytimes", "nyt", "nytimes.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "science", "health", "sports", "culture", "opinion"]
+    },
+    {
+      publisher: "The Washington Post",
+      site: "https://www.washingtonpost.com",
+      domain: "washingtonpost.com",
+      aliases: ["washington post", "wapo", "washingtonpost", "washingtonpost.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "health", "sports", "culture", "opinion"]
+    },
+    {
+      publisher: "USA Today",
+      site: "https://www.usatoday.com",
+      domain: "usatoday.com",
+      aliases: ["usa today", "usatoday", "usatoday.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Politico",
+      site: "https://www.politico.com",
+      domain: "politico.com",
+      aliases: ["politico", "politico.com"],
+      topicKeys: ["top", "politics", "world", "business", "opinion"]
+    },
+    {
+      publisher: "Axios",
+      site: "https://www.axios.com",
+      domain: "axios.com",
+      aliases: ["axios", "axios.com"],
+      topicKeys: ["top", "politics", "business", "technology", "science"]
+    },
+    {
+      publisher: "The Hill",
+      site: "https://thehill.com",
+      domain: "thehill.com",
+      aliases: ["the hill", "thehill", "thehill.com"],
+      topicKeys: ["top", "politics", "business", "opinion"]
+    },
+    {
+      publisher: "Bloomberg",
+      site: "https://www.bloomberg.com",
+      domain: "bloomberg.com",
+      aliases: ["bloomberg", "bloomberg.com"],
+      topicKeys: ["top", "world", "politics", "business", "markets", "technology", "opinion"]
+    },
+    {
+      publisher: "CNBC",
+      site: "https://www.cnbc.com",
+      domain: "cnbc.com",
+      aliases: ["cnbc", "cnbc.com"],
+      topicKeys: ["top", "business", "markets", "technology"]
+    },
+    {
+      publisher: "MarketWatch",
+      site: "https://www.marketwatch.com",
+      domain: "marketwatch.com",
+      aliases: ["marketwatch", "marketwatch.com"],
+      topicKeys: ["top", "business", "markets", "technology", "opinion"]
+    },
+    {
+      publisher: "Financial Times",
+      site: "https://www.ft.com",
+      domain: "ft.com",
+      aliases: ["financial times", "ft", "ft.com"],
+      topicKeys: ["top", "world", "politics", "business", "markets", "technology", "opinion"]
+    },
+    {
+      publisher: "The Wall Street Journal",
+      site: "https://www.wsj.com",
+      domain: "wsj.com",
+      aliases: ["wall street journal", "wsj", "wsj.com"],
+      topicKeys: ["top", "world", "politics", "business", "markets", "technology", "opinion", "lifestyle"]
+    },
+    {
+      publisher: "Fortune",
+      site: "https://fortune.com",
+      domain: "fortune.com",
+      aliases: ["fortune", "fortune.com"],
+      topicKeys: ["top", "business", "markets", "technology", "opinion"]
+    },
+    {
+      publisher: "Ars Technica",
+      site: "https://arstechnica.com",
+      domain: "arstechnica.com",
+      aliases: ["ars technica", "arstechnica", "arstechnica.com"],
+      entries: [
+        { category: "Top Stories", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", type: "direct" }
+      ],
+      topicKeys: ["technology", "science", "business"]
+    },
+    {
+      publisher: "TechCrunch",
+      site: "https://techcrunch.com",
+      domain: "techcrunch.com",
+      aliases: ["techcrunch", "tech crunch", "techcrunch.com"],
+      topicKeys: ["top", "technology", "business"]
+    },
+    {
+      publisher: "The Verge",
+      site: "https://www.theverge.com",
+      domain: "theverge.com",
+      aliases: ["the verge", "verge", "theverge", "theverge.com"],
+      topicKeys: ["top", "technology", "science", "culture"]
+    },
+    {
+      publisher: "Wired",
+      site: "https://www.wired.com",
+      domain: "wired.com",
+      aliases: ["wired", "wired.com"],
+      topicKeys: ["top", "technology", "science", "culture", "business"]
+    },
+    {
+      publisher: "CNET",
+      site: "https://www.cnet.com",
+      domain: "cnet.com",
+      aliases: ["cnet", "cnet.com"],
+      topicKeys: ["top", "technology", "science", "culture"]
+    },
+    {
+      publisher: "Engadget",
+      site: "https://www.engadget.com",
+      domain: "engadget.com",
+      aliases: ["engadget", "engadget.com"],
+      topicKeys: ["top", "technology", "science", "culture"]
+    },
+    {
+      publisher: "9to5Mac",
+      site: "https://9to5mac.com",
+      domain: "9to5mac.com",
+      aliases: ["9to5mac", "9to5 mac", "9to5mac.com"],
+      topicKeys: ["top", "technology", "business"]
+    },
+    {
+      publisher: "MacRumors",
+      site: "https://www.macrumors.com",
+      domain: "macrumors.com",
+      aliases: ["macrumors", "mac rumors", "macrumors.com"],
+      topicKeys: ["top", "technology", "business"]
+    },
+    {
+      publisher: "Nature",
+      site: "https://www.nature.com",
+      domain: "nature.com",
+      aliases: ["nature", "nature.com"],
+      entries: [
+        { category: "Top Stories", rss: "https://www.nature.com/nature.rss", site: "https://www.nature.com", type: "direct" }
+      ],
+      topicKeys: ["science", "health", "technology"]
+    },
+    {
+      publisher: "Scientific American",
+      site: "https://www.scientificamerican.com",
+      domain: "scientificamerican.com",
+      aliases: ["scientific american", "scientificamerican", "scientificamerican.com"],
+      topicKeys: ["top", "science", "health", "technology"]
+    },
+    {
+      publisher: "New Scientist",
+      site: "https://www.newscientist.com",
+      domain: "newscientist.com",
+      aliases: ["new scientist", "newscientist", "newscientist.com"],
+      topicKeys: ["top", "science", "health", "technology"]
+    },
+    {
+      publisher: "National Geographic",
+      site: "https://www.nationalgeographic.com",
+      domain: "nationalgeographic.com",
+      aliases: ["national geographic", "nat geo", "natgeo", "nationalgeographic.com"],
+      topicKeys: ["top", "science", "culture", "lifestyle"]
+    },
+    {
+      publisher: "Space.com",
+      site: "https://www.space.com",
+      domain: "space.com",
+      aliases: ["space.com", "space news", "space"],
+      topicKeys: ["top", "science", "technology"]
+    },
+    {
+      publisher: "ESPN",
+      site: "https://www.espn.com",
+      domain: "espn.com",
+      aliases: ["espn", "espn.com"],
+      topicKeys: ["top", "sports", "business"]
+    },
+    {
+      publisher: "Sports Illustrated",
+      site: "https://www.si.com",
+      domain: "si.com",
+      aliases: ["sports illustrated", "si", "si.com"],
+      topicKeys: ["top", "sports", "culture"]
+    },
+    {
+      publisher: "Sky News",
+      site: "https://news.sky.com",
+      domain: "news.sky.com",
+      aliases: ["sky news", "skynews", "news.sky.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "sports"]
+    },
+    {
+      publisher: "CBC News",
+      site: "https://www.cbc.ca/news",
+      domain: "cbc.ca",
+      aliases: ["cbc", "cbc news", "cbc.ca"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "sports", "health"]
+    },
+    {
+      publisher: "ProPublica",
+      site: "https://www.propublica.org",
+      domain: "propublica.org",
+      aliases: ["propublica", "propublica.org"],
+      topicKeys: ["top", "politics", "health", "business"]
+    },
+    {
+      publisher: "Vox",
+      site: "https://www.vox.com",
+      domain: "vox.com",
+      aliases: ["vox", "vox.com"],
+      topicKeys: ["top", "world", "politics", "business", "technology", "culture", "opinion"]
+    },
+    {
+      publisher: "Los Angeles Times",
+      site: "https://www.latimes.com",
+      domain: "latimes.com",
+      aliases: ["la times", "los angeles times", "latimes", "latimes.com"],
+      topicKeys: ["top", "world", "politics", "business", "sports", "culture", "lifestyle"]
+    },
+    {
+      publisher: "San Francisco Chronicle",
+      site: "https://www.sfchronicle.com",
+      domain: "sfchronicle.com",
+      aliases: ["sf chronicle", "san francisco chronicle", "sfchronicle", "sfchronicle.com"],
+      topicKeys: ["top", "politics", "business", "technology", "sports", "culture"]
+    },
+    {
+      publisher: "The Seattle Times",
+      site: "https://www.seattletimes.com",
+      domain: "seattletimes.com",
+      aliases: ["seattle times", "the seattle times", "seattletimes", "seattletimes.com"],
+      topicKeys: ["top", "politics", "business", "technology", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Oregonian",
+      site: "https://www.oregonlive.com",
+      domain: "oregonlive.com",
+      aliases: ["oregonian", "oregon live", "oregonlive", "oregonlive.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Denver Post",
+      site: "https://www.denverpost.com",
+      domain: "denverpost.com",
+      aliases: ["denver post", "denverpost", "denverpost.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Dallas Morning News",
+      site: "https://www.dallasnews.com",
+      domain: "dallasnews.com",
+      aliases: ["dallas morning news", "dallasnews", "dallasnews.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Houston Chronicle",
+      site: "https://www.houstonchronicle.com",
+      domain: "houstonchronicle.com",
+      aliases: ["houston chronicle", "houstonchronicle", "houstonchronicle.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Chicago Tribune",
+      site: "https://www.chicagotribune.com",
+      domain: "chicagotribune.com",
+      aliases: ["chicago tribune", "chicagotribune", "chicagotribune.com"],
+      topicKeys: ["top", "politics", "business", "sports", "culture", "lifestyle"]
+    },
+    {
+      publisher: "Detroit Free Press",
+      site: "https://www.freep.com",
+      domain: "freep.com",
+      aliases: ["detroit free press", "freep", "freep.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Boston Globe",
+      site: "https://www.bostonglobe.com",
+      domain: "bostonglobe.com",
+      aliases: ["boston globe", "bostonglobe", "bostonglobe.com"],
+      topicKeys: ["top", "politics", "business", "sports", "culture", "lifestyle"]
+    },
+    {
+      publisher: "The Philadelphia Inquirer",
+      site: "https://www.inquirer.com",
+      domain: "inquirer.com",
+      aliases: ["philadelphia inquirer", "inquirer", "inquirer.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Miami Herald",
+      site: "https://www.miamiherald.com",
+      domain: "miamiherald.com",
+      aliases: ["miami herald", "miamiherald", "miamiherald.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Arizona Republic",
+      site: "https://www.azcentral.com",
+      domain: "azcentral.com",
+      aliases: ["arizona republic", "azcentral", "azcentral.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Kansas City Star",
+      site: "https://www.kansascity.com",
+      domain: "kansascity.com",
+      aliases: ["kansas city star", "kansascity", "kansascity.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Star Tribune",
+      site: "https://www.startribune.com",
+      domain: "startribune.com",
+      aliases: ["star tribune", "startribune", "startribune.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "The Plain Dealer",
+      site: "https://www.cleveland.com",
+      domain: "cleveland.com",
+      aliases: ["plain dealer", "cleveland.com", "cleveland plain dealer"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Newsday",
+      site: "https://www.newsday.com",
+      domain: "newsday.com",
+      aliases: ["newsday", "newsday.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    },
+    {
+      publisher: "Tampa Bay Times",
+      site: "https://www.tampabay.com",
+      domain: "tampabay.com",
+      aliases: ["tampa bay times", "tampabay", "tampabay.com"],
+      topicKeys: ["top", "politics", "business", "sports", "lifestyle"]
+    }
+  ];
+
+  const NEWS_DISCOVERY_BROWSE_GROUPS = [
+    {
+      title: "Popular Publishers",
+      items: ["BBC", "Reuters", "AP News", "NPR", "The Guardian", "CNN", "Bloomberg", "CNBC", "TechCrunch", "Ars Technica", "Nature", "ESPN"]
+    },
+    {
+      title: "Local & Regional US",
+      items: ["Los Angeles Times", "San Francisco Chronicle", "The Seattle Times", "The Oregonian", "The Denver Post", "Chicago Tribune", "The Dallas Morning News", "Houston Chronicle", "The Boston Globe", "The Philadelphia Inquirer", "Miami Herald", "The Arizona Republic"]
+    },
+    {
+      title: "International & Global",
+      items: ["BBC", "Reuters", "Financial Times", "The Guardian", "Al Jazeera", "Deutsche Welle", "Sky News", "CBC News", "The Wall Street Journal", "Bloomberg", "Nature", "New Scientist"]
+    }
+  ];
+  const NEWS_DISCOVERY_KNOWN_FEEDS = buildKnownNewsFeedCatalog();
+  let newsDiscoveryRunId = 0;
+  let newsDiscoveryCurrentResults = [];
+  let stockLookupRunId = 0;
+  let stockLookupCurrentResults = [];
+
+  function buildGoogleNewsTopicFeedUrl(publisher, domain, topicQuery){
+    const queryBits = [publisher, topicQuery, `site:${domain}`].filter(Boolean);
+    const query = queryBits.join(" ");
+    return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+  }
+
+  function normalizePresetTopicKeys(preset){
+    const keys = Array.isArray(preset?.topicKeys) ? preset.topicKeys : [];
+    return NEWS_DISCOVERY_TOPIC_PRESETS.filter((topic) => keys.includes(topic.key));
+  }
+
+  function expandSourcePreset(preset){
+    const publisher = String(preset?.publisher || "").trim();
+    const site = String(preset?.site || "").trim();
+    const domain = normalizeDiscoveryHost(preset?.domain || "");
+    const directEntries = Array.isArray(preset?.entries) ? preset.entries : [];
+    const results = directEntries.map((entry) => ({
+      publisher,
+      category: String(entry?.category || "Top Stories").trim(),
+      name: `${publisher} - ${String(entry?.category || "Top Stories").trim()}`,
+      rss: String(entry?.rss || "").trim(),
+      site: String(entry?.site || site).trim(),
+      hosts: [domain].filter(Boolean),
+      reason: "preset",
+      feedType: String(entry?.type || "direct").trim() || "direct"
+    })).filter((entry) => entry.rss);
+
+    const seenCategories = new Set(results.map((entry) => normalizeDiscoveryText(entry.category)));
+    normalizePresetTopicKeys(preset).forEach((topic) => {
+      const categoryKey = normalizeDiscoveryText(topic.label);
+      if(seenCategories.has(categoryKey) || !publisher || !domain) return;
+      results.push({
+        publisher,
+        category: topic.label,
+        name: `${publisher} - ${topic.label}`,
+        rss: buildGoogleNewsTopicFeedUrl(publisher, domain, topic.query),
+        site,
+        hosts: [domain].filter(Boolean),
+        reason: "preset",
+        feedType: "topic"
+      });
+    });
+
+    return results;
+  }
+
+  function getPresetSearchTerms(preset){
+    const terms = new Set();
+    terms.add(normalizeDiscoveryText(preset?.publisher || ""));
+    terms.add(normalizeDiscoveryHost(preset?.domain || ""));
+    (Array.isArray(preset?.aliases) ? preset.aliases : []).forEach((alias) => terms.add(normalizeDiscoveryText(alias)));
+    return Array.from(terms).filter(Boolean);
+  }
+
+  function getPresetMatchScore(preset, normalizedQuery){
+    let best = 0;
+    getPresetSearchTerms(preset).forEach((term) => {
+      if(term === normalizedQuery){
+        best = Math.max(best, 100);
+        return;
+      }
+      if(term.startsWith(normalizedQuery) || normalizedQuery.startsWith(term)){
+        best = Math.max(best, 70);
+        return;
+      }
+      if(term.includes(normalizedQuery) || normalizedQuery.includes(term)){
+        best = Math.max(best, 50);
+      }
+    });
+    return best;
+  }
+
+  function findMatchingSourcePresets(query){
+    const normalizedQuery = normalizeDiscoveryText(query).replace(/^https?:\/\//, "");
+    if(!normalizedQuery) return [];
+
+    return NEWS_DISCOVERY_SOURCE_PRESETS
+      .map((preset) => ({ preset, score: getPresetMatchScore(preset, normalizedQuery) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || String(a.preset.publisher).localeCompare(String(b.preset.publisher)))
+      .map((entry) => entry.preset);
+  }
+
+  function buildKnownNewsFeedCatalog(){
+    const defaults = Array.isArray(window.App?.DEFAULTS?.widgets) ? window.App.DEFAULTS.widgets : [];
+    const seen = new Set();
+
+    const presetEntries = NEWS_DISCOVERY_SOURCE_PRESETS.flatMap((preset) => expandSourcePreset(preset));
+    const defaultEntries = defaults.map((item) => {
+      const name = String(item?.name || "").trim();
+      const rss = String(item?.rss || "").trim();
+      const site = String(item?.site || "").trim();
+      const hosts = [];
+
+      try{ hosts.push(normalizeDiscoveryHost(new URL(rss).hostname)); }catch{}
+      try{ hosts.push(normalizeDiscoveryHost(new URL(site).hostname)); }catch{}
+
+      const key = `${name}|${rss}`.toLowerCase();
+      if(!name || !rss || seen.has(key)) return null;
+      seen.add(key);
+
+      return {
+        publisher: name,
+        category: "Top Stories",
+        name,
+        rss,
+        site,
+        hosts: hosts.filter(Boolean),
+        reason: "known",
+        feedType: "direct"
+      };
+
+    }).filter(Boolean);
+
+    return [...presetEntries, ...defaultEntries].filter((entry) => {
+      const key = `${String(entry?.name || "")}|${String(entry?.rss || "")}`.toLowerCase();
+      if(!entry || !entry.rss || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function normalizeDiscoveryHost(hostname){
+    return String(hostname || "").trim().toLowerCase().replace(/^www\./, "");
+  }
+
+  function normalizeDiscoveryText(value){
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function setNewsDiscoveryStatus(message, type = "default"){
+    if(!newsDiscoveryStatus) return;
+    newsDiscoveryStatus.textContent = message || "";
+    newsDiscoveryStatus.className = `newsDiscoveryStatus ${type ? `is-${type}` : ""}`.trim();
+  }
+
+  function setNewsDiscoveryBusy(isBusy){
+    if(newsDiscoveryBtn){
+      newsDiscoveryBtn.disabled = isBusy;
+      newsDiscoveryBtn.textContent = isBusy ? "Searching..." : "Search Feeds";
+    }
+    if(newsDiscoveryInput){
+      newsDiscoveryInput.setAttribute("aria-busy", isBusy ? "true" : "false");
+    }
+  }
+
+  function setManualNewsMode(expanded){
+    const isExpanded = Boolean(expanded);
+    if(newsManualBody) newsManualBody.hidden = !isExpanded;
+    if(newsManualToggle){
+      newsManualToggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      newsManualToggle.textContent = isExpanded ? "Hide Manual RSS URL" : "Manual RSS URL";
+    }
+  }
+
+  function renderNewsDiscoveryBrowse(){
+    if(!newsDiscoveryBrowse) return;
+
+    newsDiscoveryBrowse.innerHTML = "";
+    NEWS_DISCOVERY_BROWSE_GROUPS.forEach((group) => {
+      const section = document.createElement("section");
+      section.className = "newsDiscoveryBrowseGroup";
+
+      const title = document.createElement("div");
+      title.className = "newsDiscoveryBrowseTitle";
+      title.textContent = group.title;
+
+      const chips = document.createElement("div");
+      chips.className = "newsDiscoveryBrowseChips";
+
+      (Array.isArray(group.items) ? group.items : []).forEach((item) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "newsDiscoveryBrowseBtn";
+        btn.textContent = item;
+        btn.addEventListener("click", () => {
+          if(newsDiscoveryInput) newsDiscoveryInput.value = item;
+          runNewsDiscovery(item, { fromBrowse: true });
+        });
+        chips.appendChild(btn);
+      });
+
+      section.appendChild(title);
+      section.appendChild(chips);
+      newsDiscoveryBrowse.appendChild(section);
+    });
+  }
+
+  function getNewsDiscoveryCacheKey(query){
+    return `${NEWS_DISCOVERY_CACHE_PREFIX}${normalizeDiscoveryText(query)}`;
+  }
+
+  function canUseFeedDiscoveryProxy(){
+    const proxyBase = String(window.App?.RSS_PROXY_BASE || "").trim();
+    if(!proxyBase) return false;
+    if(window.location.protocol === "file:" && proxyBase.startsWith("/")) return false;
+    return true;
+  }
+
+  function getCachedNewsDiscovery(query){
+    const cached = window.App?.cacheGet?.(getNewsDiscoveryCacheKey(query));
+    if(!cached || typeof cached !== "object") return null;
+    if(Date.now() - Number(cached.savedAt || 0) > 15 * 60 * 1000) return null;
+    return Array.isArray(cached.results) ? cached.results : null;
+  }
+
+  function setCachedNewsDiscovery(query, results){
+    if(typeof window.App?.cacheSet !== "function") return;
+    window.App.cacheSet(getNewsDiscoveryCacheKey(query), {
+      savedAt: Date.now(),
+      results: Array.isArray(results) ? results : []
+    });
+  }
+
+  function escapeHtmlText(value){
+    return typeof window.App?.escapeHtml === "function"
+      ? window.App.escapeHtml(String(value || ""))
+      : String(value || "");
+  }
+
+  function normalizeCandidateSiteUrl(rawValue){
+    const raw = String(rawValue || "").trim();
+    if(!raw) return "";
+
+    try{
+      const direct = new URL(raw);
+      return `${direct.protocol}//${direct.hostname}`;
+    }catch{}
+
+    if(/^([a-z0-9-]+\.)+[a-z]{2,}(\/.*)?$/i.test(raw)){
+      try{
+        const withHttps = new URL(`https://${raw}`);
+        return `${withHttps.protocol}//${withHttps.hostname}`;
+      }catch{}
+    }
+
+    return "";
+  }
+
+  function queryLooksLikeSite(query){
+    return !!normalizeCandidateSiteUrl(query);
+  }
+
+  function findKnownNewsFeeds(query){
+    const normalizedQuery = normalizeDiscoveryText(query).replace(/^https?:\/\//, "");
+    if(!normalizedQuery) return [];
+
+    const matchingPresets = findMatchingSourcePresets(normalizedQuery);
+    if(matchingPresets.length > 0){
+      return dedupeDiscoveryResults(matchingPresets.flatMap((preset) => expandSourcePreset(preset))).slice(0, NEWS_DISCOVERY_MAX_RESULTS);
+    }
+
+    return NEWS_DISCOVERY_KNOWN_FEEDS.filter((entry) => {
+      if(normalizeDiscoveryText(entry.name).includes(normalizedQuery)) return true;
+      if(normalizeDiscoveryText(entry.publisher).includes(normalizedQuery)) return true;
+      if(normalizeDiscoveryText(entry.category).includes(normalizedQuery)) return true;
+      return (entry.hosts || []).some((host) => {
+        return host === normalizedQuery
+          || host.includes(normalizedQuery)
+          || normalizedQuery.includes(host);
+      });
+    }).slice(0, NEWS_DISCOVERY_MAX_RESULTS);
+  }
+
+  async function fetchTextViaProxy(targetUrl){
+    const proxyBase = String(window.App?.RSS_PROXY_BASE || "").trim();
+    if(!canUseFeedDiscoveryProxy() || !proxyBase) return "";
+
+    try{
+      const response = await fetch(`${proxyBase}${encodeURIComponent(targetUrl)}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000)
+      });
+      if(!response.ok) return "";
+      return await response.text();
+    }catch{
+      return "";
+    }
+  }
+
+  function collectDiscoveredFeedLinks(htmlText, pageUrl){
+    if(!htmlText) return [];
+
+    const doc = new DOMParser().parseFromString(htmlText, "text/html");
+    const found = [];
+    const seen = new Set();
+    const selectors = [
+      'link[rel~="alternate"][type*="rss"]',
+      'link[rel~="alternate"][type*="atom"]',
+      'link[rel~="alternate"][type*="xml"]',
+      'a[href*="/feed"]',
+      'a[href*="/rss"]',
+      'a[href*="atom.xml"]'
+    ];
+
+    selectors.forEach((selector) => {
+      doc.querySelectorAll(selector).forEach((node) => {
+        const href = String(node.getAttribute("href") || "").trim();
+        if(!href) return;
+        try{
+          const absolute = new URL(href, pageUrl).toString();
+          if(seen.has(absolute)) return;
+          seen.add(absolute);
+          found.push(absolute);
+        }catch{}
+      });
+    });
+
+    return found;
+  }
+
+  async function probeFeedCandidate(feedUrl, fallbackSite){
+    const rawUrl = String(feedUrl || "").trim();
+    if(!rawUrl) return null;
+
+    const xmlText = await fetchTextViaProxy(rawUrl);
+    if(!xmlText) return null;
+
+    const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+    if(doc.querySelector("parsererror")) return null;
+
+    const titleNode = doc.querySelector("channel > title, feed > title");
+    const channelLinkNode = doc.querySelector("channel > link");
+    const atomLinkNode = doc.querySelector("feed > link[rel='alternate']");
+    if(!(titleNode || channelLinkNode || atomLinkNode || doc.querySelector("item, entry"))) return null;
+
+    const meta = await lookupRssSourceMeta(rawUrl);
+    let site = String(meta?.site || fallbackSite || "").trim();
+    let name = String(meta?.name || titleNode?.textContent || "").trim();
+
+    const alternateHref = String(atomLinkNode?.getAttribute("href") || channelLinkNode?.textContent || "").trim();
+    if(!site && alternateHref){
+      try{
+        const parsedSite = new URL(alternateHref, rawUrl);
+        site = `${parsedSite.protocol}//${parsedSite.hostname}`;
+      }catch{}
+    }
+
+    if(!site){
+      try{
+        const parsedFeed = new URL(rawUrl);
+        site = `${parsedFeed.protocol}//${parsedFeed.hostname}`;
+      }catch{}
+    }
+
+    if(!name){
+      name = fallbackNewsMetaFromRssUrl(site || rawUrl).name || "Source";
+    }
+
+    return {
+      name,
+      rss: rawUrl,
+      site,
+      reason: "discovered"
+    };
+  }
+
+  async function discoverFeedFromSite(siteUrl){
+    const normalizedSite = normalizeCandidateSiteUrl(siteUrl);
+    if(!normalizedSite) return null;
+
+    const known = findKnownNewsFeeds(normalizedSite)[0];
+    if(known) return { ...known, reason: "known" };
+
+    const homepageHtml = await fetchTextViaProxy(normalizedSite);
+    const candidates = collectDiscoveredFeedLinks(homepageHtml, normalizedSite);
+
+    NEWS_DISCOVERY_COMMON_PATHS.forEach((path) => {
+      try{
+        const absolute = new URL(path, `${normalizedSite}/`).toString();
+        if(!candidates.includes(absolute)) candidates.push(absolute);
+      }catch{}
+    });
+
+    for(const candidate of candidates.slice(0, 12)){
+      const result = await probeFeedCandidate(candidate, normalizedSite);
+      if(result) return result;
+    }
+
+    return null;
+  }
+
+  function extractCandidateSitesFromArticles(items){
+    const sites = [];
+    const seen = new Set();
+
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const url = String(item?.url || "").trim();
+      if(!url) return;
+      try{
+        const parsed = new URL(url);
+        const site = `${parsed.protocol}//${parsed.hostname}`;
+        const key = normalizeDiscoveryHost(parsed.hostname);
+        if(!key || seen.has(key)) return;
+        seen.add(key);
+        sites.push(site);
+      }catch{}
+    });
+
+    return sites;
+  }
+
+  function dedupeDiscoveryResults(results){
+    const seen = new Set();
+    return (Array.isArray(results) ? results : []).filter((result) => {
+      const key = `${String(result?.rss || "").trim().toLowerCase()}|${String(result?.site || "").trim().toLowerCase()}`;
+      if(!result || !result.rss || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, NEWS_DISCOVERY_MAX_RESULTS);
+  }
+
+  async function searchNewsFeedCandidates(query){
+    const trimmedQuery = String(query || "").trim();
+    if(!trimmedQuery) return [];
+
+    const cached = getCachedNewsDiscovery(trimmedQuery);
+    if(cached) return cached;
+
+    const results = [];
+    const knownMatches = findKnownNewsFeeds(trimmedQuery);
+    if(knownMatches.length){
+      results.push(...knownMatches);
+    }
+
+    if(!canUseFeedDiscoveryProxy()){
+      const finalKnownResults = dedupeDiscoveryResults(results);
+      setCachedNewsDiscovery(trimmedQuery, finalKnownResults);
+      return finalKnownResults;
+    }
+
+    const siteCandidates = [];
+    const directSite = normalizeCandidateSiteUrl(trimmedQuery);
+    if(directSite) siteCandidates.push(directSite);
+
+    if(siteCandidates.length === 0 || results.length < NEWS_DISCOVERY_MAX_RESULTS){
+      try{
+        const gNewsItems = typeof window.App?.fetchGNewsItems === "function"
+          ? await window.App.fetchGNewsItems(trimmedQuery, 10, false)
+          : [];
+        siteCandidates.push(...extractCandidateSitesFromArticles(gNewsItems));
+      }catch(error){
+        window.App?.handleError?.(error, "News Feed Search");
+      }
+    }
+
+    const probed = [];
+    const seenSites = new Set();
+    siteCandidates.forEach((candidate) => {
+      const key = normalizeCandidateSiteUrl(candidate);
+      if(!key || seenSites.has(key)) return;
+      seenSites.add(key);
+      probed.push(key);
+    });
+
+    for(const candidate of probed.slice(0, NEWS_DISCOVERY_MAX_SITE_PROBES)){
+      const result = await discoverFeedFromSite(candidate);
+      if(result) results.push(result);
+      if(results.length >= NEWS_DISCOVERY_MAX_RESULTS) break;
+    }
+
+    const finalResults = dedupeDiscoveryResults(results);
+    setCachedNewsDiscovery(trimmedQuery, finalResults);
+    return finalResults;
+  }
+
+  function addDiscoveredNewsSource(result){
+    if(!result || !result.rss) return;
+
+    cfg.widgets = cfg.widgets || [];
+
+    const alreadyExists = cfg.widgets.some((widget) => String(widget?.rss || "").trim() === String(result.rss || "").trim());
+    if(alreadyExists){
+      setStatus("That feed is already in your list", "default");
+      renderNewsDiscoveryResults();
+      return;
+    }
+
+    if(cfg.widgets.length >= NEWS_SOURCE_LIMIT){
+      setStatus(`Maximum ${NEWS_SOURCE_LIMIT} sources reached`, "error");
+      setNewsDiscoveryStatus("Remove a source before adding another feed.", "error");
+      renderNewsDiscoveryResults();
+      return;
+    }
+
+    cfg.widgets.push({
+      name: String(result.name || "Source").trim() || "Source",
+      rss: String(result.rss || "").trim(),
+      site: String(result.site || "").trim(),
+      headlinesCount: 6
+    });
+    renderNews();
+    renderNewsDiscoveryResults();
+    setStatus("Added discovered feed (not saved yet)", "unsaved");
+    setNewsDiscoveryStatus(`Added ${result.name || "source"}. Click Save Changes to keep it.`, "success");
+  }
+
+  function addTopSectionsForPublisher(publisher, maxToAdd = 3){
+    const label = String(publisher || "").trim();
+    if(!label) return;
+
+    cfg.widgets = cfg.widgets || [];
+    const candidates = newsDiscoveryCurrentResults
+      .filter((item) => String(item?.publisher || "").trim() === label)
+      .sort((a, b) => {
+        const ac = normalizeDiscoveryText(a?.category || "");
+        const bc = normalizeDiscoveryText(b?.category || "");
+        if(ac === "top stories") return -1;
+        if(bc === "top stories") return 1;
+        return String(a?.name || "").localeCompare(String(b?.name || ""));
+      });
+
+    if(candidates.length === 0){
+      setNewsDiscoveryStatus(`No section options available for ${label}.`, "error");
+      return;
+    }
+
+    let added = 0;
+    for(const candidate of candidates){
+      if(added >= maxToAdd) break;
+      if((cfg.widgets || []).length >= NEWS_SOURCE_LIMIT) break;
+      const exists = (cfg.widgets || []).some((widget) => String(widget?.rss || "").trim() === String(candidate?.rss || "").trim());
+      if(exists) continue;
+      cfg.widgets.push({
+        name: String(candidate.name || `${label} - Top Stories`).trim(),
+        rss: String(candidate.rss || "").trim(),
+        site: String(candidate.site || "").trim(),
+        headlinesCount: 6
+      });
+      added += 1;
+    }
+
+    renderNews();
+    renderNewsDiscoveryResults(newsDiscoveryCurrentResults);
+
+    if(added > 0){
+      setStatus(`Added ${added} ${label} source${added === 1 ? "" : "s"} (not saved yet)`, "unsaved");
+      setNewsDiscoveryStatus(`Added ${added} top section${added === 1 ? "" : "s"} for ${label}. Click Save Changes to keep them.`, "success");
+      return;
+    }
+
+    if((cfg.widgets || []).length >= NEWS_SOURCE_LIMIT){
+      setStatus(`Maximum ${NEWS_SOURCE_LIMIT} sources reached`, "error");
+      setNewsDiscoveryStatus(`No room left. Remove a source before adding more from ${label}.`, "error");
+      return;
+    }
+
+    setNewsDiscoveryStatus(`All shown ${label} sections are already added.`, "default");
+  }
+
+  function renderNewsDiscoveryResults(results){
+    if(!newsDiscoveryResults) return;
+
+    const list = Array.isArray(results) ? results : [];
+    newsDiscoveryCurrentResults = list.slice();
+    newsDiscoveryResults.innerHTML = "";
+
+    if(list.length === 0) return;
+
+    const perPublisherCount = new Map();
+    const firstPublisherCardRendered = new Set();
+    list.forEach((result) => {
+      const publisherKey = String(result?.publisher || result?.name || "").trim();
+      perPublisherCount.set(publisherKey, (perPublisherCount.get(publisherKey) || 0) + 1);
+    });
+
+    list.forEach((result) => {
+      const exists = (cfg.widgets || []).some((widget) => String(widget?.rss || "").trim() === String(result.rss || "").trim());
+      const atCapacity = (cfg.widgets || []).length >= NEWS_SOURCE_LIMIT;
+      const card = document.createElement("article");
+      card.className = "newsDiscoveryCard";
+
+      const sourceLabel = escapeHtmlText(result.name || "Source");
+      const siteValue = escapeHtmlText(result.site || "Not available");
+      const rssValue = escapeHtmlText(result.rss || "");
+      const reasonLabel = result.reason === "preset"
+        ? (result.feedType === "topic" ? "Simple topic feed" : "Publisher feed")
+        : (result.reason === "known" ? "Known feed" : "Auto-discovered");
+      const publisherLabel = escapeHtmlText(result.publisher || result.name || "Source");
+      const categoryLabel = escapeHtmlText(result.category || "Top Stories");
+      const publisherKey = String(result?.publisher || result?.name || "").trim();
+      const canBulkAdd = (perPublisherCount.get(publisherKey) || 0) > 1;
+      const isFirstCardForPublisher = !firstPublisherCardRendered.has(publisherKey);
+      if(isFirstCardForPublisher) firstPublisherCardRendered.add(publisherKey);
+
+      card.innerHTML = `
+        <div class="newsDiscoveryCardHead">
+          <div>
+            <div class="newsDiscoveryName">${publisherLabel}</div>
+            <div class="newsDiscoverySection">${categoryLabel}</div>
+            <div class="newsDiscoveryBadge">${reasonLabel}</div>
+          </div>
+        </div>
+        <div class="newsDiscoveryMeta">
+          <div class="newsDiscoveryMetaRow">
+            <span class="newsDiscoveryMetaLabel">Site</span>
+            <span class="newsDiscoveryMetaValue">${siteValue}</span>
+          </div>
+          <div class="newsDiscoveryMetaRow">
+            <span class="newsDiscoveryMetaLabel">Feed</span>
+            <span class="newsDiscoveryMetaValue newsDiscoveryMetaValue--mono">${rssValue}</span>
+          </div>
+        </div>
+      `;
+
+      const actions = document.createElement("div");
+      actions.className = "newsDiscoveryActions";
+
+      if(canBulkAdd && isFirstCardForPublisher){
+        const topBtn = document.createElement("button");
+        topBtn.type = "button";
+        topBtn.className = "btn newsDiscoveryBulkBtn";
+        topBtn.textContent = "Add Top 3";
+        topBtn.disabled = atCapacity;
+        topBtn.title = atCapacity
+          ? `Maximum ${NEWS_SOURCE_LIMIT} sources reached`
+          : `Add up to 3 top sections for ${publisherKey}`;
+        if(!atCapacity){
+          topBtn.addEventListener("click", () => addTopSectionsForPublisher(publisherKey, 3));
+        }
+        actions.appendChild(topBtn);
+      }
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn newsDiscoveryAddBtn";
+
+      if(exists){
+        addBtn.disabled = true;
+        addBtn.textContent = "Already Added";
+      }else if(atCapacity){
+        addBtn.disabled = true;
+        addBtn.textContent = `Max ${NEWS_SOURCE_LIMIT} Reached`;
+      }else{
+        addBtn.textContent = "Add This Source";
+        addBtn.addEventListener("click", () => addDiscoveredNewsSource(result));
+      }
+
+      actions.appendChild(addBtn);
+      card.appendChild(actions);
+      newsDiscoveryResults.appendChild(card);
+    });
+  }
 
   // Resolves a hostname to a well-known display name, supporting subdomains.
   // e.g. feeds.npr.org → "NPR", news.bbc.co.uk → "BBC"
@@ -1194,14 +2557,10 @@
     if(list.length === 0){
       const empty = document.createElement("div");
       empty.className = "hint stockEditorEmptyHint";
-      empty.textContent = "No symbols yet. Add your first stock.";
+      empty.textContent = "No symbols yet. Use symbol lookup above to add your first stock or fund.";
       stocksEditor.appendChild(empty);
     }
-
-    addStockBtn.classList.add("addStockCardBtn");
-    addStockBtn.classList.remove("btnSettings");
-    addStockBtn.textContent = "+ Add Stock";
-    stocksEditor.appendChild(addStockBtn);
+    renderStockAssignTargetOptions();
   }
 
   // Render news sources
@@ -1230,10 +2589,10 @@
       return { after, hint };
     };
 
-    // Disable add button if at max capacity (9 sources)
+    // Disable add button if at max capacity
     if(addNewsBtn){
-      addNewsBtn.disabled = list.length >= 9;
-      addNewsBtn.title = list.length >= 9 ? "Maximum 9 sources reached" : "Add a new news source";
+      addNewsBtn.disabled = list.length >= NEWS_SOURCE_LIMIT;
+      addNewsBtn.title = list.length >= NEWS_SOURCE_LIMIT ? `Maximum ${NEWS_SOURCE_LIMIT} sources reached` : "Add a new news source";
     }
 
     list.forEach((w, idx) => {
@@ -1447,15 +2806,16 @@
       newsEditor.appendChild(empty);
     }
 
-    addNewsBtn.classList.add("addNewsCardBtn");
-    addNewsBtn.classList.remove("btnSettings");
-    addNewsBtn.textContent = "+ Add News Source";
-    newsEditor.appendChild(addNewsBtn);
+    addNewsBtn.classList.remove("addNewsCardBtn");
+    addNewsBtn.classList.add("btnSettings");
+    addNewsBtn.textContent = "+ Add News Source Manually";
+    renderNewsDiscoveryResults();
   }
 
   // Load config to UI
   function loadToUI(){
     themeSel.value = cfg.theme || "dark";
+    if(renderModeSel) renderModeSel.value = cfg.renderMode || "smooth";
     zipInput.value = cfg.zipCode || "";
     wxRefreshInput.value = String(cfg.weatherRefreshMinutes || 10);
     if(weatherStaleWarnInput) weatherStaleWarnInput.value = String(cfg.weatherStaleWarnMinutes || 30);
@@ -1494,6 +2854,7 @@
   // Pull UI values back to config
   function pullFromUI(){
     cfg.theme = themeSel.value;
+    if(renderModeSel) cfg.renderMode = renderModeSel.value;
     cfg.zipCode = String(zipInput.value || "").trim();
     cfg.weatherRefreshMinutes = Number(wxRefreshInput.value || 10);
     if(weatherStaleWarnInput){
@@ -1635,6 +2996,14 @@
     setStatus("Modified (not saved yet)", "unsaved");
   });
 
+  if(renderModeSel){
+    renderModeSel.addEventListener("change", () => {
+      cfg.renderMode = renderModeSel.value;
+      applyThemeDensity(cfg); // Live preview
+      setStatus("Modified (not saved yet)", "unsaved");
+    });
+  }
+
   // Location & Weather settings
   zipInput.addEventListener("input", () => {
     setStatus("Modified (not saved yet)", "unsaved");
@@ -1650,25 +3019,90 @@
     });
   }
 
-  // Add stock
-  addStockBtn.addEventListener("click", () => {
-    cfg.stocks = cfg.stocks || [];
-    cfg.stocks.push({ symbol:"", label:"" });
-    renderStocks();
-    setStatus("Added (not saved yet)", "unsaved");
+  stockLookupForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    runStockLookup(String(stockLookupInput?.value || ""));
   });
 
   // Add news
   addNewsBtn.addEventListener("click", () => {
     cfg.widgets = cfg.widgets || [];
-    if(cfg.widgets.length >= 9){
-      setStatus("Maximum 9 sources reached", "error");
+    if(cfg.widgets.length >= NEWS_SOURCE_LIMIT){
+      setStatus(`Maximum ${NEWS_SOURCE_LIMIT} sources reached`, "error");
       return;
     }
     cfg.widgets.push({ name:"", rss:"", site:"", headlinesCount:6 });
     renderNews();
     setStatus("Added (not saved yet)", "unsaved");
   });
+
+  newsManualToggle?.addEventListener("click", () => {
+    const nextExpanded = newsManualToggle.getAttribute("aria-expanded") !== "true";
+    setManualNewsMode(nextExpanded);
+  });
+
+  async function runNewsDiscovery(rawQuery, options = {}){
+    const { fromBrowse = false } = options;
+    const query = String(rawQuery || "").trim();
+    if(!query){
+      setNewsDiscoveryStatus("Enter a publisher name or website first.", "error");
+      if(newsDiscoveryResults) newsDiscoveryResults.innerHTML = "";
+      return;
+    }
+
+    const runId = ++newsDiscoveryRunId;
+    setNewsDiscoveryBusy(true);
+    setNewsDiscoveryStatus(fromBrowse ? `Loading options for \"${query}\"...` : `Searching for feeds matching \"${query}\"...`, "loading");
+    if(newsDiscoveryResults) newsDiscoveryResults.innerHTML = "";
+
+    try{
+      const results = await searchNewsFeedCandidates(query);
+      if(runId !== newsDiscoveryRunId) return;
+
+      renderNewsDiscoveryResults(results);
+
+      if(results.length === 0){
+        setManualNewsMode(true);
+        const hint = !canUseFeedDiscoveryProxy()
+          ? "Simple feed suggestions need the app's RSS proxy, so discovery is unavailable in this local preview. You can still paste an RSS URL manually below."
+          : (queryLooksLikeSite(query)
+            ? "We could not confirm a working RSS/Atom feed for that site. You can still paste a feed URL manually below."
+            : "We could not find simple feed options from that search. Try the publication's website address or paste a feed URL manually below.");
+        setNewsDiscoveryStatus(hint, "error");
+        return;
+      }
+
+      const publishers = Array.from(new Set(results.map((result) => String(result?.publisher || "").trim()).filter(Boolean)));
+      const noun = results.length === 1 ? "option" : "options";
+      setNewsDiscoveryStatus(
+        publishers.length === 1
+          ? `Found ${results.length} ${noun} for ${publishers[0]}. Pick the section you want.`
+          : (publishers.length > 1
+            ? `Found ${results.length} ${noun} across ${publishers.length} publishers. Pick the section you want.`
+            : `Found ${results.length} feed ${noun}. Pick the one you want.`)
+          ,
+        "success"
+      );
+    }catch(error){
+      window.App?.handleError?.(error, "News Feed Discovery");
+      if(runId !== newsDiscoveryRunId) return;
+      if(newsDiscoveryResults) newsDiscoveryResults.innerHTML = "";
+      setManualNewsMode(true);
+      setNewsDiscoveryStatus("Feed search is unavailable right now. You can still paste an RSS URL manually below.", "error");
+    }finally{
+      if(runId === newsDiscoveryRunId){
+        setNewsDiscoveryBusy(false);
+      }
+    }
+  }
+
+  newsDiscoveryForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    runNewsDiscovery(String(newsDiscoveryInput?.value || ""));
+  });
+
+  setManualNewsMode(false);
+  renderNewsDiscoveryBrowse();
 
   // Export config
   exportBtn.addEventListener("click", () => {

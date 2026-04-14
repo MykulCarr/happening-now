@@ -334,6 +334,16 @@ function restoreNewsFromCache(){
     const body = document.createElement("div");
     body.className = "cardBody";
 
+    const widgetName = String(widget?.name || "").trim();
+    const categoryParts = widgetName.split(" - ");
+    const category = categoryParts.length > 1 ? String(categoryParts.slice(1).join(" - ")).trim() : "";
+    if(category){
+      const categoryBadge = document.createElement("div");
+      categoryBadge.className = "newsSourceCategory";
+      categoryBadge.textContent = category;
+      body.appendChild(categoryBadge);
+    }
+
     const list = document.createElement("div");
     list.className = "rssList";
     list.setAttribute("role", "list");
@@ -477,7 +487,7 @@ function restoreNewsFromCache(){
     newsGrid.innerHTML = "";
     newsGrid.setAttribute("aria-busy", "true");
 
-    const widgets = (cfg.widgets || []).slice(0, 9);
+    const widgets = (cfg.widgets || []).slice(0, 15);
     if(widgets.length === 0){
       updateStatus("No news sources configured", true);
       newsGrid.innerHTML = `<div class="hint" style="grid-column:1/-1;text-align:center;padding:20px;">Please configure news sources in Settings.</div>`;

@@ -243,7 +243,7 @@
       <div class="settingsTabContent" data-tab="news">
         <div class="collapsibleSection">
           <button class="collapsibleHeader expanded" data-section="news-sources">
-            <span class="collapsibleHeaderMain">News Sources (Max 9)</span>
+            <span class="collapsibleHeaderMain">News Sources (Max 15)</span>
             <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
               <span class="usageGuideIcon">i</span>
               How to use this editor
@@ -251,11 +251,33 @@
           </button>
           <div class="collapsibleBody expanded">
             <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
+              <p>Search by publisher name or website to see simple feed choices like top stories, business, sports, or culture.</p>
               <p>Paste the RSS URL first. If Source Name and Site URL are blank, they auto-fill when possible.</p>
               <p>Use the grip icon to reorder sources. Use Headlines count to control how many items each source shows.</p>
             </div>
+            <section class="newsDiscoveryPanel" aria-labelledby="newsDiscoveryTitle">
+              <div class="newsDiscoveryIntro">
+                <div>
+                  <div id="newsDiscoveryTitle" class="settingLabel">Find a News Feed</div>
+                  <div class="settingHint">Search by publisher name or website and we will show simple feed options you can add.</div>
+                </div>
+              </div>
+              <form id="newsDiscoveryForm" class="newsDiscoveryForm" novalidate>
+                <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search" placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
+                <button id="newsDiscoveryBtn" class="btn newsDiscoveryBtn" type="submit">Search Feeds</button>
+              </form>
+              <div id="newsDiscoveryBrowse" class="newsDiscoveryBrowse" aria-label="Browse popular and local publishers"></div>
+              <div id="newsDiscoveryStatus" class="newsDiscoveryStatus" aria-live="polite"></div>
+              <div id="newsDiscoveryResults" class="newsDiscoveryResults" aria-live="polite"></div>
+            </section>
             <div id="newsEditor" class="stack newsEditorStack"></div>
-            <button id="addNewsBtn" class="btn" type="button">+ Add News Source</button>
+            <section class="newsManualWrap" aria-labelledby="newsManualToggle">
+              <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS URL</button>
+              <div id="newsManualBody" class="newsManualBody" hidden>
+                <button id="addNewsBtn" class="btn" type="button">+ Add News Source Manually</button>
+                <div class="hint">Use manual mode only if search and browse do not show your source.</div>
+              </div>
+            </section>
             <div class="hint hintMt10">
               Best performance: keep source count lean and headlines between 5 and 8.
             </div>
@@ -276,10 +298,27 @@
           <div class="collapsibleBody expanded">
             <div id="stocksHeaderGuide" class="headerGuidePanel" hidden>
               <p>Drag with the grip icon to reorder cards. The number badge shows display order.</p>
-              <p>Type a symbol first and, if Name is blank, it auto-fills when possible. Click Save Changes to apply.</p>
+              <p>Use symbol lookup to find exact listings, then assign the result to a specific row or a new row.</p>
             </div>
+            <section class="stockLookupPanel" aria-labelledby="stockLookupTitle">
+              <div class="stockLookupIntro">
+                <div>
+                  <div id="stockLookupTitle" class="settingLabel">Find and Assign a Stock</div>
+                  <div class="settingHint">Search by ticker or company name, then assign the exact match to your watchlist.</div>
+                </div>
+              </div>
+              <form id="stockLookupForm" class="stockLookupForm" novalidate>
+                <input id="stockLookupInput" class="input stockLookupInput" type="search" placeholder="Try AAPL, TSLA, BRK.B, or Berkshire Hathaway" aria-label="Search for a stock symbol" />
+                <button id="stockLookupBtn" class="btn stockLookupBtn" type="submit">Search Symbols</button>
+              </form>
+              <div class="stockLookupAssignRow">
+                <label for="stockAssignTarget" class="stockLookupAssignLabel">Assign To</label>
+                <select id="stockAssignTarget" class="input stockAssignTarget" aria-label="Assignment target"></select>
+              </div>
+              <div id="stockLookupStatus" class="stockLookupStatus" aria-live="polite"></div>
+              <div id="stockLookupResults" class="stockLookupResults" aria-live="polite"></div>
+            </section>
             <div id="stocksEditor" class="stack stockEditorStack"></div>
-            <button id="addStockBtn" class="btn btnSettings" type="button">+ Add Stock</button>
           </div>
         </div>
 
@@ -632,6 +671,16 @@
                   <option value="light">Light</option>
                 </select>
               </div>
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Rendering Mode 🛡️</div>
+                  <div class="settingHint">The top-bar shield icon uses this setting. Smooth keeps richer hover motion. Stable reduces GPU-heavy effects to prevent flicker.</div>
+                </div>
+                <select id="renderModeSel" class="input settingsInput170" aria-label="Rendering mode">
+                  <option value="smooth">Smooth 🛡️ (recommended)</option>
+                  <option value="stable">Stable 🛡️ (anti-flicker)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -673,7 +722,7 @@
   <footer class="page-footer">
     <p>⚙️ All settings stored locally in your browser using localStorage • No server-side storage or tracking</p>
     <p class="pageFooterFinePrint">💡 Install as a PWA for the best experience • Changes take effect immediately • JSON export/import available for backup</p>
-    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a></p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a> • <a href="mailto:hn-station@protonmail.com" target="_blank" rel="noopener noreferrer">Feedback</a></p>
   </footer>
 
   <!-- Install Instructions Modal -->
