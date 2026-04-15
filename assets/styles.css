@@ -4517,6 +4517,100 @@ select.input optgroup,
   overflow-y: auto;
   overflow-x: hidden;
 }
+/* Location Picker — modal backdrop override (floats as card, no dark overlay) */
+#locationPickerModal {
+  background: transparent;
+  pointer-events: none;
+}
+#locationPickerModal > .modalContent {
+  pointer-events: auto;
+  background: #1a2235;
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 16px 56px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.4);
+}
+[data-theme="light"] #locationPickerModal > .modalContent {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.18);
+  box-shadow: 0 16px 56px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Location Picker shared components — used in modal AND settings page */
+.locationPickerTabs {
+  margin-bottom: 16px;
+}
+.locationPickerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.locationPickerPanel[hidden] {
+  display: none;
+}
+.locationPickerRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.locationPickerRow .input {
+  flex: 1;
+}
+.locationPickerStatus {
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 20px;
+}
+.locationPickerStatus.isError {
+  color: #f87171;
+}
+.locationPickerStatus.isSuccess {
+  color: #4ade80;
+}
+.locationPickerConfirmBox {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--panel2, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.locationPickerFound {
+  font-weight: 700;
+  font-size: 15px;
+}
+.locationPickerSaveLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.locationPickerActions {
+  display: flex;
+  gap: 8px;
+}
+.locationGpsBtn {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.settLocRefreshRow {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.settLocCurrentDisplay {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
 /* Modal Styles */
 .modal {
   position: fixed;
@@ -4849,6 +4943,110 @@ select.input optgroup,
 
 .installModalTipStrong {
   color: var(--text);
+}
+
+.systemPanelRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.systemPanelRow > .collapsibleSection {
+  margin-bottom: 0;
+}
+@media (max-width: 800px) {
+  .systemPanelRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.installHintSteps {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--panel2);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+}
+.installHintTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.installHintList {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.installHintList li {
+  margin-bottom: 4px;
+}
+.installHintList li:last-child {
+  margin-bottom: 0;
+}
+.installHintList strong {
+  color: var(--text);
+}
+.installBrowserGuide {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--panel2);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+}
+.installBrowserGuide:empty {
+  display: none;
+}
+.installGuideTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin: 0 0 8px 0;
+}
+.installGuideSteps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.installGuideSteps li {
+  margin-bottom: 4px;
+}
+.installGuideSteps li:last-child {
+  margin-bottom: 0;
+}
+.installGuideSteps strong {
+  color: var(--text);
+}
+.installGuideNote {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+.installGuideSub {
+  margin-top: 10px;
+}
+.installGuideLinkBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+.installGuideLinkBtn:hover {
+  opacity: 0.75;
 }
 
 .collapsibleSection {

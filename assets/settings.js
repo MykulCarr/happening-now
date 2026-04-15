@@ -2820,6 +2820,19 @@
     wxRefreshInput.value = String(cfg.weatherRefreshMinutes || 10);
     if(weatherStaleWarnInput) weatherStaleWarnInput.value = String(cfg.weatherStaleWarnMinutes || 30);
 
+    // Sync location tab selection and current display
+    if(cfg.useDeviceLocation && cfg.deviceLocationLabel) {
+      settLocMode = "city"; // device location was set via city/GPS
+      settLocTabs.forEach(b => {
+        const mode = b.dataset.settLocMode;
+        b.classList.toggle("active", mode === "city");
+        b.setAttribute("aria-selected", String(mode === "city"));
+      });
+      settLocPanels.forEach(p => { p.hidden = p.dataset.settLocPanel !== "city"; });
+      if(settLocCityInput) settLocCityInput.value = cfg.deviceLocationLabel;
+    }
+    settLocUpdateCurrentDisplay();
+
     // Page visibility settings removed from UI
 
     // Set button group active states
@@ -2861,6 +2874,10 @@
       cfg.weatherStaleWarnMinutes = Number(weatherStaleWarnInput.value || 30);
     }
 
+    // If ZIP mode is active and no pending geo was applied, clear device location mode
+    if(settLocMode === "zip") {
+      cfg.useDeviceLocation = false;
+    }
     // Extract button group values from active buttons
     const activeForecastBtn = document.querySelector("[data-field='forecastLength'].active");
     if(activeForecastBtn){
@@ -3004,8 +3021,181 @@
     });
   }
 
+  // ── Location section (Weather tab) ────────────────────────────────────────
+  const settLocTabs = document.querySelectorAll("[data-sett-loc-mode]");
+  const settLocPanels = document.querySelectorAll("[data-sett-loc-panel]");
+  const settLocZipVerifyBtn = document.getElementById("settLocZipVerifyBtn");
+  const settLocCityInput = document.getElementById("settLocCityInput");
+  const settLocCityFindBtn = document.getElementById("settLocCityFindBtn");
+  const settLocGpsBtn = document.getElementById("settLocGpsBtn");
+  const settLocCurrentDisplay = document.getElementById("settLocCurrentDisplay");
+  const settLocApplyRow = document.getElementById("settLocApplyRow");
+  const settLocFoundLabel = document.getElementById("settLocFoundLabel");
+  const settLocApplyBtn = document.getElementById("settLocApplyBtn");
+  const settLocCancelGeoBtn = document.getElementById("settLocCancelGeoBtn");
+  let settLocMode = "zip";
+  let settLocPendingGeo = null;
+
+  function settLocShowStatus(id, msg, type = "") {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = msg;
+    el.className = "locationPickerStatus" + (type ? " " + type : "");
+  }
+
+  function settLocUpdateCurrentDisplay() {
+    if(!settLocCurrentDisplay) return;
+    if(cfg.useDeviceLocation && cfg.deviceLocationLabel) {
+      settLocCurrentDisplay.textContent = "Current: " + cfg.deviceLocationLabel;
+    } else if(cfg.zipCode) {
+      settLocCurrentDisplay.textContent = "Current: ZIP " + cfg.zipCode;
+    } else {
+      settLocCurrentDisplay.textContent = "";
+    }
+  }
+
+  function settLocShowApply(geo, label) {
+    settLocPendingGeo = geo;
+    if(settLocFoundLabel) settLocFoundLabel.textContent = "Found: " + label;
+    if(settLocApplyRow) settLocApplyRow.hidden = false;
+  }
+
+  function settLocHideApply() {
+    settLocPendingGeo = null;
+    if(settLocApplyRow) settLocApplyRow.hidden = true;
+  }
+
+  // Tab switching
+  settLocTabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.settLocMode;
+      settLocMode = mode;
+      settLocTabs.forEach(b => {
+        b.classList.toggle("active", b.dataset.settLocMode === mode);
+        b.setAttribute("aria-selected", String(b.dataset.settLocMode === mode));
+      });
+      settLocPanels.forEach(p => { p.hidden = p.dataset.settLocPanel !== mode; });
+      settLocHideApply();
+      ["settLocZipStatus", "settLocCityStatus", "settLocGpsStatus"].forEach(id => settLocShowStatus(id, ""));
+    });
+  });
+
+  // City geocode helper (mirrors weather.js geocodeCityName)
+  async function settLocGeocodeCityName(query) {
+    const q = String(query || "").trim();
+    if(!q) return null;
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) return null;
+    const j = await res.json();
+    const row = Array.isArray(j?.results) ? j.results[0] : null;
+    if(!row) return null;
+    const city = String(row.name || "").trim();
+    const state = String(row.admin1 || "").trim();
+    const abbrev = typeof window.App.abbreviateState === "function" ? window.App.abbreviateState(state) : state;
+    const label = [city, abbrev].filter(Boolean).join(", ") || city;
+    const lat = Number(row.latitude), lon = Number(row.longitude);
+    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return { city, state, lat, lon, label, zipCode: "" };
+  }
+
+  // ZIP verify
+  async function doSettLocVerifyZip() {
+    const val = (zipInput?.value || "").trim();
+    if(!/^\d{5}$/.test(val)) {
+      settLocShowStatus("settLocZipStatus", "Enter a 5-digit ZIP code.", "isError");
+      return;
+    }
+    settLocShowStatus("settLocZipStatus", "Looking up\u2026");
+    try {
+      const geo = typeof window.App.geocodeZip === "function" ? await window.App.geocodeZip(val) : null;
+      if(geo && geo.lat) {
+        const abbrev = typeof window.App.abbreviateState === "function" ? window.App.abbreviateState(geo.state || "") : (geo.state || "");
+        const label = [geo.city, abbrev].filter(Boolean).join(", ") || val;
+        settLocShowStatus("settLocZipStatus", "\u2713 " + label, "isSuccess");
+      } else {
+        settLocShowStatus("settLocZipStatus", "No location found for that ZIP.", "isError");
+      }
+    } catch(e) {
+      settLocShowStatus("settLocZipStatus", "Lookup failed. Try again.", "isError");
+    }
+  }
+
+  settLocZipVerifyBtn?.addEventListener("click", doSettLocVerifyZip);
+  zipInput?.addEventListener("keydown", e => { if(e.key === "Enter") doSettLocVerifyZip(); });
+
+  // City find
+  async function doSettLocFindCity() {
+    const val = (settLocCityInput?.value || "").trim();
+    if(!val) { settLocShowStatus("settLocCityStatus", "Enter a city name.", "isError"); return; }
+    settLocShowStatus("settLocCityStatus", "Looking up\u2026");
+    settLocHideApply();
+    try {
+      const geo = await settLocGeocodeCityName(val);
+      if(geo && Number.isFinite(geo.lat)) {
+        settLocShowStatus("settLocCityStatus", "");
+        settLocShowApply({ ...geo, source: "manual-city" }, geo.label);
+      } else {
+        settLocShowStatus("settLocCityStatus", "City not found. Try \u2018City, ST\u2019 format.", "isError");
+      }
+    } catch(e) {
+      settLocShowStatus("settLocCityStatus", "Lookup failed. Try again.", "isError");
+    }
+  }
+
+  settLocCityFindBtn?.addEventListener("click", doSettLocFindCity);
+  settLocCityInput?.addEventListener("keydown", e => { if(e.key === "Enter") doSettLocFindCity(); });
+
+  // GPS
+  settLocGpsBtn?.addEventListener("click", async () => {
+    if(!("geolocation" in navigator)) {
+      settLocShowStatus("settLocGpsStatus", "GPS not available in this browser.", "isError");
+      return;
+    }
+    settLocShowStatus("settLocGpsStatus", "Requesting location\u2026");
+    settLocHideApply();
+    try {
+      const pos = typeof window.App.getCurrentPositionAsync === "function"
+        ? await window.App.getCurrentPositionAsync()
+        : await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }));
+      const lat = Number(pos?.coords?.latitude), lon = Number(pos?.coords?.longitude);
+      if(!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        settLocShowStatus("settLocGpsStatus", "Could not read GPS coordinates.", "isError");
+        return;
+      }
+      settLocShowStatus("settLocGpsStatus", "Resolving address\u2026");
+      const rev = typeof window.App.reverseGeocodeCoords === "function" ? await window.App.reverseGeocodeCoords(lat, lon) : null;
+      const label = rev?.label || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      settLocShowStatus("settLocGpsStatus", "");
+      settLocShowApply({ lat, lon, city: rev?.city || "", state: rev?.state || "", label, source: "gps", zipCode: rev?.zipCode || "" }, label);
+    } catch(e) {
+      const denied = e?.code === 1 || /denied/i.test(e?.message || "");
+      settLocShowStatus("settLocGpsStatus", denied ? "Permission denied. Allow location in browser settings." : "GPS lookup failed. Try again.", "isError");
+    }
+  });
+
+  // Apply pending geo (saves immediately)
+  settLocApplyBtn?.addEventListener("click", () => {
+    if(!settLocPendingGeo) return;
+    const geo = settLocPendingGeo;
+    cfg.useDeviceLocation = true;
+    cfg.deviceLat = Number(geo.lat);
+    cfg.deviceLon = Number(geo.lon);
+    cfg.deviceLocationLabel = geo.label;
+    if(geo.zipCode && /^\d{5}$/.test(geo.zipCode)) {
+      cfg.zipCode = geo.zipCode;
+      if(zipInput) zipInput.value = geo.zipCode;
+    }
+    settLocHideApply();
+    settLocUpdateCurrentDisplay();
+    setStatus("Location updated \u2014 click Save Changes to keep", "unsaved");
+  });
+
+  settLocCancelGeoBtn?.addEventListener("click", settLocHideApply);
+
   // Location & Weather settings
-  zipInput.addEventListener("input", () => {
+  zipInput?.addEventListener("input", () => {
+    cfg.useDeviceLocation = false; // typing a ZIP clears device mode
     setStatus("Modified (not saved yet)", "unsaved");
   });
 
@@ -3141,6 +3331,7 @@
   // PWA Install functionality
   let deferredPrompt;
   let canAutoInstall = false;
+  let pendingInstallClick = false;
   const installAppBtn = document.getElementById("installAppBtn");
   const installBtnText = document.getElementById("installBtnText");
   const installStatus = document.getElementById("installStatus");
@@ -3308,6 +3499,89 @@
     return false;
   }
 
+  // Render browser-specific install guide into #installBrowserGuide
+  function renderInstallGuide(browser) {
+    const guide = document.getElementById("installBrowserGuide");
+    if (!guide) return;
+
+    const isChromium = browser.isChrome || browser.isEdge || browser.isBrave || browser.isOpera || browser.isDuckDuckGo;
+
+    // Chromium — native install dialog handles Desktop/Start menu/Taskbar; just explain + offer shortcut
+    if (isChromium) {
+      const name = browser.isBrave ? "Brave" : browser.isEdge ? "Edge" : browser.isOpera ? "Opera" : browser.isDuckDuckGo ? "DuckDuckGo" : "Chrome";
+      let bodyHtml = "";
+      if (browser.isAndroid) {
+        bodyHtml = `<p class="installGuideNote">Tap <strong>Install</strong> above to add the app to your home screen and app drawer.</p>`;
+      } else if (browser.isWindows) {
+        bodyHtml = `<p class="installGuideNote">${name}'s install dialog lets you choose where to add the app &mdash; <strong>Desktop</strong>, <strong>Start menu</strong>, and/or <strong>Taskbar</strong>.</p>
+          <p class="installGuideNote installGuideSub">Prefer just a shortcut? <button id="downloadDesktopShortcutBtn" type="button" class="installGuideLinkBtn">Download desktop shortcut (.url)</button></p>`;
+      } else if (browser.isMac) {
+        bodyHtml = `<p class="installGuideNote">${name}'s install dialog adds the app to your <strong>Applications</strong> folder and Dock.</p>`;
+      } else {
+        bodyHtml = `<p class="installGuideNote">Click <strong>Install</strong> above to add the app to your system.</p>`;
+      }
+      guide.innerHTML = bodyHtml;
+      const shortcutBtn = guide.querySelector("#downloadDesktopShortcutBtn");
+      if (shortcutBtn) shortcutBtn.addEventListener("click", () => downloadWindowsDesktopShortcut());
+      return;
+    }
+
+    // Non-Chromium — numbered manual steps
+    let title = "";
+    let steps = [];
+    let note = "";
+
+    if (browser.isSafari && browser.isIOS) {
+      title = "Install on iPhone / iPad (Safari)";
+      steps = [
+        'Tap the <strong>Share button</strong> (&#9633;&#8593;) at the bottom of the screen',
+        'Scroll down and tap <strong>Add to Home Screen</strong>',
+        'Tap <strong>Add</strong> in the top right to confirm',
+      ];
+    } else if (browser.isSafari) {
+      title = "Install on macOS (Safari)";
+      steps = [
+        'In the menu bar, click <strong>File</strong>',
+        'Select <strong>Add to Dock</strong>',
+      ];
+      note = "Requires macOS Sonoma (14) or later with Safari 17+.";
+    } else if (browser.isFirefox && browser.isAndroid) {
+      title = "Install on Android (Firefox)";
+      steps = [
+        'Tap the <strong>menu</strong> (&#8942;) in the top right',
+        'Tap <strong>Install</strong> or <strong>Add to Home screen</strong>',
+      ];
+    } else if (browser.isFirefox) {
+      title = "Install in Firefox";
+      steps = [
+        'Look for the <strong>install icon</strong> (&#8853;) in the address bar &mdash; click it, then click <strong>Install</strong>',
+        'Or: open the menu (&#9776;) and choose <strong>Install this site as an app</strong>',
+      ];
+      if (browser.isWindows) {
+        note = 'Or: <button id="downloadDesktopShortcutBtn" type="button" class="installGuideLinkBtn">download a desktop shortcut</button> without a full install.';
+      }
+    } else if (browser.isDuckDuckGo && browser.isAndroid) {
+      title = "Install on Android (DuckDuckGo)";
+      steps = [
+        'Tap the <strong>menu</strong> (&#8942;) in the top right',
+        'Tap <strong>Add to Home screen</strong>',
+        'Tap <strong>Add</strong> to confirm',
+      ];
+    } else {
+      title = "Install in " + browser.name;
+      steps = [
+        'Look for an <strong>install icon</strong> in the address bar',
+        'Or open the browser menu and look for <strong>Install</strong>, <strong>Add to Home Screen</strong>, or <strong>Add to Dock</strong>',
+      ];
+    }
+
+    const stepsHtml = steps.map((s) => `<li>${s}</li>`).join("");
+    const noteHtml = note ? `<p class="installGuideNote">${note}</p>` : "";
+    guide.innerHTML = `<p class="installGuideTitle">${title}</p><ol class="installGuideSteps">${stepsHtml}</ol>${noteHtml}`;
+    const shortcutBtn = guide.querySelector("#downloadDesktopShortcutBtn");
+    if (shortcutBtn) shortcutBtn.addEventListener("click", () => downloadWindowsDesktopShortcut());
+  }
+
   function getShortcutLaunchUrl(){
     return new URL("index.html", window.location.href).href;
   }
@@ -3398,11 +3672,24 @@
     if (e.target === installModal) hideInstallModal();
   });
 
-  // Listen for beforeinstallprompt event (Chrome/Edge support)
+  // Listen for beforeinstallprompt event — only fires on Chromium-based browsers
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     canAutoInstall = true;
+    // Reveal the install button now that native prompt is available
+    if (installAppBtn) {
+      installAppBtn.style.display = "";
+      installAppBtn.disabled = false;
+      if (installBtnText && installBtnText.textContent === "Preparing install…") {
+        installBtnText.textContent = installAppBtn.dataset.origLabel || "Install HAPPENING NOW!";
+      }
+    }
+    // User clicked install before the event fired — trigger now
+    if (pendingInstallClick) {
+      pendingInstallClick = false;
+      installAppBtn?.click();
+    }
     console.log('[PWA] Auto-install available');
   });
 
@@ -3435,8 +3722,27 @@
           showInstallModal();
         }
       } else {
-        // Browser doesn't support auto-install or this page is not currently installable.
-        showInstallModal();
+        // beforeinstallprompt not ready yet — queue the click and wait for it to fire
+        const b = detectBrowser();
+        const isChromium = b.isChrome || b.isEdge || b.isBrave || b.isOpera || b.isDuckDuckGo;
+        if (isChromium) {
+          // Only queue if we're on a secure origin where the event can still fire
+          const isSecure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+          if (!isSecure) {
+            const guide = document.getElementById("installBrowserGuide");
+            if (guide) guide.innerHTML = `<p class="installGuideNote"><strong>Install button unavailable.</strong> Install prompts require a secure connection (HTTPS). This page is being served over ${location.protocol}</p>`;
+            if (installAppBtn) installAppBtn.style.display = "none";
+            return;
+          }
+          pendingInstallClick = true;
+          if (installAppBtn) {
+            installAppBtn.dataset.origLabel = installBtnText?.textContent || "Install HAPPENING NOW!";
+            installAppBtn.disabled = true;
+          }
+          if (installBtnText) installBtnText.textContent = "Preparing install…";
+        } else {
+          showInstallModal();
+        }
       }
     });
   }
@@ -3444,32 +3750,52 @@
   // Listen for app installed event
   window.addEventListener('appinstalled', () => {
     console.log('[PWA] App was installed');
-    installAppBtn.style.display = "none";
-    installStatus.style.display = "block";
-    installStatusText.textContent = "Successfully installed! 🎉";
+    if (installAppBtn) installAppBtn.style.display = "none";
+    if (installStatus) installStatus.style.display = "block";
+    if (installStatusText) installStatusText.textContent = "Successfully installed!";
+    const guide = document.getElementById("installBrowserGuide");
+    if (guide) guide.innerHTML = "";
     setTimeout(hideInstallModal, 500);
   });
 
   // Initialize install state
   if (!checkInstalled()) {
     const browser = detectBrowser();
-    // Update button text based on browser
-    if (browser.isFirefox) {
-      installBtnText.textContent = "Install in Firefox";
-    } else if (browser.isDuckDuckGo) {
-      installBtnText.textContent = "Install in DuckDuckGo";
-    } else if (browser.isSafari && browser.isIOS) {
-      installBtnText.textContent = "Install on iPhone/iPad";
-    } else if (browser.isSafari) {
-      installBtnText.textContent = "Install on Mac";
-    } else if (browser.isAndroid) {
-      installBtnText.textContent = "Install on Android";
-    } else if (browser.isEdge) {
-      installBtnText.textContent = "Install in Edge";
-    } else if (browser.isChrome) {
-      installBtnText.textContent = "Install in Chrome";
-    } else {
-      installBtnText.textContent = `Install in ${browser.name}`;
+    renderInstallGuide(browser);
+    // Show install button immediately for Chromium-based browsers
+    // (beforeinstallprompt fires asynchronously; show button now, native dialog activates it)
+    const isChromium = browser.isChrome || browser.isEdge || browser.isBrave || browser.isOpera || browser.isDuckDuckGo;
+    if (installAppBtn && isChromium) {
+      installAppBtn.style.display = "";
+      if (installBtnText) {
+        if (browser.isEdge) installBtnText.textContent = "Install in Edge";
+        else if (browser.isBrave) installBtnText.textContent = "Install in Brave";
+        else if (browser.isOpera) installBtnText.textContent = "Install in Opera";
+        else if (browser.isDuckDuckGo) installBtnText.textContent = "Install in DuckDuckGo";
+        else installBtnText.textContent = "Install in Chrome";
+      }
+
+      // Timeout: if beforeinstallprompt never fires the site isn't installable here
+      // (file://, non-HTTPS, already installed in another profile, etc.)
+      setTimeout(() => {
+        if (canAutoInstall) return; // already fired, all good
+        // Cancel any pending click
+        pendingInstallClick = false;
+        if (installAppBtn) {
+          installAppBtn.disabled = false;
+          installAppBtn.style.display = "none";
+        }
+        const guide = document.getElementById("installBrowserGuide");
+        if (guide) {
+          const isSecure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+          const reason = isSecure
+            ? "The browser hasn't offered an install prompt. The app may already be installed, or the browser requires an interaction first."
+            : "Install prompts require a secure connection (HTTPS). This page is being served over " + location.protocol;
+          guide.innerHTML = `<p class="installGuideNote"><strong>Install button unavailable.</strong> ${reason}</p>
+            <p class="installGuideNote installGuideSub">Look for the install icon (&#10010; or monitor icon) in the address bar, or open the menu (&#8942;) and choose <strong>Install HAPPENING NOW</strong>.</p>`;
+        }
+        console.log('[PWA] beforeinstallprompt did not fire — install button hidden.');
+      }, 5000);
     }
   }
 

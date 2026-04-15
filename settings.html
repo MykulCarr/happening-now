@@ -4,7 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Configure your HAPPENING NOW dashboard settings" />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://happening-now.net/settings.html" />
+  <meta property="og:site_name" content="HAPPENING NOW" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Happening Now! - Settings" />
+  <meta property="og:description" content="Configure your HAPPENING NOW dashboard settings" />
+  <meta property="og:url" content="https://happening-now.net/settings.html" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Happening Now! - Settings" />
+  <meta name="twitter:description" content="Configure your HAPPENING NOW dashboard settings" />
   <title>Happening Now! - Settings</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Happening Now! - Settings",
+      "url": "https://happening-now.net/settings.html",
+      "description": "Configure your HAPPENING NOW dashboard settings",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "HAPPENING NOW",
+        "url": "https://happening-now.net/"
+      },
+      "inLanguage": "en"
+    }
+  </script>
   <link rel="stylesheet" href="assets/styles.css">
   <script>
     if (location.protocol !== "file:") {
@@ -54,8 +79,7 @@
     <!-- Settings Tabs -->
     <div class="settingsTabsWrap">
       <div class="settingsTabs" role="tablist" aria-label="Settings sections">
-        <button class="settingsTab active" data-tab="general" role="tab" aria-selected="true">General</button>
-        <button class="settingsTab" data-tab="news" role="tab" aria-selected="false">News</button>
+        <button class="settingsTab active" data-tab="news" role="tab" aria-selected="true">News</button>
         <button class="settingsTab" data-tab="weather" role="tab" aria-selected="false">Weather</button>
         <button class="settingsTab" data-tab="stocks" role="tab" aria-selected="false">Stocks</button>
         <button class="settingsTab" data-tab="astrolab" role="tab" aria-selected="false">AstroLab</button>
@@ -63,62 +87,68 @@
         <button class="settingsTab" data-tab="system" role="tab" aria-selected="false">System</button>
       </div>
 
-      <!-- TAB: General -->
-      <div class="settingsTabContent active" data-tab="general">
-        <div class="generalPanelRow">
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="location-weather">
-            Location & Refresh
-          </button>
-          <div class="collapsibleBody expanded">
-            <div class="settingRowGroup">
-              <div class="settingRow">
-                <div>
-                  <div class="settingLabel">ZIP Code</div>
-                  <div class="settingHint">Fallback location for weather and time zone sync</div>
-                </div>
-                <input id="zipInput" class="input settingsInput100" maxlength="5" placeholder="49201" />
-              </div>
-
-              <div class="settingRow">
-                <div>
-                  <div class="settingLabel">Weather Refresh Rate</div>
-                  <div class="settingHint">Minutes between updates (minimum 2)</div>
-                </div>
-                <div class="settingsInlineUnitRow">
-                  <input id="wxRefreshInput" class="input settingsInput70" inputmode="numeric" placeholder="10" />
-                  <span class="settingsUnitSuffix">min</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="install-app">
-            Install App (Recommended)
-          </button>
-          <div class="collapsibleBody expanded">
-            <div id="installContainer" class="installContainer">
-              <button id="installAppBtn" class="btn installAppBtnProminent" type="button">
-                <span class="installAppBtnIcon">📲</span> <span id="installBtnText">Install HAPPENING NOW!</span>
-              </button>
-              <div id="installStatus" class="installStatusPanel">
-                <span class="installStatusIcon">✓</span> <span id="installStatusText">App is already installed!</span>
-              </div>
-            </div>
-            <div class="hint hintMt12">
-              Install as a Progressive Web App (PWA) for offline access, home screen icon, and app-like experience.
-            </div>
-          </div>
-        </div>
-        </div><!-- /.generalPanelRow -->
-
-      </div>
 
       <!-- TAB: Weather -->
       <div class="settingsTabContent" data-tab="weather">
         <div class="weatherPanelGrid">
+
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="weather-location">
+              Location
+            </button>
+            <div class="collapsibleBody expanded">
+              <div id="settLocCurrentDisplay" class="settLocCurrentDisplay"></div>
+              <div class="tabsRow locationPickerTabs" role="tablist">
+                <button class="tabPill active" data-sett-loc-mode="zip" role="tab" aria-selected="true">ZIP Code</button>
+                <button class="tabPill" data-sett-loc-mode="city" role="tab" aria-selected="false">City Name</button>
+                <button class="tabPill" data-sett-loc-mode="gps" role="tab" aria-selected="false">GPS</button>
+              </div>
+
+              <div class="locationPickerPanel" data-sett-loc-panel="zip">
+                <div class="locationPickerRow">
+                  <input id="zipInput" class="input" maxlength="5" inputmode="numeric"
+                    placeholder="e.g. 49201" autocomplete="postal-code" aria-label="ZIP code" />
+                  <button id="settLocZipVerifyBtn" class="btn" type="button">Verify</button>
+                </div>
+                <div class="locationPickerStatus" id="settLocZipStatus"></div>
+              </div>
+
+              <div class="locationPickerPanel" data-sett-loc-panel="city" hidden>
+                <div class="locationPickerRow">
+                  <input id="settLocCityInput" class="input" type="text"
+                    placeholder="e.g. Lansing, MI" autocomplete="address-level2" aria-label="City name" />
+                  <button id="settLocCityFindBtn" class="btn" type="button">Find</button>
+                </div>
+                <div class="locationPickerStatus" id="settLocCityStatus"></div>
+              </div>
+
+              <div class="locationPickerPanel" data-sett-loc-panel="gps" hidden>
+                <button class="btn locationGpsBtn" id="settLocGpsBtn" type="button">&#128205; Use My GPS</button>
+                <div class="locationPickerStatus" id="settLocGpsStatus"></div>
+              </div>
+
+              <div id="settLocApplyRow" class="locationPickerConfirmBox" hidden>
+                <div class="locationPickerFound" id="settLocFoundLabel"></div>
+                <div class="locationPickerActions">
+                  <button class="btn" id="settLocApplyBtn" type="button">Use This Location</button>
+                  <button class="btn" id="settLocCancelGeoBtn" type="button">Cancel</button>
+                </div>
+              </div>
+
+              <div class="settingRowGroup settLocRefreshRow">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Weather Refresh Rate</div>
+                    <div class="settingHint">Minutes between updates (minimum 2)</div>
+                  </div>
+                  <div class="settingsInlineUnitRow">
+                    <input id="wxRefreshInput" class="input settingsInput70" inputmode="numeric" placeholder="10" />
+                    <span class="settingsUnitSuffix">min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="weather-alerting">
@@ -240,13 +270,13 @@
       </div>
 
       <!-- TAB: News -->
-      <div class="settingsTabContent" data-tab="news">
+      <div class="settingsTabContent active" data-tab="news">
         <div class="collapsibleSection">
           <button class="collapsibleHeader expanded" data-section="news-sources">
             <span class="collapsibleHeaderMain">News Sources (Max 15)</span>
             <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
               <span class="usageGuideIcon">i</span>
-              How to use this editor
+              How to add/remove news sources
             </span>
           </button>
           <div class="collapsibleBody expanded">
@@ -691,6 +721,25 @@
 
       <!-- TAB: System -->
       <div class="settingsTabContent" data-tab="system">
+        <div class="systemPanelRow">
+
+        <div class="collapsibleSection">
+          <button class="collapsibleHeader expanded" data-section="install-app">
+            Install App (Recommended)
+          </button>
+          <div class="collapsibleBody expanded">
+            <div id="installContainer" class="installContainer">
+              <button id="installAppBtn" class="btn installAppBtnProminent" type="button" style="display:none">
+                <span class="installAppBtnIcon">&#128242;</span> <span id="installBtnText">Install HAPPENING NOW!</span>
+              </button>
+              <div id="installStatus" class="installStatusPanel">
+                <span class="installStatusIcon">&#x2713;</span> <span id="installStatusText">App is already installed!</span>
+              </div>
+            </div>
+            <div id="installBrowserGuide" class="installBrowserGuide"></div>
+          </div>
+        </div>
+
         <div class="collapsibleSection">
           <button class="collapsibleHeader expanded" data-section="import-export">
             Import / Export (Backup)
@@ -714,12 +763,14 @@
           <div class="collapsibleBody expanded">
             <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
             <div class="hint hintMt12">
-              This restores dashboard preferences to defaults.
+              Resets all preferences to defaults — including news sources, stock watchlist, and AstroLab settings. Use the Export JSON option to back up your current configuration first if you may want to restore it later.
             </div>
           </div>
         </div>
+
+        </div><!-- /.systemPanelRow -->
       </div>
-    </div>
+    </div><!-- /.settingsTabsWrap -->
   </main>
 
   <footer class="page-footer">

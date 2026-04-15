@@ -21,11 +21,6 @@
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/settings.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://happening-now.net/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>

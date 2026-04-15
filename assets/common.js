@@ -2655,6 +2655,8 @@
     wmoDesc,
     getWeatherIcon,
     geocodeZip,
+    getCurrentPositionAsync,
+    reverseGeocodeCoords,
     fetchCurrentWeather,
     resolvePreferredLocation,
     fetchStockPrice,

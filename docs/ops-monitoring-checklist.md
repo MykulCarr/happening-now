@@ -28,6 +28,7 @@ Last updated: 2026-04-09
   - worker API endpoint
 - Verify domain and TLS certificate status in Cloudflare.
 - Review Cloudflare analytics for traffic anomalies and error spikes.
+- Review Google Search Console and Bing Webmaster Tools for indexing, sitemap, and crawl anomalies.
 - Spot-check mobile layout on at least one phone viewport.
 
 ## Monthly (30 minutes)
@@ -68,3 +69,6 @@ Record after each weekly check:
 
 Minimum evidence retention:
 - Keep at least 90 days of check-in records.
+
+Reference:
+- docs/web-presence-baseline.md

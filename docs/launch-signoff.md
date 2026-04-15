@@ -39,12 +39,16 @@ Owner: Site operator
 ## 6) Manual Account Actions (Required)
 - [ ] Submit sitemap in Google Search Console.
 - [ ] Verify Search Console ownership (Domain or URL prefix).
-- [ ] Confirm Cloudflare Analytics/Web Analytics enabled.
+- [ ] Submit sitemap in Bing Webmaster Tools.
+- [ ] Verify Bing Webmaster ownership.
+- [x] Confirm Cloudflare Analytics/Web Analytics enabled.
 - [ ] Confirm Cloudflare alerting notifications route to active email.
+- [ ] Review docs/web-presence-baseline.md and record Day 1 baseline values.
 
 ## 7) Week 1 SEO Verification
 - [ ] Day 1: Confirm sitemap submission status is healthy in Search Console.
 - [ ] Day 1: Run URL Inspection for homepage and request indexing if needed.
+- [ ] Day 1: Confirm sitemap submission status is healthy in Bing Webmaster Tools.
 - [ ] Day 7: Re-check indexing state for core pages and legal pages.
 - [ ] Day 7: Confirm no crawl-blocking errors in Pages/Coverage reports.
 - [ ] Day 7: Re-submit sitemap once only if persistent indexing lag exists.

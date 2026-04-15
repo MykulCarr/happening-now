@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { cfg, escapeHtml, fetchRssItems, getRssCooldownStatus, getRssLastSuccessAgeMs, formatAge, clearRssCache, loadConfig, parseDateOnlyLocal, applyThemeDensity, resolvePreferredLocation, abbreviateState, geocodeZip, saveConfig, cacheGet, cacheSet } = window.App;
+  const { cfg, escapeHtml, fetchRssItems, getRssCooldownStatus, getRssLastSuccessAgeMs, formatAge, clearRssCache, loadConfig, parseDateOnlyLocal, applyThemeDensity, resolvePreferredLocation, abbreviateState, geocodeZip, getCurrentPositionAsync, reverseGeocodeCoords, saveConfig, cacheGet, cacheSet } = window.App;
 
   // Apply theme, density, and font size on page load
   applyThemeDensity(cfg);
@@ -841,92 +841,253 @@
     };
   }
 
-  // Allow user to change location on-the-fly
-  async function changeLocationPrompt() {
-    const input = prompt("Enter a new ZIP code (5 digits) or city name:");
-    if (!input || !input.trim()) return;
-    
-    const trimmed = input.trim();
-    
-    // Check if it's a 5-digit ZIP
-    if (/^\d{5}$/.test(trimmed)) {
-      try {
-        if(typeof geocodeZip !== "function"){
-          alert("ZIP lookup is unavailable right now. Please refresh and try again.");
-          return;
-        }
+  // Build and show location picker modal
+  function changeLocationPrompt() {
+    if(document.getElementById("locationPickerModal")) return; // already open
 
-        const geo = await geocodeZip(trimmed);
-        if (geo && geo.lat && geo.lon) {
-          // Ask if user wants to save permanently
-          const savePermanent = confirm("Save this ZIP code to settings? (Cancel for session-only)");
-          
-          if (savePermanent) {
-            // Update config and save permanently
-            cfg.zipCode = trimmed;
-            cfg.useDeviceLocation = false; // Switch from device to ZIP mode
-            saveConfig(cfg);
-            manualLocationOverride = null;
-          } else {
-            manualLocationOverride = {
-              ...geo,
-              label: geo.city && geo.state ? `${geo.city}, ${abbreviateState(geo.state)}` : trimmed,
-              source: "manual-zip"
-            };
-          }
-          
-          // Update lastGeo with label for display
-          lastGeo = { 
-            ...geo, 
-            label: geo.city && geo.state ? `${geo.city}, ${abbreviateState(geo.state)}` : trimmed 
-          };
-          
-          await refresh(true);
-          return;
-        } else {
-          alert("Could not find location for that ZIP code.");
-        }
-      } catch (err) {
-        console.error("Geocode error:", err);
-        alert("Error looking up ZIP code. Please try again.");
-      }
-    } else {
-      try {
-        const geo = await geocodeCityName(trimmed);
-        if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
-          const savePermanent = confirm("Save this city as your default location? (Cancel for session-only)");
-          if (savePermanent) {
-            cfg.useDeviceLocation = true;
-            cfg.deviceLat = Number(geo.lat);
-            cfg.deviceLon = Number(geo.lon);
-            cfg.deviceLocationLabel = geo.label || trimmed;
-            saveConfig(cfg);
-            manualLocationOverride = null;
-          } else {
-            manualLocationOverride = {
-              ...geo,
-              label: geo.label || trimmed,
-              source: "manual-city"
-            };
-          }
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.id = "locationPickerModal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-label", "Change Location");
 
-          lastGeo = {
-            ...geo,
-            label: geo.label || trimmed
-          };
+    modal.innerHTML = `
+      <div class="modalContent">
+        <div class="modalHead">
+          <h3 style="margin:0;font-size:16px;">Change Location</h3>
+          <button class="modalClose" id="locationPickerClose" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="modalBody">
+          <div class="tabsRow locationPickerTabs" role="tablist">
+            <button class="tabPill active" data-lp-mode="zip" type="button" role="tab" aria-selected="true">ZIP Code</button>
+            <button class="tabPill" data-lp-mode="city" type="button" role="tab" aria-selected="false">City Name</button>
+            <button class="tabPill" data-lp-mode="gps" type="button" role="tab" aria-selected="false">GPS</button>
+          </div>
 
-          await refresh(true);
-          return;
-        }
+          <div class="locationPickerPanel" data-lp-panel="zip">
+            <div class="locationPickerRow">
+              <input class="input" id="locationZipInput" type="text" inputmode="numeric"
+                placeholder="e.g. 49201" maxlength="5" autocomplete="postal-code" aria-label="ZIP code">
+              <button class="btn" id="locationZipLookupBtn" type="button">Find</button>
+            </div>
+            <div class="locationPickerStatus" id="locationZipStatus"></div>
+          </div>
 
-        alert("Could not find that city. Try 'City, ST' (example: Lansing, MI) or a 5-digit ZIP.");
-      } catch (err) {
-        console.error("City geocode error:", err);
-        alert("Error looking up city. Please try again.");
+          <div class="locationPickerPanel" data-lp-panel="city" hidden>
+            <div class="locationPickerRow">
+              <input class="input" id="locationCityInput" type="text"
+                placeholder="e.g. Lansing, MI" autocomplete="address-level2" aria-label="City name">
+              <button class="btn" id="locationCityLookupBtn" type="button">Find</button>
+            </div>
+            <div class="locationPickerStatus" id="locationCityStatus"></div>
+          </div>
+
+          <div class="locationPickerPanel" data-lp-panel="gps" hidden>
+            <button class="btn locationGpsBtn" id="locationGpsBtn" type="button">
+              &#128205; Use My GPS
+            </button>
+            <div class="locationPickerStatus" id="locationGpsStatus"></div>
+          </div>
+
+          <div class="locationPickerConfirmBox" id="locationPickerConfirmBox" hidden>
+            <div class="locationPickerFound" id="locationPickerFound"></div>
+            <label class="locationPickerSaveLabel">
+              <input type="checkbox" id="locationPickerSaveCheck" checked>
+              Save as my default location
+            </label>
+            <div class="locationPickerActions">
+              <button class="btn" id="locationPickerApplyBtn" type="button">Apply</button>
+              <button class="btn" id="locationPickerCancelBtn" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+
+    let pendingGeo = null;
+
+    function closeModal() {
+      modal.remove();
+    }
+
+    function showStatus(id, msg, type = "") {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.textContent = msg;
+      el.className = "locationPickerStatus" + (type ? " " + type : "");
+    }
+
+    function showConfirm(geo, label) {
+      pendingGeo = geo;
+      const box = document.getElementById("locationPickerConfirmBox");
+      const found = document.getElementById("locationPickerFound");
+      if(box && found) {
+        found.textContent = "Found: " + label;
+        box.hidden = false;
       }
     }
+
+    function hideConfirm() {
+      const box = document.getElementById("locationPickerConfirmBox");
+      if(box) box.hidden = true;
+      pendingGeo = null;
+    }
+
+    // Tab switching
+    modal.querySelectorAll("button[data-lp-mode]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.lpMode;
+        modal.querySelectorAll("button[data-lp-mode]").forEach(b => {
+          b.classList.toggle("active", b.dataset.lpMode === mode);
+          b.setAttribute("aria-selected", String(b.dataset.lpMode === mode));
+        });
+        modal.querySelectorAll(".locationPickerPanel").forEach(p => {
+          p.hidden = p.dataset.lpPanel !== mode;
+        });
+        hideConfirm();
+        // Clear statuses
+        ["locationZipStatus", "locationCityStatus", "locationGpsStatus"].forEach(id => showStatus(id, ""));
+      });
+    });
+
+    // ZIP lookup
+    async function doZipLookup() {
+      const val = (document.getElementById("locationZipInput")?.value || "").trim();
+      if(!/^\d{5}$/.test(val)) {
+        showStatus("locationZipStatus", "Enter a 5-digit ZIP code.", "isError");
+        return;
+      }
+      showStatus("locationZipStatus", "Looking up…");
+      hideConfirm();
+      try {
+        const geo = await geocodeZip(val);
+        if(geo && geo.lat && geo.lon) {
+          const label = geo.city && geo.state
+            ? `${geo.city}, ${abbreviateState(geo.state)}`
+            : val;
+          showStatus("locationZipStatus", "");
+          showConfirm({ ...geo, label, source: "manual-zip", _zip: val }, label);
+        } else {
+          showStatus("locationZipStatus", "No location found for that ZIP.", "isError");
+        }
+      } catch(err) {
+        console.error("[locationPicker] ZIP error:", err);
+        showStatus("locationZipStatus", "Lookup failed. Try again.", "isError");
+      }
+    }
+
+    document.getElementById("locationZipLookupBtn")?.addEventListener("click", doZipLookup);
+    document.getElementById("locationZipInput")?.addEventListener("keydown", e => {
+      if(e.key === "Enter") doZipLookup();
+    });
+
+    // City lookup
+    async function doCityLookup() {
+      const val = (document.getElementById("locationCityInput")?.value || "").trim();
+      if(!val) {
+        showStatus("locationCityStatus", "Enter a city name.", "isError");
+        return;
+      }
+      showStatus("locationCityStatus", "Looking up…");
+      hideConfirm();
+      try {
+        const geo = await geocodeCityName(val);
+        if(geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
+          const label = geo.label || val;
+          showStatus("locationCityStatus", "");
+          showConfirm({ ...geo, source: "manual-city" }, label);
+        } else {
+          showStatus("locationCityStatus", "City not found. Try 'City, ST' format.", "isError");
+        }
+      } catch(err) {
+        console.error("[locationPicker] City error:", err);
+        showStatus("locationCityStatus", "Lookup failed. Try again.", "isError");
+      }
+    }
+
+    document.getElementById("locationCityLookupBtn")?.addEventListener("click", doCityLookup);
+    document.getElementById("locationCityInput")?.addEventListener("keydown", e => {
+      if(e.key === "Enter") doCityLookup();
+    });
+
+    // GPS lookup
+    document.getElementById("locationGpsBtn")?.addEventListener("click", async () => {
+      if(!("geolocation" in navigator)) {
+        showStatus("locationGpsStatus", "GPS is not available in this browser.", "isError");
+        return;
+      }
+      showStatus("locationGpsStatus", "Requesting location…");
+      hideConfirm();
+      try {
+        const pos = typeof getCurrentPositionAsync === "function"
+          ? await getCurrentPositionAsync()
+          : await new Promise((res, rej) =>
+              navigator.geolocation.getCurrentPosition(res, rej, {
+                enableHighAccuracy: true, timeout: 10000, maximumAge: 300000
+              }));
+        const lat = Number(pos?.coords?.latitude);
+        const lon = Number(pos?.coords?.longitude);
+        if(!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          showStatus("locationGpsStatus", "Could not read GPS coordinates.", "isError");
+          return;
+        }
+        showStatus("locationGpsStatus", "Resolving address…");
+        const rev = typeof reverseGeocodeCoords === "function"
+          ? await reverseGeocodeCoords(lat, lon)
+          : null;
+        const label = rev?.label || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        showStatus("locationGpsStatus", "");
+        showConfirm({ lat, lon, city: rev?.city || "", state: rev?.state || "",
+          label, source: "gps", zipCode: rev?.zipCode || "" }, label);
+      } catch(err) {
+        const denied = err?.code === 1 || /denied/i.test(err?.message || "");
+        showStatus("locationGpsStatus",
+          denied ? "Location permission denied. Allow access in your browser settings." : "GPS lookup failed. Try again.",
+          "isError");
+        console.error("[locationPicker] GPS error:", err);
+      }
+    });
+
+    // Apply location
+    document.getElementById("locationPickerApplyBtn")?.addEventListener("click", async () => {
+      if(!pendingGeo) return;
+      const savePermanent = document.getElementById("locationPickerSaveCheck")?.checked;
+      const geo = pendingGeo;
+
+      if(savePermanent) {
+        if(geo.source === "manual-zip" && geo._zip) {
+          cfg.zipCode = geo._zip;
+          cfg.useDeviceLocation = false;
+        } else {
+          cfg.useDeviceLocation = true;
+          cfg.deviceLat = Number(geo.lat);
+          cfg.deviceLon = Number(geo.lon);
+          cfg.deviceLocationLabel = geo.label;
+        }
+        if(geo.zipCode && /^\d{5}$/.test(geo.zipCode)) cfg.zipCode = geo.zipCode;
+        saveConfig(cfg);
+        manualLocationOverride = null;
+      } else {
+        manualLocationOverride = { ...geo };
+      }
+
+      lastGeo = { ...geo };
+      closeModal();
+      await refresh(true);
+    });
+
+    // Cancel / close
+    document.getElementById("locationPickerCancelBtn")?.addEventListener("click", hideConfirm);
+    document.getElementById("locationPickerClose")?.addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+    modal.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+    // Focus first input
+    window.setTimeout(() => document.getElementById("locationZipInput")?.focus(), 50);
   }
-  
+
   // Make changeLocationPrompt globally accessible for onclick handler
   window.changeLocationPrompt = changeLocationPrompt;
 
@@ -1440,7 +1601,7 @@
                 onclick="changeLocationPrompt()">
                   ${lastGeo?.city && lastGeo?.state ? `${escapeHtml(lastGeo.city)}, ${escapeHtml(abbreviateState(lastGeo.state))}` : (lastGeo?.label ? escapeHtml(lastGeo.label) : 'Location')}
                 </div>
-                <div class="currentLocationHint">click to update location (zip/city)</div>
+                <div class="currentLocationHint">click to change location</div>
             </div>
           </div>
           
