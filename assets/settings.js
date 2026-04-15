@@ -3554,7 +3554,7 @@
     } else if (browser.isFirefox) {
       title = "Install in Firefox";
       steps = [
-        'Look for the <strong>install icon</strong> (&#8853;) in the address bar &mdash; click it, then click <strong>Install</strong>',
+        'Look for the <strong>install icon</strong> (a download arrow &#8659; in a tray) at the right end of the address bar &mdash; click it, then click <strong>Install</strong>',
         'Or: open the menu (&#9776;) and choose <strong>Install this site as an app</strong>',
       ];
       if (browser.isWindows) {

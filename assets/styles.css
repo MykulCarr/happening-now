@@ -5076,6 +5076,23 @@ select.input optgroup,
 .weatherPanelGrid > .collapsibleSection {
   margin-bottom: 0;
 }
+/* Explicit desktop placement — Location spans 2 rows; Units fills the gap in row 2 cols 2-3 */
+.weatherPanelLocation { grid-column: 1; grid-row: 1 / 3; }
+.weatherPanelAlerting { grid-column: 2; grid-row: 1; }
+.weatherPanelMap      { grid-column: 3; grid-row: 1; }
+.weatherPanelUnits    { grid-column: 2 / 4; grid-row: 2; }
+/* Spread the 3 unit rows horizontally inside the wide Units panel */
+.weatherPanelUnits .settingRowGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+.weatherPanelUnits .settingRow {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
 
 .astrolabPanelGrid {
   display: grid;
@@ -5728,6 +5745,20 @@ select.input optgroup,
 
   .weatherPanelGrid {
     grid-template-columns: 1fr;
+  }
+  .weatherPanelLocation,
+  .weatherPanelAlerting,
+  .weatherPanelMap,
+  .weatherPanelUnits {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .weatherPanelUnits .settingRowGroup {
+    flex-direction: column;
+  }
+  .weatherPanelUnits .settingRow {
+    flex-direction: row;
+    align-items: center;
   }
 
   .astrolabPanelGrid {
