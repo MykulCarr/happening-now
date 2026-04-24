@@ -107,7 +107,7 @@
               <div class="locationPickerPanel" data-sett-loc-panel="zip">
                 <div class="locationPickerRow">
                   <input id="zipInput" class="input" maxlength="5" inputmode="numeric"
-                    placeholder="e.g. 49201" autocomplete="postal-code" aria-label="ZIP code" />
+                    placeholder="e.g. 10001" autocomplete="postal-code" aria-label="ZIP code" />
                   <button id="settLocZipVerifyBtn" class="btn" type="button">Verify</button>
                 </div>
                 <div class="locationPickerStatus" id="settLocZipStatus"></div>
@@ -150,6 +150,7 @@
             </div>
           </div>
 
+          <div class="weatherPanelRight">
           <div class="collapsibleSection weatherPanelAlerting">
             <button class="collapsibleHeader expanded" data-section="weather-alerting">
               Alerting &amp; Forecast
@@ -265,6 +266,7 @@
               </div>
             </div>
           </div>
+          </div><!-- /.weatherPanelRight -->
 
         </div><!-- /.weatherPanelGrid -->
       </div>
@@ -281,34 +283,15 @@
           </button>
           <div class="collapsibleBody expanded">
             <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Start with feed search: type a publisher name or website to see simple sections such as Top Stories, World, Business, Sports, or Culture.</p>
-              <p>Use Browse for quick picks, use Add Top 3 when a publisher offers several sections, and use Add This Source when you only want one feed.</p>
-              <p>If search does not find the source you want, open Manual RSS URL and add it yourself. Blank Source Name and Site URL fields auto-fill when possible.</p>
-              <p>Use the grip icon to reorder saved sources, adjust Headlines count for each card, then click Save Changes to keep the update.</p>
+              <p>Click <strong>+ Add News Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
+              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This Source</strong> for a single feed. The modal closes automatically after adding.</p>
+              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and Site fields auto-fill when possible.</p>
+              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click <strong>Save Changes</strong>.</p>
             </div>
-            <section class="newsDiscoveryPanel" aria-labelledby="newsDiscoveryTitle">
-              <div class="newsDiscoveryIntro">
-                <div>
-                  <div id="newsDiscoveryTitle" class="settingLabel">Find a News Feed</div>
-                  <div class="settingHint">Search by publisher name or website and we will show simple feed options you can add.</div>
-                </div>
-              </div>
-              <form id="newsDiscoveryForm" class="newsDiscoveryForm" novalidate>
-                <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search" placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
-                <button id="newsDiscoveryBtn" class="btn newsDiscoveryBtn" type="submit">Search Feeds</button>
-              </form>
-              <div id="newsDiscoveryBrowse" class="newsDiscoveryBrowse" aria-label="Browse popular and local publishers"></div>
-              <div id="newsDiscoveryStatus" class="newsDiscoveryStatus" aria-live="polite"></div>
-              <div id="newsDiscoveryResults" class="newsDiscoveryResults" aria-live="polite"></div>
-            </section>
+            <div class="newsEditorToolbar">
+              <button id="addNewsSourceBtn" class="btn newsAddTriggerBtn" type="button">+ Add News Source</button>
+            </div>
             <div id="newsEditor" class="stack newsEditorStack"></div>
-            <section class="newsManualWrap" aria-labelledby="newsManualToggle">
-              <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS URL</button>
-              <div id="newsManualBody" class="newsManualBody" hidden>
-                <button id="addNewsBtn" class="btn" type="button">+ Add News Source Manually</button>
-                <div class="hint">Use manual mode only if search and browse do not show your source.</div>
-              </div>
-            </section>
             <div class="hint hintMt10">
               Best performance: keep source count lean and headlines between 5 and 8.
             </div>
@@ -328,29 +311,14 @@
           </button>
           <div class="collapsibleBody expanded">
             <div id="stocksHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Search by ticker or company name to find the exact listing you want, then use Assign To to place it in a specific row or add it as a new row.</p>
-              <p>If you already know the symbol, you can still edit any row directly in the watchlist below.</p>
-              <p>Drag with the grip icon to reorder rows. The number badge shows the display order used on the Stocks page.</p>
-              <p>When the watchlist looks right, click Save Changes to apply it to the live Stocks page.</p>
+              <p>Click <strong>+ Add Stock / Fund</strong> to open the symbol search. Type a ticker or company name, pick the exact match, and use <strong>Assign To</strong> to place it in an existing row or add it as a new one.</p>
+              <p>You can also edit any symbol or label directly in the watchlist rows below without reopening the picker.</p>
+              <p>Drag the grip icon to reorder rows. The number badge reflects the display order on the Stocks page.</p>
+              <p>When the list looks right, click <strong>Save Changes</strong> to apply it live.</p>
             </div>
-            <section class="stockLookupPanel" aria-labelledby="stockLookupTitle">
-              <div class="stockLookupIntro">
-                <div>
-                  <div id="stockLookupTitle" class="settingLabel">Find and Assign a Stock</div>
-                  <div class="settingHint">Search by ticker or company name, then assign the exact match to your watchlist.</div>
-                </div>
-              </div>
-              <form id="stockLookupForm" class="stockLookupForm" novalidate>
-                <input id="stockLookupInput" class="input stockLookupInput" type="search" placeholder="Try AAPL, TSLA, BRK.B, or Berkshire Hathaway" aria-label="Search for a stock symbol" />
-                <button id="stockLookupBtn" class="btn stockLookupBtn" type="submit">Search Symbols</button>
-              </form>
-              <div class="stockLookupAssignRow">
-                <label for="stockAssignTarget" class="stockLookupAssignLabel">Assign To</label>
-                <select id="stockAssignTarget" class="input stockAssignTarget" aria-label="Assignment target"></select>
-              </div>
-              <div id="stockLookupStatus" class="stockLookupStatus" aria-live="polite"></div>
-              <div id="stockLookupResults" class="stockLookupResults" aria-live="polite"></div>
-            </section>
+            <div class="stockEditorToolbar">
+              <button id="addStockBtn" class="btn stockAddTriggerBtn" type="button">+ Add Stock / Fund</button>
+            </div>
             <div id="stocksEditor" class="stack stockEditorStack"></div>
           </div>
         </div>
@@ -423,7 +391,7 @@
             <div class="astrolabDenseFields">
               <div class="astrolabDenseField astrolabDenseField--toggle">
                 <div class="settingLabel">Use Device Location by Default</div>
-                <div class="settingHint">Prefers GPS position when AstroLab opens</div>
+                <div class="settingHint">Uses your device GPS when AstroLab opens (only after you've granted location permission)</div>
                 <div class="toggleSwitch astrolabDenseControl">
                   <input type="checkbox" id="astUseDeviceLocationDefault" class="toggleInput astrolabSetting" aria-label="Use device location by default" />
                 </div>
@@ -806,6 +774,64 @@
             <strong class="installModalTipStrong">💡 Tip:</strong> Once installed, you can launch the app from your home screen, app drawer, or applications folder just like any other app!
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- News Discovery Modal -->
+  <div id="newsDiscoveryModal" class="newsDiscoveryModal" role="dialog" aria-modal="true" aria-labelledby="newsDiscoveryModalTitle" hidden>
+    <div class="newsDiscoveryModalBackdrop" id="newsDiscoveryModalBackdrop"></div>
+    <div class="newsDiscoveryModalSheet">
+      <div class="newsDiscoveryModalHead">
+        <div id="newsDiscoveryModalTitle" class="newsDiscoveryModalTitle">Add News Sources</div>
+        <button class="newsDiscoveryModalClose" id="newsDiscoveryModalClose" type="button" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="newsDiscoveryModalBody">
+        <form id="newsDiscoveryForm" class="newsDiscoveryForm" novalidate>
+          <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search" placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
+          <button id="newsDiscoveryBtn" class="btn newsDiscoveryBtn" type="submit">Search Feeds</button>
+        </form>
+        <div id="newsDiscoveryBrowse" class="newsDiscoveryBrowse" aria-label="Browse by category"></div>
+        <div id="newsDiscoveryStatus" class="newsDiscoveryStatus" aria-live="polite"></div>
+        <div id="newsDiscoveryResults" class="newsDiscoveryResults" aria-live="polite"></div>
+        <section class="newsManualWrap" aria-labelledby="newsManualToggle">
+          <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS URL</button>
+          <div id="newsManualBody" class="newsManualBody" hidden>
+            <button id="addNewsBtn" class="btn" type="button">+ Add News Source Manually</button>
+            <div class="hint">Use manual mode when search and category browse don't list your source.</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Lookup Modal -->
+  <div id="stockLookupModal" class="stockLookupModal" role="dialog" aria-modal="true" aria-labelledby="stockLookupModalTitle" hidden>
+    <div class="stockLookupModalBackdrop" id="stockLookupModalBackdrop"></div>
+    <div class="stockLookupModalSheet">
+      <div class="stockLookupModalHead">
+        <div id="stockLookupModalTitle" class="stockLookupModalTitle">Add Stock / Fund</div>
+        <button class="stockLookupModalClose" id="stockLookupModalClose" type="button" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="stockLookupModalBody">
+        <section class="stockLookupPanel" aria-labelledby="stockLookupTitle">
+          <div class="stockLookupIntro">
+            <div>
+              <div id="stockLookupTitle" class="settingLabel">Search by ticker or company name</div>
+              <div class="settingHint">Select a result and choose which watchlist row to assign it to, or add it as a new row.</div>
+            </div>
+          </div>
+          <form id="stockLookupForm" class="stockLookupForm" novalidate>
+            <input id="stockLookupInput" class="input stockLookupInput" type="search" placeholder="Try AAPL, TSLA, BRK.B, or Berkshire Hathaway" aria-label="Search for a stock symbol" />
+            <button id="stockLookupBtn" class="btn stockLookupBtn" type="submit">Search Symbols</button>
+          </form>
+          <div class="stockLookupAssignRow">
+            <label for="stockAssignTarget" class="stockLookupAssignLabel">Assign To</label>
+            <select id="stockAssignTarget" class="input stockAssignTarget" aria-label="Assignment target"></select>
+          </div>
+          <div id="stockLookupStatus" class="stockLookupStatus" aria-live="polite"></div>
+          <div id="stockLookupResults" class="stockLookupResults" aria-live="polite"></div>
+        </section>
       </div>
     </div>
   </div>

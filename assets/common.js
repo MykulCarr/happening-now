@@ -109,7 +109,7 @@
   };
 
   const ASTROLAB_DEFAULTS = {
-    useDeviceLocationDefault: true,
+    useDeviceLocationDefault: false,
     fallbackLocation: "",
     rememberLastLocation: true,
     showLocationAccuracy: true,
@@ -165,7 +165,7 @@
     theme: "dark",
     density: "compact",
     renderMode: "smooth",
-    zipCode: "49201",
+    zipCode: "",
     weatherRefreshMinutes: 10,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York",
 
@@ -222,9 +222,7 @@
   // Migrate old RSS feeds to working alternatives
   function migrateWidgets(widgets){
     if(!Array.isArray(widgets)) return clone(DEFAULTS.widgets);
-    
-    // Just return defaults - clean slate with verified working feeds
-    return clone(DEFAULTS.widgets);
+    return widgets;
   }
 
   function normalizeConfig(cfg){
@@ -466,12 +464,10 @@
     if(typeof window !== "undefined" && window.isSecureContext === false) return false;
     if(hasValidDeviceCoords(config) && config?.useDeviceLocation) return false;
 
+    // Only silently re-use geolocation if the user has previously explicitly granted it.
+    // Never trigger the browser permission prompt without a direct user gesture.
     const pref = loadGeoPref();
-    if(pref?.attempted) return false;
-
-    const hasSavedConfig = !!localStorage.getItem(LS_KEY);
-    const usingDefaultZip = String(config?.zipCode || "") === String(DEFAULTS.zipCode || "");
-    return !hasSavedConfig || usingDefaultZip;
+    return pref?.granted === true;
   }
 
   function getCurrentPositionAsync(options = {}){
@@ -1464,15 +1460,26 @@
     });
   }
 
-  async function fetchAndDisplayWeather(cfg){
+  async function fetchAndDisplayWeather(_cfg){
     try{
+      // Always read the latest cfg so stale references after saveConfig don't break this
+      const cfg = window.App?.cfg || loadConfig();
       console.log("[topbar] fetchAndDisplayWeather start", cfg);
       const loc = await resolvePreferredLocation({
-        cfg: cfg || window.App?.cfg || loadConfig(),
+        cfg,
         autoDetect: false
       });
       if(!loc || !Number.isFinite(Number(loc.lat)) || !Number.isFinite(Number(loc.lon))){
         console.warn("[topbar] fetchAndDisplayWeather: unable to resolve location");
+        const weatherEl = document.getElementById("topWeather");
+        if(weatherEl){
+          weatherEl.innerHTML = `
+            <a href="settings.html#weather" class="topWeatherSetLoc" aria-label="Set location for weather">
+              <span class="topWeatherSetLocIcon">📍</span>
+              <span class="topWeatherSetLocText">Set location</span>
+            </a>
+          `;
+        }
         return;
       }
 
@@ -2668,7 +2675,8 @@
     formatTime,
     formatDate,
     getTimezoneLabel,
-    abbreviateState
+    abbreviateState,
+    fetchAndDisplayWeather
   };
 
   // Register service worker for PWA functionality

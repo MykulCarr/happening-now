@@ -1075,6 +1075,8 @@
 
       lastGeo = { ...geo };
       closeModal();
+      // Refresh topbar weather with the new location
+      window.refreshTopbarWeather?.();
       await refresh(true);
     });
 
@@ -1450,22 +1452,42 @@
     if(inFlight && !force) return;
     const runId = ++refreshRunId;
     inFlight = true;
-    weatherCurrent?.classList.add("isLoading");
-    
-    // Try to reload config from storage to get latest settings (in case they changed)
+
+    // Check for location before doing anything else — show a helpful prompt if none set
     try{
       const freshCfg = loadConfig();
-      if(freshCfg){
-        cfg.zipCode = freshCfg.zipCode;
-        cfg.weatherAlertScope = freshCfg.weatherAlertScope;
-        cfg.forecastLength = freshCfg.forecastLength;
-        cfg.weatherRefreshMinutes = freshCfg.weatherRefreshMinutes;
-        cfg.weatherStaleWarnMinutes = freshCfg.weatherStaleWarnMinutes;
-      }
+      if(freshCfg) Object.assign(cfg, {
+        zipCode: freshCfg.zipCode,
+        weatherAlertScope: freshCfg.weatherAlertScope,
+        forecastLength: freshCfg.forecastLength,
+        weatherRefreshMinutes: freshCfg.weatherRefreshMinutes,
+        weatherStaleWarnMinutes: freshCfg.weatherStaleWarnMinutes
+      });
     }catch(e){
       console.warn("[weather] Failed to reload config:", e);
     }
-    
+
+    const hasLocation = (cfg.zipCode && /^\d{5}$/.test(cfg.zipCode)) ||
+      (cfg.useDeviceLocation && Number.isFinite(Number(cfg.deviceLat)) && Number.isFinite(Number(cfg.deviceLon)));
+    if(!hasLocation && !manualLocationOverride){
+      if(weatherCurrent){
+        weatherCurrent.innerHTML = `<div class="weatherNoLocPrompt">
+          <div class="weatherNoLocIcon">📍</div>
+          <div class="weatherNoLocMsg">No location set</div>
+          <button class="btn weatherNoLocBtn" onclick="changeLocationPrompt()">Set My Location</button>
+        </div>`;
+      }
+      if(weatherHourly) weatherHourly.innerHTML = `<div class="hint">Set a location to see hourly forecast.</div>`;
+      if(weatherDaily)  weatherDaily.innerHTML  = `<div class="hint">Set a location to see 7-day forecast.</div>`;
+      if(weatherAlerts) weatherAlerts.innerHTML = `<div class="hint">Set a location to see alerts.</div>`;
+      if(weatherSub) weatherSub.textContent = "No location set";
+      if(weatherCurrentUpdated) weatherCurrentUpdated.textContent = "";
+      weatherCurrent?.classList.remove("isLoading");
+      inFlight = false;
+      return;
+    }
+
+    weatherCurrent?.classList.add("isLoading");
 
     try{
       // Update alertScope from fresh config

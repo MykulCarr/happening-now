@@ -82,7 +82,14 @@
 
   async function loadWeather(){
     try{
-      const geo = await geocodeZip(cfg.zipCode);
+      // Always read fresh config so location changes are picked up immediately
+      const liveCfg = window.App?.cfg || loadConfig();
+      const zip = liveCfg.zipCode;
+      if(!zip || !/^\d{5}$/.test(zip)){
+        updateWeatherDisplay({});
+        return;
+      }
+      const geo = await geocodeZip(zip);
       
       // Fetch both current and daily weather data
       const weatherData = {};
@@ -270,6 +277,9 @@
 
   // Export function to update stats from news.js
   window.updateNewsStats = updateNewsStats;
+
+  // Expose weather refresh so other pages can trigger a topbar update after a location change
+  window.refreshTopbarWeather = loadWeather;
 
   // Initialize when DOM is ready
   if(document.readyState === "loading"){

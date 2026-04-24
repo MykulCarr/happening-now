@@ -668,6 +668,7 @@
       renderStocks();
       setStatus(`Assigned ${result.symbol} to row ${targetIndex + 1} (not saved yet)`, "unsaved");
       setStockLookupStatus(`Assigned ${result.symbol} to row ${targetIndex + 1}.`, "success");
+      setTimeout(() => closeStockLookupModal?.(), 600);
       return;
     }
 
@@ -676,6 +677,7 @@
     setStatus(`Added ${result.symbol} to watchlist (not saved yet)`, "unsaved");
     setStockLookupStatus(`Added ${result.symbol} as a new row.`, "success");
     if(stockAssignTarget) stockAssignTarget.value = "new";
+    setTimeout(() => closeStockLookupModal?.(), 600);
   }
 
   function renderStockLookupResults(results){
@@ -1318,23 +1320,57 @@
     }
   ];
 
-  const NEWS_DISCOVERY_BROWSE_GROUPS = [
+  const NEWS_BROWSE_CATEGORIES = [
     {
-      title: "Popular Publishers",
-      items: ["BBC", "Reuters", "AP News", "NPR", "The Guardian", "CNN", "Bloomberg", "CNBC", "TechCrunch", "Ars Technica", "Nature", "ESPN"]
+      id: "popular",
+      label: "Popular",
+      publishers: ["BBC", "Reuters", "AP News", "NPR", "The Guardian", "CNN", "Bloomberg", "CNBC", "TechCrunch", "Ars Technica", "Nature", "ESPN"]
     },
     {
-      title: "Local & Regional US",
-      items: ["Los Angeles Times", "San Francisco Chronicle", "The Seattle Times", "The Oregonian", "The Denver Post", "Chicago Tribune", "The Dallas Morning News", "Houston Chronicle", "The Boston Globe", "The Philadelphia Inquirer", "Miami Herald", "The Arizona Republic"]
+      id: "us-national",
+      label: "US National",
+      publishers: ["ABC News", "CBS News", "NBC News", "CNN", "Fox News", "NPR", "PBS NewsHour", "AP News", "The New York Times", "The Washington Post", "USA Today", "Politico", "Axios", "Vox"]
     },
     {
-      title: "International & Global",
-      items: ["BBC", "Reuters", "Financial Times", "The Guardian", "Al Jazeera", "Deutsche Welle", "Sky News", "CBC News", "The Wall Street Journal", "Bloomberg", "Nature", "New Scientist"]
+      id: "us-regional",
+      label: "US Regional",
+      publishers: ["Los Angeles Times", "San Francisco Chronicle", "The Seattle Times", "The Oregonian", "The Denver Post", "Chicago Tribune", "The Dallas Morning News", "Houston Chronicle", "The Boston Globe", "The Philadelphia Inquirer", "Miami Herald", "The Arizona Republic", "Detroit Free Press", "The Kansas City Star", "Star Tribune", "Newsday", "Tampa Bay Times"]
+    },
+    {
+      id: "international",
+      label: "International",
+      publishers: ["BBC", "Reuters", "Al Jazeera", "Deutsche Welle", "Sky News", "CBC News", "Financial Times", "The Wall Street Journal", "Bloomberg", "The Guardian", "New Scientist"]
+    },
+    {
+      id: "business",
+      label: "Business & Finance",
+      publishers: ["Bloomberg", "CNBC", "MarketWatch", "Financial Times", "The Wall Street Journal", "Fortune", "Reuters", "The New York Times", "The Washington Post"]
+    },
+    {
+      id: "technology",
+      label: "Technology",
+      publishers: ["Ars Technica", "TechCrunch", "The Verge", "Wired", "CNET", "Engadget", "9to5Mac", "MacRumors"]
+    },
+    {
+      id: "science",
+      label: "Science",
+      publishers: ["Nature", "Scientific American", "New Scientist", "National Geographic", "Space.com"]
+    },
+    {
+      id: "sports",
+      label: "Sports",
+      publishers: ["ESPN", "Sports Illustrated", "BBC", "Sky News"]
+    },
+    {
+      id: "politics",
+      label: "Politics",
+      publishers: ["Politico", "The Hill", "Axios", "ProPublica", "Reuters", "AP News", "The New York Times", "The Washington Post"]
     }
   ];
   const NEWS_DISCOVERY_KNOWN_FEEDS = buildKnownNewsFeedCatalog();
   let newsDiscoveryRunId = 0;
   let newsDiscoveryCurrentResults = [];
+  let newsDiscoveryActiveCatId = "popular";
   let stockLookupRunId = 0;
   let stockLookupCurrentResults = [];
 
@@ -1497,33 +1533,45 @@
     if(!newsDiscoveryBrowse) return;
 
     newsDiscoveryBrowse.innerHTML = "";
-    NEWS_DISCOVERY_BROWSE_GROUPS.forEach((group) => {
-      const section = document.createElement("section");
-      section.className = "newsDiscoveryBrowseGroup";
 
-      const title = document.createElement("div");
-      title.className = "newsDiscoveryBrowseTitle";
-      title.textContent = group.title;
-
-      const chips = document.createElement("div");
-      chips.className = "newsDiscoveryBrowseChips";
-
-      (Array.isArray(group.items) ? group.items : []).forEach((item) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "newsDiscoveryBrowseBtn";
-        btn.textContent = item;
-        btn.addEventListener("click", () => {
-          if(newsDiscoveryInput) newsDiscoveryInput.value = item;
-          runNewsDiscovery(item, { fromBrowse: true });
-        });
-        chips.appendChild(btn);
+    // Category pills row
+    const pillsRow = document.createElement("div");
+    pillsRow.className = "newsDiscoveryCatPills";
+    pillsRow.setAttribute("role", "tablist");
+    pillsRow.setAttribute("aria-label", "Browse by category");
+    NEWS_BROWSE_CATEGORIES.forEach((cat) => {
+      const pill = document.createElement("button");
+      pill.type = "button";
+      pill.className = "newsDiscoveryCatPill" + (cat.id === newsDiscoveryActiveCatId ? " active" : "");
+      pill.textContent = cat.label;
+      pill.setAttribute("role", "tab");
+      pill.setAttribute("aria-selected", cat.id === newsDiscoveryActiveCatId ? "true" : "false");
+      pill.addEventListener("click", () => {
+        newsDiscoveryActiveCatId = cat.id;
+        renderNewsDiscoveryBrowse();
       });
-
-      section.appendChild(title);
-      section.appendChild(chips);
-      newsDiscoveryBrowse.appendChild(section);
+      pillsRow.appendChild(pill);
     });
+    newsDiscoveryBrowse.appendChild(pillsRow);
+
+    // Source chips for the active category
+    const activeCat = NEWS_BROWSE_CATEGORIES.find((c) => c.id === newsDiscoveryActiveCatId);
+    if(!activeCat) return;
+
+    const chipsGrid = document.createElement("div");
+    chipsGrid.className = "newsDiscoverySrcChips";
+    (activeCat.publishers || []).forEach((pub) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "newsDiscoverySrcChip";
+      chip.textContent = pub;
+      chip.addEventListener("click", () => {
+        if(newsDiscoveryInput) newsDiscoveryInput.value = pub;
+        runNewsDiscovery(pub, { fromBrowse: true });
+      });
+      chipsGrid.appendChild(chip);
+    });
+    newsDiscoveryBrowse.appendChild(chipsGrid);
   }
 
   function getNewsDiscoveryCacheKey(query){
@@ -3214,7 +3262,70 @@
     runStockLookup(String(stockLookupInput?.value || ""));
   });
 
-  // Add news
+  // Stock lookup modal
+  const stockLookupModal = document.getElementById("stockLookupModal");
+  const stockLookupModalBackdrop = document.getElementById("stockLookupModalBackdrop");
+  const stockLookupModalClose = document.getElementById("stockLookupModalClose");
+  const addStockBtn = document.getElementById("addStockBtn");
+
+  function openStockLookupModal(){
+    if(!stockLookupModal) return;
+    renderStockAssignTargetOptions();
+    if(stockLookupInput) stockLookupInput.value = "";
+    if(stockLookupResults) stockLookupResults.innerHTML = "";
+    setStockLookupStatus("", "default");
+    stockLookupModal.hidden = false;
+    document.body.classList.add("stockLookupModalOpen");
+    requestAnimationFrame(() => stockLookupInput?.focus());
+  }
+
+  function closeStockLookupModal(){
+    if(!stockLookupModal) return;
+    stockLookupModal.hidden = true;
+    document.body.classList.remove("stockLookupModalOpen");
+    addStockBtn?.focus();
+  }
+
+  addStockBtn?.addEventListener("click", openStockLookupModal);
+  stockLookupModalClose?.addEventListener("click", closeStockLookupModal);
+  stockLookupModalBackdrop?.addEventListener("click", closeStockLookupModal);
+  stockLookupModal?.addEventListener("keydown", (e) => {
+    if(e.key === "Escape") closeStockLookupModal();
+  });
+
+  // News discovery modal
+  const newsDiscoveryModal = document.getElementById("newsDiscoveryModal");
+  const newsDiscoveryModalBackdrop = document.getElementById("newsDiscoveryModalBackdrop");
+  const newsDiscoveryModalClose = document.getElementById("newsDiscoveryModalClose");
+  const addNewsSourceBtn = document.getElementById("addNewsSourceBtn");
+
+  function openNewsDiscoveryModal(){
+    if(!newsDiscoveryModal) return;
+    if(newsDiscoveryInput) newsDiscoveryInput.value = "";
+    if(newsDiscoveryResults) newsDiscoveryResults.innerHTML = "";
+    setNewsDiscoveryStatus("", "default");
+    setManualNewsMode(false);
+    renderNewsDiscoveryBrowse();
+    newsDiscoveryModal.hidden = false;
+    document.body.classList.add("newsDiscoveryModalOpen");
+    requestAnimationFrame(() => newsDiscoveryInput?.focus());
+  }
+
+  function closeNewsDiscoveryModal(){
+    if(!newsDiscoveryModal) return;
+    newsDiscoveryModal.hidden = true;
+    document.body.classList.remove("newsDiscoveryModalOpen");
+    addNewsSourceBtn?.focus();
+  }
+
+  addNewsSourceBtn?.addEventListener("click", openNewsDiscoveryModal);
+  newsDiscoveryModalClose?.addEventListener("click", closeNewsDiscoveryModal);
+  newsDiscoveryModalBackdrop?.addEventListener("click", closeNewsDiscoveryModal);
+  newsDiscoveryModal?.addEventListener("keydown", (e) => {
+    if(e.key === "Escape") closeNewsDiscoveryModal();
+  });
+
+  // Add news (manual blank row — triggered from inside the modal)
   addNewsBtn.addEventListener("click", () => {
     cfg.widgets = cfg.widgets || [];
     if(cfg.widgets.length >= NEWS_SOURCE_LIMIT){

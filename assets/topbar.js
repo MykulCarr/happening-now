@@ -187,11 +187,11 @@
   syncTopbarSectionSpacing();
   setActiveNav();
 
-  // Click on brand: refresh current page data by reloading this page.
+  // Click on brand: always navigate to the news page.
   const brand = document.getElementById('hnBrand');
   brand.addEventListener('click', (e) => {
     e.preventDefault();
-    window.location.reload();
+    window.location.href = 'index.html';
   });
 
   window.addEventListener('resize', syncTopbarSectionSpacing);
@@ -205,5 +205,146 @@
   try {
     if (window.App) window.App.TopBar = { mount: root };
   } catch (err) { /* ignore */ }
+
+  // ── First-run welcome ──────────────────────────────────────────────────────
+  // Show once when the user has no saved config (brand-new visitor).
+  // A separate flag "jas_welcomed_v1" ensures the modal never re-appears even
+  // if the user later clears their location or imports a config.
+  const WELCOMED_KEY = "jas_welcomed_v1";
+  const CFG_KEY      = "jas_cfg_v3";
+
+  function isFirstRun() {
+    try {
+      return !localStorage.getItem(CFG_KEY) && !localStorage.getItem(WELCOMED_KEY);
+    } catch { return false; }
+  }
+
+  function markWelcomed() {
+    try { localStorage.setItem(WELCOMED_KEY, "1"); } catch {}
+  }
+
+  function buildWelcomeModal() {
+    const overlay = document.createElement("div");
+    overlay.id = "hnWelcomeModal";
+    overlay.className = "hnWelcomeModal";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "hnWelcomeTitle");
+
+    overlay.innerHTML = `
+      <div class="hnWelcomeSheet">
+        <div class="hnWelcomeHead">
+          <div class="hnWelcomeDot" aria-hidden="true"></div>
+          <h2 id="hnWelcomeTitle" class="hnWelcomeTitle">Welcome to Happening Now!</h2>
+        </div>
+        <p class="hnWelcomeSub">Your personal dashboard for news, weather, stocks, and the night sky. Set your location to see a live weather summary everywhere in the app.</p>
+
+        <div class="hnWelcomeLocRow">
+          <input id="hnWelcomeZip" class="input hnWelcomeZipInput" type="text"
+            inputmode="numeric" maxlength="5" placeholder="Enter your ZIP code"
+            aria-label="ZIP code" />
+          <button id="hnWelcomeVerifyBtn" class="btn hnWelcomeVerifyBtn" type="button">Verify</button>
+        </div>
+        <div id="hnWelcomeLocStatus" class="hnWelcomeLocStatus" aria-live="polite"></div>
+
+        <div class="hnWelcomeActions">
+          <button id="hnWelcomeSaveBtn" class="btn hnWelcomeSaveBtn" type="button" disabled>Save &amp; Get Started</button>
+          <button id="hnWelcomeSkipBtn" class="btn hnWelcomeSkipBtn" type="button">Skip for now</button>
+        </div>
+        <p class="hnWelcomeSettingHint">You can always update your location in <a href="settings.html">Settings</a>.</p>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const zipInput    = overlay.querySelector("#hnWelcomeZip");
+    const verifyBtn   = overlay.querySelector("#hnWelcomeVerifyBtn");
+    const statusEl    = overlay.querySelector("#hnWelcomeLocStatus");
+    const saveBtn     = overlay.querySelector("#hnWelcomeSaveBtn");
+    const skipBtn     = overlay.querySelector("#hnWelcomeSkipBtn");
+
+    let resolvedZip   = "";
+    let resolvedLabel = "";
+
+    function setStatus(msg, type = "default") {
+      statusEl.textContent = msg;
+      statusEl.className = "hnWelcomeLocStatus hnWelcomeLocStatus--" + type;
+    }
+
+    async function doVerify() {
+      const zip = zipInput.value.trim();
+      if (!/^\d{5}$/.test(zip)) {
+        setStatus("Please enter a 5-digit US ZIP code.", "error");
+        saveBtn.disabled = true;
+        return;
+      }
+      verifyBtn.disabled = true;
+      setStatus("Looking up…", "loading");
+      try {
+        const geo = await window.App.geocodeZip(zip);
+        if (geo?.city) {
+          resolvedZip   = zip;
+          resolvedLabel = `${geo.city}, ${geo.state}`;
+          setStatus(`✓ Found: ${resolvedLabel}`, "success");
+          saveBtn.disabled = false;
+        } else {
+          setStatus("ZIP not found. Double-check and try again.", "error");
+          saveBtn.disabled = true;
+        }
+      } catch {
+        setStatus("Lookup failed. Check your connection and try again.", "error");
+        saveBtn.disabled = true;
+      } finally {
+        verifyBtn.disabled = false;
+      }
+    }
+
+    verifyBtn.addEventListener("click", doVerify);
+    zipInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doVerify(); } });
+
+    // Clear resolved result if user edits the input after a successful verify
+    zipInput.addEventListener("input", () => {
+      resolvedZip = "";
+      saveBtn.disabled = true;
+      statusEl.textContent = "";
+    });
+
+    function closeModal() {
+      overlay.remove();
+    }
+
+    saveBtn.addEventListener("click", () => {
+      if (!resolvedZip) return;
+      try {
+        const { loadConfig, saveConfig, syncTimezoneFromZip } = window.App;
+        const cfg = loadConfig();
+        cfg.zipCode = resolvedZip;
+        saveConfig(cfg);
+        syncTimezoneFromZip?.(cfg);
+      } catch (err) {
+        console.warn("[welcome] could not save location:", err);
+      }
+      markWelcomed();
+      closeModal();
+    });
+
+    skipBtn.addEventListener("click", () => {
+      markWelcomed();
+      closeModal();
+    });
+
+    // Focus the ZIP input after a brief paint delay
+    requestAnimationFrame(() => zipInput.focus());
+  }
+
+  if (isFirstRun()) {
+    // Defer until DOMContentLoaded so document.body is available
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", buildWelcomeModal, { once: true });
+    } else {
+      buildWelcomeModal();
+    }
+  }
+  // ── End first-run welcome ──────────────────────────────────────────────────
 
 })();

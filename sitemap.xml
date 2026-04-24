@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://happening-now.net/index.html</loc>
+    <loc>https://happening-now.net/</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/weather.html</loc>
+    <loc>https://happening-now.net/weather</loc>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/stocks.html</loc>
+    <loc>https://happening-now.net/stocks</loc>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/AstroLab.html</loc>
+    <loc>https://happening-now.net/AstroLab</loc>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/privacy.html</loc>
+    <loc>https://happening-now.net/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/terms.html</loc>
+    <loc>https://happening-now.net/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://happening-now.net/sources.html</loc>
+    <loc>https://happening-now.net/sources</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
