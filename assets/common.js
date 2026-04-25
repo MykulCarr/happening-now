@@ -1746,9 +1746,13 @@
   const cfg = loadConfig();
   applyThemeDensity(cfg);
 
-  // Redirect to startup page if on index and not news
+  // Redirect to startup page if on index and not news, but only for external access
   if (window.location.pathname === "/" && cfg.startupPage && cfg.startupPage !== "news") {
-    window.location.replace(cfg.startupPage + ".html");
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    if (!referrer || !referrer.startsWith(currentOrigin)) {
+      window.location.replace(cfg.startupPage + ".html");
+    }
   }
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once:true });
