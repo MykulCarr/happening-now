@@ -1718,12 +1718,13 @@
         fetchNwsNationalAlerts()
       ]);
 
+      const localAlertsCacheKey = `${LOCAL_ALERTS_CACHE_KEY}:${coordsKey(lat, lon)}`;
       if(localResult.status === "fulfilled"){
         localAlerts = Array.isArray(localResult.value) ? localResult.value : [];
-        saveCachedAlerts(LOCAL_ALERTS_CACHE_KEY, localAlerts);
+        saveCachedAlerts(localAlertsCacheKey, localAlerts);
         localAlertsSavedAt = Date.now();
       } else {
-        const cachedLocal = loadCachedAlerts(LOCAL_ALERTS_CACHE_KEY);
+        const cachedLocal = loadCachedAlerts(localAlertsCacheKey);
         if(cachedLocal){
           localAlerts = cachedLocal.items;
           localAlertsSavedAt = Number(cachedLocal.savedAt) || Date.now();

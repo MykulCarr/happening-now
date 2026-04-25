@@ -661,22 +661,27 @@
       }
     }
 
+    // Combine exchange and symbol if exchange exists and symbol doesn't already contain it
+    const finalSymbol = result.exchange && !String(result.symbol || "").includes(":") 
+      ? `${result.exchange}:${result.symbol}`
+      : result.symbol;
+
     if(targetIndex >= 0){
       cfg.stocks[targetIndex] = {
         ...cfg.stocks[targetIndex],
-        symbol: result.symbol,
+        symbol: finalSymbol,
         label: result.label || cfg.stocks[targetIndex]?.label || result.symbol
       };
       renderStocks();
-      setStatus(`Assigned ${result.symbol} to row ${targetIndex + 1} (not saved yet)`, "unsaved");
-      setStockLookupStatus(`Assigned ${result.symbol} to row ${targetIndex + 1}.`, "success");
+      setStatus(`Assigned ${finalSymbol} to row ${targetIndex + 1} (not saved yet)`, "unsaved");
+      setStockLookupStatus(`Assigned ${finalSymbol} to row ${targetIndex + 1}.`, "success");
       setTimeout(() => closeStockLookupModal?.(), 600);
       return;
     }
 
-    cfg.stocks.push({ symbol: result.symbol, label: result.label || result.symbol });
+    cfg.stocks.push({ symbol: finalSymbol, label: result.label || result.symbol });
     renderStocks();
-    setStatus(`Added ${result.symbol} to watchlist (not saved yet)`, "unsaved");
+    setStatus(`Added ${finalSymbol} to watchlist (not saved yet)`, "unsaved");
     setStockLookupStatus(`Added ${result.symbol} as a new row.`, "success");
     if(stockAssignTarget) stockAssignTarget.value = "new";
     setTimeout(() => closeStockLookupModal?.(), 600);

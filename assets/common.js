@@ -277,7 +277,8 @@
     if(!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
     out.stocks = out.stocks.map(s => ({
       symbol: String(s?.symbol || "").trim(),
-      label:  String(s?.label || "").trim() || String(s?.symbol || "").trim()
+      label:  String(s?.label || "").trim() || String(s?.symbol || "").trim(),
+      market: String(s?.market || "").trim()
     })).filter(s => s.symbol);
 
     // Normalize new preference fields
