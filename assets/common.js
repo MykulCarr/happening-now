@@ -165,6 +165,7 @@
     theme: "dark",
     density: "compact",
     renderMode: "smooth",
+    startupPage: "news",
     zipCode: "",
     weatherRefreshMinutes: 10,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York",
@@ -233,6 +234,7 @@
     out.renderMode = ["smooth", "stable"].includes(String(out.renderMode || "").toLowerCase())
       ? String(out.renderMode).toLowerCase()
       : DEFAULTS.renderMode;
+    out.startupPage = ["news", "weather", "stocks", "astrolab"].includes(out.startupPage) ? out.startupPage : DEFAULTS.startupPage;
 
     out.zipCode = String(out.zipCode || "").trim();
     if(!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;
@@ -1743,6 +1745,11 @@
   // Global App API
   const cfg = loadConfig();
   applyThemeDensity(cfg);
+
+  // Redirect to startup page if on index and not news
+  if (window.location.pathname === "/" && cfg.startupPage && cfg.startupPage !== "news") {
+    window.location.replace(cfg.startupPage + ".html");
+  }
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once:true });
   }else{

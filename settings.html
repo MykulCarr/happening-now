@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Configure your HAPPENING NOW dashboard settings" />
+  <meta name="description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <meta name="robots" content="noindex,follow" />
   <link rel="canonical" href="https://happening-now.net/settings.html" />
   <meta property="og:site_name" content="HAPPENING NOW" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Happening Now! - Settings" />
-  <meta property="og:description" content="Configure your HAPPENING NOW dashboard settings" />
+  <meta property="og:description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <meta property="og:url" content="https://happening-now.net/settings.html" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Happening Now! - Settings" />
-  <meta name="twitter:description" content="Configure your HAPPENING NOW dashboard settings" />
+  <meta name="twitter:description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <title>Happening Now! - Settings</title>
   <script type="application/ld+json">
     {
@@ -83,7 +83,7 @@
         <button class="settingsTab" data-tab="weather" role="tab" aria-selected="false">Weather</button>
         <button class="settingsTab" data-tab="stocks" role="tab" aria-selected="false">Stocks</button>
         <button class="settingsTab" data-tab="astrolab" role="tab" aria-selected="false">AstroLab</button>
-        <button class="settingsTab" data-tab="appearance" role="tab" aria-selected="false">Appearance</button>
+        <button class="settingsTab" data-tab="general" role="tab" aria-selected="false">General</button>
         <button class="settingsTab" data-tab="system" role="tab" aria-selected="false">System</button>
       </div>
 
@@ -655,7 +655,7 @@
       </div>
 
       <!-- TAB: Appearance -->
-      <div class="settingsTabContent" data-tab="appearance">
+      <div class="settingsTabContent" data-tab="general">
         <div class="collapsibleSection">
           <button class="collapsibleHeader expanded" data-section="theme-density">
             Theme
@@ -680,6 +680,18 @@
                 <select id="renderModeSel" class="input settingsInput170" aria-label="Rendering mode">
                   <option value="smooth">Smooth 🛡️ (recommended)</option>
                   <option value="stable">Stable 🛡️ (anti-flicker)</option>
+                </select>
+              </div>
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">Startup Page</div>
+                  <div class="settingHint">Page to load when opening the app</div>
+                </div>
+                <select id="startupPageSel" class="input settingsInput140" aria-label="Startup page selection">
+                  <option value="news">News</option>
+                  <option value="weather">Weather</option>
+                  <option value="stocks">Stocks</option>
+                  <option value="astrolab">AstroLab</option>
                 </select>
               </div>
             </div>

@@ -53,6 +53,7 @@
   // General inputs
   const themeSel = document.getElementById("themeSel");
   const renderModeSel = document.getElementById("renderModeSel");
+  const startupPageSel = document.getElementById("startupPageSel");
   const zipInput = document.getElementById("zipInput");
   const wxRefreshInput = document.getElementById("wxRefreshInput");
   const weatherStaleWarnInput = document.getElementById("weatherStaleWarnInput");
@@ -2864,6 +2865,7 @@
   function loadToUI(){
     themeSel.value = cfg.theme || "dark";
     if(renderModeSel) renderModeSel.value = cfg.renderMode || "smooth";
+    startupPageSel.value = cfg.startupPage || "news";
     zipInput.value = cfg.zipCode || "";
     wxRefreshInput.value = String(cfg.weatherRefreshMinutes || 10);
     if(weatherStaleWarnInput) weatherStaleWarnInput.value = String(cfg.weatherStaleWarnMinutes || 30);
@@ -2916,6 +2918,7 @@
   function pullFromUI(){
     cfg.theme = themeSel.value;
     if(renderModeSel) cfg.renderMode = renderModeSel.value;
+    cfg.startupPage = startupPageSel.value;
     cfg.zipCode = String(zipInput.value || "").trim();
     cfg.weatherRefreshMinutes = Number(wxRefreshInput.value || 10);
     if(weatherStaleWarnInput){
@@ -3068,6 +3071,11 @@
       setStatus("Modified (not saved yet)", "unsaved");
     });
   }
+
+  startupPageSel.addEventListener("change", () => {
+    cfg.startupPage = startupPageSel.value;
+    setStatus("Modified (not saved yet)", "unsaved");
+  });
 
   // ── Location section (Weather tab) ────────────────────────────────────────
   const settLocTabs = document.querySelectorAll("[data-sett-loc-mode]");
