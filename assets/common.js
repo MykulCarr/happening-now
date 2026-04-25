@@ -185,6 +185,7 @@
 
     // Stock preferences
     stockSortMode: "pinned",
+    stocksNewsMode: "watchlist",
     marketNewsSourceMode: "google",
     marketNewsOpenMode: "new-tab",
     marketIndices: MARKET_INDEX_DEFS.map((item) => ({ key: item.key, visible: true })),
@@ -235,6 +236,7 @@
       ? String(out.renderMode).toLowerCase()
       : DEFAULTS.renderMode;
     out.startupPage = ["news", "weather", "stocks", "astrolab"].includes(out.startupPage) ? out.startupPage : DEFAULTS.startupPage;
+    out.stocksNewsMode = ["watchlist", "major"].includes(out.stocksNewsMode) ? out.stocksNewsMode : DEFAULTS.stocksNewsMode;
 
     out.zipCode = String(out.zipCode || "").trim();
     if(!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;

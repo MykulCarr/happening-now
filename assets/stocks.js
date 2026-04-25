@@ -256,7 +256,7 @@
   
   let pins = loadPins();
   let sortMode = cfg.stockSortMode || "pinned";
-  let newsMode = localStorage.getItem(NEWS_MODE_KEY) || "watchlist";
+  let newsMode = cfg.stocksNewsMode || localStorage.getItem(NEWS_MODE_KEY) || "watchlist";
   let lastUpdateTime = null;
   let marketTickerState = null;
 
@@ -1809,6 +1809,7 @@
         
         btn.addEventListener("click", async () => {
           newsMode = btn.dataset.newsMode;
+          cfg.stocksNewsMode = newsMode;
           localStorage.setItem(NEWS_MODE_KEY, newsMode);
           
           newsTabs.querySelectorAll(".tabPill").forEach(b => b.classList.remove("active"));

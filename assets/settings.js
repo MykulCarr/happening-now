@@ -70,6 +70,7 @@
   const weatherPrecipUnitButtons = document.querySelectorAll("[data-field='weatherPrecipUnit']");
   const weatherShowMapToggle = document.getElementById("weatherShowMapToggle");
   const stockSortButtons = document.querySelectorAll("[data-field='stockSortMode']");
+  const stocksNewsButtons = document.querySelectorAll("[data-field='stocksNewsMode']");
   const marketNewsSourceButtons = document.querySelectorAll("[data-field='marketNewsSourceMode']");
   const marketNewsOpenButtons = document.querySelectorAll("[data-field='marketNewsOpenMode']");
   const marketIndicesContainer = document.getElementById("marketIndicesCheckboxes");
@@ -2894,6 +2895,7 @@
     updateButtonGroupState(weatherPrecipUnitButtons, cfg.weatherPrecipUnit || "inch");
     if(weatherShowMapToggle) weatherShowMapToggle.checked = cfg.weatherShowMap !== false;
     updateButtonGroupState(stockSortButtons, cfg.stockSortMode || "pinned");
+    updateButtonGroupState(stocksNewsButtons, cfg.stocksNewsMode || "watchlist");
     updateButtonGroupState(marketNewsSourceButtons, cfg.marketNewsSourceMode || "google");
     updateButtonGroupState(marketNewsOpenButtons, cfg.marketNewsOpenMode || "new-tab");
     renderMarketIndices();
@@ -2969,6 +2971,11 @@
       cfg.stockSortMode = activeStockBtn.dataset.value;
     }
 
+    const activeStocksNewsBtn = document.querySelector("[data-field='stocksNewsMode'].active");
+    if(activeStocksNewsBtn){
+      cfg.stocksNewsMode = activeStocksNewsBtn.dataset.value;
+    }
+
     const activeMarketSourceBtn = document.querySelector("[data-field='marketNewsSourceMode'].active");
     if(activeMarketSourceBtn){
       cfg.marketNewsSourceMode = activeMarketSourceBtn.dataset.value;
@@ -3023,6 +3030,9 @@
       } else if(field === "stockSortMode"){
         cfg.stockSortMode = value;
         updateButtonGroupState(stockSortButtons, value);
+      } else if(field === "stocksNewsMode"){
+        cfg.stocksNewsMode = value;
+        updateButtonGroupState(stocksNewsButtons, value);
       } else if(field === "marketNewsSourceMode"){
         cfg.marketNewsSourceMode = value;
         updateButtonGroupState(marketNewsSourceButtons, value);
