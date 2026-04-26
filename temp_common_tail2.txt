@@ -1,0 +1,260 @@
+    }catch(error){
+      handleError(error, "Geocoding");
+      throw error;
+    }
+  }
+
+  async function fetchCurrentWeather(lat, lon){
+    const cacheKey = `weather:${lat}:${lon}`;
+    const cached = getCached(cacheKey);
+    if(cached) return cached;
+
+    try{
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,relative_humidity_2m` +
+        `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+
+      const res = await fetch(url, { cache:"no-store" });
+      if(!res.ok) throw new Error("Weather API failed");
+      const data = await res.json();
+      const result = {
+        temp: data.current?.temperature_2m,
+        feels: data.current?.apparent_temperature,
+        code: data.current?.weather_code,
+        wind: data.current?.wind_speed_10m,
+        windGust: data.current?.wind_gusts_10m,
+        windDirection: data.current?.wind_direction_10m,
+        humidity: data.current?.relative_humidity_2m,
+        timezone: data.timezone
+      };
+      // Cache for 5 minutes
+      setCached(cacheKey, result);
+      return result;
+    }catch(error){
+      handleError(error, "Weather Fetch");
+      return null;
+    }
+  }
+
+  // Timezone utilities
+  const TIMEZONES = [
+    { value: "America/New_York", label: "Eastern (ET)", offset: -5 },
+    { value: "America/Chicago", label: "Central (CT)", offset: -6 },
+    { value: "America/Denver", label: "Mountain (MT)", offset: -7 },
+    { value: "America/Los_Angeles", label: "Pacific (PT)", offset: -8 },
+    { value: "America/Anchorage", label: "Alaska (AKT)", offset: -9 },
+    { value: "Pacific/Honolulu", label: "Hawaii (HST)", offset: -10 },
+    { value: "Europe/London", label: "London (GMT)", offset: 0 },
+    { value: "Europe/Paris", label: "Paris (CET)", offset: 1 },
+    { value: "Asia/Tokyo", label: "Tokyo (JST)", offset: 9 },
+    { value: "Asia/Shanghai", label: "Shanghai (CST)", offset: 8 },
+    { value: "Australia/Sydney", label: "Sydney (AEDT)", offset: 11 },
+    { value: "UTC", label: "UTC", offset: 0 }
+  ];
+
+  function formatTime(date, timezone){
+    try{
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      }).format(date);
+    }catch{
+      return date.toLocaleTimeString();
+    }
+  }
+
+  function formatDate(date, timezone){
+    try{
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      }).format(date);
+    }catch{
+      return date.toLocaleDateString();
+    }
+  }
+
+  function getTimezoneLabel(timezone){
+    const tz = TIMEZONES.find(t => t.value === timezone);
+    return tz ? tz.label : timezone.split("/").pop();
+  }
+
+  function getTimezoneAbbrev(timezone){
+    const full = getTimezoneLabel(timezone);       // e.g. "Eastern (ET)"
+    const m = /\(([^)]+)\)/.exec(full);
+    return m ? m[1] : full;                         // => "ET"
+  }
+  
+  function maybeRenderLegacyTopbar(cfg){
+    const topbar = document.getElementById("topbar");
+    if(!topbar) return;
+    if(topbar.classList.contains("hn-topbar")) return;
+    renderTopbar(cfg);
+  }
+
+  // Global App API
+  const cfg = loadConfig();
+  applyThemeDensity(cfg);
+
+  // Redirect to startup page if on index and not news, but only for external access
+  if (window.location.pathname === "/" && cfg.startupPage && cfg.startupPage !== "news") {
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    if (!referrer || !referrer.startsWith(currentOrigin)) {
+      window.location.replace(cfg.startupPage + ".html");
+    }
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once:true });
+  }else{
+    maybeRenderLegacyTopbar(cfg);
+  }
+
+  function cacheSet(key, value){
+    try{
+      localStorage.setItem(key, JSON.stringify(value));
+    }catch{}
+  }
+  
+  function cacheGet(key){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }catch{
+      return null;
+    }
+  }
+
+  function parseDateOnlyLocal(value){
+    if(typeof value !== "string") return null;
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    if(!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+
+    return new Date(year, month - 1, day);
+  }
+
+  function parseTimeValue(value){
+    if(typeof value === "number") return value;
+    if(typeof value !== "string") return NaN;
+
+    const localDate = parseDateOnlyLocal(value);
+    if(localDate) return localDate.getTime();
+
+    return Date.parse(value);
+  }
+  
+  function cacheAgeMs(savedAt){
+    const t = parseTimeValue(savedAt);
+    return Number.isFinite(t) ? (Date.now() - t) : Infinity;
+  }
+  
+  function formatAge(ms){
+    if(!Number.isFinite(ms) || ms < 0) return "";
+    const s = Math.floor(ms / 1000);
+    if(s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if(m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    return `${h}h`;
+  }
+
+  // Stock price fetching - uses multiple free APIs with fallback
+  async function fetchStockPrice(symbol){
+    const cacheKey = `stock:${symbol}`;
+    const cached = getCached(cacheKey);
+    if(cached && Number.isFinite(Number(cached.price)) && Number(cached.price) > 0) return cached;
+
+    try{
+      // Normalize symbol: remove exchange prefix like NASDAQ:, BITSTAMP:, etc.
+      const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
+      
+      // Try Finnhub first (if API key is configured)
+      if(STOCK_API_KEYS.finnhub){
+        const result = await fetchStockPriceFromFinnhub(baseSymbol);
+        if(result){
+          setCached(cacheKey, result);
+          return result;
+        }
+      }
+      
+      // Try Alpha Vantage (if API key is configured)
+      if(STOCK_API_KEYS.alphaVantage){
+        const result = await fetchStockPriceFromAlphaVantage(baseSymbol);
+        if(result){
+          setCached(cacheKey, result);
+          return result;
+        }
+      }
+      
+      // Try IEX Cloud (if API key is configured)
+      if(STOCK_API_KEYS.iex){
+        const result = await fetchStockPriceFromIex(baseSymbol);
+        if(result){
+          setCached(cacheKey, result);
+          return result;
+        }
+      }
+      
+      // Try Twelve Data free endpoint as last resort
+      const result = await fetchStockPriceFromTwelveData(baseSymbol);
+      if(result){
+        setCached(cacheKey, result);
+        return result;
+      }
+
+      // Fallback: Yahoo chart endpoint (works for many mutual funds, incl. FNIPX)
+      const yahooResult = await fetchStockPriceFromYahooChart(baseSymbol);
+      if(yahooResult){
+        setCached(cacheKey, yahooResult);
+        return yahooResult;
+      }
+
+      // Final fallback (no API key): Stooq end-of-day quote via CORS-friendly relay
+      const stooqResult = await fetchStockPriceFromStooq(baseSymbol);
+      if(stooqResult){
+        setCached(cacheKey, stooqResult);
+        return stooqResult;
+      }
+      
+      return null;
+    }catch(error){
+      handleError(error, "Stock Price Fetch");
+      return null;
+    }
+  }
+
+  async function fetchStockCandles(symbol, options = {}){
+    const resolution = String(options.resolution || "30");
+    const days = Number.isFinite(options.days) ? options.days : 5;
+
+    const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
+    const now = Math.floor(Date.now() / 1000);
+    const bucket = Math.max(1, Number(resolution)) * 60;
+    const to = Math.floor(now / bucket) * bucket;
+    const from = to - Math.max(1, days) * 24 * 60 * 60;
+    const cacheKey = `candles:${baseSymbol}:${resolution}:${from}:${to}`;
+    const cached = getCached(cacheKey);
+    if(cached) return { data: cached, error: null, source: "cache" };
+
+    let finnhubError = "";
+    if(STOCK_API_KEYS.finnhub){
+      const res = await fetchStockCandlesFromFinnhub(baseSymbol, resolution, from, to);
+      if(res.data){
+        setCached(cacheKey, res.data);
+        return { data: res.data, error: null, source: "finnhub" };
+      }
+      finnhubError = res.error || "Finnhub: no data";
+    } else {
+      finnhubError = "Finnhub key not configured";

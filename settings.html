@@ -30,7 +30,8 @@
       "inLanguage": "en"
     }
   </script>
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/styles.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="assets/styles.css"></noscript>
   <script>
     if (location.protocol !== "file:") {
       const manifestLink = document.createElement("link");
@@ -858,9 +859,10 @@
     </div>
   </div>
 
-  <script src="assets/common.js"></script>
-  <script src="assets/topbar.js"></script>
-  <script src="assets/infobar.js"></script>
-  <script src="assets/settings.js?v=20260307b"></script>
+  <script defer src="assets/common.js"></script>
+  <script defer src="assets/common-weather.js"></script>
+  <script defer src="assets/topbar.js"></script>
+  <script defer src="assets/infobar.js"></script>
+  <script defer src="assets/settings.js?v=20260307b"></script>
 </body>
 </html>

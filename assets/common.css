@@ -1894,16 +1894,11 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   grid-template-columns:repeat(12, 1fr);
   gap:var(--gap);
 }
-.newsCard{
-  grid-column:span 4;
-}
 @media (max-width:1200px){ 
   .grid{grid-template-columns:repeat(6, 1fr);}
-  .newsCard{grid-column:span 3;}
 }
 @media (max-width:720px){ 
   .grid{grid-template-columns:repeat(1, 1fr);}
-  .newsCard{grid-column:span 1;}
 }
 
 .grid2{
