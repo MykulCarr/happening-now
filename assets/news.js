@@ -17,25 +17,253 @@
   const CRITICAL_WORLD_RSS = "https://news.google.com/rss/search?q=world+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
   const CRITICAL_US_RSS = "https://news.google.com/rss/search?q=US+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
   let criticalTickerState = null;
+  let criticalTickerPopup = null;
+  let criticalTickerHoverController = null;
+  let criticalTickerHoverTimeout = null;
+  let criticalTickerCloseTimeout = null;
 
   function destroyCriticalTicker(){
+    if(!criticalTickerState) return;
+    if(criticalTickerState.resumeTimer) window.clearTimeout(criticalTickerState.resumeTimer);
+    if(criticalTickerState.rafId) window.cancelAnimationFrame(criticalTickerState.rafId);
+    if(criticalTickerState.abortController) criticalTickerState.abortController.abort();
     criticalTickerState = null;
+  }
+
+  function clearCriticalTickerPopup(){
+    if(criticalTickerPopup){ criticalTickerPopup.remove(); criticalTickerPopup = null; }
+  }
+
+  function clearCriticalTickerTimers(){
+    if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+    if(criticalTickerCloseTimeout){ window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
+  }
+
+  function destroyCriticalTickerHover(){
+    clearCriticalTickerTimers();
+    clearCriticalTickerPopup();
+    if(criticalTickerHoverController){ criticalTickerHoverController.abort(); criticalTickerHoverController = null; }
   }
 
   function setupCriticalTicker(container){
     destroyCriticalTicker();
     container.classList.add("criticalTickerReady");
-    const track = container.querySelector(".criticalTickerTrack");
+
+    const viewport = container.querySelector(".criticalTickerViewport");
+    const track    = container.querySelector(".criticalTickerTrack");
     const firstGroup = container.querySelector(".criticalTickerGroup");
-    if(track && firstGroup){
-      const speedPxPerSecond = 22;
-      requestAnimationFrame(() => {
-        const w = firstGroup.getBoundingClientRect().width;
-        if(w > 0){
-          track.style.animationDuration = `${Math.max(10, w / speedPxPerSecond).toFixed(1)}s`;
-        }
-      });
+    if(!viewport || !track || !firstGroup) return;
+
+    const abortController = new AbortController();
+    const speedPxPerSecond = 22;
+    const gap = Number.parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap || "0") || 0;
+
+    let cycleWidth = 0;
+    let paused = false;
+    let dragging = false;
+    let activePointerId = null;
+    let lastPointerX = 0;
+    let dragDistancePx = 0;
+    let pointerDownUrl = "";
+    let offsetPx = 0;
+    const hoverPauseGraceMs = 1200;
+    let hoverPauseReadyAt = 0;
+    let lastFrameTs = 0;
+    let lastMeasureTs = 0;
+    let rafId = 0;
+    let resumeTimer = 0;
+
+    function measure(resetPosition = false){
+      cycleWidth = firstGroup.getBoundingClientRect().width + gap;
+      if(resetPosition && cycleWidth > 0){ offsetPx = 0; applyTrackTransform(); }
     }
+
+    function applyTrackTransform(){
+      track.style.transform = `translate3d(${-offsetPx}px, 0, 0)`;
+    }
+
+    function normalizeScroll(){
+      if(cycleWidth <= 0) return;
+      while(offsetPx >= cycleWidth) offsetPx -= cycleWidth;
+      while(offsetPx < 0) offsetPx += cycleWidth;
+    }
+
+    function clearResumeTimer(){
+      if(resumeTimer){ window.clearTimeout(resumeTimer); resumeTimer = 0; }
+    }
+
+    function queueAutoResume(delayMs = 600){
+      clearResumeTimer();
+      resumeTimer = window.setTimeout(() => { paused = false; }, delayMs);
+    }
+
+    function tick(timestamp){
+      if(!lastFrameTs) lastFrameTs = timestamp;
+      const dt = (timestamp - lastFrameTs) / 1000;
+      lastFrameTs = timestamp;
+      const hoverPaused = timestamp >= hoverPauseReadyAt && viewport.matches(":hover") && !dragging;
+
+      if(paused && !dragging && !hoverPaused && !resumeTimer) paused = false;
+
+      if(cycleWidth <= 0){
+        if(!lastMeasureTs || (timestamp - lastMeasureTs) >= 250){
+          lastMeasureTs = timestamp;
+          measure(false);
+          if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+        }
+      } else if(!paused && !dragging && !hoverPaused){
+        offsetPx += speedPxPerSecond * dt;
+        normalizeScroll();
+        applyTrackTransform();
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+      if(criticalTickerState){ criticalTickerState.rafId = rafId; criticalTickerState.resumeTimer = resumeTimer; }
+    }
+
+    measure(true);
+    hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
+    window.requestAnimationFrame(() => {
+      measure(false);
+      if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+    });
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(() => {
+        measure(false);
+        if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+      }).catch(() => {});
+    }
+
+    viewport.addEventListener("pointerdown", (event) => {
+      if(event.pointerType === "mouse" && event.button !== 0) return;
+      if(activePointerId !== null) return;
+      event.preventDefault();
+      if(cycleWidth <= 0) measure(false);
+      clearResumeTimer();
+      dragging = true;
+      paused = true;
+      activePointerId = event.pointerId;
+      lastPointerX = event.clientX;
+      dragDistancePx = 0;
+      pointerDownUrl = event.target?.closest(".criticalTickerItem[data-item-url]")?.dataset?.itemUrl || "";
+      viewport.classList.add("isDragging");
+      viewport.setPointerCapture(event.pointerId);
+    }, { signal: abortController.signal });
+
+    viewport.addEventListener("pointermove", (event) => {
+      if(!dragging || event.pointerId !== activePointerId) return;
+      event.preventDefault();
+      const dx = event.clientX - lastPointerX;
+      lastPointerX = event.clientX;
+      dragDistancePx += Math.abs(dx);
+      offsetPx -= dx;
+      normalizeScroll();
+      applyTrackTransform();
+    }, { signal: abortController.signal });
+
+    function endDrag(event){
+      if(!dragging || event.pointerId !== activePointerId) return;
+      const shouldOpenLink = event.type === "pointerup" && dragDistancePx < 8 && pointerDownUrl;
+      dragging = false;
+      activePointerId = null;
+      viewport.classList.remove("isDragging");
+      if(viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      dragDistancePx = 0;
+      if(shouldOpenLink) window.open(pointerDownUrl, "_blank", "noopener,noreferrer");
+      pointerDownUrl = "";
+      queueAutoResume(350);
+      hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
+    }
+
+    viewport.addEventListener("pointerup",           endDrag, { signal: abortController.signal });
+    viewport.addEventListener("pointercancel",        endDrag, { signal: abortController.signal });
+    viewport.addEventListener("lostpointercapture",   endDrag, { signal: abortController.signal });
+    viewport.addEventListener("dragstart", (event) => { event.preventDefault(); }, { signal: abortController.signal });
+
+    viewport.addEventListener("wheel", (event) => {
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if(!delta) return;
+      event.preventDefault();
+      clearResumeTimer();
+      paused = true;
+      offsetPx += delta;
+      normalizeScroll();
+      applyTrackTransform();
+      queueAutoResume(700);
+    }, { passive: false, signal: abortController.signal });
+
+    window.addEventListener("resize", () => {
+      measure(false);
+      if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+    }, { signal: abortController.signal });
+
+    rafId = window.requestAnimationFrame(tick);
+    criticalTickerState = { abortController, rafId, resumeTimer };
+  }
+
+  function setupCriticalTickerHover(container, items){
+    destroyCriticalTickerHover();
+    const controller = new AbortController();
+    criticalTickerHoverController = controller;
+
+    const clearCloseTimeout = () => {
+      if(criticalTickerCloseTimeout){ window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
+    };
+
+    const schedulePopupClose = (delayMs = 500) => {
+      clearCloseTimeout();
+      if(!criticalTickerPopup) return;
+      criticalTickerCloseTimeout = window.setTimeout(() => {
+        if(criticalTickerPopup && !criticalTickerPopup.matches(":hover")) clearCriticalTickerPopup();
+      }, delayMs);
+    };
+
+    container.addEventListener("mousemove", (e) => {
+      const viewport = container.querySelector(".criticalTickerViewport");
+      if(viewport?.classList.contains("isDragging")) return;
+
+      const itemEl = e.target.closest(".criticalTickerItem[data-item-idx]");
+      if(!itemEl){
+        if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+        schedulePopupClose(400);
+        return;
+      }
+
+      const idx = parseInt(itemEl.dataset.itemIdx, 10);
+      const item = items[idx];
+      if(!item) return;
+
+      if(criticalTickerHoverTimeout) window.clearTimeout(criticalTickerHoverTimeout);
+      clearCloseTimeout();
+
+      criticalTickerHoverTimeout = window.setTimeout(() => {
+        clearCriticalTickerPopup();
+
+        const popup = document.createElement("div");
+        popup.className = "alertHoverPopup";
+        const scopeLabel = item.scope === "world" ? "WORLD" : "US";
+        popup.innerHTML = `
+          <div class="popupTitle"><span class="localAlertBadge">${escapeHtml(scopeLabel)}</span> ${escapeHtml(item.title)}</div>
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="popupLink">Read Article →</a>
+        `;
+
+        popup.style.left = Math.min(e.clientX + 12, window.innerWidth - 420) + "px";
+        popup.style.top  = Math.min(e.clientY + 12, window.innerHeight - 300) + "px";
+
+        document.body.appendChild(popup);
+        criticalTickerPopup = popup;
+
+        popup.addEventListener("mouseenter", () => { clearCloseTimeout(); }, { signal: controller.signal });
+        popup.addEventListener("mouseleave", () => { schedulePopupClose(400); }, { signal: controller.signal });
+      }, 1500);
+    }, { signal: controller.signal });
+
+    container.addEventListener("mouseleave", () => {
+      if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+      schedulePopupClose(400);
+    }, { signal: controller.signal });
+
+    container.addEventListener("mouseenter", () => { clearCloseTimeout(); }, { signal: controller.signal });
   }
 
   function normalizeTickerItems(items, scope){
@@ -84,27 +312,23 @@
         return;
       }
 
-      const tickerItems = prioritized.map((item) => {
+      const tickerItemsHtml = prioritized.map((item, idx) => {
         const scopeClass = item.scope === "world" ? "world" : "us";
         const scopeLabel = item.scope === "world" ? "WORLD" : "US";
-        return `
-          <a class="criticalTickerItem" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" aria-label="${scopeLabel}: ${escapeHtml(item.title)}">
-            <span class="criticalBadge ${scopeClass}">${scopeLabel}</span>
-            <span>${escapeHtml(item.title)}</span>
-          </a>
-        `;
+        return `<a class="criticalTickerItem" data-item-idx="${idx}" data-item-url="${escapeHtml(item.url)}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" aria-label="${scopeLabel}: ${escapeHtml(item.title)}"><span class="criticalBadge ${scopeClass}">${scopeLabel}</span><span>${escapeHtml(item.title)}</span></a>`;
       }).join('<span class="criticalTickerSep" aria-hidden="true">•</span>');
 
       criticalNewsBar.innerHTML = `
         <div class="criticalTickerViewport" aria-live="polite" aria-label="Critical headlines ticker">
           <div class="criticalTickerTrack">
-            <div class="criticalTickerGroup">${tickerItems}</div>
-            <div class="criticalTickerGroup" aria-hidden="true">${tickerItems}</div>
+            <div class="criticalTickerGroup">${tickerItemsHtml}</div>
+            <div class="criticalTickerGroup" aria-hidden="true">${tickerItemsHtml}</div>
           </div>
         </div>
       `;
 
       setupCriticalTicker(criticalNewsBar);
+      setupCriticalTickerHover(criticalNewsBar, prioritized);
     }catch(error){
       handleError(error, "Critical ticker");
       criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Critical ticker unavailable right now.</span>`;

@@ -1,3 +1,31 @@
+/* Cross-document view transitions — keeps the topbar static across page navigations.
+   Supported in Chrome 126+/Edge 126+/Firefox 131+; older browsers fall back to normal navigation. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Mark topbar as a persistent element so it doesn't flash during navigation */
+header#topbar {
+  view-transition-name: topbar;
+}
+
+/* Keep the topbar fully static — no animation between pages */
+::view-transition-old(topbar),
+::view-transition-new(topbar) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Slide main content in from slightly below on arrival */
+::view-transition-new(root) {
+  animation: 220ms ease hn-page-in;
+}
+::view-transition-old(root) {
+  animation: 180ms ease hn-page-out;
+}
+@keyframes hn-page-in  { from { opacity: 0; transform: translateY(6px); } }
+@keyframes hn-page-out { to   { opacity: 0; } }
+
 :root{
   --bg:#0d1521;
   --panel:rgba(255,255,255,.08);
@@ -2273,6 +2301,10 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   overflow:hidden;
   width:100%;
   position:relative;
+  cursor: grab;
+}
+.criticalNewsBar .criticalTickerViewport.isDragging{
+  cursor: grabbing;
 }
 
 .criticalNewsBar .criticalTickerTrack{
@@ -2281,14 +2313,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   gap:14px;
   width:max-content;
   will-change:transform;
-  animation:criticalTickerScroll 160s linear infinite;
-  animation-delay: 1s;
 }
-
-  .criticalNewsBar .criticalTickerViewport:hover .criticalTickerTrack,
-  .criticalNewsBar .criticalTickerViewport:focus-within .criticalTickerTrack{
-    animation-play-state:paused;
-  }
 
   .criticalNewsBar .criticalTickerGroup{
     display:flex;
@@ -2308,10 +2333,6 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
     line-height:1.2;
   }
 
-  @keyframes criticalTickerScroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-50% - 7px)); }
-}
 
 .criticalNewsBar .criticalTickerItem:hover,
 .criticalNewsBar .criticalTickerItem:focus-visible{
