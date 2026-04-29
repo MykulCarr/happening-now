@@ -23,10 +23,10 @@
   // Cloudflare dashboard (Workers → your worker → Settings → Variables & Secrets).
   // Alpha Vantage and IEX can be added here directly if desired (optional fallbacks).
   const STOCK_API_KEYS = {
-    finnhub: "",      // Proxied via Worker — set FINNHUB_KEY secret in Cloudflare
-    alphaVantage: "", // Optional direct key from alphavantage.co
-    iex: "",          // Optional direct key from iexcloud.io
-    twelvedata: ""    // Proxied via Worker — set TWELVEDATA_KEY secret in Cloudflare
+    finnhub: "d6fn95hr01qqnmbpagjgd6fn95hr01qqnmbpagk0",
+    alphaVantage: "",
+    iex: "",
+    twelvedata: "0e445cbc4f8447bca852199162995caf"
   };
 
   // NewsAPI and GNews keys — cleared; the site relies on RSS feeds which work without keys.

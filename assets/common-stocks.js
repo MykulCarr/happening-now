@@ -257,8 +257,9 @@
     if(shouldSkipFinnhubSymbol(symbol)){
       return { data: null, error: "Finnhub skipped for unsupported fund symbol" };
     }
+    if(!STOCK_API_KEYS.finnhub) return { data: null, error: "Finnhub: no API key" };
     try{
-      const url = `/v1/stocks/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+      const url = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${STOCK_API_KEYS.finnhub}`;
       const res = await fetch(url, { cache: "no-store" });
       if(!res.ok){
         if(res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
@@ -283,9 +284,11 @@
 
   async function fetchStockCandlesFromTwelveData(symbol, resolution, days){
     try{
+      const apiKey = STOCK_API_KEYS.twelvedata || "";
+      if(!apiKey) return { data: null, error: "Twelve Data: no API key" };
       const interval = Number(resolution) >= 60 ? `${Math.round(Number(resolution) / 60)}h` : `${resolution}min`;
       const outputSize = Math.max(24, Math.min(240, Math.round(days * 24 * 60 / Math.max(1, Number(resolution)))));
-      const url = `/v1/stocks/ts?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputSize)}`;
+      const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputSize)}&apikey=${apiKey}`;
       const res = await fetch(url, { cache: "no-store" });
       if(!res.ok){
         return { data: null, error: `Twelve Data error (${res.status})` };
@@ -320,8 +323,9 @@
     if(shouldSkipFinnhubSymbol(symbol)){
       return null;
     }
+    if(!STOCK_API_KEYS.finnhub) return null;
     try{
-      const url = `/v1/stocks/quote?symbol=${encodeURIComponent(symbol)}`;
+      const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${STOCK_API_KEYS.finnhub}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(url, { cache: "no-store", signal: controller.signal });
