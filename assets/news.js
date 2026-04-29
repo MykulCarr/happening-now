@@ -25,6 +25,17 @@
   function setupCriticalTicker(container){
     destroyCriticalTicker();
     container.classList.add("criticalTickerReady");
+    const track = container.querySelector(".criticalTickerTrack");
+    const firstGroup = container.querySelector(".criticalTickerGroup");
+    if(track && firstGroup){
+      const speedPxPerSecond = 22;
+      requestAnimationFrame(() => {
+        const w = firstGroup.getBoundingClientRect().width;
+        if(w > 0){
+          track.style.animationDuration = `${Math.max(10, w / speedPxPerSecond).toFixed(1)}s`;
+        }
+      });
+    }
   }
 
   function normalizeTickerItems(items, scope){

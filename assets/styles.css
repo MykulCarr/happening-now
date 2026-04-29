@@ -2281,7 +2281,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   gap:14px;
   width:max-content;
   will-change:transform;
-  animation:criticalTickerScroll 60s linear infinite;
+  animation:criticalTickerScroll 160s linear infinite;
   animation-delay: 1s;
 }
 
