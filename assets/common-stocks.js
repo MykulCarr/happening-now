@@ -770,11 +770,45 @@
     }
   }
 
+  async function fetchYahooBatchQuotes(symbols){
+    if(!Array.isArray(symbols) || symbols.length === 0) return null;
+    try{
+      const symStr = symbols.join(",");
+      const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symStr)}`;
+      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
+      const res = await fetch(proxyUrl, { cache: "no-store" });
+      if(!res.ok) return null;
+      const data = await res.json();
+      const quotes = data?.quoteResponse?.result;
+      if(!Array.isArray(quotes) || quotes.length === 0) return null;
+      const map = {};
+      for(const q of quotes){
+        const sym = q.symbol;
+        const price = Number(q.regularMarketPrice);
+        if(!sym || !Number.isFinite(price) || price <= 0) continue;
+        map[sym] = {
+          symbol: sym,
+          price,
+          change: Number.isFinite(Number(q.regularMarketChange)) ? Number(q.regularMarketChange) : 0,
+          changePercent: Number.isFinite(Number(q.regularMarketChangePercent)) ? Number(q.regularMarketChangePercent) : 0,
+          previousClose: Number.isFinite(Number(q.regularMarketPreviousClose)) ? Number(q.regularMarketPreviousClose) : null,
+          high: Number.isFinite(Number(q.regularMarketDayHigh)) ? Number(q.regularMarketDayHigh) : null,
+          low: Number.isFinite(Number(q.regularMarketDayLow)) ? Number(q.regularMarketDayLow) : null,
+          timestamp: new Date().toISOString()
+        };
+      }
+      return Object.keys(map).length > 0 ? map : null;
+    }catch{
+      return null;
+    }
+  }
+
   Object.assign(App, {
     fetchStockPrice,
     fetchStockCandles,
     fetchStockGainers,
     fetchStockLosers,
-    fetchStockMovers
+    fetchStockMovers,
+    fetchYahooBatchQuotes
   });
 })();

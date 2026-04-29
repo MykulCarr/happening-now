@@ -192,6 +192,7 @@
 
     // News preferences
     newsLayout: "text-only",
+    newsTickerScope: "national",
 
     // AstroLab preferences
     astrolab: clone(ASTROLAB_DEFAULTS),
@@ -305,6 +306,7 @@
     out.stockSortMode = ["pinned","az","symbol"].includes(out.stockSortMode) ? out.stockSortMode : "pinned";
     out.marketNewsSourceMode = ["google","direct"].includes(out.marketNewsSourceMode) ? out.marketNewsSourceMode : "google";
     out.marketNewsOpenMode = ["new-tab","same-tab"].includes(out.marketNewsOpenMode) ? out.marketNewsOpenMode : "new-tab";
+    out.newsTickerScope = ["local","regional","national","international"].includes(out.newsTickerScope) ? out.newsTickerScope : "national";
 
     const astro = (out.astrolab && typeof out.astrolab === "object") ? out.astrolab : {};
     out.astrolab = {

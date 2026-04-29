@@ -73,6 +73,7 @@
   const stocksNewsButtons = document.querySelectorAll("[data-field='stocksNewsMode']");
   const marketNewsSourceButtons = document.querySelectorAll("[data-field='marketNewsSourceMode']");
   const marketNewsOpenButtons = document.querySelectorAll("[data-field='marketNewsOpenMode']");
+  const newsTickerScopeButtons = document.querySelectorAll("[data-field='newsTickerScope']");
   const marketIndicesContainer = document.getElementById("marketIndicesCheckboxes");
 
   // News
@@ -2903,6 +2904,7 @@
     updateButtonGroupState(stocksNewsButtons, cfg.stocksNewsMode || "watchlist");
     updateButtonGroupState(marketNewsSourceButtons, cfg.marketNewsSourceMode || "google");
     updateButtonGroupState(marketNewsOpenButtons, cfg.marketNewsOpenMode || "new-tab");
+    updateButtonGroupState(newsTickerScopeButtons, cfg.newsTickerScope || "national");
     renderMarketIndices();
     loadAstrolabToUI();
 
@@ -2991,6 +2993,11 @@
       cfg.marketNewsOpenMode = activeMarketOpenBtn.dataset.value;
     }
 
+    const activeTickerScopeBtn = document.querySelector("[data-field='newsTickerScope'].active");
+    if(activeTickerScopeBtn){
+      cfg.newsTickerScope = activeTickerScopeBtn.dataset.value;
+    }
+
     pullAstrolabFromUI();
     
     // Keep default page visibility config
@@ -3044,6 +3051,9 @@
       } else if(field === "marketNewsOpenMode"){
         cfg.marketNewsOpenMode = value;
         updateButtonGroupState(marketNewsOpenButtons, value);
+      } else if(field === "newsTickerScope"){
+        cfg.newsTickerScope = value;
+        updateButtonGroupState(newsTickerScopeButtons, value);
       }
 
       setStatus("Modified (not saved yet)", "unsaved");

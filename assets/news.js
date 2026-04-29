@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { cfg, fetchNewsItems, escapeHtml, createCardHeader, handleError, showError, applyThemeDensity } = window.App;
+  const { cfg, fetchNewsItems, escapeHtml, createCardHeader, handleError, showError, applyThemeDensity, saveConfig, geocodeZip } = window.App;
   const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
 
   // Apply theme, density, and font size on page load
@@ -9,13 +9,18 @@
 
   const newsGrid = document.getElementById("newsGrid");
   const criticalNewsBar = document.getElementById("criticalNewsBar");
+  const tickerScopeBar = document.getElementById("tickerScopeBar");
   const refreshBtn = document.getElementById("refreshBtn");
   const statusLine = document.getElementById("statusLine");
 
   const NEWS_CACHE_KEY = "jas_cache_news_v1";
   const NEWS_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
-  const CRITICAL_WORLD_RSS = "https://news.google.com/rss/search?q=world+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
-  const CRITICAL_US_RSS = "https://news.google.com/rss/search?q=US+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
+
+  const CRITICAL_NATIONAL_RSS = "https://news.google.com/rss/search?q=US+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
+  const CRITICAL_INTERNATIONAL_RSS = "https://news.google.com/rss/search?q=world+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
+
+  let currentTickerScope = cfg.newsTickerScope || "national";
+  let geoCache = null;
   let criticalTickerState = null;
   let criticalTickerPopup = null;
   let criticalTickerHoverController = null;
@@ -241,9 +246,8 @@
 
         const popup = document.createElement("div");
         popup.className = "alertHoverPopup";
-        const scopeLabel = item.scope === "world" ? "WORLD" : "US";
         popup.innerHTML = `
-          <div class="popupTitle"><span class="localAlertBadge">${escapeHtml(scopeLabel)}</span> ${escapeHtml(item.title)}</div>
+          <div class="popupTitle"><span class="localAlertBadge">${escapeHtml(item.label || item.scope.toUpperCase())}</span> ${escapeHtml(item.title)}</div>
           <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="popupLink">Read Article →</a>
         `;
 
@@ -266,13 +270,47 @@
     container.addEventListener("mouseenter", () => { clearCloseTimeout(); }, { signal: controller.signal });
   }
 
-  function normalizeTickerItems(items, scope){
+  function normalizeTickerItems(items, scope, label){
     return items.map((item) => ({
       scope,
+      label: label || scope.toUpperCase(),
       title: item.title || "Untitled",
       url: item.url || "",
       pubDate: item.pubDate || ""
     })).filter((item) => Boolean(item.url));
+  }
+
+  async function getGeoForScope(){
+    if(geoCache) return geoCache;
+    const zip = cfg.zipCode;
+    if(!zip || !/^\d{5}$/.test(zip)) return null;
+    try{
+      geoCache = await geocodeZip(zip);
+      return geoCache;
+    }catch{
+      return null;
+    }
+  }
+
+  async function getTickerFeedsForScope(scope){
+    if(scope === "national"){
+      return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
+    }
+    if(scope === "international"){
+      return [{ rss: CRITICAL_INTERNATIONAL_RSS, scope: "international", label: "WORLD" }];
+    }
+    const geo = await getGeoForScope();
+    if(scope === "local"){
+      if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
+      const q = encodeURIComponent(`"${geo.city}" local news`);
+      return [{ rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`, scope: "local", label: geo.city.toUpperCase() }];
+    }
+    if(scope === "regional"){
+      if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
+      const q = encodeURIComponent(`${geo.state} news`);
+      return [{ rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`, scope: "regional", label: geo.state.toUpperCase() }];
+    }
+    return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
   }
 
   function dedupeTickerItems(items){
@@ -289,37 +327,29 @@
     if(!criticalNewsBar) return;
 
     destroyCriticalTicker();
-    criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading critical headlines...</span>`;
+    criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading headlines...</span>`;
 
     try{
-      const [worldItems, usItems] = await Promise.all([
-        fetchNewsItems(CRITICAL_WORLD_RSS, 10, !force),
-        fetchNewsItems(CRITICAL_US_RSS, 10, !force)
-      ]);
+      const feeds = await getTickerFeedsForScope(currentTickerScope);
+      const allItems = [];
+      await Promise.all(feeds.map(async (feed) => {
+        const items = await fetchNewsItems(feed.rss, 12, !force);
+        allItems.push(...normalizeTickerItems(items, feed.scope, feed.label));
+      }));
 
-      const merged = dedupeTickerItems([
-        ...normalizeTickerItems(worldItems, "world"),
-        ...normalizeTickerItems(usItems, "us")
-      ]);
-
-      const prioritized = [
-        ...merged.filter((item) => item.scope === "world").slice(0, 8),
-        ...merged.filter((item) => item.scope === "us").slice(0, 8)
-      ];
+      const prioritized = dedupeTickerItems(allItems).slice(0, 16);
 
       if(prioritized.length === 0){
-        criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">No critical headlines right now.</span>`;
+        criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">No headlines right now.</span>`;
         return;
       }
 
       const tickerItemsHtml = prioritized.map((item, idx) => {
-        const scopeClass = item.scope === "world" ? "world" : "us";
-        const scopeLabel = item.scope === "world" ? "WORLD" : "US";
-        return `<a class="criticalTickerItem" data-item-idx="${idx}" data-item-url="${escapeHtml(item.url)}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" aria-label="${scopeLabel}: ${escapeHtml(item.title)}"><span class="criticalBadge ${scopeClass}">${scopeLabel}</span><span>${escapeHtml(item.title)}</span></a>`;
+        return `<a class="criticalTickerItem" data-item-idx="${idx}" data-item-url="${escapeHtml(item.url)}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}: ${escapeHtml(item.title)}"><span class="criticalBadge ${escapeHtml(item.scope)}">${escapeHtml(item.label)}</span><span>${escapeHtml(item.title)}</span></a>`;
       }).join('<span class="criticalTickerSep" aria-hidden="true">•</span>');
 
       criticalNewsBar.innerHTML = `
-        <div class="criticalTickerViewport" aria-live="polite" aria-label="Critical headlines ticker">
+        <div class="criticalTickerViewport" aria-live="polite" aria-label="Headlines ticker">
           <div class="criticalTickerTrack">
             <div class="criticalTickerGroup">${tickerItemsHtml}</div>
             <div class="criticalTickerGroup" aria-hidden="true">${tickerItemsHtml}</div>
@@ -331,7 +361,7 @@
       setupCriticalTickerHover(criticalNewsBar, prioritized);
     }catch(error){
       handleError(error, "Critical ticker");
-      criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Critical ticker unavailable right now.</span>`;
+      criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Headlines unavailable right now.</span>`;
     }
   }
 
@@ -600,6 +630,27 @@ function restoreNewsFromCache(){
 
   // Clear stale news cache on page load to ensure fresh content
   window.App.clearRssCache();
+
+  // Initialize scope button active state from saved config
+  function syncScopeButtons(scope){
+    document.querySelectorAll(".tickerScopeBtn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.scope === scope);
+    });
+  }
+  syncScopeButtons(currentTickerScope);
+
+  // Wire scope buttons
+  tickerScopeBar?.querySelectorAll(".tickerScopeBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const scope = btn.dataset.scope;
+      if(scope === currentTickerScope) return;
+      currentTickerScope = scope;
+      syncScopeButtons(scope);
+      saveConfig({ ...window.App.cfg, newsTickerScope: scope });
+      geoCache = null;
+      renderCriticalTicker(true);
+    });
+  });
 
   // Keyboard accessibility for refresh button
   refreshBtn?.addEventListener("click", () => render(true));

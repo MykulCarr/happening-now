@@ -2180,7 +2180,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
 }
 
 .criticalNewsBar{
-  margin:0 0 14px;
+  margin:0 0 5px;
   overflow:hidden;
   background:linear-gradient(100deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
   border:1px solid var(--border);
@@ -2368,6 +2368,64 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   color:rgba(255,255,255,.35);
   margin:0 8px;
   font-weight:700;
+}
+
+.criticalNewsBar .criticalBadge.national,
+.criticalNewsBar .criticalBadge.us{
+  color:#dbeafe;
+  background:rgba(37,99,235,.24);
+  border-color:rgba(59,130,246,.48);
+}
+
+.criticalNewsBar .criticalBadge.international,
+.criticalNewsBar .criticalBadge.world{
+  color:#fef3c7;
+  background:rgba(217,119,6,.22);
+  border-color:rgba(217,119,6,.48);
+}
+
+.criticalNewsBar .criticalBadge.local{
+  color:#d1fae5;
+  background:rgba(16,185,129,.22);
+  border-color:rgba(16,185,129,.48);
+}
+
+.criticalNewsBar .criticalBadge.regional{
+  color:#ede9fe;
+  background:rgba(139,92,246,.22);
+  border-color:rgba(139,92,246,.48);
+}
+
+.tickerScopeBar{
+  display:flex;
+  justify-content:flex-end;
+  gap:5px;
+  margin-bottom:10px;
+}
+
+.tickerScopeBtn{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.07em;
+  padding:2px 9px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-family:inherit;
+  transition:background 0.15s,color 0.15s,border-color 0.15s;
+}
+
+.tickerScopeBtn:hover{
+  background:rgba(255,255,255,.07);
+  color:var(--text);
+}
+
+.tickerScopeBtn.active{
+  background:rgba(99,102,241,.2);
+  color:var(--accent);
+  border-color:rgba(99,102,241,.5);
 }
 
 .skeleton{

@@ -22,6 +22,7 @@
     fetchStockGainers,
     fetchStockLosers,
     fetchStockMovers,
+    fetchYahooBatchQuotes,
     applyThemeDensity,
     MARKET_INDEX_DEFS
   } = window.App;
@@ -663,23 +664,34 @@
   }
 
   async function hydrateIndicesWithLiveQuotes(indices){
+    // Batch fetch all index symbols in one Yahoo Finance v7 request (avoids rate limits)
+    const yahooSymbols = indices.map(idx => INDEX_QUOTE_SYMBOLS[idx.key]).filter(Boolean);
+    const batchQuotes = await fetchYahooBatchQuotes(yahooSymbols).catch(() => null);
+
     const quotePromises = indices.map(async (idx) => {
       const symbol = INDEX_QUOTE_SYMBOLS[idx.key];
       if(!symbol) return idx;
 
+      // Use batch result when available
+      const bq = batchQuotes?.[symbol];
+      if(bq && Number.isFinite(bq.price) && bq.price > 0){
+        return {
+          ...idx,
+          value: bq.price,
+          change: bq.change,
+          changePercent: bq.changePercent
+        };
+      }
+
+      // Individual fallback for any symbol the batch missed
       try{
         const quote = await fetchStockPrice(symbol);
         if(!quote || !Number.isFinite(Number(quote.price))) return idx;
-
-        const nextValue = Number(quote.price);
-        const nextChange = Number.isFinite(Number(quote.change)) ? Number(quote.change) : (Number.isFinite(idx.change) ? idx.change : 0);
-        const nextChangePercent = Number.isFinite(Number(quote.changePercent)) ? Number(quote.changePercent) : (Number.isFinite(idx.changePercent) ? idx.changePercent : 0);
-
         return {
           ...idx,
-          value: nextValue,
-          change: nextChange,
-          changePercent: nextChangePercent
+          value: Number(quote.price),
+          change: Number.isFinite(Number(quote.change)) ? Number(quote.change) : 0,
+          changePercent: Number.isFinite(Number(quote.changePercent)) ? Number(quote.changePercent) : 0
         };
       }catch{
         return idx;
@@ -961,16 +973,22 @@
     }
 
     try {
-      // Fetch all prices and candles in parallel with error handling
+      // Batch-fetch all watchlist prices in one Yahoo Finance v7 request
+      const baseSymbols = sorted.map(s => s.symbol.includes(":") ? s.symbol.split(":")[1] : s.symbol);
+      const batchPrices = await fetchYahooBatchQuotes(baseSymbols).catch(() => null);
+
       const pricePromises = sorted.map(async (stock) => {
-        let price = null;
+        const baseSymbol = stock.symbol.includes(":") ? stock.symbol.split(":")[1] : stock.symbol;
+        let price = batchPrices?.[baseSymbol] || null;
         let candles = null;
         let candleError = null;
 
-        try{
-          price = await fetchStockPrice(stock.symbol);
-        }catch(err){
-          console.warn(`Failed to fetch price for ${stock.symbol}:`, err);
+        if(!price){
+          try{
+            price = await fetchStockPrice(stock.symbol);
+          }catch(err){
+            console.warn(`Failed to fetch price for ${stock.symbol}:`, err);
+          }
         }
 
         if(price){
