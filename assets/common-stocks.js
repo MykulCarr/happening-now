@@ -16,29 +16,29 @@
 
     try{
       const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
-      const result = await fetchStockPriceFromFinnhub(baseSymbol);
-      if(result){
-        setCached(cacheKey, result);
-        return result;
+      const finnhubResult = await fetchStockPriceFromFinnhub(baseSymbol);
+      if(finnhubResult){
+        setCached(cacheKey, finnhubResult);
+        return finnhubResult;
       }
       if(STOCK_API_KEYS.alphaVantage){
-        const result = await fetchStockPriceFromAlphaVantage(baseSymbol);
-        if(result){
-          setCached(cacheKey, result);
-          return result;
+        const avResult = await fetchStockPriceFromAlphaVantage(baseSymbol);
+        if(avResult){
+          setCached(cacheKey, avResult);
+          return avResult;
         }
       }
       if(STOCK_API_KEYS.iex){
-        const result = await fetchStockPriceFromIex(baseSymbol);
-        if(result){
-          setCached(cacheKey, result);
-          return result;
+        const iexResult = await fetchStockPriceFromIex(baseSymbol);
+        if(iexResult){
+          setCached(cacheKey, iexResult);
+          return iexResult;
         }
       }
-      const result = await fetchStockPriceFromTwelveData(baseSymbol);
-      if(result){
-        setCached(cacheKey, result);
-        return result;
+      const tdResult = await fetchStockPriceFromTwelveData(baseSymbol);
+      if(tdResult){
+        setCached(cacheKey, tdResult);
+        return tdResult;
       }
       const yahooResult = await fetchStockPriceFromYahooChart(baseSymbol);
       if(yahooResult){
