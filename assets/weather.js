@@ -242,7 +242,7 @@
     if(!viewport || !track || !firstGroup) return;
 
     const abortController = new AbortController();
-    const speedPxPerSecond = 32;
+    const speedPxPerSecond = 22;
     const gap = Number.parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap || "0") || 0;
 
     let cycleWidth = 0;

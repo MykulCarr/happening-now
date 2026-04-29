@@ -21,7 +21,7 @@
   if (pageVis.stocks !== false) navParts.push('<a href="stocks.html" class="hn-nav-link">STOCKS</a>');
   if (pageVis.astrolab !== false) navParts.push('<a href="AstroLab.html" class="hn-nav-link">ASTROLAB</a>');
   navParts.push('<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>');
-  const mobileNavHtml = navParts.join('·');
+  const mobileNavHtml = navParts.join('');
 
   // Create structure
   mount.classList.add('hn-topbar');
@@ -184,7 +184,6 @@
 
   // Initialize mobile menu
   setupMobileMenu();
-  syncTopbarSectionSpacing();
   setActiveNav();
 
   // Click on brand: always navigate to the news page.
@@ -194,7 +193,6 @@
     window.location.href = 'index.html';
   });
 
-  window.addEventListener('resize', syncTopbarSectionSpacing);
 
   // (Search UI moved into the info bar)
 

@@ -1,0 +1,25 @@
+{
+  // Cloudflare Worker: happening-now-sync
+  // Handles all /v1/* API routes for happening-now.net
+  "name": "happening-now-sync",
+  "main": "src/index.js",
+  "compatibility_date": "2026-04-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "3949da63d9ab140c1997f85b14086013",
+
+  "routes": [
+    { "pattern": "happening-now.net/v1/*", "zone_name": "happening-now.net" }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "HN_STATE_DATA",
+      // To find this ID: Cloudflare dashboard → Workers & Pages → KV → click HN_STATE_DATA → copy the Namespace ID
+      "id": "e023969612b94b27b89d041e4502be77"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}

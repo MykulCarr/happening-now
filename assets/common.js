@@ -18,24 +18,22 @@
     feedbin: "https://feedbin.com",         // Feedly alternative (requires account)
   };
   
-  // For real-time stock prices, configure your free API key from:
-  // - Finnhub: https://finnhub.io/register (free tier: 60 requests/minute)
-  // - Alpha Vantage: https://www.alphavantage.co/support/#api-key (free: 5 requests/minute)
-  // - IEX Cloud: https://iexcloud.io/console/tokens (free: limited quotes)
+  // Stock API keys — Finnhub and TwelveData are proxied through /v1/stocks/* on the
+  // Cloudflare Worker. Set FINNHUB_KEY and TWELVEDATA_KEY as Worker secrets in the
+  // Cloudflare dashboard (Workers → your worker → Settings → Variables & Secrets).
+  // Alpha Vantage and IEX can be added here directly if desired (optional fallbacks).
   const STOCK_API_KEYS = {
-    finnhub: "d6fn95hr01qqnmbpagjgd6fn95hr01qqnmbpagk0",
-    alphaVantage: "", // Optional: Add your Alpha Vantage API key here
-    iex: "",         // Optional: Add your IEX Cloud API key here
-    twelvedata: "0e445cbc4f8447bca852199162995caf"   // Optional: Add your Twelve Data API key here
+    finnhub: "",      // Proxied via Worker — set FINNHUB_KEY secret in Cloudflare
+    alphaVantage: "", // Optional direct key from alphavantage.co
+    iex: "",          // Optional direct key from iexcloud.io
+    twelvedata: ""    // Proxied via Worker — set TWELVEDATA_KEY secret in Cloudflare
   };
-  
-  // NewsAPI.org key for premium news sources (free tier: 100 requests/day)
-  // Sign up at https://newsapi.org/register if you want enhanced news coverage
-  const NEWS_API_KEY = "64eb574d15144fa595df531b4c09c922";
-  
-  // GNews API (free tier: 100 requests/day)
-  // Sign up at https://gnews.io to get your API key
-  const GNEWS_API_KEY = "8b0b1fa39d8e27241804dbb0b430660c";
+
+  // NewsAPI and GNews keys — cleared; the site relies on RSS feeds which work without keys.
+  // To re-enable, add keys here and set matching Worker secrets (NEWSAPI_KEY, GNEWS_KEY).
+  const NEWS_API_KEY = "";
+
+  const GNEWS_API_KEY = "";
   
   // MediaStack API (free tier: 1000 requests/month, ~33/day)
   // Sign up at https://mediastack.com to get your API key
@@ -70,30 +68,32 @@
   }
 
   // Shared market-strip catalog used by Stocks and Settings.
+  // value/change/changePercent are populated at runtime from live quotes; no defaults here
+  // so that failed fetches render "—" rather than convincing-looking stale numbers.
   const MARKET_INDEX_DEFS = [
-    { key: "dow", name: "DOW", value: 37892.45, change: 145.23, changePercent: 0.38 },
-    { key: "sp500", name: "S&P 500", value: 4783.21, change: -12.34, changePercent: -0.26 },
-    { key: "nasdaq", name: "NASDAQ", value: 14912.67, change: 67.89, changePercent: 0.46 },
-    { key: "russell2000", name: "RUSSELL 2000", value: 1987.34, change: 8.45, changePercent: 0.43 },
-    { key: "sp400", name: "S&P MIDCAP 400", value: 3028.45, change: 10.18, changePercent: 0.34 },
-    { key: "sp600", name: "S&P SMALLCAP 600", value: 1332.87, change: -4.26, changePercent: -0.32 },
-    { key: "microcap", name: "MICROCAP", value: 1143.82, change: 2.74, changePercent: 0.24 },
-    { key: "vix", name: "VIX", value: 14.62, change: -0.48, changePercent: -3.18 },
-    { key: "ftse100", name: "FTSE 100", value: 7684.17, change: 22.93, changePercent: 0.30 },
-    { key: "dax", name: "DAX", value: 17742.52, change: 64.52, changePercent: 0.36 },
-    { key: "nikkei225", name: "NIKKEI 225", value: 38954.22, change: -95.34, changePercent: -0.24 },
-    { key: "hangseng", name: "HANG SENG", value: 16423.38, change: 120.57, changePercent: 0.74 },
-    { key: "gold", name: "GOLD", value: 2034.50, change: 12.30, changePercent: 0.61 },
-    { key: "silver", name: "SILVER", value: 23.47, change: -0.23, changePercent: -0.97 },
-    { key: "copper", name: "COPPER", value: 3.86, change: 0.03, changePercent: 0.78 },
-    { key: "crudeoil", name: "CRUDE OIL", value: 78.92, change: 1.45, changePercent: 1.87 },
-    { key: "brent", name: "BRENT", value: 82.16, change: 1.11, changePercent: 1.37 },
-    { key: "natgas", name: "NAT GAS", value: 2.34, change: -0.08, changePercent: -3.31 },
-    { key: "us10y", name: "US 10Y", value: 4.22, change: 0.03, changePercent: 0.72 },
-    { key: "dxy", name: "DXY", value: 103.84, change: -0.21, changePercent: -0.20 },
-    { key: "eurusd", name: "EUR/USD", value: 1.0842, change: 0.0023, changePercent: 0.21 },
-    { key: "bitcoin", name: "BITCOIN", value: 51234.67, change: 892.45, changePercent: 1.77 },
-    { key: "ethereum", name: "ETHEREUM", value: 2865.33, change: 54.21, changePercent: 1.93 }
+    { key: "dow",       name: "DOW" },
+    { key: "sp500",     name: "S&P 500" },
+    { key: "nasdaq",    name: "NASDAQ" },
+    { key: "russell2000", name: "RUSSELL 2000" },
+    { key: "sp400",     name: "S&P MIDCAP 400" },
+    { key: "sp600",     name: "S&P SMALLCAP 600" },
+    { key: "microcap",  name: "MICROCAP" },
+    { key: "vix",       name: "VIX" },
+    { key: "ftse100",   name: "FTSE 100" },
+    { key: "dax",       name: "DAX" },
+    { key: "nikkei225", name: "NIKKEI 225" },
+    { key: "hangseng",  name: "HANG SENG" },
+    { key: "gold",      name: "GOLD" },
+    { key: "silver",    name: "SILVER" },
+    { key: "copper",    name: "COPPER" },
+    { key: "crudeoil",  name: "CRUDE OIL" },
+    { key: "brent",     name: "BRENT" },
+    { key: "natgas",    name: "NAT GAS" },
+    { key: "us10y",     name: "US 10Y" },
+    { key: "dxy",       name: "DXY" },
+    { key: "eurusd",    name: "EUR/USD" },
+    { key: "bitcoin",   name: "BITCOIN" },
+    { key: "ethereum",  name: "ETHEREUM" }
   ];
 
   const LEGACY_MARKET_INDEX_NAME_TO_KEY = {
@@ -1245,6 +1245,30 @@
     return fetchRssItems(source, limit, useCache);
   }
 
+  async function syncTimezoneFromZip(cfg){
+    try{
+      const zip = String(cfg?.zipCode || "").trim();
+      if(!/^\d{5}$/.test(zip)) return cfg;
+
+      if(cfg?._zipTz === zip && cfg.timezone) return cfg;
+
+      const loc = await geocodeZip(zip);
+      const wx = await fetchCurrentWeather(loc.lat, loc.lon);
+      const tz = wx?.timezone;
+
+      if(tz && tz !== cfg.timezone){
+        return saveConfig({ ...cfg, timezone: tz, _zipTz: zip });
+      }
+      if(tz && tz === cfg.timezone && cfg?._zipTz !== zip){
+        return saveConfig({ ...cfg, _zipTz: zip });
+      }
+      if(!cfg.timezone) return saveConfig({ ...cfg, timezone: DEFAULTS.timezone });
+      return cfg;
+    }catch{
+      return cfg;
+    }
+  }
+
   function renderTopbar(cfg){
     const key = (p) => String(p || "").toLowerCase();
     const path = key(location.pathname.split("/").pop());
@@ -1376,6 +1400,8 @@
         </div>
       `;
     }catch{/* best-effort only */}
+  }
+
   // Reusable component: News Card Header
   function createCardHeader({ name, site, onOpen }){
     const head = document.createElement("div");

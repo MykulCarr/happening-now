@@ -284,7 +284,7 @@
 
     const abortController = new AbortController();
     const gap = Number.parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap || "0") || 0;
-    const speedPxPerSecond = 28;
+    const speedPxPerSecond = 20;
 
     let cycleWidth = 0;
     let paused = false;
@@ -672,8 +672,8 @@
         if(!quote || !Number.isFinite(Number(quote.price))) return idx;
 
         const nextValue = Number(quote.price);
-        const nextChange = Number.isFinite(Number(quote.change)) ? Number(quote.change) : idx.change;
-        const nextChangePercent = Number.isFinite(Number(quote.changePercent)) ? Number(quote.changePercent) : idx.changePercent;
+        const nextChange = Number.isFinite(Number(quote.change)) ? Number(quote.change) : (Number.isFinite(idx.change) ? idx.change : 0);
+        const nextChangePercent = Number.isFinite(Number(quote.changePercent)) ? Number(quote.changePercent) : (Number.isFinite(idx.changePercent) ? idx.changePercent : 0);
 
         return {
           ...idx,
@@ -717,7 +717,8 @@
 
       const now = new Date();
       const tickerItems = indices.map(idx => {
-        const isPositive = idx.change >= 0;
+        const hasData = Number.isFinite(idx.value) && idx.value > 0;
+        const isPositive = hasData ? idx.change >= 0 : true;
         const arrow = isPositive ? "▲" : "▼";
         const cls = isPositive ? "positive" : "negative";
         const sign = isPositive ? "+" : "";
@@ -726,15 +727,22 @@
         const sourceLabel = getIndexSourceLabel(idx);
         const sourceClass = getIndexSourceClass(idx);
 
+        const valueHtml = hasData
+          ? formatIndexValue(idx)
+          : `<span class="indexUnavailable">—</span>`;
+        const changeHtml = hasData
+          ? `${arrow} ${sign}${idx.change.toFixed(2)} (${sign}${idx.changePercent.toFixed(2)}%)`
+          : `<span class="indexUnavailable">Unavailable</span>`;
+
         return `
           <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(idx.name)} news">
             <div class="indexTopRow">
               <div class="indexName">${escapeHtml(idx.name)}</div>
               <span class="indexSession ${session.tone}">${session.label}</span>
             </div>
-            <div class="indexValue">${formatIndexValue(idx)}</div>
-            <div class="indexChange ${cls}">
-              ${arrow} ${sign}${idx.change.toFixed(2)} (${sign}${idx.changePercent.toFixed(2)}%)
+            <div class="indexValue">${valueHtml}</div>
+            <div class="indexChange ${hasData ? cls : ""}">
+              ${changeHtml}
             </div>
             <div class="indexSourceTag ${sourceClass}">${escapeHtml(sourceLabel)}</div>
           </div>

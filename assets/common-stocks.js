@@ -16,12 +16,10 @@
 
     try{
       const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
-      if(STOCK_API_KEYS.finnhub){
-        const result = await fetchStockPriceFromFinnhub(baseSymbol);
-        if(result){
-          setCached(cacheKey, result);
-          return result;
-        }
+      const result = await fetchStockPriceFromFinnhub(baseSymbol);
+      if(result){
+        setCached(cacheKey, result);
+        return result;
       }
       if(STOCK_API_KEYS.alphaVantage){
         const result = await fetchStockPriceFromAlphaVantage(baseSymbol);
@@ -72,15 +70,13 @@
     if(cached) return { data: cached, error: null, source: "cache" };
 
     let finnhubError = "";
-    if(STOCK_API_KEYS.finnhub){
+    {
       const res = await fetchStockCandlesFromFinnhub(baseSymbol, resolution, from, to);
       if(res.data){
         setCached(cacheKey, res.data);
         return { data: res.data, error: null, source: "finnhub" };
       }
       finnhubError = res.error || "Finnhub: no data";
-    } else {
-      finnhubError = "Finnhub key not configured";
     }
 
     const tdRes = await fetchStockCandlesFromTwelveData(baseSymbol, resolution, days);
@@ -262,7 +258,7 @@
       return { data: null, error: "Finnhub skipped for unsupported fund symbol" };
     }
     try{
-      const url = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${resolution}&from=${from}&to=${to}&token=${STOCK_API_KEYS.finnhub}`;
+      const url = `/v1/stocks/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
       const res = await fetch(url, { cache: "no-store" });
       if(!res.ok){
         if(res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
@@ -287,12 +283,9 @@
 
   async function fetchStockCandlesFromTwelveData(symbol, resolution, days){
     try{
-      const apiKey = STOCK_API_KEYS.twelvedata || "";
-      if(!apiKey) return { data: null, error: "Twelve Data key not configured" };
-
       const interval = Number(resolution) >= 60 ? `${Math.round(Number(resolution) / 60)}h` : `${resolution}min`;
       const outputSize = Math.max(24, Math.min(240, Math.round(days * 24 * 60 / Math.max(1, Number(resolution)))));
-      const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputSize}&apikey=${apiKey}`;
+      const url = `/v1/stocks/ts?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputSize)}`;
       const res = await fetch(url, { cache: "no-store" });
       if(!res.ok){
         return { data: null, error: `Twelve Data error (${res.status})` };
@@ -328,7 +321,7 @@
       return null;
     }
     try{
-      const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${STOCK_API_KEYS.finnhub}`;
+      const url = `/v1/stocks/quote?symbol=${encodeURIComponent(symbol)}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(url, { cache: "no-store", signal: controller.signal });

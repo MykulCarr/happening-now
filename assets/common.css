@@ -105,10 +105,9 @@ body{
 
 /* Light theme: topbar internal separators */
 [data-theme="light"] .hn-brand,
-[data-theme="light"] .hn-nav-section,
 [data-theme="light"] .hn-time-section,
 [data-theme="light"] .hn-host-search{
-  border-right-color: rgba(0,0,0,.12);
+  border-color: rgba(0,0,0,.12);
 }
 
 /* Light theme: card hover border */
@@ -863,9 +862,8 @@ header#topbar .pageHeadActions{
   background:rgba(13,21,33,0.92);
   border-bottom:1px solid var(--border);
   transition:background-color 0.2s ease;
-  padding:0 0 0 var(--site-h-margin);
+  padding:0 var(--site-h-margin);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  --hn-separator-pad: 14px;
 }
 
 [data-theme="light"] .hn-topbar{
@@ -874,7 +872,7 @@ header#topbar .pageHeadActions{
 .hn-topbar .hn-inner{
   max-width:none;
   margin:0;
-  width:calc(100% - var(--site-h-margin));
+  width:100%;
   padding:6px 0;
   display:flex;
   align-items:center;
@@ -900,14 +898,17 @@ header#topbar .pageHeadActions{
   background:rgba(255,255,255,0.08);
 }
 .hn-nav-link.active{
-  color:#a78bfa;
+  color:var(--accentHover);
   font-weight:800;
   text-decoration:underline;
-  text-decoration-color:#a78bfa;
+  text-decoration-color:var(--accent);
   text-decoration-thickness:2px;
   text-underline-offset:3px;
-  background:rgba(139,92,246,0.25);
+  background:rgba(var(--accent-rgb, 139,92,246),0.20);
   padding:4px 8px;
+}
+[data-theme="light"] .hn-nav-link.active{
+  background:rgba(91,33,182,0.12);
 }
 .hn-settings-link{
   text-decoration:none;
@@ -1016,22 +1017,21 @@ header#topbar .pageHeadActions{
   text-align:left;
 }
 
-.hn-host-search{ display:flex; }
-
 /* Ensure topbar styles are compact and do not affect other header styles */
 header#topbar{ padding:0; width:100%; min-height:78px; }
 
 /* Topbar search */
 .hn-rowTop{ 
-  display:flex; 
-  align-items:center; 
-  gap:0; 
-  padding:4px 0; 
+  display:flex;
+  align-items:center;
+  gap:0;
+  padding:4px 0;
   width:100%;
+  position:relative;
   justify-content:flex-start;
   min-width:0;
 }
-.hn-brand{ 
+.hn-brand{
   display:flex;
   align-items:center;
   gap:8px;
@@ -1039,23 +1039,22 @@ header#topbar{ padding:0; width:100%; min-height:78px; }
   min-width:0;
   text-decoration:none;
   color:inherit;
-  padding:0 var(--hn-separator-pad);
+  padding:0 20px 0 0;
   border-right:1px solid rgba(255,255,255,0.15);
 }
 .hn-nav-section{
   display:flex;
-  gap:2px;
+  gap:4px;
   align-items:center;
   flex:0 0 auto;
   min-width:0;
-  padding:0 var(--hn-separator-pad);
-  border-right:1px solid rgba(255,255,255,0.15);
+  padding:0 20px;
 }
 .hn-nav-section .hn-nav-link{
   color:var(--muted);
   text-decoration:none;
   font-weight:700;
-  padding:2px 3px;
+  padding:2px 7px;
   font-size:13px;
   transition:color 0.15s ease, background-color 0.15s ease;
   border-radius:4px;
@@ -1066,14 +1065,16 @@ header#topbar{ padding:0; width:100%; min-height:78px; }
   font-size:22.75px;
   line-height:1;
 }
-.hn-time-section{ 
-  display:flex; 
-  align-items:center; 
-  gap:12px; 
+.hn-time-section{
+  display:flex;
+  align-items:center;
+  gap:12px;
   flex:0 0 auto;
   min-width:0;
-  padding:0 var(--hn-separator-pad);
-  border-right:1px solid rgba(255,255,255,0.15);
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  padding:0 16px;
 }
 .hn-time-display{ 
   display:flex; 
@@ -1092,22 +1093,16 @@ header#topbar{ padding:0; width:100%; min-height:78px; }
   font-size:12px; 
   color:var(--muted); 
 }
-.hn-host-search{ 
-  display:flex;
-  flex:1 1 320px;
-  width:auto;
-  min-width:180px;
-  max-width:360px;
-  padding:0 var(--hn-separator-pad);
-  border-right:1px solid rgba(255,255,255,0.15);
+.hn-host-search{
+  display:none;
 }
-.hn-host-weather{ 
+.hn-host-weather{
   display:flex;
-  flex:0 1 360px;
-  width:100%;
-  min-width:230px;
-  max-width:360px;
-  padding:0 0 0 var(--hn-separator-pad);
+  flex:0 1 340px;
+  min-width:200px;
+  max-width:340px;
+  padding:0 0 0 16px;
+  margin-left:auto;
 }
 .hn-rowSearch{ display:none }
 .hn-search{ display:flex; align-items:center; gap:8px; width:100%; }
@@ -1413,9 +1408,9 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   }
   
   /* Time display: vertical on mobile with date below */
-  .hn-time-section{ 
-    display:flex; 
-    align-items:center; 
+  .hn-time-section{
+    display:flex;
+    align-items:center;
     justify-content:center;
     gap:0;
     flex-direction:column;
@@ -1424,6 +1419,8 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
     border-right:none;
     flex:0 0 auto;
     min-width:0;
+    position:static;
+    transform:none;
     margin:0 auto 0 8px;
   }
   .hn-time-display{ 
@@ -2282,7 +2279,7 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   gap:14px;
   width:max-content;
   will-change:transform;
-  animation:criticalTickerScroll 32s linear infinite;
+  animation:criticalTickerScroll 60s linear infinite;
   animation-delay: 1s;
 }
 

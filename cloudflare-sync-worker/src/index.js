@@ -289,6 +289,92 @@ async function fetchRssThroughProxy(request, env, url) {
   });
 }
 
+async function fetchStockQuote(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
+  }
+  const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+  if (!symbol) {
+    return jsonResponse({ ok: false, error: "Missing symbol parameter" }, 400, request, env);
+  }
+  const key = String(env.FINNHUB_KEY || "").trim();
+  if (!key) {
+    return jsonResponse({ ok: false, error: "Stock quotes not configured" }, 503, request, env);
+  }
+  try {
+    const upstream = await fetch(
+      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`,
+      { cf: { cacheEverything: true, cacheTtl: 60 } }
+    );
+    const data = await upstream.json();
+    return new Response(JSON.stringify(data), {
+      status: upstream.ok ? 200 : upstream.status,
+      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=60", ...getCorsHeaders(request, env) },
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Failed to fetch stock quote" }, 502, request, env);
+  }
+}
+
+async function fetchStockCandle(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
+  }
+  const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+  const resolution = String(url.searchParams.get("resolution") || "D").trim();
+  const from = String(url.searchParams.get("from") || "").trim();
+  const to = String(url.searchParams.get("to") || "").trim();
+  if (!symbol || !from || !to) {
+    return jsonResponse({ ok: false, error: "Missing required parameters: symbol, from, to" }, 400, request, env);
+  }
+  const key = String(env.FINNHUB_KEY || "").trim();
+  if (!key) {
+    return jsonResponse({ ok: false, error: "Stock candles not configured" }, 503, request, env);
+  }
+  try {
+    const upstream = await fetch(
+      `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${key}`,
+      { cf: { cacheEverything: true, cacheTtl: 300 } }
+    );
+    const data = await upstream.json();
+    return new Response(JSON.stringify(data), {
+      status: upstream.ok ? 200 : upstream.status,
+      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300", ...getCorsHeaders(request, env) },
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Failed to fetch stock candles" }, 502, request, env);
+  }
+}
+
+async function fetchStockTimeSeries(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
+  }
+  const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+  const interval = String(url.searchParams.get("interval") || "1h").trim();
+  const outputsize = String(url.searchParams.get("outputsize") || "24").trim();
+  if (!symbol) {
+    return jsonResponse({ ok: false, error: "Missing symbol parameter" }, 400, request, env);
+  }
+  const key = String(env.TWELVEDATA_KEY || "").trim();
+  if (!key) {
+    return jsonResponse({ ok: false, error: "Time series not configured" }, 503, request, env);
+  }
+  try {
+    const upstream = await fetch(
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputsize)}&apikey=${key}`,
+      { cf: { cacheEverything: true, cacheTtl: 300 } }
+    );
+    const data = await upstream.json();
+    return new Response(JSON.stringify(data), {
+      status: upstream.ok ? 200 : upstream.status,
+      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300", ...getCorsHeaders(request, env) },
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Failed to fetch time series" }, 502, request, env);
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (!isOriginAllowed(request, env)) {
@@ -326,6 +412,18 @@ export default {
 
     if (url.pathname === "/v1/rss/raw") {
       return fetchRssThroughProxy(request, env, url);
+    }
+
+    if (url.pathname === "/v1/stocks/quote") {
+      return fetchStockQuote(request, env, url);
+    }
+
+    if (url.pathname === "/v1/stocks/candle") {
+      return fetchStockCandle(request, env, url);
+    }
+
+    if (url.pathname === "/v1/stocks/ts") {
+      return fetchStockTimeSeries(request, env, url);
     }
 
     const namespace = getNamespaceFromPath(url.pathname);
