@@ -253,33 +253,13 @@
     }
   }
 
-  async function fetchStockCandlesFromFinnhub(symbol, resolution, from, to){
-    if(shouldSkipFinnhubSymbol(symbol)){
-      return { data: null, error: "Finnhub skipped for unsupported fund symbol" };
-    }
-    if(!STOCK_API_KEYS.finnhub) return { data: null, error: "Finnhub: no API key" };
-    try{
-      const url = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${STOCK_API_KEYS.finnhub}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok){
-        if(res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
-        if(res.status === 403) return { data: null, error: "Finnhub forbidden (403)" };
-        if(res.status === 429) return { data: null, error: "Finnhub rate limit (429)" };
-        return { data: null, error: `Finnhub error (${res.status})` };
-      }
-
-      const data = await res.json();
-      if(data.s !== "ok" || !Array.isArray(data.c) || data.c.length < 2){
-        return { data: null, error: `Finnhub ${data.s || "no_data"}` };
-      }
-
-      const maxPoints = 60;
-      const step = Math.max(1, Math.floor(data.c.length / maxPoints));
-      const compact = data.c.filter((_, i) => i % step === 0);
-      return { data: compact, error: null };
-    }catch(err){
-      return { data: null, error: `Finnhub fetch error (${err?.message || "unknown"})` };
-    }
+  // Finnhub deprecated /stock/candle for free plans in 2024 — every request now
+  // returns 403 (Forbidden), which the browser logs as a red error before our code
+  // can even read the status. Returning early keeps the function/exports intact while
+  // routing all candle traffic to the working fallbacks (TwelveData, Yahoo v8 chart,
+  // Stooq) inside fetchStockCandles.
+  async function fetchStockCandlesFromFinnhub(_symbol, _resolution, _from, _to){
+    return { data: null, error: "Finnhub candles disabled (free plan limitation)" };
   }
 
   async function fetchStockCandlesFromTwelveData(symbol, resolution, days){
@@ -770,37 +750,13 @@
     }
   }
 
-  async function fetchYahooBatchQuotes(symbols){
-    if(!Array.isArray(symbols) || symbols.length === 0) return null;
-    try{
-      const symStr = symbols.join(",");
-      const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symStr)}`;
-      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return null;
-      const data = await res.json();
-      const quotes = data?.quoteResponse?.result;
-      if(!Array.isArray(quotes) || quotes.length === 0) return null;
-      const map = {};
-      for(const q of quotes){
-        const sym = q.symbol;
-        const price = Number(q.regularMarketPrice);
-        if(!sym || !Number.isFinite(price) || price <= 0) continue;
-        map[sym] = {
-          symbol: sym,
-          price,
-          change: Number.isFinite(Number(q.regularMarketChange)) ? Number(q.regularMarketChange) : 0,
-          changePercent: Number.isFinite(Number(q.regularMarketChangePercent)) ? Number(q.regularMarketChangePercent) : 0,
-          previousClose: Number.isFinite(Number(q.regularMarketPreviousClose)) ? Number(q.regularMarketPreviousClose) : null,
-          high: Number.isFinite(Number(q.regularMarketDayHigh)) ? Number(q.regularMarketDayHigh) : null,
-          low: Number.isFinite(Number(q.regularMarketDayLow)) ? Number(q.regularMarketDayLow) : null,
-          timestamp: new Date().toISOString()
-        };
-      }
-      return Object.keys(map).length > 0 ? map : null;
-    }catch{
-      return null;
-    }
+  // Yahoo's v7 /finance/quote batch endpoint requires authenticated crumb+cookie since
+  // late 2024; anonymous (and proxied) requests return 401/502. Callers already wrap
+  // this in `.catch(() => null)` and fall through to per-symbol fetches via
+  // fetchStockPriceFromYahooChart (v8 chart endpoint, still public). Returning null
+  // immediately avoids the failed network round-trip and the resulting console noise.
+  async function fetchYahooBatchQuotes(_symbols){
+    return null;
   }
 
   Object.assign(App, {

@@ -1197,6 +1197,13 @@
       if (newsMode === "watchlist") {
         const watchlist = Array.isArray(cfg.stocks) ? cfg.stocks.slice(0, WATCHLIST_NEWS_SYMBOL_LIMIT) : [];
         const tasks = watchlist.map(async (stock) => {
+          // Mutual-fund tickers (e.g. FNIPX, VSMPX, TLYIX) almost never have Google
+          // News results. Both proxies just time out, producing console noise with
+          // zero user-visible benefit. Same heuristic as common-stocks.js's
+          // shouldSkipFinnhubSymbol: ≥5 chars ending in X.
+          if(isFundLikeSymbol(stock.symbol)){
+            return [];
+          }
           const query = googleNewsRssQueryForSymbol(stock.symbol, stock.label);
           const items = await withTimeout(
             fetchRssItems(query, 3, true),
@@ -1317,6 +1324,13 @@
   function googleNewsRssQueryForSymbol(symbol, label) {
     const q = encodeURIComponent(`${label} ${symbol} stock when:2d`);
     return `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`;
+  }
+
+  function isFundLikeSymbol(symbol){
+    const normalized = String(symbol || "").trim().toUpperCase();
+    if(!normalized) return false;
+    const base = normalized.includes(":") ? normalized.split(":").pop() : normalized;
+    return base.length >= 5 && base.endsWith("X");
   }
 
   function extractDomain(url) {

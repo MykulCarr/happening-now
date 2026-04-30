@@ -1217,7 +1217,11 @@
         }
       }
 
-      handleError(new Error("All RSS fetch attempts failed"), "RSS Fetch");
+      // Empty result is the documented fallback (callers handle [] gracefully and
+      // render "no news"). Use console.debug so it stays accessible at Verbose level
+      // without polluting the default console — most "all attempts failed" cases are
+      // expected (no news for obscure tickers), not failures worth surfacing.
+      console.debug(`[RSS Fetch] No items for ${rssUrl} after all proxy fallbacks`);
       return [];
     })();
 
