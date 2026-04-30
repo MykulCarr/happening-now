@@ -77,6 +77,30 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+  <script>
+    // Reserve approximate news-grid height before first paint to prevent CLS.
+    // news.js builds N cards each containing M rows of skeleton (height 88px in
+    // styles.css) + padding/header. Match here so the grid doesn't grow when
+    // cards mount. Number of widgets read from user config, fallback to default 9.
+    (function reserveNewsGridHeight(){
+      try {
+        const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
+        const widgets = Array.isArray(cfg.widgets) ? cfg.widgets : null;
+        const count = widgets ? widgets.length : 9;
+        if (count <= 0) return;
+        const w = window.innerWidth || 1024;
+        const cols = w < 720 ? 1 : (w < 1200 ? 2 : 3);
+        const rows = Math.ceil(count / cols);
+        const headlinesAvg = widgets
+          ? Math.round(widgets.reduce((s, x) => s + (x.headlinesCount || 5), 0) / count) || 5
+          : 5;
+        // Per card: header ~50, padding ~32, headlines * (88 skeleton + 10 gap) - one gap
+        const cardHeight = 50 + 32 + headlinesAvg * 88 + Math.max(0, headlinesAvg - 1) * 10;
+        const total = rows * cardHeight + Math.max(0, rows - 1) * 16;
+        document.documentElement.style.setProperty("--newsGridReserve", total + "px");
+      } catch {}
+    })();
+  </script>
 </head>
 <body>
   <header id="topbar"></header>

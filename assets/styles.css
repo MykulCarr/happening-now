@@ -1937,9 +1937,12 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   align-items:center;
 }
 
-/* Stabilize widget heights while async data is loading to reduce layout shifts. */
+/* Stabilize widget heights while async data is loading to reduce layout shifts.
+   --newsGridReserve is set by the inline script in index.html based on user's
+   widget count and viewport width; falls back to a conservative default that
+   covers most users until JS runs. */
 #newsGrid{
-  min-height:420px;
+  min-height:var(--newsGridReserve, 1700px);
 }
 
 #weatherCurrent{

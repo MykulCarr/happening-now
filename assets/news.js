@@ -503,7 +503,10 @@ function restoreNewsFromCache(){
     container.href = item.url;
     container.target = "_blank";
     container.rel = "noopener noreferrer";
-    container.setAttribute("aria-label", `Read article: ${item.title}`);
+    // No aria-label — the accessible name is the link's text content
+    // (date + title + description), which already includes the article title.
+    // axe's label-content-name-mismatch rule fails when aria-label omits any
+    // visible substring (e.g. the date), so let the natural name win.
     
     // Publication date
     const dateDiv = document.createElement("div");

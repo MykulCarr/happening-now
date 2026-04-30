@@ -55,7 +55,9 @@
         </div>
       </div>
     `;
-    weatherWidget.setAttribute("aria-label", "Current weather conditions");
+    // No aria-label — accessible name comes from visible text inside
+    // (.weatherWidgetTemp, .weatherWidgetRange, .weatherDetail*) so axe's
+    // label-content-name-mismatch rule passes regardless of weather state.
     weatherWidget.addEventListener("click", () => {
       window.location.href = "weather.html";
     });
@@ -202,13 +204,7 @@
       else if(weatherData.temp > 50) tempClass = "tempMild";
     }
     widget.className = `infoBarWidget weatherWidget ${tempClass}`;
-    
-    // aria-label must start with the visible text (temp, H/L) so axe's
-    // label-content-name-mismatch rule passes. Extra detail follows.
-    widget.setAttribute(
-      "aria-label",
-      `${temp}, H: ${hi}° L: ${lo}°. Feels like ${feels}. Wind ${wind}${windGust}. Humidity ${humidity}.`
-    );
+    // No aria-label — see createTopbarWidgets; visible text is the name.
   }
 
   function updateTime(){
