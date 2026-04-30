@@ -48,4 +48,19 @@ if (Test-Path $stagedSw) {
   (Get-Content -Path $stagedSw -Raw).Replace("__BUILD_ID__", $buildId) | Set-Content -Path $stagedSw -Encoding UTF8
 }
 
+# Minify JS/CSS in the staged bundle (sources stay readable; only deploy is minified).
+# Requires devDependency esbuild — installed via `npm install` in repo root.
+$minifyScript = Join-Path $PSScriptRoot "minify-deploy.mjs"
+if (Test-Path $minifyScript) {
+  $nodeModulesEsbuild = Join-Path $repoRoot "node_modules/esbuild"
+  if (Test-Path $nodeModulesEsbuild) {
+    & node $minifyScript
+    if ($LASTEXITCODE -ne 0) {
+      throw "Minification failed (exit $LASTEXITCODE). Inspect output above."
+    }
+  } else {
+    Write-Warning "Skipping minify: node_modules/esbuild not found. Run 'npm install' in repo root."
+  }
+}
+
 Write-Host "Staged deploy bundle at $target"

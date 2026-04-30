@@ -1,0 +1,12 @@
+{
+  "name": "happening-now",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Personal dashboard at happening-now.net. No build for source; esbuild only used by stage-public-assets.ps1 to minify the deploy bundle.",
+  "scripts": {
+    "minify": "node scripts/minify-deploy.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

@@ -203,8 +203,12 @@
     }
     widget.className = `infoBarWidget weatherWidget ${tempClass}`;
     
-    const fullDesc = `Current: ${temp}, H: ${hi}° L: ${lo}°, Feels: ${feels}, Wind: ${wind}${windGust}, Humidity: ${humidity}`;
-    widget.setAttribute("aria-label", `Weather: ${fullDesc}`);
+    // aria-label must start with the visible text (temp, H/L) so axe's
+    // label-content-name-mismatch rule passes. Extra detail follows.
+    widget.setAttribute(
+      "aria-label",
+      `${temp}, H: ${hi}° L: ${lo}°. Feels like ${feels}. Wind ${wind}${windGust}. Humidity ${humidity}.`
+    );
   }
 
   function updateTime(){

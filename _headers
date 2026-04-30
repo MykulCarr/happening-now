@@ -15,3 +15,10 @@
 
 /manifest.json
   Cache-Control: public, max-age=86400
+
+# Static assets: cache for 1h, then revalidate via ETag. Service worker
+# (network-first) still gets fresh content within 1h via its own logic;
+# new deploys take effect immediately because HTML is uncached and the
+# referenced asset URLs hit Cloudflare's CDN, which is purged on deploy.
+/assets/*
+  Cache-Control: public, max-age=3600, must-revalidate

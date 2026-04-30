@@ -15,6 +15,12 @@
 # Staged public deploy bundle
 .deploy-public/
 
+# Node tooling (esbuild for deploy-time minification)
+node_modules/
+
+# Local analysis scratch (CSS dead-code reports, etc.)
+.claude_tmp/
+
 .dev.vars*
 !.dev.vars.example
 .env*

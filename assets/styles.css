@@ -1859,6 +1859,9 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   position:relative;
   overflow:hidden;
   outline:none;
+  /* Stabilize height so skeleton-to-item swap doesn't shift layout (CLS). */
+  min-height:88px;
+  box-sizing:border-box;
 }
 .rssItem:focus{
   outline:2px solid var(--accent);
@@ -1897,7 +1900,6 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   font-weight:500;
   text-transform:uppercase;
   letter-spacing:0.5px;
-  opacity:0.8;
 }
 .rssItemDesc{
   font-size: calc(13px * var(--font-multiplier, 1));
@@ -2177,7 +2179,8 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   background-size:200% 100%;
   animation:sk 1.5s ease-in-out infinite;
   border-radius:16px;
-  height:48px;
+  /* Match .rssItem min-height so skeleton-to-item swap doesn't shift layout (CLS). */
+  height:88px;
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 

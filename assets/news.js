@@ -411,7 +411,6 @@ function restoreNewsFromCache(){
 
     const list = document.createElement("div");
     list.className = "rssList";
-    list.setAttribute("role", "list");
 
     // Create skeleton loaders
     const skeletonCount = Math.max(3, widget.headlinesCount || 6);
@@ -513,7 +512,6 @@ function restoreNewsFromCache(){
       dateDiv.textContent = item.pubDate;
     } else {
       dateDiv.textContent = "Date unavailable";
-      dateDiv.style.opacity = "0.6";
     }
     
     // Article title
@@ -528,7 +526,6 @@ function restoreNewsFromCache(){
       descDiv.textContent = item.desc;
     } else {
       descDiv.textContent = "No description available";
-      descDiv.style.opacity = "0.6";
     }
     
     container.appendChild(dateDiv);

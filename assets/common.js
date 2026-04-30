@@ -633,7 +633,10 @@
   function faviconUrl(site){
     try{
       const u = new URL(site);
-      return `${u.protocol}//${u.hostname}/favicon.ico`;
+      // Google's favicon service: 32x32 PNG, cached/optimized, gracefully
+      // returns a generic globe icon for sites without a favicon. Avoids
+      // 404s and the 5-22 KB per-source /favicon.ico downloads PSI flags.
+      return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
     }catch{
       return "";
     }
