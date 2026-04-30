@@ -41,6 +41,26 @@ foreach ($dir in $publicDirs) {
   }
 }
 
+# Inject the static topbar HTML into every .html so the topbar paints with
+# its full structure on first paint, eliminating the brief flash that occurs
+# when topbar.js builds it post-load. topbar.js detects the existing markup
+# and skips the build, only attaching handlers + applying user pageVisibility.
+$topbarTemplate = Join-Path $PSScriptRoot "topbar-template.html"
+if (Test-Path $topbarTemplate) {
+  $topbarHtml = Get-Content -Path $topbarTemplate -Raw
+  $needle = '<header id="topbar"></header>'
+  $replacement = '<header id="topbar" class="hn-topbar">' + $topbarHtml + '</header>'
+  foreach ($file in $publicFiles) {
+    if (-not $file.EndsWith(".html")) { continue }
+    $stagedHtml = Join-Path $target $file
+    if (-not (Test-Path $stagedHtml)) { continue }
+    $content = Get-Content -Path $stagedHtml -Raw
+    if ($content.Contains($needle)) {
+      $content.Replace($needle, $replacement) | Set-Content -Path $stagedHtml -Encoding UTF8 -NoNewline
+    }
+  }
+}
+
 # Force a fresh service worker version on every deploy to avoid stale asset caches.
 $buildId = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmss")
 $stagedSw = Join-Path $target "sw.js"

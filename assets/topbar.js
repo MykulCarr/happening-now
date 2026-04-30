@@ -6,67 +6,69 @@
 
   // Get config for page visibility
   const cfg = window.App?.cfg || {};
-  
+
   // Apply theme, density, and font size on page load
   if (window.App?.applyThemeDensity) {
     window.App.applyThemeDensity(cfg);
   }
-  
+
   const pageVis = cfg.pageVisibility || { news: true, weather: true, stocks: true, astrolab: true };
 
-  // Build navigation links for mobile menu only
-  const navParts = [];
-  if (pageVis.news !== false) navParts.push('<a href="index.html" class="hn-nav-link">NEWS</a>');
-  if (pageVis.weather !== false) navParts.push('<a href="weather.html" class="hn-nav-link">WEATHER</a>');
-  if (pageVis.stocks !== false) navParts.push('<a href="stocks.html" class="hn-nav-link">STOCKS</a>');
-  if (pageVis.astrolab !== false) navParts.push('<a href="AstroLab.html" class="hn-nav-link">ASTROLAB</a>');
-  navParts.push('<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>');
-  const mobileNavHtml = navParts.join('');
-
-  // Create structure
+  // The deploy bundle injects the static topbar HTML into <header id="topbar">
+  // (see scripts/stage-public-assets.ps1 + scripts/topbar-template.html) so the
+  // topbar paints in its final form on first navigation, eliminating the flash
+  // we used to see while this script was still building it post-load.
+  // If the static HTML isn't already present (dev / pre-stage runs), build it.
   mount.classList.add('hn-topbar');
-  mount.innerHTML = `
-    <div class="hn-inner">
-      <div class="hn-rowTop">
-        <button class="hn-hamburger" id="hnMenuToggle" aria-label="Menu" aria-expanded="false">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        
-        <!-- Yellow: Brand/Title -->
-        <a href="index.html" class="hn-brand" id="hnBrand" aria-label="HAPPENING NOW Home">
-          <span class="hn-dot" aria-hidden="true"></span>
-          <span class="hn-title">HAPPENING NOW!</span>
-        </a>
-        
-        <!-- Orange: Nav links -->
-        <div class="hn-nav-section" id="hnNavDesktop">
-          ${mobileNavHtml}
+  if (!mount.querySelector('.hn-inner')) {
+    const navLinkHtml = (key, href, label) =>
+      pageVis[key] !== false
+        ? `<a href="${href}" class="hn-nav-link" data-nav-key="${key}">${label}</a>`
+        : '';
+    const navHtml =
+      navLinkHtml('news', 'index.html', 'NEWS') +
+      navLinkHtml('weather', 'weather.html', 'WEATHER') +
+      navLinkHtml('stocks', 'stocks.html', 'STOCKS') +
+      navLinkHtml('astrolab', 'AstroLab.html', 'ASTROLAB') +
+      '<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>';
+    mount.innerHTML = `
+      <div class="hn-inner">
+        <div class="hn-rowTop">
+          <button class="hn-hamburger" id="hnMenuToggle" aria-label="Menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <a href="index.html" class="hn-brand" id="hnBrand" aria-label="HAPPENING NOW Home">
+            <span class="hn-dot" aria-hidden="true"></span>
+            <span class="hn-title">HAPPENING NOW!</span>
+          </a>
+          <div class="hn-nav-section" id="hnNavDesktop">${navHtml}</div>
+          <div class="hn-time-section" id="hnTimeSection" aria-live="polite"></div>
+          <div class="hn-host-search" id="hnSearchHost"></div>
+          <div class="hn-host-weather" id="hnWeatherHost"></div>
+          <div class="hn-actions" id="hnActions">
+            <div class="hn-slot" id="hnSlot1"></div>
+            <div class="hn-slot" id="hnSlot2"></div>
+          </div>
         </div>
-        
-        <!-- Light Blue: Time/Date -->
-        <div class="hn-time-section" id="hnTimeSection" aria-live="polite"></div>
-        
-        <!-- Green: Search -->
-        <div class="hn-host-search" id="hnSearchHost"></div>
-        
-        <!-- Purple: Weather -->
-        <div class="hn-host-weather" id="hnWeatherHost"></div>
-        
-        <div class="hn-actions" id="hnActions">
-          <div class="hn-slot" id="hnSlot1"></div>
-          <div class="hn-slot" id="hnSlot2"></div>
-        </div>
+        <nav class="hn-mobile-menu" id="hnMobileMenu" aria-hidden="true">
+          <div class="hn-mobile-nav" id="hnNavMobile">${navHtml}</div>
+        </nav>
       </div>
-      <nav class="hn-mobile-menu" id="hnMobileMenu" aria-hidden="true">
-        <div class="hn-mobile-nav" id="hnNavMobile">
-          ${mobileNavHtml}
-        </div>
-      </nav>
-      
-    </div>
-  `;
+    `;
+  } else {
+    // Static topbar already present — hide any nav links the user has disabled
+    // via cfg.pageVisibility. (When we built the markup ourselves above, we
+    // emitted only the visible links, so this only runs on the staged path.)
+    for (const key of ['news', 'weather', 'stocks', 'astrolab']) {
+      if (pageVis[key] === false) {
+        mount.querySelectorAll(`.hn-nav-link[data-nav-key="${key}"]`).forEach(a => {
+          a.style.display = 'none';
+        });
+      }
+    }
+  }
 
   const root = mount;
 
