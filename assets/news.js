@@ -79,12 +79,14 @@
     let resumeTimer = 0;
 
     function measure(resetPosition = false){
-      cycleWidth = firstGroup.getBoundingClientRect().width + gap;
+      // offsetWidth (integer) avoids sub-pixel drift that makes the cycle wrap
+      // look jumpy when offsetPx wraps from cycleWidth back to 0.
+      cycleWidth = firstGroup.offsetWidth + gap;
       if(resetPosition && cycleWidth > 0){ offsetPx = 0; applyTrackTransform(); }
     }
 
     function applyTrackTransform(){
-      track.style.transform = `translate3d(${-offsetPx}px, 0, 0)`;
+      track.style.transform = `translate3d(${-Math.round(offsetPx)}px, 0, 0)`;
     }
 
     function normalizeScroll(){

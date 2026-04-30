@@ -87,6 +87,9 @@ header#topbar {
 *{box-sizing:border-box}
 html{
   scroll-behavior:smooth;
+  /* Match body's base color so any space below body content (overscroll,
+     short pages) shows the theme color instead of the browser default. */
+  background:var(--bg);
 }
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {

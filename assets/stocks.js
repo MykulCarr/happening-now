@@ -303,7 +303,10 @@
     let resumeTimer = 0;
 
     function measure(resetPosition = false){
-      cycleWidth = firstGroup.getBoundingClientRect().width + gap;
+      // Use offsetWidth (layout integer) instead of getBoundingClientRect (sub-pixel)
+      // because the loop wrap subtracts cycleWidth from offsetPx — any sub-pixel
+      // drift between measured-width and actual-stride shows as a visible jump.
+      cycleWidth = firstGroup.offsetWidth + gap;
       container.style.setProperty("--ticker-distance", `${cycleWidth}px`);
       container.style.setProperty("--ticker-duration", `${Math.max(120, cycleWidth / speedPxPerSecond)}s`);
       if(resetPosition && cycleWidth > 0){
@@ -313,7 +316,9 @@
     }
 
     function applyTrackTransform(){
-      track.style.transform = `translate3d(${-offsetPx}px, 0, 0)`;
+      // Round the translate to avoid sub-pixel rendering differences across
+      // animation frames that can make the wrap look jittery.
+      track.style.transform = `translate3d(${-Math.round(offsetPx)}px, 0, 0)`;
     }
 
     function normalizeScroll(){
