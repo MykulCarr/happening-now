@@ -2514,12 +2514,10 @@
           console.warn('[SW] Service Worker registration failed:', error);
         });
 
-      // Reload once when a newly installed service worker takes control.
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (window.__hnSwReloaded) return;
-        window.__hnSwReloaded = true;
-        window.location.reload();
-      });
+      // Don't force a reload when a new SW takes over — that caused a visible
+      // freeze/blink on every deploy and Lighthouse measured it as a 4-5s
+      // "redirect" to the same URL, tanking the LCP score. The new SW will
+      // serve fresh assets on the user's next natural navigation.
     });
   }
 })();

@@ -6,7 +6,12 @@
     "enabled": true
   },
   "assets": {
-    "directory": ".deploy-public"
+    "directory": ".deploy-public",
+    // Don't auto-redirect /foo.html -> /foo. The site's nav links all use
+    // .html and the redirect was costing every click an extra round-trip
+    // (and PSI was flagging it as wasted ms). With "none", .html URLs are
+    // served as-is.
+    "html_handling": "none"
   },
   "compatibility_flags": [
     "nodejs_compat"
