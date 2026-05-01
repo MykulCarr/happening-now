@@ -10,6 +10,31 @@
   let timeInterval = null;
   let weatherInterval = null;
 
+  // Persist the last successful topbar weather snapshot so a slow / failed
+  // fetch on the next page load doesn't fall back to "--°". As long as the
+  // saved data is fresh enough and matches the user's current ZIP, render
+  // it immediately on load while the live fetch happens in the background.
+  const TOPBAR_WX_KEY = "hn_topbar_weather_v1";
+  const TOPBAR_WX_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+  function loadPersistedWeather(currentZip){
+    try {
+      const raw = localStorage.getItem(TOPBAR_WX_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      if(!obj?.data || typeof obj.savedAt !== "number") return null;
+      if(Date.now() - obj.savedAt > TOPBAR_WX_MAX_AGE_MS) return null;
+      if(currentZip && obj.zip && obj.zip !== currentZip) return null;
+      return obj;
+    } catch { return null; }
+  }
+
+  function persistWeather(zip, data){
+    try {
+      localStorage.setItem(TOPBAR_WX_KEY, JSON.stringify({ zip, data, savedAt: Date.now() }));
+    } catch {}
+  }
+
   function createTopbarWidgets(){
 
     // Time display for topbar header (time + date inline)
@@ -83,16 +108,34 @@
   }
 
   async function loadWeather(){
+    // Always read fresh config so location changes are picked up immediately
+    const liveCfg = window.App?.cfg || loadConfig();
+    const zip = liveCfg.zipCode;
+
+    // Render last-known weather immediately so the widget never starts at "--°"
+    // on a slow/failed fetch. Only do this if the persisted ZIP still matches
+    // (so a ZIP change doesn't briefly show old-location weather).
+    const persisted = loadPersistedWeather(zip);
+    if(persisted?.data){
+      updateWeatherDisplay(persisted.data);
+    }
+
     try{
-      // Always read fresh config so location changes are picked up immediately
-      const liveCfg = window.App?.cfg || loadConfig();
-      const zip = liveCfg.zipCode;
       if(!zip || !/^\d{5}$/.test(zip)){
-        updateWeatherDisplay({});
+        if(!persisted) updateWeatherDisplay({});
         return;
       }
-      const geo = await geocodeZip(zip);
-      
+
+      let geo;
+      try {
+        geo = await geocodeZip(zip);
+      } catch(e) {
+        console.error("Failed to geocode ZIP:", e);
+        // Keep persisted data on screen rather than flashing to error.
+        if(!persisted) updateWeatherDisplay(true);
+        return;
+      }
+
       // Fetch both current and daily weather data
       const weatherData = {};
       try {
@@ -101,7 +144,7 @@
       } catch(e) {
         console.error("Error fetching current weather:", e);
       }
-      
+
       // Fetch daily high/low
       try {
         const dailyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit`;
@@ -114,10 +157,11 @@
       } catch(e) {
         console.error("Error fetching daily weather:", e);
       }
-      
+
       if(weatherData.temp !== undefined){
         Object.assign(weatherData, { location: `${geo.city}, ${geo.state}` });
         updateWeatherDisplay(weatherData);
+        persistWeather(zip, weatherData);
 
         // If the center search exists in the infoBar, wire its form
         const searchForm = document.getElementById('hnSearchForm');
@@ -132,11 +176,13 @@
           });
         }
       }else{
-        updateWeatherDisplay({})
+        // Live fetch produced nothing usable. Keep the persisted snapshot
+        // visible if we have one; only fall back to "--°" otherwise.
+        if(!persisted) updateWeatherDisplay({});
       }
     }catch(error){
       console.error("Failed to load weather:", error);
-      updateWeatherDisplay(true);
+      if(!persisted) updateWeatherDisplay(true);
     }
   }
 
