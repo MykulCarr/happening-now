@@ -1270,9 +1270,10 @@
     }
 
     list.forEach(a => {
-      const div = document.createElement("div");
-      div.className = "chip";
-      div.innerHTML = `
+      // NWS provides a public web URL on most alerts; fall back to the API URL
+      // (returns JSON, but at least uniquely identifies the alert).
+      const href = a.webUrl || a.apiUrl || "";
+      const inner = `
         <div><b>${escapeHtml(a.title || "Alert")}</b></div>
         <small>
           ${escapeHtml(a.severity || "")}
@@ -1281,7 +1282,20 @@
         </small>
         ${a.desc ? `<small>${escapeHtml(a.desc)}</small>` : ""}
       `;
-      weatherAlerts.appendChild(div);
+      let el;
+      if(href){
+        el = document.createElement("a");
+        el.className = "chip alertChip";
+        el.href = href;
+        el.target = "_blank";
+        el.rel = "noopener noreferrer";
+        el.setAttribute("aria-label", `Open alert: ${a.title || "Alert"}`);
+      } else {
+        el = document.createElement("div");
+        el.className = "chip";
+      }
+      el.innerHTML = inner;
+      weatherAlerts.appendChild(el);
     });
   }
 

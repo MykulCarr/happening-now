@@ -1822,6 +1822,18 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   border-color:rgba(255,255,255,.25);
   transform:translateX(2px);
 }
+/* When the chip is rendered as an <a> (clickable alert), keep the visual
+   identical to the div form: block layout, inherited color, no underline. */
+a.chip{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+  cursor:pointer;
+}
+a.chip:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 .chip small{
   display:block;
   margin-top:6px;
