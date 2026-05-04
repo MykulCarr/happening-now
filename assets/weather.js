@@ -575,7 +575,11 @@
       ends: f.properties?.ends || "",
       area: (f.properties?.areaDesc || "").slice(0, 140),
       desc: (f.properties?.description || "").slice(0, 320),
-      apiUrl: f.properties?.id || f.id || "",
+      // Full text retained for the inline-expanded view in renderAlerts.
+      fullDesc: f.properties?.description || "",
+      instruction: f.properties?.instruction || "",
+      sender: f.properties?.senderName || "",
+      apiUrl: f.id || f.properties?.id || "",
       webUrl: f.properties?.web || ""
     }));
   }
@@ -663,7 +667,10 @@
       ends: f.properties?.ends || "",
       area: (f.properties?.areaDesc || "").slice(0, 140),
       desc: (f.properties?.description || "").slice(0, 320),
-      apiUrl: f.properties?.id || f.id || "",
+      fullDesc: f.properties?.description || "",
+      instruction: f.properties?.instruction || "",
+      sender: f.properties?.senderName || "",
+      apiUrl: f.id || f.properties?.id || "",
       webUrl: f.properties?.web || ""
     }));
   }
@@ -1270,32 +1277,40 @@
     }
 
     list.forEach(a => {
-      // NWS provides a public web URL on most alerts; fall back to the API URL
-      // (returns JSON, but at least uniquely identifies the alert).
-      const href = a.webUrl || a.apiUrl || "";
-      const inner = `
-        <div><b>${escapeHtml(a.title || "Alert")}</b></div>
+      // Render as <details>/<summary> so click-to-expand is native and shows
+      // the full description + safety instructions inline. NWS doesn't provide
+      // a per-alert web URL (properties.web is always weather.gov's homepage),
+      // and the API URL returns JSON — neither is useful as a navigation target.
+      // Inline expansion keeps the user in the app with all the info that was
+      // already in the API response.
+      const det = document.createElement("details");
+      det.className = "chip alertChip";
+
+      const summary = document.createElement("summary");
+      summary.className = "alertChipSummary";
+      summary.innerHTML = `
+        <div class="alertChipTitle"><b>${escapeHtml(a.title || "Alert")}</b></div>
         <small>
           ${escapeHtml(a.severity || "")}
           ${a.area ? ` • ${escapeHtml(a.area)}` : ""}
           ${a.ends ? ` • Ends ${escapeHtml(a.ends)}` : ""}
         </small>
-        ${a.desc ? `<small>${escapeHtml(a.desc)}</small>` : ""}
       `;
-      let el;
-      if(href){
-        el = document.createElement("a");
-        el.className = "chip alertChip";
-        el.href = href;
-        el.target = "_blank";
-        el.rel = "noopener noreferrer";
-        el.setAttribute("aria-label", `Open alert: ${a.title || "Alert"}`);
-      } else {
-        el = document.createElement("div");
-        el.className = "chip";
+      det.appendChild(summary);
+
+      const body = document.createElement("div");
+      body.className = "alertChipBody";
+      const parts = [];
+      if(a.fullDesc) parts.push(`<p>${escapeHtml(a.fullDesc)}</p>`);
+      if(a.instruction) parts.push(`<p><b>Instructions:</b> ${escapeHtml(a.instruction)}</p>`);
+      if(a.sender) parts.push(`<p class="alertChipMeta">Source: ${escapeHtml(a.sender)}</p>`);
+      if(a.apiUrl){
+        parts.push(`<p class="alertChipMeta"><a href="${escapeHtml(a.apiUrl)}" target="_blank" rel="noopener noreferrer">View raw NWS data &rarr;</a></p>`);
       }
-      el.innerHTML = inner;
-      weatherAlerts.appendChild(el);
+      body.innerHTML = parts.length ? parts.join("") : `<p class="alertChipMeta">No additional details.</p>`;
+      det.appendChild(body);
+
+      weatherAlerts.appendChild(det);
     });
   }
 
