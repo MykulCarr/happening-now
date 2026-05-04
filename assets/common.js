@@ -199,16 +199,19 @@
 
     // Content arrays
   widgets: [
-    // All working RSS feeds - verified and tested
-    { name:"NPR", rss:"https://feeds.npr.org/1001/rss.xml", site:"https://www.npr.org", headlinesCount:5 },
-    { name:"BBC", rss:"https://feeds.bbci.co.uk/news/rss.xml", site:"https://www.bbc.com/news", headlinesCount:5 },
-    { name:"The Guardian (US)", rss:"https://www.theguardian.com/us-news/rss", site:"https://www.theguardian.com/us-news", headlinesCount:5 },
-    { name:"ArsTechnica", rss:"https://feeds.arstechnica.com/arstechnica/index", site:"https://arstechnica.com", headlinesCount:5 },
-    { name:"PBS NewsHour", rss:"https://www.pbs.org/newshour/feeds/rss/headlines", site:"https://www.pbs.org/newshour", headlinesCount:5 },
-    { name:"Al Jazeera", rss:"https://www.aljazeera.com/xml/rss/all.xml", site:"https://www.aljazeera.com", headlinesCount:5 },
-    { name:"Hacker News", rss:"https://news.ycombinator.com/rss", site:"https://news.ycombinator.com", headlinesCount:5 },
-    { name:"Deutsche Welle", rss:"https://rss.dw.com/rdf/rss-en-all", site:"https://www.dw.com", headlinesCount:5 },
-    { name:"Nature", rss:"https://www.nature.com/nature.rss", site:"https://www.nature.com", headlinesCount:5 }
+    // All working RSS feeds - verified and tested.
+    // `scopes` controls which scope tab(s) on the news page show this widget.
+    // Widgets without a `scopes` field are treated as ["national","international"]
+    // by getWidgetsForScope so older saved configs still render.
+    { name:"NPR", rss:"https://feeds.npr.org/1001/rss.xml", site:"https://www.npr.org", headlinesCount:5, scopes:["national"] },
+    { name:"BBC", rss:"https://feeds.bbci.co.uk/news/rss.xml", site:"https://www.bbc.com/news", headlinesCount:5, scopes:["international"] },
+    { name:"The Guardian (US)", rss:"https://www.theguardian.com/us-news/rss", site:"https://www.theguardian.com/us-news", headlinesCount:5, scopes:["national"] },
+    { name:"ArsTechnica", rss:"https://feeds.arstechnica.com/arstechnica/index", site:"https://arstechnica.com", headlinesCount:5, scopes:["national"] },
+    { name:"PBS NewsHour", rss:"https://www.pbs.org/newshour/feeds/rss/headlines", site:"https://www.pbs.org/newshour", headlinesCount:5, scopes:["national"] },
+    { name:"Al Jazeera", rss:"https://www.aljazeera.com/xml/rss/all.xml", site:"https://www.aljazeera.com", headlinesCount:5, scopes:["international"] },
+    { name:"Hacker News", rss:"https://news.ycombinator.com/rss", site:"https://news.ycombinator.com", headlinesCount:5, scopes:["national"] },
+    { name:"Deutsche Welle", rss:"https://rss.dw.com/rdf/rss-en-all", site:"https://www.dw.com", headlinesCount:5, scopes:["international"] },
+    { name:"Nature", rss:"https://www.nature.com/nature.rss", site:"https://www.nature.com", headlinesCount:5, scopes:["international"] }
   ],
 
   stocks: [

@@ -19,7 +19,10 @@
   const CRITICAL_NATIONAL_RSS = "https://news.google.com/rss/search?q=US+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
   const CRITICAL_INTERNATIONAL_RSS = "https://news.google.com/rss/search?q=world+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
 
-  let currentTickerScope = cfg.newsTickerScope || "national";
+  // Single state for the four scope tabs (LOCAL/REGIONAL/NATIONAL/INTERNATIONAL).
+  // Drives both the critical ticker and the main news grid. Reads the old
+  // `newsTickerScope` key for back-compat with users who only had the ticker.
+  let currentScope = cfg.newsScope || cfg.newsTickerScope || "national";
   let geoCache = null;
   let criticalTickerState = null;
   let criticalTickerPopup = null;
@@ -315,6 +318,53 @@
     return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
   }
 
+  // Pick the news-grid widgets for the active scope.
+  // - national / international: filter cfg.widgets by their `scopes` tag.
+  //   Widgets without a `scopes` field count as ["national","international"]
+  //   so older saved configs keep rendering on those views.
+  // - local / regional: synthesize a Google News search widget from the user's
+  //   geocoded city/state. If no ZIP, returns []; the caller renders a hint.
+  async function getWidgetsForScope(scope, sourceCfg){
+    if(scope === "local" || scope === "regional"){
+      const geo = await getGeoForScope();
+      if(!geo) return { widgets: [], reason: "no-geo" };
+      if(scope === "local"){
+        const q = encodeURIComponent(`"${geo.city}" local news`);
+        return {
+          widgets: [{
+            name: `${geo.city}, ${geo.state} — Local`,
+            rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`,
+            site: "https://news.google.com",
+            headlinesCount: 8
+          }],
+          reason: ""
+        };
+      }
+      const q = encodeURIComponent(`${geo.state} news`);
+      return {
+        widgets: [{
+          name: `${geo.state} — Regional`,
+          rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`,
+          site: "https://news.google.com",
+          headlinesCount: 10
+        }],
+        reason: ""
+      };
+    }
+
+    const all = Array.isArray(sourceCfg?.widgets) ? sourceCfg.widgets : [];
+    const filtered = all.filter(w => {
+      const tags = Array.isArray(w?.scopes) && w.scopes.length
+        ? w.scopes
+        : ["national","international"]; // legacy default
+      return tags.includes(scope);
+    });
+    return {
+      widgets: filtered,
+      reason: filtered.length === 0 ? "no-match" : ""
+    };
+  }
+
   function dedupeTickerItems(items){
     const seen = new Set();
     return items.filter((item) => {
@@ -332,7 +382,7 @@
     criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading headlines...</span>`;
 
     try{
-      const feeds = await getTickerFeedsForScope(currentTickerScope);
+      const feeds = await getTickerFeedsForScope(currentScope);
       const allItems = [];
       await Promise.all(feeds.map(async (feed) => {
         const items = await fetchNewsItems(feed.rss, 12, !force);
@@ -554,10 +604,23 @@ function restoreNewsFromCache(){
     newsGrid.innerHTML = "";
     newsGrid.setAttribute("aria-busy", "true");
 
-    const widgets = (cfg.widgets || []).slice(0, 15);
+    const liveCfg = window.App?.cfg || cfg;
+    const { widgets: scopeWidgets, reason } = await getWidgetsForScope(currentScope, liveCfg);
+    const widgets = scopeWidgets.slice(0, 15);
+
     if(widgets.length === 0){
-      updateStatus("No news sources configured", true);
-      newsGrid.innerHTML = `<div class="hint" style="grid-column:1/-1;text-align:center;padding:20px;">Please configure news sources in Settings.</div>`;
+      let hint;
+      if(reason === "no-geo"){
+        updateStatus("Set your ZIP code to enable local/regional news", true);
+        hint = `Set your ZIP code in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope} news.`;
+      } else if(reason === "no-match"){
+        updateStatus(`No sources tagged "${currentScope}"`, true);
+        hint = `None of your configured sources are tagged for the ${currentScope.toUpperCase()} scope. Adjust their tags in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
+      } else {
+        updateStatus("No news sources configured", true);
+        hint = `Please configure news sources in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
+      }
+      newsGrid.innerHTML = `<div class="hint" style="grid-column:1/-1;text-align:center;padding:20px;">${hint}</div>`;
       newsGrid.setAttribute("aria-busy", "false");
       inFlight = false;
       newsGrid.style.removeProperty("min-height");
@@ -639,18 +702,22 @@ function restoreNewsFromCache(){
       btn.classList.toggle("active", btn.dataset.scope === scope);
     });
   }
-  syncScopeButtons(currentTickerScope);
+  syncScopeButtons(currentScope);
 
-  // Wire scope buttons
+  // Wire scope buttons — drive both the critical ticker AND the news grid
+  // off the same scope state so the whole page reflects the chosen perspective.
   tickerScopeBar?.querySelectorAll(".tickerScopeBtn").forEach(btn => {
     btn.addEventListener("click", () => {
       const scope = btn.dataset.scope;
-      if(scope === currentTickerScope) return;
-      currentTickerScope = scope;
+      if(scope === currentScope) return;
+      currentScope = scope;
       syncScopeButtons(scope);
-      saveConfig({ ...window.App.cfg, newsTickerScope: scope });
+      // Persist as newsScope; keep newsTickerScope in sync for any older code
+      // that still reads it (back-compat across deploys).
+      saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
       geoCache = null;
       renderCriticalTicker(true);
+      render(true);
     });
   });
 
