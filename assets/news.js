@@ -354,21 +354,29 @@
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
 
       if(scope === "local"){
-        // Two cards from different angles so the page isn't sparse and a
-        // dry day for one query still leaves the other populated. The
-        // query patterns are picked from direct testing — see
-        // getTickerFeedsForScope() for the rationale.
+        // Three cards filling a row on desktop: General / Sports / Entertainment.
+        // Categories chosen by direct testing of Google News RSS — `news`,
+        // `sports`, and `entertainment` reliably return 100+ items per query
+        // for unambiguous cities, while `business`/`politics`/`food` return
+        // empty lists. If a card comes back empty, the other two still fill
+        // the page.
         return {
           widgets: [
             {
               name: `${geo.city} — Local News`,
               rss: googleNewsRssFor(`${geo.city} news`),
               site: "https://news.google.com",
-              headlinesCount: 8
+              headlinesCount: 6
             },
             {
-              name: `${geo.city}, ${geo.state} — Headlines`,
-              rss: googleNewsRssFor(`"${geo.city}" ${fullState}`),
+              name: `${geo.city} — Sports`,
+              rss: googleNewsRssFor(`${geo.city} sports`),
+              site: "https://news.google.com",
+              headlinesCount: 6
+            },
+            {
+              name: `${geo.city} — Entertainment & Culture`,
+              rss: googleNewsRssFor(`${geo.city} entertainment`),
               site: "https://news.google.com",
               headlinesCount: 6
             }
@@ -377,18 +385,25 @@
         };
       }
 
-      // Regional: full state name avoids "NY" matching every "ny" substring.
+      // Regional: same 3-category split, full state name (avoids "NY"
+      // matching every "ny" substring on Google News).
       return {
         widgets: [
           {
             name: `${fullState} — State News`,
             rss: googleNewsRssFor(`${fullState} news`),
             site: "https://news.google.com",
-            headlinesCount: 10
+            headlinesCount: 6
           },
           {
-            name: `${fullState} — Headlines`,
-            rss: googleNewsRssFor(`${fullState} state headlines`),
+            name: `${fullState} — Sports`,
+            rss: googleNewsRssFor(`${fullState} sports`),
+            site: "https://news.google.com",
+            headlinesCount: 6
+          },
+          {
+            name: `${fullState} — Entertainment & Culture`,
+            rss: googleNewsRssFor(`${fullState} entertainment`),
             site: "https://news.google.com",
             headlinesCount: 6
           }
