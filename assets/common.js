@@ -194,6 +194,40 @@
     newsLayout: "text-only",
     newsTickerScope: "national",
 
+    // Per-page section visibility. Each key maps a section to true/false.
+    // Missing keys are treated as `true` (visible) by readers, so adding a
+    // new section in the future doesn't surprise existing users.
+    sectionVisibility: {
+      weather: {
+        topAlertsTicker: true,
+        current:   true,   // recommended
+        hourly:    true,
+        forecast:  true,   // recommended
+        radar:     true,
+        alerts:    true,
+        news:      true
+      },
+      stocks: {
+        indices:    true,  // recommended
+        watchlist:  true,  // recommended
+        news:       true,
+        gainers:    true,
+        losers:     true,
+        trending:   true,
+        calendar:   true,
+        diagnostic: true
+      },
+      astrolab: {
+        sky:        true,  // recommended
+        calendar:   true,
+        highlights: true,
+        events:     true,
+        launches:   true,
+        headlines:  true,
+        artemis:    true
+      }
+    },
+
     // AstroLab preferences
     astrolab: clone(ASTROLAB_DEFAULTS),
 
@@ -2482,8 +2516,19 @@
     formatTime,
     formatDate,
     getTimezoneLabel,
-    abbreviateState
+    abbreviateState,
+    isSectionHidden
   };
+
+  // Returns true when the user has disabled the given section in Settings.
+  // Missing keys (not yet configured / older saved cfg) count as visible (false).
+  function isSectionHidden(page, key){
+    try {
+      const v = window.App?.cfg?.sectionVisibility?.[page];
+      if(!v) return false;
+      return v[key] === false;
+    } catch { return false; }
+  }
 
   // Register service worker for PWA functionality
   const canRegisterServiceWorker =

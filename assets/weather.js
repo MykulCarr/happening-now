@@ -1849,12 +1849,15 @@
         weatherCurrentUpdated.textContent += " • alerts cached";
       }
       
-      // Fetch and render weather news
+      // Fetch and render weather news (skip the RSS round-trips when the
+      // user has hidden this card via Settings).
       let weatherNewsMeta = { rssQuery: WEATHER_NEWS_PRIMARY_QUERY };
-      try{
-        weatherNewsMeta = await renderWeatherNews();
-      }catch(e){
-        console.error('[weather] renderWeatherNews error', e);
+      if(!window.App?.isSectionHidden?.("weather","news")){
+        try{
+          weatherNewsMeta = await renderWeatherNews();
+        }catch(e){
+          console.error('[weather] renderWeatherNews error', e);
+        }
       }
 
       await updateWeatherDiagnostics(weatherNewsMeta?.rssQuery || WEATHER_NEWS_PRIMARY_QUERY);
@@ -1917,6 +1920,8 @@
   function updateMap(forceLoad = false) {
     if (!weatherMapFrame) return;
     if(!forceLoad && !mapHasLoaded) return;
+    // Skip the heavy Windy embed when the radar card is hidden via Settings.
+    if(window.App?.isSectionHidden?.("weather","radar")) return;
 
     const mapType = mapTypeSelect?.value || cfg.weatherDefaultMapLayer || "radar";
     const overlay = mapOverlayMap[mapType] || "radar";

@@ -63,6 +63,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+  <script>
+    // Mark hidden sections on <html> before paint so CSS can hide them
+    // without a flash. Missing keys default to visible.
+    (function applySectionVisibility(){
+      try {
+        const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
+        const v = cfg.sectionVisibility?.stocks || {};
+        const html = document.documentElement;
+        for (const [key, on] of Object.entries(v)) {
+          if (on === false) html.setAttribute(`data-hide-stocks-${key}`, "1");
+        }
+      } catch {}
+    })();
+  </script>
 </head>
 <body>
   <header id="topbar"></header>
@@ -71,7 +85,7 @@
     <section class="pageHead">
       <div>
         <h1>Stocks</h1>
-        <div class="sub" id="stocksSub">Update your WATCHLIST and STOCK TICKER in <a class="subLink" href="settings.html#stocks">SETTINGS</a></div>
+        <div class="sub" id="stocksSub">Update your WATCHLIST and MARKET INDICES in <a class="subLink" href="settings.html#stocks">SETTINGS</a></div>
       </div>
       <div class="pageHeadActions">
         <button id="stocksRefreshBtn" class="btn" type="button">Refresh</button>
@@ -79,10 +93,10 @@
     </section>
 
     <!-- Market Indices Bar -->
-    <section id="marketIndices" class="marketIndices">Loading indices...</section>
+    <section id="marketIndices" class="marketIndices" data-section="indices">Loading indices...</section>
 
     <section class="grid2">
-      <div class="card">
+      <div class="card" data-section="watchlist">
         <div class="cardHead stocksCardHeadRow">
           <h2>Watchlist</h2>
           <div class="stocksCardHeadActions">
@@ -99,7 +113,7 @@
         </div>
       </div>
 
-      <div class="card stocksNewsCard">
+      <div class="card stocksNewsCard" data-section="news">
         <div class="cardHead stocksCardHeadRow">
           <h2>Market News</h2>
           <div class="stocksCardHeadActions">
@@ -117,7 +131,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-section="gainers">
         <div class="cardHead">
           <h2>Top Gainers <span id="gainersSourceTag" class="dataSourceTag">Source: Loading</span></h2>
         </div>
@@ -126,7 +140,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-section="losers">
         <div class="cardHead">
           <h2>Top Losers <span id="losersSourceTag" class="dataSourceTag">Source: Loading</span></h2>
         </div>
@@ -135,7 +149,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-section="trending">
         <div class="cardHead">
           <h2>Trending Stocks <span id="moversSourceTag" class="dataSourceTag">Source: Loading</span></h2>
         </div>
@@ -144,7 +158,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-section="calendar">
         <div class="cardHead">
           <h2>Economic Calendar</h2>
         </div>
@@ -154,7 +168,7 @@
       </div>
     </section>
 
-    <div class="pageDiagDock">
+    <div class="pageDiagDock" data-section="diagnostic">
       <div class="sub diagLine" id="stocksDiag" aria-live="polite">Backend: checking...</div>
     </div>
   </main>

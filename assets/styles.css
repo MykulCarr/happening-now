@@ -91,6 +91,69 @@ html{
      short pages) shows the theme color instead of the browser default. */
   background:var(--bg);
 }
+
+/* Per-page section visibility. Inline scripts in weather/stocks/AstroLab
+   read cfg.sectionVisibility from localStorage and set data-hide-{page}-{key}
+   attributes on <html> before paint. The selectors below match those keys
+   to the data-section attributes on each card. Adding a new section just
+   needs a new attribute on the HTML and a one-line rule here. */
+[data-hide-weather-topAlertsTicker] [data-section="topAlertsTicker"],
+[data-hide-weather-current]         [data-section="current"],
+[data-hide-weather-hourly]          [data-section="hourly"],
+[data-hide-weather-forecast]        [data-section="forecast"],
+[data-hide-weather-radar]           [data-section="radar"],
+[data-hide-weather-alerts]          [data-section="alerts"],
+[data-hide-weather-news]            [data-section="news"],
+[data-hide-stocks-indices]          [data-section="indices"],
+[data-hide-stocks-watchlist]        [data-section="watchlist"],
+[data-hide-stocks-news]             [data-section="news"],
+[data-hide-stocks-gainers]          [data-section="gainers"],
+[data-hide-stocks-losers]           [data-section="losers"],
+[data-hide-stocks-trending]         [data-section="trending"],
+[data-hide-stocks-calendar]         [data-section="calendar"],
+[data-hide-stocks-diagnostic]       [data-section="diagnostic"],
+[data-hide-astrolab-sky]            [data-section="sky"],
+[data-hide-astrolab-calendar]       [data-section="calendar"],
+[data-hide-astrolab-highlights]     [data-section="highlights"],
+[data-hide-astrolab-events]         [data-section="events"],
+[data-hide-astrolab-launches]       [data-section="launches"],
+[data-hide-astrolab-headlines]      [data-section="headlines"],
+[data-hide-astrolab-artemis]        [data-section="artemis"]{
+  display:none !important;
+}
+
+/* Settings: per-section toggle list */
+.sectionToggleList{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:10px;
+}
+.sectionToggleRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background 0.15s ease;
+}
+.sectionToggleRow:hover{
+  background:rgba(255,255,255,0.05);
+}
+.sectionToggleRow input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  flex-shrink:0;
+  cursor:pointer;
+  accent-color:var(--accent);
+}
+.sectionToggleHint{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:500;
+  margin-left:6px;
+}
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width:6px;

@@ -63,6 +63,21 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
+  <script>
+    // Mark hidden sections on <html> before paint so CSS can hide them
+    // without a flash. Missing keys default to visible. Reads cfg from
+    // localStorage; safe to fail silently for first-run / parse errors.
+    (function applySectionVisibility(){
+      try {
+        const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
+        const v = cfg.sectionVisibility?.weather || {};
+        const html = document.documentElement;
+        for (const [key, on] of Object.entries(v)) {
+          if (on === false) html.setAttribute(`data-hide-weather-${key}`, "1");
+        }
+      } catch {}
+    })();
+  </script>
 </head>
 <body>
   <header id="topbar"></header>
@@ -79,12 +94,12 @@
       </div>
     </section>
     <!-- Top alerts ticker -->
-    <div id="topAlertsBar" class="alertsBar" aria-live="polite">Loading alerts…</div>
+    <div id="topAlertsBar" class="alertsBar" aria-live="polite" data-section="topAlertsTicker">Loading alerts…</div>
 
     <section class="weatherGrid">
       <!-- Left column (Current, 24h, 7-day) -->
       <div class="col leftCol">
-        <div class="card weatherCurrent">
+        <div class="card weatherCurrent" data-section="current">
           <div class="cardHead">
             <h2>Current Conditions</h2>
             <span id="weatherCurrentUpdated" class="meta">Updated --</span>
@@ -95,14 +110,14 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" data-section="hourly">
           <div class="cardHead"><h2>24 Hour Forecast</h2></div>
           <div class="cardBody weatherHourlyCardBody">
             <div id="weatherHourly">Loading…</div>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" data-section="forecast">
           <div class="cardHead weatherCardHeadInline">
             <h2 id="forecastTitle" class="weatherHeadTitleGrow">7 Day Forecast</h2>
             <div class="tabsRow" id="forecastTabs">
@@ -120,7 +135,7 @@
 
       <!-- Right column (Map, Alerts, Top Weather News) -->
       <div class="col rightCol" id="weatherMapSection">
-        <div class="card">
+        <div class="card" data-section="radar">
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Weather Map</h2>
             <button id="radarOpenBtn" class="btn" type="button">NOAA Radar</button>
@@ -154,7 +169,7 @@
           </div>
         </div>
 
-        <div class="card weatherAlertsCard">
+        <div class="card weatherAlertsCard" data-section="alerts">
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Alerts</h2>
             <div class="tabsRow" id="alertsTabs">
@@ -168,7 +183,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" data-section="news">
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Top Weather News</h2>
           </div>

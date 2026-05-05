@@ -3015,6 +3015,27 @@
 
   saveBtn.addEventListener("click", doSave);
 
+  // Per-page section visibility toggles
+  function setupSectionVisibilityToggles(){
+    cfg.sectionVisibility = cfg.sectionVisibility || { weather:{}, stocks:{}, astrolab:{} };
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-section-page][data-section-key]');
+    checkboxes.forEach((cb) => {
+      const page = cb.dataset.sectionPage;
+      const key = cb.dataset.sectionKey;
+      if(!page || !key) return;
+      cfg.sectionVisibility[page] = cfg.sectionVisibility[page] || {};
+      // Missing key defaults to visible (true) so existing users see no change.
+      const current = cfg.sectionVisibility[page][key];
+      cb.checked = current !== false;
+      cb.addEventListener("change", () => {
+        cfg.sectionVisibility[page] = cfg.sectionVisibility[page] || {};
+        cfg.sectionVisibility[page][key] = cb.checked;
+        setStatus("Page sections updated (not saved yet)", "unsaved");
+      });
+    });
+  }
+  setupSectionVisibilityToggles();
+
   // Button group selection
   document.querySelectorAll(".buttonGroupItem").forEach(btn => {
     btn.addEventListener("click", () => {

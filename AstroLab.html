@@ -1168,6 +1168,20 @@
       }
     }
   </style>
+  <script>
+    // Mark hidden sections on <html> before paint so CSS can hide them
+    // without a flash. Missing keys default to visible.
+    (function applySectionVisibility(){
+      try {
+        const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
+        const v = cfg.sectionVisibility?.astrolab || {};
+        const html = document.documentElement;
+        for (const [key, on] of Object.entries(v)) {
+          if (on === false) html.setAttribute(`data-hide-astrolab-${key}`, "1");
+        }
+      } catch {}
+    })();
+  </script>
 </head>
 <body>
 <header id="topbar"></header>
@@ -1186,7 +1200,7 @@
 
   <div class="astrolab-grid">
     <!-- LEFT: SKY MAP -->
-    <section class="card astrolab-sky-card">
+    <section class="card astrolab-sky-card" data-section="sky">
       
       <!-- SKY CONTROLS: 5x3 GRID -->
       <div class="sky-controls">
@@ -1390,7 +1404,7 @@
     <!-- RIGHT COLUMN -->
     <div class="astroRightColumn">
       <!-- ASTRONOMICAL CALENDAR -->
-      <section class="card">
+      <section class="card" data-section="calendar">
         <h2>
           <span>📅 Astronomical Events Calendar</span>
           <span class="meta" id="calendarMeta"></span>
@@ -1404,7 +1418,7 @@
       </section>
       
       <!-- HIGHLIGHTS & RESOURCES (COMBINED) -->
-      <section class="card astroHighlightsCard">
+      <section class="card astroHighlightsCard" data-section="highlights">
         <h2>
           <span>✨ Tonight's Highlights & Resources</span>
           <span class="meta" id="hlMeta">Local</span>
@@ -1424,7 +1438,7 @@
   </div>
 
   <!-- ASTRONOMICAL EVENTS (FULL WIDTH) -->
-  <section class="card astrolabSectionGap">
+  <section class="card astrolabSectionGap" data-section="events">
       <h2>
         <span>🌌 Upcoming Astronomical Events (Next 8)</span>
         <span class="meta" id="eventsMeta"></span>
@@ -1433,7 +1447,7 @@
   </section>
 
   <!-- LAUNCHES (FULL WIDTH) -->
-  <section class="card astrolabSectionGap">
+  <section class="card astrolabSectionGap" data-section="launches">
       <h2>
         <span>🚀 Space Launches (Next 8)</span>
         <span class="meta" id="lnMeta"></span>
@@ -1442,7 +1456,7 @@
   </section>
 
   <!-- NEWS (FULL WIDTH) -->
-  <section class="card astrolabSectionGap">
+  <section class="card astrolabSectionGap" data-section="headlines">
       <h2>
         <span>📰 Latest Headlines (8)</span>
         <span class="meta">Spaceflight News</span>
@@ -1450,7 +1464,7 @@
         <div class="list astroNewsGrid" id="news"></div>
   </section>
 
-  <section class="card artemis-card section-spaced artemis-bottom">
+  <section class="card artemis-card section-spaced artemis-bottom" data-section="artemis">
     <h2>
       <span>🌕 Artemis II Mission Tracker</span>
       <span class="meta" id="artemisMeta">Bottom deck • official NASA feed • 15m refresh</span>

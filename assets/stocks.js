@@ -1496,13 +1496,19 @@
   }
 
   function renderMovers() {
-    renderGainers();
-    renderLosers();
-    renderTrending();
-    // Load actual data asynchronously
-    loadAndRenderGainers();
-    loadAndRenderLosers();
-    loadAndRenderTrending();
+    // Skip rendering and the API fan-out for sections the user has hidden.
+    if(!window.App?.isSectionHidden?.("stocks","gainers")){
+      renderGainers();
+      loadAndRenderGainers();
+    }
+    if(!window.App?.isSectionHidden?.("stocks","losers")){
+      renderLosers();
+      loadAndRenderLosers();
+    }
+    if(!window.App?.isSectionHidden?.("stocks","trending")){
+      renderTrending();
+      loadAndRenderTrending();
+    }
   }
 
   function renderGainers() {
@@ -1893,19 +1899,28 @@
   }
 
   // ===== MAIN REFRESH =====
+  // Section visibility lets the user hide cards via Settings; we also skip
+  // the data fetches for hidden sections to save round-trips and CPU.
+  // `indices` and `watchlist` are vital and always rendered (nothing to skip).
   async function refresh() {
-    console.log("Refresh called - starting render cycle");
-    await renderIndices();
-    console.log("Indices rendered");
-    await renderWatchlist();
-    console.log("Watchlist rendered");
-    renderMovers();
-    console.log("Movers rendered (loading async)");
-    renderCalendar();
-    console.log("Calendar rendered");
-    await renderNews();
-    await updateStocksDiagnostics();
-    console.log("News rendered - refresh complete");
+    const hidden = (key) => window.App?.isSectionHidden?.("stocks", key) === true;
+
+    if(!hidden("indices")){
+      await renderIndices();
+    }
+    if(!hidden("watchlist")){
+      await renderWatchlist();
+    }
+    renderMovers();          // already gates gainers/losers/trending internally
+    if(!hidden("calendar")){
+      renderCalendar();
+    }
+    if(!hidden("news")){
+      await renderNews();
+    }
+    if(!hidden("diagnostic")){
+      await updateStocksDiagnostics();
+    }
   }
 
   // ===== INIT =====
