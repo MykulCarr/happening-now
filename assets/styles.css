@@ -2167,9 +2167,19 @@ details.chip > .alertChipBody a{
   width:100%;
   position:relative;
   cursor: grab;
+  -webkit-user-select:none;
+  user-select:none;
+  /* Let vertical page scroll pass through, but capture horizontal swipes
+     so the ticker's pointermove handler can drag-scroll on touch devices.
+     Without this, the browser commits to a vertical scroll on the first
+     touch and ignores our preventDefault() on pointermove. */
+  touch-action:pan-y;
 }
 .criticalNewsBar .criticalTickerViewport.isDragging{
   cursor: grabbing;
+  /* While actively dragging horizontally, block vertical scroll too so
+     the gesture doesn't pull the page along with the ticker. */
+  touch-action:none;
 }
 
 .criticalNewsBar .criticalTickerTrack{
