@@ -297,6 +297,14 @@
     }
   }
 
+  // Build a Google News RSS search URL. We deliberately drop the
+  // `when:1d` restriction we used to send: in many small/medium markets
+  // there isn't a fresh story every day, and Google's relevance/recency
+  // ranking already biases recent results to the top.
+  function googleNewsRssFor(query){
+    return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+  }
+
   async function getTickerFeedsForScope(scope){
     if(scope === "national"){
       return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
@@ -307,13 +315,28 @@
     const geo = await getGeoForScope();
     if(scope === "local"){
       if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      const q = encodeURIComponent(`"${geo.city}" local news`);
-      return [{ rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`, scope: "local", label: geo.city.toUpperCase() }];
+      // Query patterns chosen by direct probing of Google News RSS. The
+      // ${city} ${state-abbrev} pattern (e.g. "Albany NY news") returns 0
+      // results — Google chokes on the abbreviation. The bare "${city} news"
+      // is broadest and reliable; the quoted "${city}" ${fullState} pattern
+      // disambiguates common names (Springfield, Madison, Albany) without
+      // killing the result count.
+      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
+      const label = geo.city.toUpperCase();
+      return [
+        { rss: googleNewsRssFor(`${geo.city} news`), scope: "local", label },
+        { rss: googleNewsRssFor(`"${geo.city}" ${fullState}`), scope: "local", label }
+      ];
     }
     if(scope === "regional"){
       if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      const q = encodeURIComponent(`${geo.state} news`);
-      return [{ rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`, scope: "regional", label: geo.state.toUpperCase() }];
+      // Full state name avoids "NY" matching every "ny" substring.
+      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
+      const label = (fullState || geo.state).toUpperCase();
+      return [
+        { rss: googleNewsRssFor(`${fullState} news`), scope: "regional", label },
+        { rss: googleNewsRssFor(`${fullState} state headlines`), scope: "regional", label }
+      ];
     }
     return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
   }
@@ -328,26 +351,48 @@
     if(scope === "local" || scope === "regional"){
       const geo = await getGeoForScope();
       if(!geo) return { widgets: [], reason: "no-geo" };
+      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
+
       if(scope === "local"){
-        const q = encodeURIComponent(`"${geo.city}" local news`);
+        // Two cards from different angles so the page isn't sparse and a
+        // dry day for one query still leaves the other populated. The
+        // query patterns are picked from direct testing — see
+        // getTickerFeedsForScope() for the rationale.
         return {
-          widgets: [{
-            name: `${geo.city}, ${geo.state} — Local`,
-            rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`,
-            site: "https://news.google.com",
-            headlinesCount: 8
-          }],
+          widgets: [
+            {
+              name: `${geo.city} — Local News`,
+              rss: googleNewsRssFor(`${geo.city} news`),
+              site: "https://news.google.com",
+              headlinesCount: 8
+            },
+            {
+              name: `${geo.city}, ${geo.state} — Headlines`,
+              rss: googleNewsRssFor(`"${geo.city}" ${fullState}`),
+              site: "https://news.google.com",
+              headlinesCount: 6
+            }
+          ],
           reason: ""
         };
       }
-      const q = encodeURIComponent(`${geo.state} news`);
+
+      // Regional: full state name avoids "NY" matching every "ny" substring.
       return {
-        widgets: [{
-          name: `${geo.state} — Regional`,
-          rss: `https://news.google.com/rss/search?q=${q}+when%3A1d&hl=en-US&gl=US&ceid=US:en`,
-          site: "https://news.google.com",
-          headlinesCount: 10
-        }],
+        widgets: [
+          {
+            name: `${fullState} — State News`,
+            rss: googleNewsRssFor(`${fullState} news`),
+            site: "https://news.google.com",
+            headlinesCount: 10
+          },
+          {
+            name: `${fullState} — Headlines`,
+            rss: googleNewsRssFor(`${fullState} state headlines`),
+            site: "https://news.google.com",
+            headlinesCount: 6
+          }
+        ],
         reason: ""
       };
     }

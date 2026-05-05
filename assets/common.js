@@ -67,6 +67,19 @@
     return stateName;
   }
 
+  // Reverse lookup: "NY" -> "New York". Falls back to the input if it's
+  // already a full name or doesn't match any known abbreviation.
+  function expandStateName(stateAbbrOrName){
+    if(!stateAbbrOrName) return "";
+    const upper = String(stateAbbrOrName).toUpperCase();
+    if(upper.length === 2){
+      for(const [name, abbr] of Object.entries(STATE_ABBREVIATIONS)){
+        if(abbr === upper) return name;
+      }
+    }
+    return stateAbbrOrName;
+  }
+
   // Shared market-strip catalog used by Stocks and Settings.
   // value/change/changePercent are populated at runtime from live quotes; no defaults here
   // so that failed fetches render "—" rather than convincing-looking stale numbers.
@@ -2517,6 +2530,7 @@
     formatDate,
     getTimezoneLabel,
     abbreviateState,
+    expandStateName,
     isSectionHidden
   };
 
