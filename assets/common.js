@@ -716,13 +716,67 @@
   const cache = new Map();
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   const RSS_REQUEST_TIMEOUT_MS = 9000;
-  const RSS_REQUEST_TIMEOUT_FAST_MS = 4500;
+  // Google News goes through one extra hop (our CF worker -> Google), and
+  // Google itself rate-limits / 503's intermittently. 4500ms was too tight:
+  // any worker cold start or upstream slowdown blew past the timeout. 8s
+  // covers the realistic worst-case while still failing fast enough that
+  // we move on to the fallback proxy.
+  const RSS_REQUEST_TIMEOUT_FAST_MS = 8000;
   const RSS_STALE_CACHE_MAX_AGE_MS = 30 * 60 * 1000; // serve stale for up to 30 minutes on failures
   const RSS_ROUTE_COOLDOWN_BASE_MS = 8000;
   const RSS_ROUTE_COOLDOWN_MAX_MS = 60000;
   const rssInFlight = new Map();
   const rssRouteCooldowns = new Map();
   const rssLastSuccessAt = new Map();
+
+  // Persist successful RSS fetches across page navigations so a refresh
+  // doesn't have to re-fetch every feed from scratch (and so transient
+  // upstream errors don't leave the user staring at empty cards).
+  const RSS_LS_KEY = "hn_rss_cache_v1";
+  const RSS_LS_MAX_ENTRIES = 60;
+  let rssLsSaveTimer = null;
+
+  function hydrateRssCacheFromStorage(){
+    try {
+      const raw = localStorage.getItem(RSS_LS_KEY);
+      if(!raw) return;
+      const obj = JSON.parse(raw);
+      if(!obj || typeof obj !== "object") return;
+      const now = Date.now();
+      const maxAge = CACHE_TTL + RSS_STALE_CACHE_MAX_AGE_MS;
+      for(const [k, v] of Object.entries(obj)){
+        if(!v || typeof v.timestamp !== "number") continue;
+        if((now - v.timestamp) > maxAge) continue;
+        cache.set(k, v);
+      }
+    } catch {}
+  }
+
+  function persistRssCacheToStorage(){
+    if(rssLsSaveTimer) return;
+    // Coalesce bursts of setCached calls (e.g. 5 widgets settling on
+    // load) into a single localStorage write a tick later.
+    rssLsSaveTimer = setTimeout(() => {
+      rssLsSaveTimer = null;
+      try {
+        const entries = [];
+        for(const [k, v] of cache.entries()){
+          if(typeof k === "string" && k.startsWith("rss:") && v?.timestamp){
+            entries.push([k, v]);
+          }
+        }
+        // Keep only the freshest N entries to bound localStorage usage.
+        entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+        const trimmed = Object.fromEntries(entries.slice(0, RSS_LS_MAX_ENTRIES));
+        localStorage.setItem(RSS_LS_KEY, JSON.stringify(trimmed));
+      } catch {}
+    }, 250);
+  }
+
+  // Restore previously-fetched RSS into the in-memory cache before any
+  // fetch fires, so the first render can fall back to fresh-but-stored
+  // results when proxies are slow / 5xx'ing.
+  hydrateRssCacheFromStorage();
 
   function timeoutSignal(timeoutMs){
     if(typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"){
@@ -743,6 +797,11 @@
 
   function setCached(key, data){
     cache.set(key, { data, timestamp: Date.now() });
+    // Persist RSS results so a later page load can show content
+    // immediately even if the upstream fetch is failing.
+    if(typeof key === "string" && key.startsWith("rss:")){
+      persistRssCacheToStorage();
+    }
   }
 
   function getCachedStale(key, maxStaleAgeMs = RSS_STALE_CACHE_MAX_AGE_MS){
