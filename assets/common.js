@@ -318,12 +318,37 @@
     if(!Array.isArray(out.widgets)) out.widgets = clone(DEFAULTS.widgets);
     // Migrate old feeds to NewsAPI
     out.widgets = migrateWidgets(out.widgets);
-    out.widgets = out.widgets.map(w => ({
-      name: String(w?.name || "").trim() || "Source",
-      rss:  String(w?.rss  || "").trim(),
-      site: String(w?.site || "").trim(),
-      headlinesCount: Math.max(1, Math.min(20, Number(w?.headlinesCount || 6)))
-    })).filter(w => w.rss).slice(0, 15); // Max 15 sources
+    // Lookup table for restoring `scopes` on legacy saved configs whose
+    // widgets predate the field. Built from DEFAULTS.widgets so the 9
+    // canonical sources keep their intended scope after a config reload.
+    const defaultScopesByRss = {};
+    for(const dw of DEFAULTS.widgets || []){
+      if(dw?.rss && Array.isArray(dw?.scopes) && dw.scopes.length){
+        defaultScopesByRss[dw.rss] = clone(dw.scopes);
+      }
+    }
+    out.widgets = out.widgets.map(w => {
+      const rss = String(w?.rss || "").trim();
+      // Preserve incoming scopes; otherwise fall back to the canonical
+      // tag for known default RSS URLs; otherwise default to ["national"]
+      // (single scope) so an unrecognized custom widget doesn't pollute
+      // every scope tab the way ["national","international"] would.
+      let scopes;
+      if(Array.isArray(w?.scopes) && w.scopes.length){
+        scopes = w.scopes.filter(s => typeof s === "string");
+      } else if(defaultScopesByRss[rss]){
+        scopes = clone(defaultScopesByRss[rss]);
+      } else {
+        scopes = ["national"];
+      }
+      return {
+        name: String(w?.name || "").trim() || "Source",
+        rss,
+        site: String(w?.site || "").trim(),
+        headlinesCount: Math.max(1, Math.min(20, Number(w?.headlinesCount || 6))),
+        scopes
+      };
+    }).filter(w => w.rss).slice(0, 15); // Max 15 sources
 
     if(!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
     out.stocks = out.stocks.map(s => ({

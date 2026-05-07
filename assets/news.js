@@ -419,9 +419,12 @@
 
     const all = Array.isArray(sourceCfg?.widgets) ? sourceCfg.widgets : [];
     const filtered = all.filter(w => {
+      // normalizeConfig assigns scopes on save (canonical defaults by RSS
+      // URL or ["national"] for unrecognized custom feeds), so this fallback
+      // is just a safety net for in-memory cfgs that bypass normalize.
       const tags = Array.isArray(w?.scopes) && w.scopes.length
         ? w.scopes
-        : ["national","international"]; // legacy default
+        : ["national"];
       return tags.includes(scope);
     });
     return {
