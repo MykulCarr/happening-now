@@ -315,27 +315,25 @@
     const geo = await getGeoForScope();
     if(scope === "local"){
       if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      // Query patterns chosen by direct probing of Google News RSS. The
-      // ${city} ${state-abbrev} pattern (e.g. "Albany NY news") returns 0
-      // results — Google chokes on the abbreviation. The bare "${city} news"
-      // is broadest and reliable; the quoted "${city}" ${fullState} pattern
-      // disambiguates common names (Springfield, Madison, Albany) without
-      // killing the result count.
+      // Quoted "City, ST" disambiguates common-name cities (Jackson, MS vs
+      // Jackson, MI). Pair with unquoted "City StateName" for broader
+      // recall — both feed into the ticker dedupe.
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
       const label = geo.city.toUpperCase();
       return [
-        { rss: googleNewsRssFor(`${geo.city} news`), scope: "local", label },
-        { rss: googleNewsRssFor(`"${geo.city}" ${fullState}`), scope: "local", label }
+        { rss: googleNewsRssFor(`"${geo.city}, ${geo.state}"`), scope: "local", label },
+        { rss: googleNewsRssFor(`${geo.city} ${fullState}`), scope: "local", label }
       ];
     }
     if(scope === "regional"){
       if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      // Full state name avoids "NY" matching every "ny" substring.
+      // "${state} state news" is more reliable than "${state} news" — the
+      // latter returns 0 for some states (Michigan being the notable case).
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
       const label = (fullState || geo.state).toUpperCase();
       return [
-        { rss: googleNewsRssFor(`${fullState} news`), scope: "regional", label },
-        { rss: googleNewsRssFor(`${fullState} state headlines`), scope: "regional", label }
+        { rss: googleNewsRssFor(`${fullState} state news`), scope: "regional", label },
+        { rss: googleNewsRssFor(`${fullState} headlines`), scope: "regional", label }
       ];
     }
     return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
@@ -354,29 +352,32 @@
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
 
       if(scope === "local"){
-        // Three cards filling a row on desktop: General / Sports / Entertainment.
-        // Categories chosen by direct testing of Google News RSS — `news`,
-        // `sports`, and `entertainment` reliably return 100+ items per query
-        // for unambiguous cities, while `business`/`politics`/`food` return
-        // empty lists. If a card comes back empty, the other two still fill
-        // the page.
+        // Disambiguated by direct probing of Google News RSS. Common-name
+        // cities like Jackson, Springfield, Madison, Albany were returning
+        // results from the wrong-state homonym when we used bare ${city}
+        // queries. The quoted "City, ST" form (e.g. `"Jackson, MI"`) is the
+        // most reliable disambiguator across cities. Per-category combos
+        // ("Jackson sports", "Jackson entertainment", etc.) are highly
+        // inconsistent — many return 0 — so we use complementary angles
+        // instead of strict topical splits and add a state-level card so
+        // the row never feels empty for small markets.
         return {
           widgets: [
             {
-              name: `${geo.city} — Local News`,
-              rss: googleNewsRssFor(`${geo.city} news`),
+              name: `${geo.city}, ${geo.state} — Local News`,
+              rss: googleNewsRssFor(`"${geo.city}, ${geo.state}"`),
               site: "https://news.google.com",
               headlinesCount: 6
             },
             {
-              name: `${geo.city} — Sports`,
-              rss: googleNewsRssFor(`${geo.city} sports`),
+              name: `${geo.city} — Headlines`,
+              rss: googleNewsRssFor(`${geo.city} ${fullState}`),
               site: "https://news.google.com",
               headlinesCount: 6
             },
             {
-              name: `${geo.city} — Entertainment & Culture`,
-              rss: googleNewsRssFor(`${geo.city} entertainment`),
+              name: `${fullState} — State News`,
+              rss: googleNewsRssFor(`${fullState} state news`),
               site: "https://news.google.com",
               headlinesCount: 6
             }
@@ -385,25 +386,29 @@
         };
       }
 
-      // Regional: same 3-category split, full state name (avoids "NY"
-      // matching every "ny" substring on Google News).
+      // Regional: full state name avoids "NY" matching every "ny" substring.
+      // Use "${state} state news" (verified to return content even for states
+      // where the bare "${state} news" returns 0, like Michigan) and add the
+      // headlines + sports angles. Some states / categories may still come
+      // back sparse — that's a Google News content limitation, not a query
+      // we can fix client-side.
       return {
         widgets: [
           {
             name: `${fullState} — State News`,
-            rss: googleNewsRssFor(`${fullState} news`),
+            rss: googleNewsRssFor(`${fullState} state news`),
+            site: "https://news.google.com",
+            headlinesCount: 6
+          },
+          {
+            name: `${fullState} — Headlines`,
+            rss: googleNewsRssFor(`${fullState} headlines`),
             site: "https://news.google.com",
             headlinesCount: 6
           },
           {
             name: `${fullState} — Sports`,
             rss: googleNewsRssFor(`${fullState} sports`),
-            site: "https://news.google.com",
-            headlinesCount: 6
-          },
-          {
-            name: `${fullState} — Entertainment & Culture`,
-            rss: googleNewsRssFor(`${fullState} entertainment`),
             site: "https://news.google.com",
             headlinesCount: 6
           }
