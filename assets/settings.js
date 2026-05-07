@@ -3038,31 +3038,38 @@
 
     function liveCfg(){ return window.App?.cfg || cfg; }
 
+    // Render saved sources as 3-column tile grid that mirrors the news page layout.
+    // Each tile is a mini-card showing name, source URL host, and a remove button.
+    // The grid wraps to 2 columns on tablet and 1 on mobile via the .sourceTileGrid CSS.
     function render(){
       const sources = Array.isArray(liveCfg()[cfgKey]) ? liveCfg()[cfgKey] : [];
       const skipped = liveCfg()[skipKey] === true;
       listEl.innerHTML = "";
       if(sources.length === 0){
         const empty = document.createElement("div");
-        empty.className = "hint";
+        empty.className = "sourceTileEmpty";
         empty.textContent = skipped
-          ? "Skipping picker — auto-search is active. Uncheck the box below to use saved sources instead."
+          ? "Auto-search active — uncheck Skip below to use saved sources."
           : "No saved sources yet. Open the picker or paste a custom RSS URL.";
         listEl.appendChild(empty);
       } else {
         sources.forEach((s, idx) => {
-          const row = document.createElement("div");
-          row.className = "newsSourceRow";
-          row.innerHTML = `
-            <div class="newsSourceRowMain">
-              <div class="newsSourceRowName">${escapeHtmlSafe(s.name || "Source")}</div>
-              <div class="newsSourceRowUrl">${escapeHtmlSafe(s.rss || "")}</div>
-            </div>
-            <button type="button" class="newsSourceRowRm btn" data-idx="${idx}" aria-label="Remove">×</button>
+          const tile = document.createElement("div");
+          tile.className = "sourceTile";
+          const host = (() => {
+            try { return new URL(s.rss).hostname.replace(/^www\./, ""); }
+            catch { return s.rss || ""; }
+          })();
+          const isReddit = /reddit\.com/i.test(host);
+          tile.innerHTML = `
+            <button type="button" class="sourceTileRm" data-idx="${idx}" aria-label="Remove ${escapeHtmlSafe(s.name || "source")}">×</button>
+            <div class="sourceTileBadge ${isReddit ? "isReddit" : ""}">${isReddit ? "r/" : "RSS"}</div>
+            <div class="sourceTileName">${escapeHtmlSafe(s.name || "Source")}</div>
+            <div class="sourceTileHost">${escapeHtmlSafe(host)}</div>
           `;
-          listEl.appendChild(row);
+          listEl.appendChild(tile);
         });
-        listEl.querySelectorAll(".newsSourceRowRm").forEach(btn => {
+        listEl.querySelectorAll(".sourceTileRm").forEach(btn => {
           btn.addEventListener("click", () => {
             const i = Number(btn.dataset.idx);
             const next = { ...liveCfg() };

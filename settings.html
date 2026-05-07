@@ -293,28 +293,52 @@
 
       <!-- TAB: News -->
       <div class="settingsTabContent active" data-tab="news">
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="news-sources">
-            <span class="collapsibleHeaderMain">News Sources (Max 15)</span>
-            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
-              <span class="usageGuideIcon">i</span>
-              How to add/remove news sources
-            </span>
+
+        <!-- Source-card preview style: each scope shows its saved feeds as
+             tile cards in a 3-column grid that mirrors the news page layout. -->
+        <div class="collapsibleSection sourceCard sourceCard--local" id="news-local-sources">
+          <button class="collapsibleHeader expanded" data-section="news-local-sources-body">
+            <span class="collapsibleHeaderMain">📍 Local News Sources</span>
+            <span class="collapsibleHeaderMeta sourceCardMeta">Hyperlocal feeds for your city</span>
           </button>
-          <div class="collapsibleBody expanded">
-            <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Click <strong>+ Add News Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
-              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This Source</strong> for a single feed. The modal closes automatically after adding.</p>
-              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and Site fields auto-fill when possible.</p>
-              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click <strong>Save Changes</strong>.</p>
+          <div class="collapsibleBody expanded sourceCardBody" id="localSourcesBody">
+            <div class="sourceCardHint" id="localSourcesHint">Click "Open picker" to find Reddit communities and add custom RSS for your area.</div>
+            <div class="sourceTileGrid" id="localSourcesList"></div>
+            <div class="sourceCardActions">
+              <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
-            <div class="newsEditorToolbar">
-              <button id="addNewsSourceBtn" class="btn newsAddTriggerBtn" type="button">+ Add News Source</button>
+            <div class="sourceCardCustomRow">
+              <input id="localCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
+              <button id="localCustomAddBtn" class="btn" type="button">Add</button>
             </div>
-            <div id="newsEditor" class="stack newsEditorStack"></div>
-            <div class="hint hintMt10">
-              Best performance: keep source count lean and headlines between 5 and 8.
+            <label class="sectionToggleRow sourceCardSkipRow">
+              <input type="checkbox" id="localSkipToggle" />
+              <span>Skip picker — use Google News auto-search instead</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="collapsibleSection sourceCard sourceCard--regional" id="news-regional-sources">
+          <button class="collapsibleHeader expanded" data-section="news-regional-sources-body">
+            <span class="collapsibleHeaderMain">🗺️ Regional News Sources</span>
+            <span class="collapsibleHeaderMeta sourceCardMeta">State-level feeds and communities</span>
+          </button>
+          <div class="collapsibleBody expanded sourceCardBody" id="regionalSourcesBody">
+            <div class="sourceCardHint" id="regionalSourcesHint">Click "Open picker" to find state-level Reddit communities and add custom RSS.</div>
+            <div class="sourceTileGrid" id="regionalSourcesList"></div>
+            <div class="sourceCardActions">
+              <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
+            <div class="sourceCardCustomRow">
+              <input id="regionalCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
+              <button id="regionalCustomAddBtn" class="btn" type="button">Add</button>
+            </div>
+            <label class="sectionToggleRow sourceCardSkipRow">
+              <input type="checkbox" id="regionalSkipToggle" />
+              <span>Skip picker — use Google News auto-search instead</span>
+            </label>
           </div>
         </div>
 
@@ -339,47 +363,32 @@
           </div>
         </div>
 
-        <div class="collapsibleSection" id="news-local-sources">
-          <button class="collapsibleHeader expanded" data-section="news-local-sources-body">
-            <span class="collapsibleHeaderMain">Local News Sources</span>
+        <!-- National & International live at the bottom — they use a richer
+             editor (drag-reorder, headlines count, multi-publisher picker)
+             and aren't tied to the user's geo, so they don't fit the same
+             3-column tile layout. -->
+        <div class="collapsibleSection sourceCard sourceCard--global">
+          <button class="collapsibleHeader expanded" data-section="news-sources">
+            <span class="collapsibleHeaderMain">🌐 National & International News Sources (Max 15)</span>
+            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
+              <span class="usageGuideIcon">i</span>
+              How to add/remove news sources
+            </span>
           </button>
-          <div class="collapsibleBody expanded" id="localSourcesBody">
-            <div class="hint hintMt10" id="localSourcesHint">Click "Open picker" to find Reddit communities and add custom RSS for your area.</div>
-            <div class="newsSourceList" id="localSourcesList"></div>
-            <div class="newsSourceActions">
-              <button id="openLocalPickerBtn" class="btn newsAddTriggerBtn" type="button">📍 Open picker</button>
-              <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
+          <div class="collapsibleBody expanded sourceCardBody">
+            <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
+              <p>Click <strong>+ Add News Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
+              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This Source</strong> for a single feed. The modal closes automatically after adding.</p>
+              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and Site fields auto-fill when possible.</p>
+              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click <strong>Save Changes</strong>.</p>
             </div>
-            <div class="newsSourceCustomRow">
-              <input id="localCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
-              <button id="localCustomAddBtn" class="btn" type="button">Add</button>
+            <div class="newsEditorToolbar">
+              <button id="addNewsSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add News Source</button>
             </div>
-            <label class="sectionToggleRow newsSourceSkipRow">
-              <input type="checkbox" id="localSkipToggle" />
-              <span>Skip picker — use Google News auto-search instead</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="collapsibleSection" id="news-regional-sources">
-          <button class="collapsibleHeader expanded" data-section="news-regional-sources-body">
-            <span class="collapsibleHeaderMain">Regional News Sources</span>
-          </button>
-          <div class="collapsibleBody expanded" id="regionalSourcesBody">
-            <div class="hint hintMt10" id="regionalSourcesHint">Click "Open picker" to find state-level Reddit communities and add custom RSS.</div>
-            <div class="newsSourceList" id="regionalSourcesList"></div>
-            <div class="newsSourceActions">
-              <button id="openRegionalPickerBtn" class="btn newsAddTriggerBtn" type="button">📍 Open picker</button>
-              <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
+            <div id="newsEditor" class="stack newsEditorStack"></div>
+            <div class="hint hintMt10">
+              Best performance: keep source count lean and headlines between 5 and 8.
             </div>
-            <div class="newsSourceCustomRow">
-              <input id="regionalCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
-              <button id="regionalCustomAddBtn" class="btn" type="button">Add</button>
-            </div>
-            <label class="sectionToggleRow newsSourceSkipRow">
-              <input type="checkbox" id="regionalSkipToggle" />
-              <span>Skip picker — use Google News auto-search instead</span>
-            </label>
           </div>
         </div>
       </div>
