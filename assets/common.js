@@ -207,6 +207,15 @@
     newsLayout: "text-only",
     newsTickerScope: "national",
 
+    // User-curated local/regional news sources. Populated by the picker
+    // modal (news.js) on first scope click; empty arrays mean "user hasn't
+    // chosen yet" and the picker will open. localSourcesSkipped/regionalSourcesSkipped
+    // remember a user's choice to fall back to auto-search instead.
+    localSources: [],
+    regionalSources: [],
+    localSourcesSkipped: false,
+    regionalSourcesSkipped: false,
+
     // Per-page section visibility. Each key maps a section to true/false.
     // Missing keys are treated as `true` (visible) by readers, so adding a
     // new section in the future doesn't surprise existing users.
@@ -349,6 +358,22 @@
         scopes
       };
     }).filter(w => w.rss).slice(0, 15); // Max 15 sources
+
+    // Normalize user-curated local/regional source lists. Each entry mirrors
+    // a widget shape so the news.js render path can use them directly.
+    function normalizeSourceList(list){
+      if(!Array.isArray(list)) return [];
+      return list.map(s => ({
+        name: String(s?.name || "").trim() || "Source",
+        rss:  String(s?.rss  || "").trim(),
+        site: String(s?.site || "").trim() || "https://www.reddit.com",
+        headlinesCount: Math.max(1, Math.min(20, Number(s?.headlinesCount || 8)))
+      })).filter(s => s.rss).slice(0, 8);
+    }
+    out.localSources = normalizeSourceList(out.localSources);
+    out.regionalSources = normalizeSourceList(out.regionalSources);
+    out.localSourcesSkipped = out.localSourcesSkipped === true;
+    out.regionalSourcesSkipped = out.regionalSourcesSkipped === true;
 
     if(!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
     out.stocks = out.stocks.map(s => ({
