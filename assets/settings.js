@@ -3015,6 +3015,136 @@
 
   saveBtn.addEventListener("click", doSave);
 
+  // ──────────────────────────────────────────────────────────────────
+  // Local / Regional source manager (inline panels in News tab)
+  // ──────────────────────────────────────────────────────────────────
+  // Each panel mirrors what the picker modal does, but without the
+  // discovery step — users can list/add/remove their saved sources here
+  // and click "Open picker" to launch the Reddit-search modal when they
+  // want to discover new ones.
+  function setupScopedSourceManager(scope){
+    const cap = scope === "local" ? "local" : "regional";
+    const Cap = cap.charAt(0).toUpperCase() + cap.slice(1);
+    const cfgKey = `${cap}Sources`;
+    const skipKey = `${cap}SourcesSkipped`;
+    const listEl  = document.getElementById(`${cap}SourcesList`);
+    const hintEl  = document.getElementById(`${cap}SourcesHint`);
+    const openBtn = document.getElementById(`open${Cap}PickerBtn`);
+    const clearBtn = document.getElementById(`clear${Cap}SourcesBtn`);
+    const inputEl  = document.getElementById(`${cap}CustomRssInput`);
+    const addBtn   = document.getElementById(`${cap}CustomAddBtn`);
+    const skipEl   = document.getElementById(`${cap}SkipToggle`);
+    if(!listEl) return;
+
+    function liveCfg(){ return window.App?.cfg || cfg; }
+
+    function render(){
+      const sources = Array.isArray(liveCfg()[cfgKey]) ? liveCfg()[cfgKey] : [];
+      const skipped = liveCfg()[skipKey] === true;
+      listEl.innerHTML = "";
+      if(sources.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "hint";
+        empty.textContent = skipped
+          ? "Skipping picker — auto-search is active. Uncheck the box below to use saved sources instead."
+          : "No saved sources yet. Open the picker or paste a custom RSS URL.";
+        listEl.appendChild(empty);
+      } else {
+        sources.forEach((s, idx) => {
+          const row = document.createElement("div");
+          row.className = "newsSourceRow";
+          row.innerHTML = `
+            <div class="newsSourceRowMain">
+              <div class="newsSourceRowName">${escapeHtmlSafe(s.name || "Source")}</div>
+              <div class="newsSourceRowUrl">${escapeHtmlSafe(s.rss || "")}</div>
+            </div>
+            <button type="button" class="newsSourceRowRm btn" data-idx="${idx}" aria-label="Remove">×</button>
+          `;
+          listEl.appendChild(row);
+        });
+        listEl.querySelectorAll(".newsSourceRowRm").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const i = Number(btn.dataset.idx);
+            const next = { ...liveCfg() };
+            next[cfgKey] = (next[cfgKey] || []).filter((_, j) => j !== i);
+            window.App.saveConfig(next);
+            cfg = next;
+            render();
+            setStatus(`${Cap} source removed`, "saved");
+          });
+        });
+      }
+      if(skipEl) skipEl.checked = !!skipped;
+    }
+
+    openBtn?.addEventListener("click", () => {
+      // Clear skip so the picker treats it as a fresh selection.
+      const next = { ...liveCfg() };
+      next[skipKey] = false;
+      window.App.saveConfig(next);
+      cfg = next;
+      window.App?.openSourcePicker?.(scope, () => {
+        // After save/skip, re-read cfg and re-render.
+        cfg = window.App?.cfg || cfg;
+        render();
+        setStatus(`${Cap} sources updated`, "saved");
+      });
+    });
+
+    clearBtn?.addEventListener("click", () => {
+      const next = { ...liveCfg() };
+      next[cfgKey] = [];
+      window.App.saveConfig(next);
+      cfg = next;
+      render();
+      setStatus(`${Cap} sources cleared`, "saved");
+    });
+
+    addBtn?.addEventListener("click", () => {
+      const url = (inputEl?.value || "").trim();
+      if(!url) return;
+      try { new URL(url); } catch {
+        setStatus("That doesn't look like a valid URL", "error");
+        return;
+      }
+      const name = url.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
+      const next = { ...liveCfg() };
+      const list = Array.isArray(next[cfgKey]) ? [...next[cfgKey]] : [];
+      list.push({ name, rss: url, site: "", headlinesCount: 8 });
+      next[cfgKey] = list;
+      next[skipKey] = false;
+      window.App.saveConfig(next);
+      cfg = next;
+      if(inputEl) inputEl.value = "";
+      render();
+      setStatus(`Added ${name}`, "saved");
+    });
+
+    inputEl?.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){ e.preventDefault(); addBtn?.click(); }
+    });
+
+    skipEl?.addEventListener("change", () => {
+      const next = { ...liveCfg() };
+      next[skipKey] = !!skipEl.checked;
+      window.App.saveConfig(next);
+      cfg = next;
+      render();
+      setStatus(`${Cap} skip preference updated`, "saved");
+    });
+
+    render();
+  }
+
+  function escapeHtmlSafe(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => (
+      { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]
+    ));
+  }
+
+  setupScopedSourceManager("local");
+  setupScopedSourceManager("regional");
+
   // Per-page section visibility toggles
   function setupSectionVisibilityToggles(){
     cfg.sectionVisibility = cfg.sectionVisibility || { weather:{}, stocks:{}, astrolab:{} };

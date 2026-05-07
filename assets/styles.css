@@ -279,6 +279,61 @@ html{
   border-color:var(--accent);
 }
 
+/* Settings: Local/Regional source manager rows */
+.newsSourceList{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:10px 0;
+}
+.newsSourceRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,0.03);
+}
+.newsSourceRowMain{ flex:1 1 auto; min-width:0; }
+.newsSourceRowName{
+  font-weight:700;
+  color:var(--text);
+  font-size:13px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.newsSourceRowUrl{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.newsSourceRowRm{
+  flex-shrink:0;
+  padding:4px 10px;
+  font-size:16px;
+  line-height:1;
+}
+.newsSourceActions{
+  display:flex;
+  gap:8px;
+  margin:10px 0;
+  flex-wrap:wrap;
+}
+.newsSourceCustomRow{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+.newsSourceCustomRow .input{ flex:1 1 auto; }
+.newsSourceSkipRow{
+  margin-top:12px;
+}
+
 /* Settings: per-section toggle list */
 .sectionToggleList{
   display:flex;

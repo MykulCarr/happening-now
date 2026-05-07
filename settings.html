@@ -338,6 +338,50 @@
             <div class="hint hintMt10">Local and Regional require a ZIP code configured in General settings.</div>
           </div>
         </div>
+
+        <div class="collapsibleSection" id="news-local-sources">
+          <button class="collapsibleHeader expanded" data-section="news-local-sources-body">
+            <span class="collapsibleHeaderMain">Local News Sources</span>
+          </button>
+          <div class="collapsibleBody expanded" id="localSourcesBody">
+            <div class="hint hintMt10" id="localSourcesHint">Click "Open picker" to find Reddit communities and add custom RSS for your area.</div>
+            <div class="newsSourceList" id="localSourcesList"></div>
+            <div class="newsSourceActions">
+              <button id="openLocalPickerBtn" class="btn newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
+            </div>
+            <div class="newsSourceCustomRow">
+              <input id="localCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
+              <button id="localCustomAddBtn" class="btn" type="button">Add</button>
+            </div>
+            <label class="sectionToggleRow newsSourceSkipRow">
+              <input type="checkbox" id="localSkipToggle" />
+              <span>Skip picker — use Google News auto-search instead</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="collapsibleSection" id="news-regional-sources">
+          <button class="collapsibleHeader expanded" data-section="news-regional-sources-body">
+            <span class="collapsibleHeaderMain">Regional News Sources</span>
+          </button>
+          <div class="collapsibleBody expanded" id="regionalSourcesBody">
+            <div class="hint hintMt10" id="regionalSourcesHint">Click "Open picker" to find state-level Reddit communities and add custom RSS.</div>
+            <div class="newsSourceList" id="regionalSourcesList"></div>
+            <div class="newsSourceActions">
+              <button id="openRegionalPickerBtn" class="btn newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
+            </div>
+            <div class="newsSourceCustomRow">
+              <input id="regionalCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
+              <button id="regionalCustomAddBtn" class="btn" type="button">Add</button>
+            </div>
+            <label class="sectionToggleRow newsSourceSkipRow">
+              <input type="checkbox" id="regionalSkipToggle" />
+              <span>Skip picker — use Google News auto-search instead</span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: Stocks -->

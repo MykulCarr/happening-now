@@ -305,245 +305,8 @@
     return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
   }
 
-  // ──────────────────────────────────────────────────────────────────────
-  // Local/Regional source discovery (Reddit subreddit search)
-  // ──────────────────────────────────────────────────────────────────────
-  // Reddit's subreddit search reliably returns relevant communities for any
-  // US city/state. We use it to seed the source picker so the user can curate
-  // which feeds to use rather than us guessing with brittle Google News
-  // queries that work for some cities and break for others.
-
-  async function searchRedditSubs(query){
-    try{
-      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=10`;
-      const proxied = "/v1/rss/raw?url=" + encodeURIComponent(url);
-      const res = await fetch(proxied, { cache: "no-store",
-        signal: (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
-          ? AbortSignal.timeout(8000) : undefined });
-      if(!res.ok) return [];
-      const data = await res.json();
-      const children = data?.data?.children || [];
-      return children.map(c => c?.data).filter(Boolean);
-    }catch{ return []; }
-  }
-
-  // Score a subreddit's relevance to the user's location. Higher score = better.
-  function scoreSubForLocation(sub, city, state, fullState){
-    const name = String(sub.display_name || "").toLowerCase();
-    const desc = String(sub.public_description || sub.description || "").toLowerCase();
-    const cityL = String(city || "").toLowerCase();
-    const stateL = String(state || "").toLowerCase();
-    const fullL = String(fullState || "").toLowerCase();
-    let s = 0;
-    // Name signals are strongest (e.g. r/JacksonMI for Jackson, MI)
-    if(cityL && name.includes(cityL)) s += 50;
-    if(stateL && name.includes(stateL)) s += 20;
-    if(fullL && fullL.length > 2 && name.includes(fullL.replace(/\s/g, ""))) s += 30;
-    // Description signals
-    if(cityL && desc.includes(cityL)) s += 15;
-    if(fullL && desc.includes(fullL)) s += 10;
-    // Subscriber count is a tiebreaker (log scale so a 5k sub doesn't beat a perfect-match 50)
-    s += Math.min(15, Math.log10(Math.max(1, sub.subscribers || 0)) * 2);
-    return s;
-  }
-
-  async function discoverSources(scope){
-    const geo = await getGeoForScope();
-    if(!geo) return { results: [], geo: null };
-    const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
-    // Two parallel searches: city+state for local relevance, state alone for
-    // state-wide subs (always returns r/{state} as the top hit).
-    const queries = scope === "regional"
-      ? [fullState, `${fullState} news`]
-      : [`${geo.city} ${fullState}`, `${geo.city} ${geo.state}`, fullState];
-    const buckets = await Promise.all(queries.map(q => searchRedditSubs(q)));
-    const seen = new Set();
-    const merged = [];
-    for(const bucket of buckets){
-      for(const sub of bucket){
-        const name = sub.display_name;
-        if(!name || seen.has(name.toLowerCase())) continue;
-        seen.add(name.toLowerCase());
-        merged.push({
-          displayName: name,
-          subscribers: sub.subscribers || 0,
-          description: (sub.public_description || sub.description || "").trim().slice(0, 140),
-          rss: `https://www.reddit.com/r/${name}/.rss`,
-          score: scoreSubForLocation(sub, geo.city, geo.state, fullState)
-        });
-      }
-    }
-    merged.sort((a, b) => b.score - a.score);
-    return { results: merged.slice(0, 10), geo: { ...geo, fullState } };
-  }
-
-  // Returns the top N subs that should be pre-checked when the picker opens.
-  // Always includes the city-name match (if any) and the bare state subreddit.
-  function defaultPickedSubs(results, geo){
-    const picks = new Set();
-    const cityL = (geo?.city || "").toLowerCase();
-    const fullL = (geo?.fullState || "").toLowerCase();
-    for(const r of results){
-      const n = r.displayName.toLowerCase();
-      // city-named sub (e.g. r/jacksonmi for Jackson, MI)
-      if(cityL && n.includes(cityL)) picks.add(r.displayName);
-      // bare state sub (e.g. r/Michigan)
-      if(fullL && n === fullL.replace(/\s/g, "")) picks.add(r.displayName);
-    }
-    // If nothing matched, default to top 2 by score
-    if(picks.size === 0){
-      for(const r of results.slice(0, 2)) picks.add(r.displayName);
-    }
-    return picks;
-  }
-
-  // Modal that lets the user curate which Reddit subs (and any custom RSS
-  // URLs) feed the local/regional scopes.
-  async function openSourcePicker(scope){
-    // Block reentry while a picker is already open
-    if(document.getElementById("hnSourcePicker")) return;
-
-    const overlay = document.createElement("div");
-    overlay.id = "hnSourcePicker";
-    overlay.className = "hnPickerOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-labelledby", "hnPickerTitle");
-    overlay.innerHTML = `
-      <div class="hnPickerSheet">
-        <div class="hnPickerHead">
-          <h2 id="hnPickerTitle" class="hnPickerTitle">Find ${scope} news sources</h2>
-          <button type="button" class="hnPickerClose" aria-label="Close">×</button>
-        </div>
-        <div class="hnPickerBody">
-          <p class="hnPickerLead" id="hnPickerLead">Searching Reddit for communities near you…</p>
-          <div class="hnPickerList" id="hnPickerList" role="list"></div>
-          <div class="hnPickerCustom">
-            <label for="hnPickerCustomInput" class="hnPickerCustomLabel">Add a custom RSS URL:</label>
-            <div class="hnPickerCustomRow">
-              <input id="hnPickerCustomInput" type="url" class="input" placeholder="https://example.com/feed.rss" />
-              <button id="hnPickerCustomAdd" type="button" class="btn">Add</button>
-            </div>
-            <div id="hnPickerCustomList" class="hnPickerCustomItems"></div>
-          </div>
-        </div>
-        <div class="hnPickerActions">
-          <button id="hnPickerSave" type="button" class="btn primary">Save selection</button>
-          <button id="hnPickerSkip" type="button" class="btn">Skip — use auto search</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const closeBtn = overlay.querySelector(".hnPickerClose");
-    const listEl   = overlay.querySelector("#hnPickerList");
-    const leadEl   = overlay.querySelector("#hnPickerLead");
-    const customIn = overlay.querySelector("#hnPickerCustomInput");
-    const customAdd= overlay.querySelector("#hnPickerCustomAdd");
-    const customLi = overlay.querySelector("#hnPickerCustomList");
-    const saveBtn  = overlay.querySelector("#hnPickerSave");
-    const skipBtn  = overlay.querySelector("#hnPickerSkip");
-
-    const customSources = []; // [{name, rss}]
-    let suggestions = [];
-    let preChecked = new Set();
-
-    function close(){
-      overlay.remove();
-    }
-    closeBtn.addEventListener("click", close);
-    overlay.addEventListener("click", (e) => { if(e.target === overlay) close(); });
-
-    function renderCustomList(){
-      customLi.innerHTML = "";
-      customSources.forEach((src, idx) => {
-        const row = document.createElement("div");
-        row.className = "hnPickerCustomItem";
-        row.innerHTML = `<span class="hnPickerCustomName">${escapeHtml(src.name)}</span> <button type="button" class="hnPickerCustomRm" data-idx="${idx}" aria-label="Remove">×</button>`;
-        customLi.appendChild(row);
-      });
-      customLi.querySelectorAll(".hnPickerCustomRm").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const i = Number(btn.dataset.idx);
-          customSources.splice(i, 1);
-          renderCustomList();
-        });
-      });
-    }
-
-    customAdd.addEventListener("click", () => {
-      const url = customIn.value.trim();
-      if(!url) return;
-      try{ new URL(url); }catch{ leadEl.textContent = "That doesn't look like a valid URL."; return; }
-      const name = url.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
-      customSources.push({ name, rss: url });
-      customIn.value = "";
-      renderCustomList();
-    });
-    customIn.addEventListener("keydown", (e) => { if(e.key === "Enter"){ e.preventDefault(); customAdd.click(); } });
-
-    skipBtn.addEventListener("click", () => {
-      const next = { ...window.App.cfg };
-      if(scope === "local") next.localSourcesSkipped = true;
-      else next.regionalSourcesSkipped = true;
-      saveConfig(next);
-      close();
-      // re-render with auto-search fallback
-      render(true);
-    });
-
-    saveBtn.addEventListener("click", () => {
-      const checked = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
-        const idx = Number(cb.dataset.idx);
-        return suggestions[idx];
-      }).filter(Boolean);
-      const sources = [
-        ...checked.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
-        ...customSources.map(s => ({ name: s.name, rss: s.rss, site: "", headlinesCount: 8 }))
-      ];
-      if(sources.length === 0){
-        leadEl.textContent = "Pick at least one source, or click Skip to use auto search.";
-        return;
-      }
-      const next = { ...window.App.cfg };
-      if(scope === "local"){ next.localSources = sources; next.localSourcesSkipped = false; }
-      else { next.regionalSources = sources; next.regionalSourcesSkipped = false; }
-      saveConfig(next);
-      close();
-      render(true);
-    });
-
-    // Discover and populate
-    const { results, geo } = await discoverSources(scope);
-    if(!geo){
-      leadEl.innerHTML = `Set your ZIP code in <a href="settings.html#weather" class="subLink">SETTINGS</a> to enable ${scope} news.`;
-      return;
-    }
-    suggestions = results;
-    preChecked = defaultPickedSubs(results, geo);
-    if(results.length === 0){
-      leadEl.textContent = `No Reddit communities found for ${geo.city}, ${geo.state}. Add a custom RSS URL below.`;
-    } else {
-      leadEl.textContent = `Suggested communities for ${geo.city}, ${geo.state} — pick the ones you want, then Save.`;
-    }
-
-    listEl.innerHTML = "";
-    results.forEach((r, idx) => {
-      const row = document.createElement("label");
-      row.className = "hnPickerRow";
-      row.setAttribute("role", "listitem");
-      const checked = preChecked.has(r.displayName) ? "checked" : "";
-      const subsLabel = r.subscribers >= 1000 ? `${(r.subscribers/1000).toFixed(1)}K` : String(r.subscribers);
-      row.innerHTML = `
-        <input type="checkbox" data-idx="${idx}" ${checked} />
-        <div class="hnPickerRowMain">
-          <div class="hnPickerRowName">r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
-          ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
-        </div>
-      `;
-      listEl.appendChild(row);
-    });
-  }
+  // The picker modal + Reddit discovery moved to common.js so both news.js
+  // and settings.js can open it. Use window.App.openSourcePicker(scope, onSaved).
 
   async function getTickerFeedsForScope(scope){
     if(scope === "national"){
@@ -602,11 +365,12 @@
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
 
       // No saved sources and the user hasn't opted to skip the picker → open it.
-      // The picker will save selections (or set the skip flag) and call render(true).
+      // The picker will save selections (or set the skip flag) and the
+      // onSaved callback re-runs render so the page picks up the new sources.
       if(!sourceCfg?.[skipKey]){
         // Fire and forget; render below shows the auto-search fallback in the
         // meantime so the page isn't empty while the modal is open.
-        openSourcePicker(scope);
+        window.App?.openSourcePicker?.(scope, () => render(true));
       }
 
       if(scope === "local"){
@@ -1054,7 +818,7 @@ function restoreNewsFromCache(){
       if(sc === "local") next.localSourcesSkipped = false;
       else next.regionalSourcesSkipped = false;
       saveConfig(next);
-      openSourcePicker(sc);
+      window.App?.openSourcePicker?.(sc, () => render(true));
     });
   }
   syncScopeButtons(currentScope);
@@ -1082,6 +846,23 @@ function restoreNewsFromCache(){
     if(e.key === "Enter" || e.key === " "){
       e.preventDefault();
       render(true);
+    }
+  });
+
+  // "Sources" button — opens the picker for the current scope (local/regional)
+  // or sends the user to Settings > News for national/international, where the
+  // existing News Sources editor manages the cfg.widgets list.
+  document.getElementById("manageSourcesBtn")?.addEventListener("click", () => {
+    if(currentScope === "local" || currentScope === "regional"){
+      // Clear skip flag so the picker opens fresh.
+      const next = { ...window.App.cfg };
+      if(currentScope === "local") next.localSourcesSkipped = false;
+      else next.regionalSourcesSkipped = false;
+      saveConfig(next);
+      window.App?.openSourcePicker?.(currentScope, () => render(true));
+    } else {
+      // For national/international, jump to the appropriate Settings panel.
+      window.location.href = `settings.html#news-${currentScope}-sources`;
     }
   });
 
