@@ -2623,22 +2623,47 @@
     const cityL = String(city || "").toLowerCase();
     const stateL = String(state || "").toLowerCase();
     const fullL = String(fullState || "").toLowerCase();
+    const fullNoSpace = fullL.replace(/\s/g, "");
     let s = 0;
-    if(cityL && name.includes(cityL)) s += 50;
-    if(stateL && name.includes(stateL)) s += 20;
-    if(fullL && fullL.length > 2 && name.includes(fullL.replace(/\s/g, ""))) s += 30;
-    if(cityL && desc.includes(cityL)) s += 15;
-    if(fullL && desc.includes(fullL)) s += 10;
-    s += Math.min(15, Math.log10(Math.max(1, sub.subscribers || 0)) * 2);
+    // City name in sub name is the strongest signal — bias heavily toward
+    // city-named subs over state-level ones.
+    if(cityL && name.includes(cityL)) s += 100;
+    // Bare state name in sub name (r/Michigan) — second-strongest.
+    if(fullNoSpace && fullNoSpace.length > 2 && name.includes(fullNoSpace)) s += 50;
+    // State abbrev in sub name (r/JacksonMI). Only meaningful with city.
+    if(stateL && name.includes(stateL) && name.includes(cityL)) s += 30;
+    // Description signals (less weighty)
+    if(cityL && desc.includes(cityL)) s += 30;
+    if(fullL && desc.includes(fullL)) s += 20;
+    // Subscribers as small tiebreaker (log scale so 100-sub city beats 5M generic)
+    s += Math.min(10, Math.log10(Math.max(1, sub.subscribers || 0)));
     return s;
+  }
+
+  // Filter out subs that have no recognizable city or state signal at all.
+  // Without this, Reddit's search bleeds in completely unrelated subs that
+  // happened to match a single keyword (e.g. searching "Jackson Michigan"
+  // would return r/mississippi because of Jackson, MS in some post — and
+  // a naive `name.includes("mi")` check would pass r/mississippi too).
+  function subHasLocationSignal(sub, city, state, fullState){
+    const name = String(sub.display_name || "").toLowerCase();
+    const desc = String(sub.public_description || sub.description || "").toLowerCase();
+    const cityL = String(city || "").toLowerCase();
+    const stateL = String(state || "").toLowerCase();
+    const fullL = String(fullState || "").toLowerCase();
+    const fullNoSpace = fullL.replace(/\s/g, "");
+    if(cityL && (name.includes(cityL) || desc.includes(cityL))) return true;
+    if(fullNoSpace && fullNoSpace.length > 3 && name.includes(fullNoSpace)) return true;
+    if(fullL && desc.includes(fullL)) return true;
+    // State abbrev only at the END of the name (e.g. "JacksonMI") or as a
+    // standalone word — avoids r/mississippi matching "mi" as a substring.
+    if(stateL && stateL.length === 2 && (name.endsWith(stateL) || new RegExp(`\\b${stateL}\\b`).test(name))) return true;
+    return false;
   }
 
   async function discoverSourcesForScope(scope){
     const liveCfg = window.App?.cfg || cfg;
-    // Use the unified location resolver if available — it honors GPS, saved
-    // device coords, AND ZIP, matching weather.js's behavior. Falls back to a
-    // direct geocodeZip lookup if resolvePreferredLocation isn't loaded yet
-    // (e.g. on a page that doesn't include common-weather.js).
+    // Honors GPS, saved device coords, OR ZIP — same resolver weather.js uses.
     let geo = null;
     try {
       if(typeof window.App?.resolvePreferredLocation === "function"){
@@ -2656,9 +2681,15 @@
     }
     if(!geo || !geo.city) return { results: [], geo: null };
     const fullState = expandStateName(geo.state) || geo.state;
+
+    // For LOCAL: query "${city} ${stateName}" and "${city}, ${stateAbbrev}"
+    // — both anchor on the city. Drop the bare-state query that used to
+    // pollute results with state-level subs.
+    // For REGIONAL: query the state name (r/Michigan etc.) plus a state-news
+    // angle. Both produce state-focused subs.
     const queries = scope === "regional"
       ? [fullState, `${fullState} news`]
-      : [`${geo.city} ${fullState}`, `${geo.city} ${geo.state}`, fullState];
+      : [`${geo.city} ${fullState}`, `${geo.city}, ${geo.state}`, `${geo.city} ${geo.state}`];
     const buckets = await Promise.all(queries.map(q => searchRedditSubs(q)));
     const seen = new Set();
     const merged = [];
@@ -2667,6 +2698,9 @@
         const name = sub.display_name;
         if(!name || seen.has(name.toLowerCase())) continue;
         seen.add(name.toLowerCase());
+        // Filter: must have at least some city/state signal. This drops the
+        // r/mississippi-when-searching-for-Jackson-Michigan kind of noise.
+        if(!subHasLocationSignal(sub, geo.city, geo.state, fullState)) continue;
         merged.push({
           displayName: name,
           subscribers: sub.subscribers || 0,
@@ -2711,7 +2745,7 @@
     overlay.innerHTML = `
       <div class="hnPickerSheet">
         <div class="hnPickerHead">
-          <h2 id="hnPickerTitle" class="hnPickerTitle">Find ${scope} news sources</h2>
+          <h2 id="hnPickerTitle" class="hnPickerTitle">${scope === "local" ? "Sources Near You" : "State & Regional Sources"}</h2>
           <button type="button" class="hnPickerClose" aria-label="Close">×</button>
         </div>
         <div class="hnPickerBody">

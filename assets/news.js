@@ -399,19 +399,19 @@
         return {
           widgets: [
             {
-              name: `${geo.city}, ${geo.state} — Local News`,
+              name: `Near You — ${geo.city}, ${geo.state}`,
               rss: googleNewsRssFor(`"${geo.city}, ${geo.state}"`),
               site: "https://news.google.com",
               headlinesCount: 6
             },
             {
-              name: `${geo.city} — Headlines`,
+              name: `${geo.city} Headlines`,
               rss: googleNewsRssFor(`${geo.city} ${fullState}`),
               site: "https://news.google.com",
               headlinesCount: 6
             },
             {
-              name: `${fullState} — State News`,
+              name: `Across ${fullState}`,
               rss: googleNewsRssFor(`${fullState} state news`),
               site: "https://news.google.com",
               headlinesCount: 6
@@ -421,28 +421,26 @@
         };
       }
 
-      // Regional: full state name avoids "NY" matching every "ny" substring.
-      // Use "${state} state news" (verified to return content even for states
-      // where the bare "${state} news" returns 0, like Michigan) and add the
-      // headlines + sports angles. Some states / categories may still come
-      // back sparse — that's a Google News content limitation, not a query
-      // we can fix client-side.
+      // Regional: state-level fallback widgets. "${state} state news" returns
+      // content for states where bare "${state} news" returns 0 (Michigan,
+      // for example). Sports may be sparse for some states — Google News
+      // indexing limitation, not something we can fix client-side.
       return {
         widgets: [
           {
-            name: `${fullState} — State News`,
+            name: `Across ${fullState}`,
             rss: googleNewsRssFor(`${fullState} state news`),
             site: "https://news.google.com",
             headlinesCount: 6
           },
           {
-            name: `${fullState} — Headlines`,
+            name: `${fullState} Headlines`,
             rss: googleNewsRssFor(`${fullState} headlines`),
             site: "https://news.google.com",
             headlinesCount: 6
           },
           {
-            name: `${fullState} — Sports`,
+            name: `${fullState} Sports`,
             rss: googleNewsRssFor(`${fullState} sports`),
             site: "https://news.google.com",
             headlinesCount: 6
@@ -714,8 +712,8 @@ function restoreNewsFromCache(){
     if(widgets.length === 0){
       let hint;
       if(reason === "no-geo"){
-        updateStatus("Set your ZIP code to enable local/regional news", true);
-        hint = `Set your ZIP code in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope} news.`;
+        updateStatus("Set your location to see what's near you", true);
+        hint = `Set your location in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope === "local" ? "what's near you" : "your state"}.`;
       } else if(reason === "no-match"){
         updateStatus(`No sources tagged "${currentScope}"`, true);
         hint = `None of your configured sources are tagged for the ${currentScope.toUpperCase()} scope. Adjust their tags in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
@@ -818,7 +816,7 @@ function restoreNewsFromCache(){
     const skipKey = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
     const has = (liveCfg?.[key] || []).length > 0 || liveCfg?.[skipKey] === true;
     host.innerHTML = (showable && has)
-      ? `<a href="#" class="subLink editSourcesLink" data-edit-scope="${scope}">Edit ${scope} sources</a>`
+      ? `<a href="#" class="subLink editSourcesLink" data-edit-scope="${scope}">${scope === "local" ? "• Edit Near You sources" : "• Edit state sources"}</a>`
       : "";
     host.querySelector(".editSourcesLink")?.addEventListener("click", (e) => {
       e.preventDefault();
