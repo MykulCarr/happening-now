@@ -373,6 +373,50 @@
         }
       ]
     },
+    "OR": {
+      "_state": [
+        {
+          "name": "Oregon Capital Chronicle",
+          "rss": "https://oregoncapitalchronicle.com/feed/",
+          "site": "https://oregoncapitalchronicle.com",
+          "type": "paper"
+        }
+      ],
+      "portland": [
+        {
+          "name": "KGW Portland (NBC 8)",
+          "rss": "https://www.kgw.com/feeds/syndication/rss/news/local",
+          "site": "https://www.kgw.com",
+          "type": "tv"
+        },
+        {
+          "name": "KOIN Portland (CBS 6)",
+          "rss": "https://www.koin.com/news/feed/",
+          "site": "https://www.koin.com",
+          "type": "tv"
+        },
+        {
+          "name": "OregonLive (The Oregonian)",
+          "rss": "https://www.oregonlive.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.oregonlive.com",
+          "type": "paper"
+        }
+      ],
+      "bend": [
+        {
+          "name": "KTVZ NewsChannel 21 Bend (NBC)",
+          "rss": "https://ktvz.com/feed/",
+          "site": "https://ktvz.com",
+          "type": "tv"
+        },
+        {
+          "name": "The Bend Bulletin",
+          "rss": "https://www.bendbulletin.com/rss/",
+          "site": "https://www.bendbulletin.com",
+          "type": "paper"
+        }
+      ]
+    },
     "PA": {
       "_state": [
         {
@@ -461,6 +505,50 @@
           "name": "YourErie (WJET / WFXP)",
           "rss": "https://www.yourerie.com/news/feed/",
           "site": "https://www.yourerie.com",
+          "type": "tv"
+        }
+      ]
+    },
+    "WA": {
+      "_state": [
+        {
+          "name": "Washington State Standard",
+          "rss": "https://washingtonstatestandard.com/feed/",
+          "site": "https://washingtonstatestandard.com",
+          "type": "paper"
+        },
+        {
+          "name": "Cascade PBS (formerly Crosscut)",
+          "rss": "https://www.cascadepbs.org/feed",
+          "site": "https://www.cascadepbs.org",
+          "type": "paper"
+        },
+        {
+          "name": "Crosscut",
+          "rss": "https://crosscut.com/feed",
+          "site": "https://crosscut.com",
+          "type": "paper"
+        }
+      ],
+      "seattle": [
+        {
+          "name": "KING 5 Seattle (NBC)",
+          "rss": "https://www.king5.com/feeds/syndication/rss/news/local",
+          "site": "https://www.king5.com",
+          "type": "tv"
+        },
+        {
+          "name": "The Stranger (Seattle alt-weekly)",
+          "rss": "https://www.thestranger.com/rss",
+          "site": "https://www.thestranger.com",
+          "type": "paper"
+        }
+      ],
+      "spokane": [
+        {
+          "name": "KREM 2 Spokane (CBS)",
+          "rss": "https://www.krem.com/feeds/syndication/rss/news/local",
+          "site": "https://www.krem.com",
           "type": "tv"
         }
       ]
