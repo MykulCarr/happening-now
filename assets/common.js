@@ -2602,6 +2602,65 @@
   // city-named subs (r/JacksonMI), state subs (r/Michigan), and topical subs
   // for any US city — much better than guessing Google News query templates.
 
+  // ──────────────────────────────────────────────────────────────────────
+  // Local TV-station / paper RSS catalog (data/local-stations.json)
+  // ──────────────────────────────────────────────────────────────────────
+  // Reddit alone doesn't deliver real local journalism; many users want
+  // their actual TV station / newspaper. We bundle a curated catalog and
+  // let the picker surface it alongside Reddit suggestions for whichever
+  // city the user is in. State-level entries (`_state`) are also returned
+  // for the regional scope.
+  let localStationsCache = null;
+  let localStationsPromise = null;
+
+  async function loadLocalStations(){
+    if(localStationsCache) return localStationsCache;
+    if(localStationsPromise) return localStationsPromise;
+    localStationsPromise = (async () => {
+      try {
+        const res = await fetch("/data/local-stations.json", { cache: "default" });
+        if(!res.ok) throw new Error(`stations fetch failed: ${res.status}`);
+        const data = await res.json();
+        localStationsCache = (data && typeof data === "object") ? data : { states: {} };
+      } catch (err) {
+        console.warn("[stations] failed to load:", err?.message || err);
+        localStationsCache = { states: {} };
+      } finally {
+        localStationsPromise = null;
+      }
+      return localStationsCache;
+    })();
+    return localStationsPromise;
+  }
+
+  // Returns [{ name, rss, site, type }] suitable for direct rendering as
+  // suggestion checkboxes in the picker. Lookup is case-insensitive on city.
+  // For local scope, returns the city's entries plus the state's `_state`
+  // entries (so a hyperlocal user still sees the statewide paper). For
+  // regional, returns only the `_state` entries.
+  async function getStationsForGeo(geo, scope){
+    if(!geo?.state) return [];
+    const data = await loadLocalStations();
+    const stateKey = String(geo.state || "").toUpperCase();
+    const state = data?.states?.[stateKey];
+    if(!state) return [];
+    const out = [];
+    if(scope === "local"){
+      const cityKey = String(geo.city || "").toLowerCase();
+      const cityEntries = state[cityKey];
+      if(Array.isArray(cityEntries)) out.push(...cityEntries);
+    }
+    if(Array.isArray(state._state)) out.push(...state._state);
+    // Dedupe by RSS URL in case a city entry duplicates a statewide one.
+    const seen = new Set();
+    return out.filter(s => {
+      const k = String(s?.rss || "").toLowerCase();
+      if(!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
   async function searchRedditSubs(query){
     try{
       const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=10`;
@@ -2749,8 +2808,15 @@
           <button type="button" class="hnPickerClose" aria-label="Close">×</button>
         </div>
         <div class="hnPickerBody">
-          <p class="hnPickerLead" id="hnPickerLead">Searching Reddit for communities near you…</p>
-          <div class="hnPickerList" id="hnPickerList" role="list"></div>
+          <p class="hnPickerLead" id="hnPickerLead">Loading sources for your area…</p>
+          <div class="hnPickerSection" id="hnPickerStationsSection" hidden>
+            <div class="hnPickerSectionLabel">📺 Local TV &amp; papers</div>
+            <div class="hnPickerList" id="hnPickerStations" role="list"></div>
+          </div>
+          <div class="hnPickerSection">
+            <div class="hnPickerSectionLabel">💬 Reddit communities</div>
+            <div class="hnPickerList" id="hnPickerList" role="list"></div>
+          </div>
           <div class="hnPickerCustom">
             <label for="hnPickerCustomInput" class="hnPickerCustomLabel">Add a custom RSS URL:</label>
             <div class="hnPickerCustomRow">
@@ -2770,6 +2836,8 @@
 
     const closeBtn = overlay.querySelector(".hnPickerClose");
     const listEl   = overlay.querySelector("#hnPickerList");
+    const stationsSection = overlay.querySelector("#hnPickerStationsSection");
+    const stationsListEl  = overlay.querySelector("#hnPickerStations");
     const leadEl   = overlay.querySelector("#hnPickerLead");
     const customIn = overlay.querySelector("#hnPickerCustomInput");
     const customAdd= overlay.querySelector("#hnPickerCustomAdd");
@@ -2779,6 +2847,7 @@
 
     const customSources = [];
     let suggestions = [];
+    let stations = [];
     let preChecked = new Set();
 
     function close(){ overlay.remove(); }
@@ -2823,12 +2892,17 @@
     });
 
     saveBtn.addEventListener("click", () => {
-      const checked = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
+      const checkedStations = Array.from(stationsListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
+        const idx = Number(cb.dataset.idx);
+        return stations[idx];
+      }).filter(Boolean);
+      const checkedSubs = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
         const idx = Number(cb.dataset.idx);
         return suggestions[idx];
       }).filter(Boolean);
       const sources = [
-        ...checked.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
+        ...checkedStations.map(s => ({ name: s.name, rss: s.rss, site: s.site || "", headlinesCount: 8 })),
+        ...checkedSubs.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
         ...customSources.map(s => ({ name: s.name, rss: s.rss, site: "", headlinesCount: 8 }))
       ];
       if(sources.length === 0){
@@ -2843,17 +2917,60 @@
       try { onSaved?.(); } catch {}
     });
 
-    const { results, geo } = await discoverSourcesForScope(scope);
+    // Run station catalog lookup and Reddit discovery in parallel.
+    const [stationsRes, discoverRes] = await Promise.all([
+      (async () => {
+        try {
+          // Need geo before we can look up stations — discoverSourcesForScope
+          // resolves and returns it. We reuse here rather than calling
+          // resolvePreferredLocation twice.
+          return null; // placeholder, replaced below after we have geo
+        } catch { return []; }
+      })(),
+      discoverSourcesForScope(scope)
+    ]);
+    const { results, geo } = discoverRes;
     if(!geo){
-      leadEl.innerHTML = `Set your ZIP code in <a href="settings.html#weather" class="subLink">SETTINGS</a> to enable ${scope} news.`;
+      leadEl.innerHTML = `Set your location in <a href="settings.html#weather" class="subLink">SETTINGS</a> to enable ${scope === "local" ? "Near You" : "state"} sources.`;
       return;
     }
+
+    // Now load stations for this geo (we have geo from the discover step).
+    try {
+      stations = await getStationsForGeo(geo, scope);
+    } catch { stations = []; }
+
     suggestions = results;
     preChecked = defaultPickedSubs(results, geo);
-    if(results.length === 0){
-      leadEl.textContent = `No Reddit communities found for ${geo.city}, ${geo.state}. Add a custom RSS URL below.`;
+
+    // Friendly lead text varies by what we found.
+    const haveStations = stations.length > 0;
+    const haveSubs = results.length > 0;
+    if(!haveStations && !haveSubs){
+      leadEl.textContent = `No suggestions for ${geo.city}, ${geo.state} yet. Add a custom RSS URL below.`;
     } else {
-      leadEl.textContent = `Suggested communities for ${geo.city}, ${geo.state} — pick the ones you want, then Save.`;
+      leadEl.textContent = `Suggestions for ${geo.city}, ${geo.state} — pick what you want, then Save.`;
+    }
+
+    // Render station catalog (if any). Pre-check all of them — they're
+    // curated so they're presumed relevant.
+    if(haveStations){
+      stationsSection.hidden = false;
+      stationsListEl.innerHTML = "";
+      stations.forEach((s, idx) => {
+        const row = document.createElement("label");
+        row.className = "hnPickerRow";
+        row.setAttribute("role", "listitem");
+        const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
+        row.innerHTML = `
+          <input type="checkbox" data-idx="${idx}" checked />
+          <div class="hnPickerRowMain">
+            <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
+            ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
+          </div>
+        `;
+        stationsListEl.appendChild(row);
+      });
     }
 
     listEl.innerHTML = "";
@@ -2866,7 +2983,7 @@
       row.innerHTML = `
         <input type="checkbox" data-idx="${idx}" ${checked} />
         <div class="hnPickerRowMain">
-          <div class="hnPickerRowName">r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
+          <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
           ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
         </div>
       `;
@@ -2921,7 +3038,9 @@
     abbreviateState,
     expandStateName,
     isSectionHidden,
-    openSourcePicker
+    openSourcePicker,
+    loadLocalStations,
+    getStationsForGeo
   };
 
   // Returns true when the user has disabled the given section in Settings.

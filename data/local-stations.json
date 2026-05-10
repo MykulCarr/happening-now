@@ -1,0 +1,81 @@
+{
+  "_meta": {
+    "version": 1,
+    "purpose": "Curated local TV-station and newspaper RSS feeds used by the Near You / Across Your State source picker. Bundled because no free location-aware news API gave us reliable hyperlocal coverage; see commit history for the rabbit hole.",
+    "schema": {
+      "states": {
+        "<state-abbrev>": {
+          "_state": "[ array of statewide entries ]",
+          "<lowercase-city>": "[ array of entries serving that city specifically ]"
+        }
+      },
+      "entry": {
+        "name": "Display label shown in the picker (include city + outlet)",
+        "rss": "Direct RSS feed URL (validate it returns content before adding!)",
+        "site": "Public-facing landing page (used for the favicon and click-through)",
+        "type": "tv | paper | community"
+      }
+    },
+    "howToAdd": [
+      "1. Find a candidate RSS URL for the local outlet (TV station, paper, etc.).",
+      "2. Verify it returns items via the proxy: curl -s 'https://happening-now.net/v1/rss/raw?url=<urlencoded>' | grep -c '<item'  -- if 0, skip.",
+      "3. Add an entry under states.<XX>.<lowercase-city> for hyperlocal, or states.<XX>._state for statewide.",
+      "4. Keep entries sorted alphabetically within each city array.",
+      "5. Lookups are case-insensitive: getStationsForGeo({ city:'Jackson', state:'MI' }) finds states.MI.jackson."
+    ]
+  },
+  "states": {
+    "MI": {
+      "_state": [
+        {
+          "name": "MLive Michigan (statewide)",
+          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.mlive.com",
+          "type": "paper"
+        }
+      ],
+      "detroit": [
+        {
+          "name": "WXYZ Detroit (ABC)",
+          "rss": "https://www.wxyz.com/news.rss",
+          "site": "https://www.wxyz.com",
+          "type": "tv"
+        },
+        {
+          "name": "MLive Detroit",
+          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/detroit/",
+          "site": "https://www.mlive.com/detroit",
+          "type": "paper"
+        }
+      ],
+      "grand rapids": [
+        {
+          "name": "WZZM 13 Grand Rapids (ABC)",
+          "rss": "https://www.wzzm13.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wzzm13.com",
+          "type": "tv"
+        },
+        {
+          "name": "WOOD-TV Grand Rapids (NBC)",
+          "rss": "https://www.woodtv.com/feed/",
+          "site": "https://www.woodtv.com",
+          "type": "tv"
+        },
+        {
+          "name": "MLive Grand Rapids",
+          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/grand-rapids/",
+          "site": "https://www.mlive.com/grand-rapids",
+          "type": "paper"
+        }
+      ],
+      "jackson": [
+        {
+          "name": "MLive Jackson",
+          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/jackson/",
+          "site": "https://www.mlive.com/jackson",
+          "type": "paper"
+        }
+      ]
+    }
+  }
+}

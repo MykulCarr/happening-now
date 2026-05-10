@@ -185,7 +185,17 @@ html{
   display:flex;
   flex-direction:column;
   gap:6px;
-  margin-bottom:18px;
+}
+.hnPickerSection{
+  margin-bottom:14px;
+}
+.hnPickerSectionLabel{
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin:6px 0 6px;
 }
 .hnPickerRow{
   display:flex;
