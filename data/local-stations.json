@@ -25,6 +25,48 @@
     ]
   },
   "states": {
+    "IL": {
+      "_state": [
+        {
+          "name": "Capitol News Illinois (statewide)",
+          "rss": "https://capitolnewsillinois.com/feed/",
+          "site": "https://capitolnewsillinois.com",
+          "type": "paper"
+        }
+      ],
+      "chicago": [
+        {
+          "name": "ABC 7 Chicago (WLS)",
+          "rss": "https://abc7chicago.com/feed/",
+          "site": "https://abc7chicago.com",
+          "type": "tv"
+        },
+        {
+          "name": "NBC 5 Chicago (WMAQ)",
+          "rss": "https://www.nbcchicago.com/?rss=y",
+          "site": "https://www.nbcchicago.com",
+          "type": "tv"
+        },
+        {
+          "name": "WGN-TV Chicago",
+          "rss": "https://wgntv.com/news/feed/",
+          "site": "https://wgntv.com",
+          "type": "tv"
+        },
+        {
+          "name": "Chicago Sun-Times",
+          "rss": "https://chicago.suntimes.com/rss/index.xml",
+          "site": "https://chicago.suntimes.com",
+          "type": "paper"
+        },
+        {
+          "name": "Block Club Chicago (neighborhood)",
+          "rss": "https://blockclubchicago.org/feed/",
+          "site": "https://blockclubchicago.org",
+          "type": "paper"
+        }
+      ]
+    },
     "MI": {
       "_state": [
         {
