@@ -67,6 +67,86 @@
         }
       ]
     },
+    "OH": {
+      "_state": [
+        {
+          "name": "Ohio Capital Journal (statewide)",
+          "rss": "https://ohiocapitaljournal.com/feed/",
+          "site": "https://ohiocapitaljournal.com",
+          "type": "paper"
+        }
+      ],
+      "cleveland": [
+        {
+          "name": "WEWS News 5 Cleveland (ABC)",
+          "rss": "https://www.news5cleveland.com/news.rss",
+          "site": "https://www.news5cleveland.com",
+          "type": "tv"
+        },
+        {
+          "name": "WKYC Cleveland (NBC 3)",
+          "rss": "https://www.wkyc.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wkyc.com",
+          "type": "tv"
+        },
+        {
+          "name": "WJW Fox 8 Cleveland",
+          "rss": "https://fox8.com/news/feed/",
+          "site": "https://fox8.com",
+          "type": "tv"
+        },
+        {
+          "name": "Cleveland.com",
+          "rss": "https://www.cleveland.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.cleveland.com",
+          "type": "paper"
+        }
+      ],
+      "columbus": [
+        {
+          "name": "WBNS 10TV Columbus (CBS)",
+          "rss": "https://www.10tv.com/feeds/syndication/rss/news/local",
+          "site": "https://www.10tv.com",
+          "type": "tv"
+        },
+        {
+          "name": "WCMH NBC 4 Columbus",
+          "rss": "https://www.nbc4i.com/news/feed/",
+          "site": "https://www.nbc4i.com",
+          "type": "tv"
+        }
+      ],
+      "cincinnati": [
+        {
+          "name": "WCPO Cincinnati (ABC 9)",
+          "rss": "https://www.wcpo.com/news.rss",
+          "site": "https://www.wcpo.com",
+          "type": "tv"
+        },
+        {
+          "name": "WLWT Cincinnati (NBC 5)",
+          "rss": "https://www.wlwt.com/topstories-rss",
+          "site": "https://www.wlwt.com",
+          "type": "tv"
+        }
+      ],
+      "toledo": [
+        {
+          "name": "WTOL Toledo (CBS 11)",
+          "rss": "https://www.wtol.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wtol.com",
+          "type": "tv"
+        }
+      ],
+      "dayton": [
+        {
+          "name": "WDTN Dayton (NBC 2)",
+          "rss": "https://www.wdtn.com/news/feed/",
+          "site": "https://www.wdtn.com",
+          "type": "tv"
+        }
+      ]
+    },
     "MI": {
       "_state": [
         {
