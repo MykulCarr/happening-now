@@ -25,6 +25,128 @@
     ]
   },
   "states": {
+    "CA": {
+      "_state": [
+        {
+          "name": "CalMatters (statewide)",
+          "rss": "https://calmatters.org/feed/",
+          "site": "https://calmatters.org",
+          "type": "paper"
+        },
+        {
+          "name": "Capitol Weekly",
+          "rss": "https://capitolweekly.net/feed/",
+          "site": "https://capitolweekly.net",
+          "type": "paper"
+        }
+      ],
+      "los angeles": [
+        {
+          "name": "KABC Eyewitness News (ABC 7)",
+          "rss": "https://abc7.com/feed/",
+          "site": "https://abc7.com",
+          "type": "tv"
+        },
+        {
+          "name": "KNBC NBC Los Angeles (NBC 4)",
+          "rss": "https://www.nbclosangeles.com/?rss=y",
+          "site": "https://www.nbclosangeles.com",
+          "type": "tv"
+        },
+        {
+          "name": "KTLA 5 Los Angeles",
+          "rss": "https://ktla.com/news/feed/",
+          "site": "https://ktla.com",
+          "type": "tv"
+        },
+        {
+          "name": "Los Angeles Times — California",
+          "rss": "https://www.latimes.com/california/rss2.0.xml",
+          "site": "https://www.latimes.com",
+          "type": "paper"
+        }
+      ],
+      "san francisco": [
+        {
+          "name": "KGO ABC 7 News Bay Area",
+          "rss": "https://abc7news.com/feed/",
+          "site": "https://abc7news.com",
+          "type": "tv"
+        },
+        {
+          "name": "KNTV NBC Bay Area",
+          "rss": "https://www.nbcbayarea.com/?rss=y",
+          "site": "https://www.nbcbayarea.com",
+          "type": "tv"
+        },
+        {
+          "name": "The San Francisco Standard",
+          "rss": "https://sfstandard.com/feed/",
+          "site": "https://sfstandard.com",
+          "type": "paper"
+        }
+      ],
+      "san diego": [
+        {
+          "name": "KGTV ABC 10 News San Diego",
+          "rss": "https://www.10news.com/news.rss",
+          "site": "https://www.10news.com",
+          "type": "tv"
+        },
+        {
+          "name": "KNSD NBC 7 San Diego",
+          "rss": "https://www.nbcsandiego.com/?rss=y",
+          "site": "https://www.nbcsandiego.com",
+          "type": "tv"
+        },
+        {
+          "name": "KFMB CBS 8 San Diego",
+          "rss": "https://www.cbs8.com/feeds/syndication/rss/news/local",
+          "site": "https://www.cbs8.com",
+          "type": "tv"
+        },
+        {
+          "name": "KSWB Fox 5 San Diego",
+          "rss": "https://fox5sandiego.com/news/feed/",
+          "site": "https://fox5sandiego.com",
+          "type": "tv"
+        }
+      ],
+      "sacramento": [
+        {
+          "name": "KCRA 3 Sacramento (NBC)",
+          "rss": "https://www.kcra.com/topstories-rss",
+          "site": "https://www.kcra.com",
+          "type": "tv"
+        },
+        {
+          "name": "KXTV ABC 10 Sacramento",
+          "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
+          "site": "https://www.abc10.com",
+          "type": "tv"
+        },
+        {
+          "name": "KTXL Fox 40 Sacramento",
+          "rss": "https://www.fox40.com/news/feed/",
+          "site": "https://www.fox40.com",
+          "type": "tv"
+        }
+      ],
+      "fresno": [
+        {
+          "name": "KFSN ABC 30 Fresno",
+          "rss": "https://abc30.com/feed/",
+          "site": "https://abc30.com",
+          "type": "tv"
+        },
+        {
+          "name": "KSEE 24 Central Valley (NBC)",
+          "rss": "https://www.yourcentralvalley.com/news/feed/",
+          "site": "https://www.yourcentralvalley.com",
+          "type": "tv"
+        }
+      ]
+    },
     "FL": {
       "_state": [
         {
