@@ -373,6 +373,92 @@
         }
       ]
     },
+    "TX": {
+      "_state": [
+        {
+          "name": "The Texas Tribune",
+          "rss": "https://www.texastribune.org/rss/",
+          "site": "https://www.texastribune.org",
+          "type": "paper"
+        },
+        {
+          "name": "Texas Standard (statewide radio)",
+          "rss": "https://www.texasstandard.org/feed/",
+          "site": "https://www.texasstandard.org",
+          "type": "paper"
+        },
+        {
+          "name": "Texas Monthly",
+          "rss": "https://www.texasmonthly.com/feed/",
+          "site": "https://www.texasmonthly.com",
+          "type": "paper"
+        }
+      ],
+      "houston": [
+        {
+          "name": "KTRK ABC 13 Houston",
+          "rss": "https://abc13.com/feed/",
+          "site": "https://abc13.com",
+          "type": "tv"
+        },
+        {
+          "name": "KHOU 11 Houston (CBS)",
+          "rss": "https://www.khou.com/feeds/syndication/rss/news/local",
+          "site": "https://www.khou.com",
+          "type": "tv"
+        }
+      ],
+      "san antonio": [
+        {
+          "name": "KENS 5 San Antonio (CBS)",
+          "rss": "https://www.kens5.com/feeds/syndication/rss/news/local",
+          "site": "https://www.kens5.com",
+          "type": "tv"
+        }
+      ],
+      "dallas": [
+        {
+          "name": "WFAA Dallas (ABC 8)",
+          "rss": "https://www.wfaa.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wfaa.com",
+          "type": "tv"
+        },
+        {
+          "name": "KXAS NBC 5 DFW",
+          "rss": "https://www.nbcdfw.com/?rss=y",
+          "site": "https://www.nbcdfw.com",
+          "type": "tv"
+        }
+      ],
+      "austin": [
+        {
+          "name": "KVUE Austin (ABC 24)",
+          "rss": "https://www.kvue.com/feeds/syndication/rss/news/local",
+          "site": "https://www.kvue.com",
+          "type": "tv"
+        },
+        {
+          "name": "KXAN Austin (NBC 36)",
+          "rss": "https://www.kxan.com/news/feed/",
+          "site": "https://www.kxan.com",
+          "type": "tv"
+        }
+      ],
+      "el paso": [
+        {
+          "name": "KTSM El Paso (NBC 9)",
+          "rss": "https://www.ktsm.com/news/feed/",
+          "site": "https://www.ktsm.com",
+          "type": "tv"
+        },
+        {
+          "name": "KVIA El Paso (ABC 7)",
+          "rss": "https://kvia.com/feed/",
+          "site": "https://kvia.com",
+          "type": "tv"
+        }
+      ]
+    },
     "OH": {
       "_state": [
         {
