@@ -25,6 +25,86 @@
     ]
   },
   "states": {
+    "FL": {
+      "_state": [
+        {
+          "name": "Florida Phoenix (statewide)",
+          "rss": "https://floridaphoenix.com/feed/",
+          "site": "https://floridaphoenix.com",
+          "type": "paper"
+        },
+        {
+          "name": "Florida Politics",
+          "rss": "https://floridapolitics.com/feed/",
+          "site": "https://floridapolitics.com",
+          "type": "paper"
+        }
+      ],
+      "miami": [
+        {
+          "name": "WPLG Local 10 Miami (ABC)",
+          "rss": "https://www.local10.com/arc/outboundfeeds/rss/",
+          "site": "https://www.local10.com",
+          "type": "tv"
+        },
+        {
+          "name": "WSVN Fox 7 Miami",
+          "rss": "https://wsvn.com/news/feed/",
+          "site": "https://wsvn.com",
+          "type": "tv"
+        },
+        {
+          "name": "WTVJ NBC 6 South Florida",
+          "rss": "https://www.nbcmiami.com/?rss=y",
+          "site": "https://www.nbcmiami.com",
+          "type": "tv"
+        }
+      ],
+      "tampa": [
+        {
+          "name": "WFLA News Channel 8 Tampa (NBC)",
+          "rss": "https://www.wfla.com/news/feed/",
+          "site": "https://www.wfla.com",
+          "type": "tv"
+        },
+        {
+          "name": "WFTS ABC Action News Tampa",
+          "rss": "https://www.abcactionnews.com/news.rss",
+          "site": "https://www.abcactionnews.com",
+          "type": "tv"
+        },
+        {
+          "name": "WTSP 10 Tampa Bay (CBS)",
+          "rss": "https://www.wtsp.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wtsp.com",
+          "type": "tv"
+        }
+      ],
+      "orlando": [
+        {
+          "name": "WESH 2 Orlando (NBC)",
+          "rss": "https://www.wesh.com/topstories-rss",
+          "site": "https://www.wesh.com",
+          "type": "tv"
+        }
+      ],
+      "jacksonville": [
+        {
+          "name": "WTLV First Coast News Jacksonville",
+          "rss": "https://www.firstcoastnews.com/feeds/syndication/rss/news/local",
+          "site": "https://www.firstcoastnews.com",
+          "type": "tv"
+        }
+      ],
+      "tallahassee": [
+        {
+          "name": "WTXL ABC 27 Tallahassee",
+          "rss": "https://www.wtxl.com/news.rss",
+          "site": "https://www.wtxl.com",
+          "type": "tv"
+        }
+      ]
+    },
     "IL": {
       "_state": [
         {
