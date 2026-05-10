@@ -2635,11 +2635,26 @@
 
   async function discoverSourcesForScope(scope){
     const liveCfg = window.App?.cfg || cfg;
-    const zip = liveCfg?.zipCode;
-    if(!zip || !/^\d{5}$/.test(zip)) return { results: [], geo: null };
-    let geo;
-    try { geo = await geocodeZip(zip); } catch { return { results: [], geo: null }; }
-    if(!geo) return { results: [], geo: null };
+    // Use the unified location resolver if available — it honors GPS, saved
+    // device coords, AND ZIP, matching weather.js's behavior. Falls back to a
+    // direct geocodeZip lookup if resolvePreferredLocation isn't loaded yet
+    // (e.g. on a page that doesn't include common-weather.js).
+    let geo = null;
+    try {
+      if(typeof window.App?.resolvePreferredLocation === "function"){
+        const loc = await window.App.resolvePreferredLocation({ cfg: liveCfg, autoDetect: false });
+        if(loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon))){
+          geo = { lat: Number(loc.lat), lon: Number(loc.lon), city: loc.city || "", state: loc.state || "" };
+        }
+      }
+    } catch {}
+    if(!geo){
+      const zip = liveCfg?.zipCode;
+      if(zip && /^\d{5}$/.test(zip)){
+        try { geo = await geocodeZip(zip); } catch {}
+      }
+    }
+    if(!geo || !geo.city) return { results: [], geo: null };
     const fullState = expandStateName(geo.state) || geo.state;
     const queries = scope === "regional"
       ? [fullState, `${fullState} news`]

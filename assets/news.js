@@ -287,7 +287,20 @@
 
   async function getGeoForScope(){
     if(geoCache) return geoCache;
-    const zip = cfg.zipCode;
+    // Honor whatever source the user set their location with — GPS, saved
+    // device coords, or ZIP. Same resolver that weather.js uses, so the
+    // user only sets location once.
+    const liveCfg = window.App?.cfg || cfg;
+    try {
+      if(typeof window.App?.resolvePreferredLocation === "function"){
+        const loc = await window.App.resolvePreferredLocation({ cfg: liveCfg, autoDetect: false });
+        if(loc?.city){
+          geoCache = { lat: Number(loc.lat), lon: Number(loc.lon), city: loc.city, state: loc.state || "" };
+          return geoCache;
+        }
+      }
+    } catch {}
+    const zip = liveCfg.zipCode;
     if(!zip || !/^\d{5}$/.test(zip)) return null;
     try{
       geoCache = await geocodeZip(zip);
