@@ -373,6 +373,98 @@
         }
       ]
     },
+    "PA": {
+      "_state": [
+        {
+          "name": "WHYY (Philly NPR/PBS)",
+          "rss": "https://whyy.org/feed/",
+          "site": "https://whyy.org",
+          "type": "paper"
+        },
+        {
+          "name": "StateImpact Pennsylvania",
+          "rss": "https://stateimpact.npr.org/pennsylvania/feed/",
+          "site": "https://stateimpact.npr.org/pennsylvania",
+          "type": "paper"
+        }
+      ],
+      "philadelphia": [
+        {
+          "name": "WPVI 6abc Philadelphia (ABC)",
+          "rss": "https://6abc.com/feed/",
+          "site": "https://6abc.com",
+          "type": "tv"
+        },
+        {
+          "name": "WCAU NBC10 Philadelphia",
+          "rss": "https://www.nbcphiladelphia.com/?rss=y",
+          "site": "https://www.nbcphiladelphia.com",
+          "type": "tv"
+        },
+        {
+          "name": "PHL17 (WPHL)",
+          "rss": "https://phl17.com/feed/",
+          "site": "https://phl17.com",
+          "type": "tv"
+        },
+        {
+          "name": "Billy Penn at WHYY (Philly community)",
+          "rss": "https://billypenn.com/feed/",
+          "site": "https://billypenn.com",
+          "type": "paper"
+        }
+      ],
+      "pittsburgh": [
+        {
+          "name": "WTAE Pittsburgh (ABC 4)",
+          "rss": "https://www.wtae.com/topstories-rss",
+          "site": "https://www.wtae.com",
+          "type": "tv"
+        },
+        {
+          "name": "TribLive (Pittsburgh Tribune-Review)",
+          "rss": "https://triblive.com/rss/",
+          "site": "https://triblive.com",
+          "type": "paper"
+        }
+      ],
+      "allentown": [
+        {
+          "name": "Lehigh Valley Live",
+          "rss": "https://www.lehighvalleylive.com/arc/outboundfeeds/rss/",
+          "site": "https://www.lehighvalleylive.com",
+          "type": "paper"
+        }
+      ],
+      "harrisburg": [
+        {
+          "name": "WHTM ABC 27 Harrisburg",
+          "rss": "https://www.abc27.com/news/feed/",
+          "site": "https://www.abc27.com",
+          "type": "tv"
+        },
+        {
+          "name": "WGAL Lancaster (NBC 8)",
+          "rss": "https://www.wgal.com/topstories-rss",
+          "site": "https://www.wgal.com",
+          "type": "tv"
+        },
+        {
+          "name": "PennLive (Harrisburg Patriot-News)",
+          "rss": "https://www.pennlive.com/arc/outboundfeeds/rss/",
+          "site": "https://www.pennlive.com",
+          "type": "paper"
+        }
+      ],
+      "erie": [
+        {
+          "name": "YourErie (WJET / WFXP)",
+          "rss": "https://www.yourerie.com/news/feed/",
+          "site": "https://www.yourerie.com",
+          "type": "tv"
+        }
+      ]
+    },
     "TX": {
       "_state": [
         {
@@ -459,6 +551,22 @@
         }
       ]
     },
+    "NJ": {
+      "_state": [
+        {
+          "name": "NJ Spotlight News",
+          "rss": "https://www.njspotlightnews.org/feed/",
+          "site": "https://www.njspotlightnews.org",
+          "type": "paper"
+        },
+        {
+          "name": "NJ.com",
+          "rss": "https://www.nj.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.nj.com",
+          "type": "paper"
+        }
+      ]
+    },
     "OH": {
       "_state": [
         {
@@ -535,6 +643,56 @@
           "name": "WDTN Dayton (NBC 2)",
           "rss": "https://www.wdtn.com/news/feed/",
           "site": "https://www.wdtn.com",
+          "type": "tv"
+        }
+      ]
+    },
+    "MA": {
+      "_state": [
+        {
+          "name": "MassLive (statewide)",
+          "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.masslive.com",
+          "type": "paper"
+        },
+        {
+          "name": "CommonWealth Beacon",
+          "rss": "https://commonwealthbeacon.org/feed/",
+          "site": "https://commonwealthbeacon.org",
+          "type": "paper"
+        }
+      ],
+      "boston": [
+        {
+          "name": "WCVB Boston (ABC 5)",
+          "rss": "https://www.wcvb.com/topstories-rss",
+          "site": "https://www.wcvb.com",
+          "type": "tv"
+        },
+        {
+          "name": "WHDH 7News Boston",
+          "rss": "https://whdh.com/news/feed/",
+          "site": "https://whdh.com",
+          "type": "tv"
+        },
+        {
+          "name": "NBC10 Boston (WBTS)",
+          "rss": "https://www.nbcboston.com/?rss=y",
+          "site": "https://www.nbcboston.com",
+          "type": "tv"
+        },
+        {
+          "name": "Boston.com",
+          "rss": "https://www.boston.com/feed/",
+          "site": "https://www.boston.com",
+          "type": "paper"
+        }
+      ],
+      "springfield": [
+        {
+          "name": "WWLP 22 Springfield (NBC)",
+          "rss": "https://www.wwlp.com/news/feed/",
+          "site": "https://www.wwlp.com",
           "type": "tv"
         }
       ]
