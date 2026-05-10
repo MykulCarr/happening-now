@@ -67,6 +67,110 @@
         }
       ]
     },
+    "NY": {
+      "_state": [
+        {
+          "name": "New York Post (statewide)",
+          "rss": "https://nypost.com/feed/",
+          "site": "https://nypost.com",
+          "type": "paper"
+        }
+      ],
+      "new york": [
+        {
+          "name": "WABC Eyewitness News (ABC 7)",
+          "rss": "https://abc7ny.com/feed/",
+          "site": "https://abc7ny.com",
+          "type": "tv"
+        },
+        {
+          "name": "WNBC News 4 New York (NBC)",
+          "rss": "https://www.nbcnewyork.com/?rss=y",
+          "site": "https://www.nbcnewyork.com",
+          "type": "tv"
+        },
+        {
+          "name": "PIX 11 (WPIX)",
+          "rss": "https://pix11.com/news/feed/",
+          "site": "https://pix11.com",
+          "type": "tv"
+        },
+        {
+          "name": "NYT — N.Y. / Region",
+          "rss": "https://www.nytimes.com/services/xml/rss/nyt/NYRegion.xml",
+          "site": "https://www.nytimes.com/section/nyregion",
+          "type": "paper"
+        },
+        {
+          "name": "Gothamist",
+          "rss": "https://gothamist.com/feed",
+          "site": "https://gothamist.com",
+          "type": "paper"
+        },
+        {
+          "name": "The City NYC",
+          "rss": "https://www.thecity.nyc/feed/",
+          "site": "https://www.thecity.nyc",
+          "type": "paper"
+        }
+      ],
+      "buffalo": [
+        {
+          "name": "WIVB Buffalo (CBS 4)",
+          "rss": "https://www.wivb.com/news/feed/",
+          "site": "https://www.wivb.com",
+          "type": "tv"
+        },
+        {
+          "name": "WGRZ Buffalo (NBC 2)",
+          "rss": "https://www.wgrz.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wgrz.com",
+          "type": "tv"
+        },
+        {
+          "name": "WKBW Buffalo (ABC 7)",
+          "rss": "https://www.wkbw.com/news.rss",
+          "site": "https://www.wkbw.com",
+          "type": "tv"
+        }
+      ],
+      "rochester": [
+        {
+          "name": "WROC Rochester First (CBS 8)",
+          "rss": "https://www.rochesterfirst.com/news/feed/",
+          "site": "https://www.rochesterfirst.com",
+          "type": "tv"
+        },
+        {
+          "name": "WHEC Rochester (NBC 10)",
+          "rss": "https://www.whec.com/feed/",
+          "site": "https://www.whec.com",
+          "type": "tv"
+        }
+      ],
+      "albany": [
+        {
+          "name": "WTEN Albany (ABC 10)",
+          "rss": "https://www.news10.com/news/feed/",
+          "site": "https://www.news10.com",
+          "type": "tv"
+        }
+      ],
+      "syracuse": [
+        {
+          "name": "WSYR Local SYR (ABC 9)",
+          "rss": "https://www.localsyr.com/news/feed/",
+          "site": "https://www.localsyr.com",
+          "type": "tv"
+        },
+        {
+          "name": "Syracuse.com",
+          "rss": "https://www.syracuse.com/arc/outboundfeeds/rss/category/news/",
+          "site": "https://www.syracuse.com",
+          "type": "paper"
+        }
+      ]
+    },
     "OH": {
       "_state": [
         {
