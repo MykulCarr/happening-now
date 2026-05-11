@@ -227,6 +227,38 @@
         }
       ]
     },
+    "GA": {
+      "_state": [
+        {
+          "name": "Georgia Recorder",
+          "rss": "https://georgiarecorder.com/feed/",
+          "site": "https://georgiarecorder.com",
+          "type": "paper"
+        }
+      ],
+      "atlanta": [
+        {
+          "name": "WXIA 11Alive Atlanta (NBC)",
+          "rss": "https://www.11alive.com/feeds/syndication/rss/news/local",
+          "site": "https://www.11alive.com",
+          "type": "tv"
+        },
+        {
+          "name": "Atlanta Magazine",
+          "rss": "https://www.atlantamagazine.com/feed/",
+          "site": "https://www.atlantamagazine.com",
+          "type": "paper"
+        }
+      ],
+      "savannah": [
+        {
+          "name": "WSAV Savannah (NBC)",
+          "rss": "https://www.wsav.com/news/feed/",
+          "site": "https://www.wsav.com",
+          "type": "tv"
+        }
+      ]
+    },
     "IL": {
       "_state": [
         {
@@ -509,6 +541,56 @@
         }
       ]
     },
+    "VA": {
+      "_state": [
+        {
+          "name": "Virginia Mercury",
+          "rss": "https://virginiamercury.com/feed/",
+          "site": "https://virginiamercury.com",
+          "type": "paper"
+        },
+        {
+          "name": "Cardinal News (SW Virginia)",
+          "rss": "https://cardinalnews.org/feed/",
+          "site": "https://cardinalnews.org",
+          "type": "paper"
+        }
+      ],
+      "richmond": [
+        {
+          "name": "WRIC ABC 8 Richmond",
+          "rss": "https://www.wric.com/news/feed/",
+          "site": "https://www.wric.com",
+          "type": "tv"
+        },
+        {
+          "name": "WTVR CBS 6 Richmond",
+          "rss": "https://www.wtvr.com/news.rss",
+          "site": "https://www.wtvr.com",
+          "type": "tv"
+        }
+      ],
+      "norfolk": [
+        {
+          "name": "WVEC 13News Hampton Roads (ABC)",
+          "rss": "https://www.13newsnow.com/feeds/syndication/rss/news/local",
+          "site": "https://www.13newsnow.com",
+          "type": "tv"
+        },
+        {
+          "name": "WAVY 10 Hampton Roads (NBC)",
+          "rss": "https://www.wavy.com/news/feed/",
+          "site": "https://www.wavy.com",
+          "type": "tv"
+        },
+        {
+          "name": "WTKR News 3 Hampton Roads (CBS)",
+          "rss": "https://www.wtkr.com/news.rss",
+          "site": "https://www.wtkr.com",
+          "type": "tv"
+        }
+      ]
+    },
     "WA": {
       "_state": [
         {
@@ -635,6 +717,64 @@
           "name": "KVIA El Paso (ABC 7)",
           "rss": "https://kvia.com/feed/",
           "site": "https://kvia.com",
+          "type": "tv"
+        }
+      ]
+    },
+    "NC": {
+      "_state": [
+        {
+          "name": "NC Newsline",
+          "rss": "https://ncnewsline.com/feed/",
+          "site": "https://ncnewsline.com",
+          "type": "paper"
+        },
+        {
+          "name": "North Carolina Health News",
+          "rss": "https://www.northcarolinahealthnews.org/feed/",
+          "site": "https://www.northcarolinahealthnews.org",
+          "type": "paper"
+        }
+      ],
+      "charlotte": [
+        {
+          "name": "WCNC Charlotte (NBC 36)",
+          "rss": "https://www.wcnc.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wcnc.com",
+          "type": "tv"
+        },
+        {
+          "name": "WJZY Queen City News Charlotte (Fox 46)",
+          "rss": "https://www.fox46.com/feed/",
+          "site": "https://www.fox46.com",
+          "type": "tv"
+        }
+      ],
+      "raleigh": [
+        {
+          "name": "WTVD ABC 11 Raleigh-Durham",
+          "rss": "https://abc11.com/feed/",
+          "site": "https://abc11.com",
+          "type": "tv"
+        },
+        {
+          "name": "WNCN CBS 17 Raleigh",
+          "rss": "https://www.cbs17.com/news/feed/",
+          "site": "https://www.cbs17.com",
+          "type": "tv"
+        }
+      ],
+      "greensboro": [
+        {
+          "name": "WFMY Greensboro (CBS 2)",
+          "rss": "https://www.wfmynews2.com/feeds/syndication/rss/news/local",
+          "site": "https://www.wfmynews2.com",
+          "type": "tv"
+        },
+        {
+          "name": "WXII Winston-Salem (NBC 12)",
+          "rss": "https://www.wxii12.com/topstories-rss",
+          "site": "https://www.wxii12.com",
           "type": "tv"
         }
       ]
