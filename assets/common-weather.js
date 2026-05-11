@@ -120,6 +120,46 @@
     const forcePrompt = options?.forcePrompt === true;
     const autoDetect = options?.autoDetect === true;
     const useSavedDevice = options?.useSavedDevice !== false;
+    const ignoreOverride = options?.ignoreOverride === true;
+
+    // Active session override (set via window.App.setActiveLocationOverride)
+    // wins over saved home location. Lets the user browse another city for
+    // a session without altering their cfg.zipCode / cfg.deviceLat,Lon.
+    // Callers that specifically want home (e.g. Settings UI) pass
+    // ignoreOverride:true.
+    if(!ignoreOverride && typeof window.App?.getActiveLocationOverride === "function"){
+      const override = window.App.getActiveLocationOverride();
+      if(override){
+        const lat = Number(override.lat);
+        const lon = Number(override.lon);
+        if(Number.isFinite(lat) && Number.isFinite(lon)){
+          return {
+            lat,
+            lon,
+            city: override.city || "",
+            state: override.state || "",
+            zipCode: override.zip || "",
+            label: override.label || `${override.city || ""}${override.state ? ", " + override.state : ""}`.trim() || `${lat.toFixed(2)}, ${lon.toFixed(2)}`,
+            source: "session-override"
+          };
+        }
+        // Override has a ZIP only — geocode it.
+        if(typeof override.zip === "string" && /^\d{5}$/.test(override.zip)){
+          try {
+            const geo = await geocodeZip(override.zip);
+            return {
+              lat: geo.lat,
+              lon: geo.lon,
+              city: geo.city,
+              state: geo.state,
+              zipCode: override.zip,
+              label: `${geo.city}, ${abbreviateState(geo.state)}`,
+              source: "session-override"
+            };
+          } catch {}
+        }
+      }
+    }
 
     if(useSavedDevice && hasValidDeviceCoords(sourceCfg)){
       const lat = Number(sourceCfg.deviceLat);

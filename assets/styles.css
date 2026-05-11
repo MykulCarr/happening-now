@@ -122,6 +122,74 @@ html{
   display:none !important;
 }
 
+/* Topbar pin button — opens the location picker from any page. Sits in
+   hnSlot1 (see topbar.js / scripts/topbar-template.html). */
+.hn-locationPinBtn{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:8px;
+  padding:4px 8px;
+  font-size:14px;
+  line-height:1;
+  cursor:pointer;
+  transition:background 0.15s ease, border-color 0.15s ease;
+}
+.hn-locationPinBtn:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(255,255,255,0.25);
+}
+
+/* Location override banner — shows at the top of every page when the user
+   has chosen a session-only "viewing X" location. CSS var --hn-override-height
+   is set by common.js when the banner is visible so the fixed topbar and
+   body padding shift down to leave room. */
+.locationOverrideBar{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:32px;
+  z-index:1001;
+  background:linear-gradient(90deg, var(--accent), var(--accentHover));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:0 16px;
+  font-size:12px;
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,0.25);
+}
+.locationOverrideBar .locationOverrideLabel{ opacity:0.95; }
+.locationOverrideBar .locationOverrideLabel b{ font-weight:800; }
+.locationOverrideBar .locationOverrideReset{
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.35);
+  color:#fff;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:11px;
+  transition:background 0.15s ease;
+}
+.locationOverrideBar .locationOverrideReset:hover{ background:rgba(255,255,255,0.25); }
+/* Shift the fixed topbar and body padding down to make room when the
+   banner is visible. The --hn-override-height var is unset when no
+   override is active, so these calc() expressions collapse cleanly. */
+html[data-override-active] header#topbar{
+  top:var(--hn-override-height, 0px);
+}
+html[data-override-active] body{
+  padding-top:calc(78px + var(--hn-override-height, 0px));
+}
+@media (max-width:760px){
+  .locationOverrideBar{ font-size:11px; padding:0 10px; gap:8px; }
+  .locationOverrideBar .locationOverrideReset{ font-size:10px; padding:2px 8px; }
+}
+
 /* Local/regional news source picker modal */
 .hnPickerOverlay{
   position:fixed;

@@ -29,7 +29,10 @@
 
   let alertScope = cfg.weatherAlertScope || "both"; // local | national | both
   let lastGeo = null; // {city,state,lat,lon}
-  let manualLocationOverride = null; // session override from prompt
+  // Session-only "I'm browsing another city" override now lives in common.js
+  // (window.App.getActiveLocationOverride / setActiveLocationOverride). Read
+  // it whenever we need to check — resolvePreferredLocation honors it
+  // automatically.
   let intervalId = null;
   let topAlertsTickerState = null;
   let topAlertsHoverController = null;
@@ -1097,8 +1100,28 @@
     window.setTimeout(() => document.getElementById("locationZipInput")?.focus(), 50);
   }
 
-  // Make changeLocationPrompt globally accessible for onclick handler
-  window.changeLocationPrompt = changeLocationPrompt;
+  // Use the shared picker from common.js so the location override flow is
+  // consistent across all pages (Weather, News, topbar widget). On Apply,
+  // do the weather-specific bits: cache lastGeo, refresh topbar widget,
+  // refresh the page.
+  window.changeLocationPrompt = function changeLocationPromptShared(){
+    const fallback = changeLocationPrompt; // local inline picker (legacy)
+    if(typeof window.App?.openLocationPicker !== "function"){
+      return fallback();
+    }
+    window.App.openLocationPicker({
+      onApply: async (geo) => {
+        lastGeo = { ...geo };
+        window.refreshTopbarWeather?.();
+        await refresh(true);
+      }
+    });
+  };
+
+  // Also refresh when the active location override changes from another page
+  // (e.g. user used the topbar widget while on weather). resolvePreferredLocation
+  // picks up the new override automatically; we just need to trigger a re-render.
+  window.addEventListener("hn:locationchange", () => { refresh(true); });
 
   radarOpenBtn?.addEventListener("click", () => {
     if(!lastGeo) return;
@@ -1498,7 +1521,7 @@
 
     const hasLocation = (cfg.zipCode && /^\d{5}$/.test(cfg.zipCode)) ||
       (cfg.useDeviceLocation && Number.isFinite(Number(cfg.deviceLat)) && Number.isFinite(Number(cfg.deviceLon)));
-    if(!hasLocation && !manualLocationOverride){
+    if(!hasLocation && !window.App?.getActiveLocationOverride?.()){
       if(weatherCurrent){
         weatherCurrent.innerHTML = `<div class="weatherNoLocPrompt">
           <div class="weatherNoLocIcon">📍</div>
@@ -1533,13 +1556,14 @@
         b.classList.toggle("active", Number(b.dataset.forecastDays) === forecastLength);
       });
       
-      let resolvedLoc = manualLocationOverride || null;
-      if(!resolvedLoc){
-        try{
-          resolvedLoc = await resolvePreferredLocation({ cfg, autoDetect: true });
-        }catch(locError){
-          console.warn("[weather] location resolve failed", locError);
-        }
+      // resolvePreferredLocation now checks active session override first
+      // (from common.js), then saved device coords, then ZIP — so this
+      // single call honors whatever the user picked last.
+      let resolvedLoc = null;
+      try{
+        resolvedLoc = await resolvePreferredLocation({ cfg, autoDetect: true });
+      }catch(locError){
+        console.warn("[weather] location resolve failed", locError);
       }
       if(!resolvedLoc && lastGeo){
         resolvedLoc = {

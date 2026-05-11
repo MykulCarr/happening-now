@@ -860,6 +860,27 @@ function restoreNewsFromCache(){
     }
   });
 
+  // "Location" button — opens the shared picker. Apply writes either cfg
+  // (home) or the session override; the hn:locationchange listener below
+  // re-renders the page once the new location takes effect.
+  document.getElementById("changeLocationBtn")?.addEventListener("click", () => {
+    window.App?.openLocationPicker?.({
+      onApply: () => {
+        geoCache = null;
+        renderCriticalTicker(true);
+        render(true);
+      }
+    });
+  });
+
+  // When the active session override flips from anywhere (Weather page,
+  // topbar widget, banner reset), re-resolve geo and re-render this page.
+  window.addEventListener("hn:locationchange", () => {
+    geoCache = null;
+    renderCriticalTicker(true);
+    render(true);
+  });
+
   // "Sources" button — opens the picker for the current scope (local/regional)
   // or sends the user to Settings > News for national/international, where the
   // existing News Sources editor manages the cfg.widgets list.

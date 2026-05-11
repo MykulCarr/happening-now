@@ -2602,6 +2602,334 @@
   // city-named subs (r/JacksonMI), state subs (r/Michigan), and topical subs
   // for any US city — much better than guessing Google News query templates.
 
+  // Lightweight city-name geocoding via Open-Meteo (no API key needed).
+  // Powers the location picker's "City Name" tab.
+  async function geocodeCityName(query){
+    const q = String(query || "").trim();
+    if(!q) return null;
+    try {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
+      const res = await fetch(url, { cache: "no-store" });
+      if(!res.ok) return null;
+      const j = await res.json();
+      const row = Array.isArray(j?.results) ? j.results[0] : null;
+      if(!row) return null;
+      const city = String(row.name || "").trim();
+      const state = String(row.admin1 || "").trim();
+      const label = [city, abbreviateState(state)].filter(Boolean).join(", ") || city;
+      const lat = Number(row.latitude);
+      const lon = Number(row.longitude);
+      if(!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      return { city, state, lat, lon, label, zipCode: "" };
+    } catch (err) {
+      console.warn("[geocodeCity] failed:", err?.message || err);
+      return null;
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Active location override (session-scoped)
+  // ──────────────────────────────────────────────────────────────────────
+  // Lets the user temporarily browse a different city for news + weather
+  // without changing their saved "home" location in cfg. Lives in
+  // sessionStorage so it survives page navigations but vanishes when the
+  // browser tab closes — natural escape hatch back to home.
+  //
+  // Shape: { city, state, zip?, lat, lon, label }. All fields optional;
+  // resolvePreferredLocation handles partial overrides gracefully.
+  const ACTIVE_LOC_KEY = "hn_active_location_v1";
+
+  function getActiveLocationOverride(){
+    try {
+      const raw = sessionStorage.getItem(ACTIVE_LOC_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      // Must have at least coords or a ZIP to be useful.
+      const hasCoords = Number.isFinite(Number(obj?.lat)) && Number.isFinite(Number(obj?.lon));
+      const hasZip = typeof obj?.zip === "string" && /^\d{5}$/.test(obj.zip);
+      if(!hasCoords && !hasZip) return null;
+      return obj;
+    } catch { return null; }
+  }
+
+  function setActiveLocationOverride(loc){
+    if(!loc) return;
+    try {
+      sessionStorage.setItem(ACTIVE_LOC_KEY, JSON.stringify(loc));
+      window.dispatchEvent(new CustomEvent("hn:locationchange", { detail: { override: loc, cleared: false } }));
+    } catch (err) {
+      console.warn("[active-loc] failed to set:", err?.message || err);
+    }
+  }
+
+  function clearActiveLocationOverride(){
+    try {
+      sessionStorage.removeItem(ACTIVE_LOC_KEY);
+      window.dispatchEvent(new CustomEvent("hn:locationchange", { detail: { override: null, cleared: true } }));
+    } catch {}
+  }
+
+  // Renders / updates a thin banner across the top of every page whenever a
+  // session location override is active. Shows the override label and a
+  // "Reset to home" link. Hidden (and CSS var cleared) when at home.
+  function renderLocationOverrideBanner(){
+    if(typeof document === "undefined") return;
+    const override = getActiveLocationOverride();
+    let bar = document.getElementById("locationOverrideBar");
+    if(!override){
+      if(bar) bar.remove();
+      document.documentElement.style.removeProperty("--hn-override-height");
+      document.documentElement.removeAttribute("data-override-active");
+      return;
+    }
+    if(!bar){
+      bar = document.createElement("div");
+      bar.id = "locationOverrideBar";
+      bar.className = "locationOverrideBar";
+      document.body.appendChild(bar);
+    }
+    const label = override.label
+      || `${override.city || ""}${override.state ? ", " + override.state : ""}`.trim()
+      || override.zip
+      || "Custom location";
+    bar.innerHTML = `
+      <span class="locationOverrideLabel">📍 Viewing <b>${escapeHtml(label)}</b> · session only</span>
+      <button type="button" class="locationOverrideReset" id="locationOverrideResetBtn" aria-label="Reset to home location">← Reset to home</button>
+    `;
+    bar.querySelector("#locationOverrideResetBtn")?.addEventListener("click", () => {
+      clearActiveLocationOverride();
+    });
+    // Reserve room for the bar above the fixed topbar; CSS reads --hn-override-height.
+    document.documentElement.style.setProperty("--hn-override-height", "32px");
+    document.documentElement.setAttribute("data-override-active", "1");
+  }
+
+  // Render on DOM ready and on every change.
+  function initLocationOverrideBanner(){
+    if(typeof document === "undefined") return;
+    if(document.readyState === "loading"){
+      document.addEventListener("DOMContentLoaded", renderLocationOverrideBanner, { once: true });
+    } else {
+      renderLocationOverrideBanner();
+    }
+    window.addEventListener("hn:locationchange", renderLocationOverrideBanner);
+  }
+  initLocationOverrideBanner();
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Shared location picker modal
+  // ──────────────────────────────────────────────────────────────────────
+  // Used by Weather page (was inline), News page change-location button,
+  // and topbar weather widget. Apply has two paths:
+  //   - "Save as my default" checked  -> updates cfg.zipCode/deviceLat,Lon
+  //     (the saved home). Clears any active session override.
+  //   - unchecked  -> writes to active session override only (sessionStorage).
+  //
+  // The modal fires "hn:locationchange" via setActiveLocationOverride /
+  // clearActiveLocationOverride so pages can re-render. Optional onApply
+  // callback fires the chosen geo for callers that want immediate action.
+  function openLocationPicker(options = {}){
+    if(document.getElementById("locationPickerModal")) return;
+    const onApply = typeof options?.onApply === "function" ? options.onApply : null;
+
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.id = "locationPickerModal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-label", "Change Location");
+    modal.innerHTML = `
+      <div class="modalContent">
+        <div class="modalHead">
+          <h3 style="margin:0;font-size:16px;">Change Location</h3>
+          <button class="modalClose" id="locationPickerClose" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="modalBody">
+          <div class="tabsRow locationPickerTabs" role="tablist">
+            <button class="tabPill active" data-lp-mode="zip" type="button" role="tab" aria-selected="true">ZIP Code</button>
+            <button class="tabPill" data-lp-mode="city" type="button" role="tab" aria-selected="false">City Name</button>
+            <button class="tabPill" data-lp-mode="gps" type="button" role="tab" aria-selected="false">GPS</button>
+          </div>
+          <div class="locationPickerPanel" data-lp-panel="zip">
+            <div class="locationPickerRow">
+              <input class="input" id="locationZipInput" type="text" inputmode="numeric"
+                placeholder="e.g. 49201" maxlength="5" autocomplete="postal-code" aria-label="ZIP code">
+              <button class="btn" id="locationZipLookupBtn" type="button">Find</button>
+            </div>
+            <div class="locationPickerStatus" id="locationZipStatus"></div>
+          </div>
+          <div class="locationPickerPanel" data-lp-panel="city" hidden>
+            <div class="locationPickerRow">
+              <input class="input" id="locationCityInput" type="text"
+                placeholder="e.g. Lansing, MI" autocomplete="address-level2" aria-label="City name">
+              <button class="btn" id="locationCityLookupBtn" type="button">Find</button>
+            </div>
+            <div class="locationPickerStatus" id="locationCityStatus"></div>
+          </div>
+          <div class="locationPickerPanel" data-lp-panel="gps" hidden>
+            <button class="btn locationGpsBtn" id="locationGpsBtn" type="button">&#128205; Use My GPS</button>
+            <div class="locationPickerStatus" id="locationGpsStatus"></div>
+          </div>
+          <div class="locationPickerConfirmBox" id="locationPickerConfirmBox" hidden>
+            <div class="locationPickerFound" id="locationPickerFound"></div>
+            <label class="locationPickerSaveLabel">
+              <input type="checkbox" id="locationPickerSaveCheck">
+              Save as my home location
+            </label>
+            <div class="locationPickerActions">
+              <button class="btn primary" id="locationPickerApplyBtn" type="button">Apply</button>
+              <button class="btn" id="locationPickerCancelBtn" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    let pendingGeo = null;
+    const closeModal = () => modal.remove();
+
+    function showStatus(id, msg, type = ""){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.textContent = msg;
+      el.className = "locationPickerStatus" + (type ? " " + type : "");
+    }
+    function showConfirm(geo, label){
+      pendingGeo = geo;
+      const box = document.getElementById("locationPickerConfirmBox");
+      const found = document.getElementById("locationPickerFound");
+      if(box && found){ found.textContent = "Found: " + label; box.hidden = false; }
+    }
+    function hideConfirm(){
+      const box = document.getElementById("locationPickerConfirmBox");
+      if(box) box.hidden = true;
+      pendingGeo = null;
+    }
+
+    modal.querySelectorAll("button[data-lp-mode]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.lpMode;
+        modal.querySelectorAll("button[data-lp-mode]").forEach(b => {
+          b.classList.toggle("active", b.dataset.lpMode === mode);
+          b.setAttribute("aria-selected", String(b.dataset.lpMode === mode));
+        });
+        modal.querySelectorAll(".locationPickerPanel").forEach(p => {
+          p.hidden = p.dataset.lpPanel !== mode;
+        });
+        hideConfirm();
+        ["locationZipStatus", "locationCityStatus", "locationGpsStatus"].forEach(id => showStatus(id, ""));
+      });
+    });
+
+    async function doZipLookup(){
+      const val = (document.getElementById("locationZipInput")?.value || "").trim();
+      if(!/^\d{5}$/.test(val)){ showStatus("locationZipStatus", "Enter a 5-digit ZIP code.", "isError"); return; }
+      showStatus("locationZipStatus", "Looking up…"); hideConfirm();
+      try {
+        const geo = await geocodeZip(val);
+        if(geo?.lat && geo?.lon){
+          const label = geo.city && geo.state ? `${geo.city}, ${abbreviateState(geo.state)}` : val;
+          showStatus("locationZipStatus", "");
+          showConfirm({ ...geo, label, source: "manual-zip", _zip: val }, label);
+        } else {
+          showStatus("locationZipStatus", "No location found for that ZIP.", "isError");
+        }
+      } catch (err){
+        showStatus("locationZipStatus", "Lookup failed. Try again.", "isError");
+        console.error("[locationPicker] ZIP error:", err);
+      }
+    }
+    document.getElementById("locationZipLookupBtn")?.addEventListener("click", doZipLookup);
+    document.getElementById("locationZipInput")?.addEventListener("keydown", e => { if(e.key === "Enter") doZipLookup(); });
+
+    async function doCityLookup(){
+      const val = (document.getElementById("locationCityInput")?.value || "").trim();
+      if(!val){ showStatus("locationCityStatus", "Enter a city name.", "isError"); return; }
+      showStatus("locationCityStatus", "Looking up…"); hideConfirm();
+      try {
+        const geo = await geocodeCityName(val);
+        if(geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)){
+          const label = geo.label || val;
+          showStatus("locationCityStatus", "");
+          showConfirm({ ...geo, source: "manual-city" }, label);
+        } else {
+          showStatus("locationCityStatus", "City not found. Try 'City, ST' format.", "isError");
+        }
+      } catch (err){
+        showStatus("locationCityStatus", "Lookup failed. Try again.", "isError");
+        console.error("[locationPicker] City error:", err);
+      }
+    }
+    document.getElementById("locationCityLookupBtn")?.addEventListener("click", doCityLookup);
+    document.getElementById("locationCityInput")?.addEventListener("keydown", e => { if(e.key === "Enter") doCityLookup(); });
+
+    document.getElementById("locationGpsBtn")?.addEventListener("click", async () => {
+      if(!("geolocation" in navigator)){ showStatus("locationGpsStatus", "GPS is not available in this browser.", "isError"); return; }
+      showStatus("locationGpsStatus", "Requesting location…"); hideConfirm();
+      try {
+        const gp = window.App?.getCurrentPositionAsync;
+        const rg = window.App?.reverseGeocodeCoords;
+        const pos = typeof gp === "function" ? await gp()
+          : await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }));
+        const lat = Number(pos?.coords?.latitude);
+        const lon = Number(pos?.coords?.longitude);
+        if(!Number.isFinite(lat) || !Number.isFinite(lon)){ showStatus("locationGpsStatus", "Could not read GPS coordinates.", "isError"); return; }
+        showStatus("locationGpsStatus", "Resolving address…");
+        const rev = typeof rg === "function" ? await rg(lat, lon) : null;
+        const label = rev?.label || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        showStatus("locationGpsStatus", "");
+        showConfirm({ lat, lon, city: rev?.city || "", state: rev?.state || "", label, source: "gps", zipCode: rev?.zipCode || "" }, label);
+      } catch (err){
+        const denied = err?.code === 1 || /denied/i.test(err?.message || "");
+        showStatus("locationGpsStatus",
+          denied ? "Location permission denied. Allow access in your browser settings." : "GPS lookup failed. Try again.",
+          "isError");
+        console.error("[locationPicker] GPS error:", err);
+      }
+    });
+
+    document.getElementById("locationPickerApplyBtn")?.addEventListener("click", () => {
+      if(!pendingGeo) return;
+      const saveAsHome = document.getElementById("locationPickerSaveCheck")?.checked;
+      const geo = pendingGeo;
+
+      if(saveAsHome){
+        // Update cfg's saved home location and clear any active override.
+        const liveCfg = window.App?.cfg || cfg;
+        const next = { ...liveCfg };
+        if(geo.source === "manual-zip" && geo._zip){
+          next.zipCode = geo._zip;
+          next.useDeviceLocation = false;
+        } else {
+          next.useDeviceLocation = true;
+          next.deviceLat = Number(geo.lat);
+          next.deviceLon = Number(geo.lon);
+          next.deviceLocationLabel = geo.label;
+        }
+        if(geo.zipCode && /^\d{5}$/.test(geo.zipCode)) next.zipCode = geo.zipCode;
+        saveConfig(next);
+        clearActiveLocationOverride();
+      } else {
+        // Session override only — home stays put.
+        setActiveLocationOverride({
+          zip: (geo._zip || geo.zipCode || "") + "",
+          lat: Number(geo.lat),
+          lon: Number(geo.lon),
+          city: geo.city || "",
+          state: geo.state || "",
+          label: geo.label || ""
+        });
+      }
+      closeModal();
+      try { onApply?.(geo, saveAsHome); } catch {}
+    });
+
+    document.getElementById("locationPickerCancelBtn")?.addEventListener("click", hideConfirm);
+    document.getElementById("locationPickerClose")?.addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+    modal.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+  }
+
   // ──────────────────────────────────────────────────────────────────────
   // Local TV-station / paper RSS catalog (data/local-stations.json)
   // ──────────────────────────────────────────────────────────────────────
@@ -3040,7 +3368,12 @@
     isSectionHidden,
     openSourcePicker,
     loadLocalStations,
-    getStationsForGeo
+    getStationsForGeo,
+    getActiveLocationOverride,
+    setActiveLocationOverride,
+    clearActiveLocationOverride,
+    geocodeCityName,
+    openLocationPicker
   };
 
   // Returns true when the user has disabled the given section in Settings.
