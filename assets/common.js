@@ -3027,6 +3027,36 @@
     return s;
   }
 
+  // Reject personals / dating / NSFW subreddits — they pollute the location
+  // search even when they're correctly named for the area (e.g. r/r4rDetroit
+  // would pass the location filter but isn't what users want here).
+  //
+  // Drops on any of:
+  //   - over18 flag from Reddit's API (catches everything tagged NSFW)
+  //   - name or description contains personals/dating/r4r tokens
+  //   - name matches the r4r / m4m / f4f / t4t / etc. gender-ratio pattern
+  const PERSONALS_TOKENS = [
+    "r4r", "personals", "personal ads", "hookup", "hookups",
+    "dating", "dating ad", "sexting", "snapchat trade",
+    "onlyfans", "sugar baby", "sugar daddy", "escort", "kik",
+    "nsfw", "gonewild", "lonely"
+  ];
+  // Matches r4r-style codes anywhere in the sub name: t4t, m4m, f4f, m4f, f4m,
+  // r4r, mm4mm, ff4ff, etc. Two letters around a "4" with both being one of
+  // r/m/f/t.
+  const RATIO_CODE_RE = /\b([mfrt]+)4([mfrt]+)\b/i;
+  function subIsPersonalsOrAdult(sub){
+    if(!sub || typeof sub !== "object") return false;
+    if(sub.over18 === true) return true;
+    const name = String(sub.display_name || "").toLowerCase();
+    const desc = String(sub.public_description || sub.description || "").toLowerCase();
+    if(RATIO_CODE_RE.test(name)) return true;
+    for(const t of PERSONALS_TOKENS){
+      if(name.includes(t) || desc.includes(t)) return true;
+    }
+    return false;
+  }
+
   // Filter out subs that have no recognizable city or state signal at all.
   // Without this, Reddit's search bleeds in completely unrelated subs that
   // happened to match a single keyword (e.g. searching "Jackson Michigan"
@@ -3085,6 +3115,9 @@
         const name = sub.display_name;
         if(!name || seen.has(name.toLowerCase())) continue;
         seen.add(name.toLowerCase());
+        // Filter: drop personals/dating/NSFW subs — they correctly geo-match
+        // (r/r4rDetroit) but aren't what news-scope users are looking for.
+        if(subIsPersonalsOrAdult(sub)) continue;
         // Filter: must have at least some city/state signal. This drops the
         // r/mississippi-when-searching-for-Jackson-Michigan kind of noise.
         if(!subHasLocationSignal(sub, geo.city, geo.state, fullState)) continue;
