@@ -354,14 +354,27 @@
     requestAnimationFrame(() => zipInput.focus());
   }
 
-  if (isFirstRun()) {
-    // Defer until DOMContentLoaded so document.body is available
-    if (document.readyState === "loading") {
+  // Expose the welcome modal so callers (news page when user clicks Local/
+  // Regional, weather page on load, AstroLab page on load) can prompt only
+  // when location is actually needed. No longer fires automatically on
+  // first visit — the bare landing page (News on National scope) doesn't
+  // require location, so prompting then was noise.
+  function openWelcomeIfNeeded(){
+    if(!isFirstRun()) return false;
+    if(document.getElementById("hnWelcomeModal")) return true;
+    if(document.readyState === "loading"){
       document.addEventListener("DOMContentLoaded", buildWelcomeModal, { once: true });
     } else {
       buildWelcomeModal();
     }
+    return true;
   }
+  try {
+    if(window.App){
+      window.App.openWelcomeIfNeeded = openWelcomeIfNeeded;
+      window.App.isFirstRun = isFirstRun;
+    }
+  } catch {}
   // ── End first-run welcome ──────────────────────────────────────────────────
 
 })();

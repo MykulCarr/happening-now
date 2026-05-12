@@ -1536,6 +1536,9 @@
       if(weatherCurrentUpdated) weatherCurrentUpdated.textContent = "";
       weatherCurrent?.classList.remove("isLoading");
       inFlight = false;
+      // Weather page is useless without a location — surface the first-run
+      // welcome modal so the user can set one with one click.
+      window.App?.openWelcomeIfNeeded?.();
       return;
     }
 

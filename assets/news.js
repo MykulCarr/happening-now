@@ -848,6 +848,11 @@ function restoreNewsFromCache(){
       geoCache = null;
       renderCriticalTicker(true);
       render(true);
+      // Local/Regional need a saved location to be useful. Prompt the
+      // first-run welcome if no cfg.zipCode or device coords are set.
+      if(scope === "local" || scope === "regional"){
+        window.App?.openWelcomeIfNeeded?.();
+      }
     });
   });
 

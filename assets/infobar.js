@@ -111,6 +111,18 @@
     // Always read fresh config so location changes are picked up immediately
     const liveCfg = window.App?.cfg || loadConfig();
     const zip = liveCfg.zipCode;
+    const hasDevice = liveCfg.useDeviceLocation
+      && Number.isFinite(Number(liveCfg.deviceLat))
+      && Number.isFinite(Number(liveCfg.deviceLon));
+    const hasOverride = !!window.App?.getActiveLocationOverride?.();
+    const hasAnyLocation = (zip && /^\d{5}$/.test(zip)) || hasDevice || hasOverride;
+
+    // If the user has no location set anywhere, show an actionable prompt
+    // in the widget instead of placeholder "--°" everywhere.
+    if(!hasAnyLocation){
+      updateWeatherDisplay("no-location");
+      return;
+    }
 
     // Render last-known weather immediately so the widget never starts at "--°"
     // on a slow/failed fetch. Only do this if the persisted ZIP still matches
@@ -189,6 +201,30 @@
   function updateWeatherDisplay(data=null){
     const widget = document.getElementById("weatherWidget");
     if(!widget) return;
+
+    // "No location" sentinel: show a clear "Set location" prompt instead of
+    // placeholder "--°" so the user knows there's an action to take. The
+    // widget's existing click handler still navigates to weather.html where
+    // the "Set My Location" button awaits.
+    if(data === "no-location"){
+      const iconEl = widget.querySelector(".weatherWidgetIcon");
+      const tempEl = widget.querySelector(".weatherWidgetTemp");
+      const rangeEl = widget.querySelector(".weatherWidgetRange");
+      const feelsEl = widget.querySelector(".weatherFeels");
+      const windEl = widget.querySelector(".weatherWind");
+      if(iconEl) iconEl.textContent = "📍";
+      if(tempEl) tempEl.textContent = "Set location";
+      if(rangeEl) rangeEl.textContent = "Tap to add";
+      if(feelsEl) feelsEl.textContent = "—";
+      if(windEl) windEl.textContent = "—";
+      const humidityFill = widget.querySelector(".humidityFill");
+      if(humidityFill) humidityFill.style.width = "0%";
+      const precipFill = widget.querySelector(".precipFill");
+      if(precipFill) precipFill.style.width = "0%";
+      widget.classList.add("isNoLocation");
+      return;
+    }
+    widget.classList.remove("isNoLocation");
 
     // If data is true (error flag) or falsy, show error state
     if(!data || data === true){

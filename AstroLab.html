@@ -3570,6 +3570,14 @@
       appCfg = window.App.loadConfig();
     }
 
+    // AstroLab needs location for the sky chart — prompt the first-run
+    // welcome modal if the user hasn't set one yet.
+    const hasZip = appCfg?.zipCode && /^\d{5}$/.test(appCfg.zipCode);
+    const hasDev = appCfg?.useDeviceLocation && Number.isFinite(Number(appCfg.deviceLat));
+    if(!hasZip && !hasDev){
+      window.App?.openWelcomeIfNeeded?.();
+    }
+
     const parseCoordsInput = (text) => {
       const m = String(text || "").trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
       if (!m) return null;
