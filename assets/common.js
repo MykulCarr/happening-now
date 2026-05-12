@@ -3292,7 +3292,40 @@
     ]);
     const { results, geo } = discoverRes;
     if(!geo){
-      leadEl.innerHTML = `Set your location in <a href="settings.html#weather" class="subLink">SETTINGS</a> to enable ${scope === "local" ? "Near You" : "state"} sources.`;
+      // Don't dead-end the user. Replace the lead with a clear CTA that
+      // opens the location picker inline. After they Apply, we re-run the
+      // discovery in place so the source picker populates without them
+      // having to close and reopen it.
+      leadEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span>${scope === "local" ? "We need to know your area to find local sources." : "We need to know your state."}</span>
+          <button type="button" class="btn primary" id="hnPickerSetLocationBtn">📍 Set Location</button>
+        </div>
+      `;
+      // Hide the suggestion sections until we have a location.
+      stationsSection.hidden = true;
+      listEl.innerHTML = "";
+      overlay.querySelector("#hnPickerSetLocationBtn")?.addEventListener("click", () => {
+        if(typeof window.App?.openLocationPicker !== "function") return;
+        window.App.openLocationPicker({
+          onApply: async () => {
+            // Re-run discovery now that location is set. Reuses the same
+            // modal instance so the user stays in flow.
+            leadEl.textContent = "Loading sources for your area…";
+            const fresh = await discoverSourcesForScope(scope);
+            const newGeo = fresh.geo;
+            const newResults = fresh.results;
+            if(!newGeo){
+              leadEl.textContent = "Couldn't resolve that location. Try again or add a custom RSS URL below.";
+              return;
+            }
+            try { stations = await getStationsForGeo(newGeo, scope); } catch { stations = []; }
+            suggestions = newResults;
+            preChecked = defaultPickedSubs(newResults, newGeo);
+            renderPickerSuggestions(newGeo, newResults);
+          }
+        });
+      });
       return;
     }
 
@@ -3307,49 +3340,56 @@
     // Friendly lead text varies by what we found.
     const haveStations = stations.length > 0;
     const haveSubs = results.length > 0;
-    if(!haveStations && !haveSubs){
-      leadEl.textContent = `No suggestions for ${geo.city}, ${geo.state} yet. Add a custom RSS URL below.`;
-    } else {
-      leadEl.textContent = `Suggestions for ${geo.city}, ${geo.state} — pick what you want, then Save.`;
-    }
+    renderPickerSuggestions(geo, results);
 
-    // Render station catalog (if any). Pre-check all of them — they're
-    // curated so they're presumed relevant.
-    if(haveStations){
-      stationsSection.hidden = false;
-      stationsListEl.innerHTML = "";
-      stations.forEach((s, idx) => {
+    // ── nested helper so the inline "Set Location" path can re-render
+    // after the user picks a location without reopening the modal ───────
+    function renderPickerSuggestions(g, subs){
+      const hasStations = stations.length > 0;
+      const hasSubs = (subs || []).length > 0;
+      if(!hasStations && !hasSubs){
+        leadEl.textContent = `No suggestions for ${g.city}, ${g.state} yet. Add a custom RSS URL below.`;
+      } else {
+        leadEl.textContent = `Suggestions for ${g.city}, ${g.state} — pick what you want, then Save.`;
+      }
+      if(hasStations){
+        stationsSection.hidden = false;
+        stationsListEl.innerHTML = "";
+        stations.forEach((s, idx) => {
+          const row = document.createElement("label");
+          row.className = "hnPickerRow";
+          row.setAttribute("role", "listitem");
+          const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
+          row.innerHTML = `
+            <input type="checkbox" data-idx="${idx}" checked />
+            <div class="hnPickerRowMain">
+              <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
+              ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
+            </div>
+          `;
+          stationsListEl.appendChild(row);
+        });
+      } else {
+        stationsSection.hidden = true;
+      }
+
+      listEl.innerHTML = "";
+      (subs || []).forEach((r, idx) => {
         const row = document.createElement("label");
         row.className = "hnPickerRow";
         row.setAttribute("role", "listitem");
-        const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
+        const checked = preChecked.has(r.displayName) ? "checked" : "";
+        const subsLabel = r.subscribers >= 1000 ? `${(r.subscribers/1000).toFixed(1)}K` : String(r.subscribers);
         row.innerHTML = `
-          <input type="checkbox" data-idx="${idx}" checked />
+          <input type="checkbox" data-idx="${idx}" ${checked} />
           <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
-            ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
+            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
+            ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
           </div>
         `;
-        stationsListEl.appendChild(row);
+        listEl.appendChild(row);
       });
     }
-
-    listEl.innerHTML = "";
-    results.forEach((r, idx) => {
-      const row = document.createElement("label");
-      row.className = "hnPickerRow";
-      row.setAttribute("role", "listitem");
-      const checked = preChecked.has(r.displayName) ? "checked" : "";
-      const subsLabel = r.subscribers >= 1000 ? `${(r.subscribers/1000).toFixed(1)}K` : String(r.subscribers);
-      row.innerHTML = `
-        <input type="checkbox" data-idx="${idx}" ${checked} />
-        <div class="hnPickerRowMain">
-          <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
-          ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
-        </div>
-      `;
-      listEl.appendChild(row);
-    });
   }
 
   window.App = {
