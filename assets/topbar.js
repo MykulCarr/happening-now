@@ -194,26 +194,6 @@
 
   // (Search UI moved into the info bar)
 
-  // Allow pages to insert into the two action slots via IDs
-  // e.g., page scripts can find #hnSlot1 and append buttons
-
-  // Global location switcher in the topbar — pin icon button next to weather.
-  // Clicking opens the shared picker; the same flow used by Weather and News.
-  // Visible on every page so the user always has a way to switch active city.
-  const locPinSlot = document.getElementById("hnSlot1");
-  if(locPinSlot){
-    const pinBtn = document.createElement("button");
-    pinBtn.type = "button";
-    pinBtn.className = "hn-locationPinBtn";
-    pinBtn.setAttribute("aria-label", "Change location");
-    pinBtn.title = "Change location for news & weather";
-    pinBtn.textContent = "📍";
-    pinBtn.addEventListener("click", () => {
-      window.App?.openLocationPicker?.();
-    });
-    locPinSlot.appendChild(pinBtn);
-  }
-
   // Expose a small API on window.App if available
   try {
     if (window.App) window.App.TopBar = { mount: root };
