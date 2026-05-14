@@ -5,8 +5,8 @@
     "schema": {
       "states": {
         "<state-abbrev>": {
-          "_state": "[ array of statewide entries ]",
-          "<lowercase-city>": "[ array of entries serving that city specifically ]"
+          "_state": "{ coords: { lat, lon }, entries: [ statewide entries ] } — coords are the state's geographic center (or capital); used to suggest this state as a fallback when no nearby city is in the repo",
+          "<lowercase-city>": "{ coords: { lat, lon }, entries: [ entries serving that city ] } — coords are the city's centroid; used to compute nearest-city fallbacks"
         }
       },
       "entry": {
@@ -14,968 +14,1342 @@
         "rss": "Direct RSS feed URL (validate it returns content before adding!)",
         "site": "Public-facing landing page (used for the favicon and click-through)",
         "type": "tv | paper | community"
-      }
+      },
+      "legacyShape": "An older form where a city's value was just an array of entries (no coords) is still tolerated by getStationsForGeo for backward compat — but new entries MUST include coords so they participate in the nearest-city fallback."
     },
     "howToAdd": [
       "1. Find a candidate RSS URL for the local outlet (TV station, paper, etc.).",
       "2. Verify it returns items via the proxy: curl -s 'https://happening-now.net/v1/rss/raw?url=<urlencoded>' | grep -c '<item'  -- if 0, skip.",
-      "3. Add an entry under states.<XX>.<lowercase-city> for hyperlocal, or states.<XX>._state for statewide.",
-      "4. Keep entries sorted alphabetically within each city array.",
-      "5. Lookups are case-insensitive: getStationsForGeo({ city:'Jackson', state:'MI' }) finds states.MI.jackson."
+      "3. Add an entry under states.<XX>.<lowercase-city>.entries for hyperlocal, or states.<XX>._state.entries for statewide.",
+      "4. When adding a NEW city or state block, include coords: { lat, lon } at the city/state level (decimal degrees, ~4 sig figs). City coords = city centroid; statewide coords = capital or geographic center. Without coords, the city won't appear in nearest-city fallback suggestions.",
+      "5. Keep entries sorted alphabetically within each entries array.",
+      "6. Lookups are case-insensitive: getStationsForGeo({ city:'Jackson', state:'MI' }) finds states.MI.jackson."
     ]
   },
   "states": {
     "CA": {
-      "_state": [
-        {
-          "name": "CalMatters (statewide)",
-          "rss": "https://calmatters.org/feed/",
-          "site": "https://calmatters.org",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 38.5816,
+          "lon": -121.4944
         },
-        {
-          "name": "Capitol Weekly",
-          "rss": "https://capitolweekly.net/feed/",
-          "site": "https://capitolweekly.net",
-          "type": "paper"
-        }
-      ],
-      "los angeles": [
-        {
-          "name": "KABC Eyewitness News (ABC 7)",
-          "rss": "https://abc7.com/feed/",
-          "site": "https://abc7.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "CalMatters (statewide)",
+            "rss": "https://calmatters.org/feed/",
+            "site": "https://calmatters.org",
+            "type": "paper"
+          },
+          {
+            "name": "Capitol Weekly",
+            "rss": "https://capitolweekly.net/feed/",
+            "site": "https://capitolweekly.net",
+            "type": "paper"
+          }
+        ]
+      },
+      "los angeles": {
+        "coords": {
+          "lat": 34.0522,
+          "lon": -118.2437
         },
-        {
-          "name": "KNBC NBC Los Angeles (NBC 4)",
-          "rss": "https://www.nbclosangeles.com/?rss=y",
-          "site": "https://www.nbclosangeles.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KABC Eyewitness News (ABC 7)",
+            "rss": "https://abc7.com/feed/",
+            "site": "https://abc7.com",
+            "type": "tv"
+          },
+          {
+            "name": "KNBC NBC Los Angeles (NBC 4)",
+            "rss": "https://www.nbclosangeles.com/?rss=y",
+            "site": "https://www.nbclosangeles.com",
+            "type": "tv"
+          },
+          {
+            "name": "KTLA 5 Los Angeles",
+            "rss": "https://ktla.com/news/feed/",
+            "site": "https://ktla.com",
+            "type": "tv"
+          },
+          {
+            "name": "Los Angeles Times — California",
+            "rss": "https://www.latimes.com/california/rss2.0.xml",
+            "site": "https://www.latimes.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "san francisco": {
+        "coords": {
+          "lat": 37.7749,
+          "lon": -122.4194
         },
-        {
-          "name": "KTLA 5 Los Angeles",
-          "rss": "https://ktla.com/news/feed/",
-          "site": "https://ktla.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KGO ABC 7 News Bay Area",
+            "rss": "https://abc7news.com/feed/",
+            "site": "https://abc7news.com",
+            "type": "tv"
+          },
+          {
+            "name": "KNTV NBC Bay Area",
+            "rss": "https://www.nbcbayarea.com/?rss=y",
+            "site": "https://www.nbcbayarea.com",
+            "type": "tv"
+          },
+          {
+            "name": "The San Francisco Standard",
+            "rss": "https://sfstandard.com/feed/",
+            "site": "https://sfstandard.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "san diego": {
+        "coords": {
+          "lat": 32.7157,
+          "lon": -117.1611
         },
-        {
-          "name": "Los Angeles Times — California",
-          "rss": "https://www.latimes.com/california/rss2.0.xml",
-          "site": "https://www.latimes.com",
-          "type": "paper"
-        }
-      ],
-      "san francisco": [
-        {
-          "name": "KGO ABC 7 News Bay Area",
-          "rss": "https://abc7news.com/feed/",
-          "site": "https://abc7news.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KGTV ABC 10 News San Diego",
+            "rss": "https://www.10news.com/news.rss",
+            "site": "https://www.10news.com",
+            "type": "tv"
+          },
+          {
+            "name": "KNSD NBC 7 San Diego",
+            "rss": "https://www.nbcsandiego.com/?rss=y",
+            "site": "https://www.nbcsandiego.com",
+            "type": "tv"
+          },
+          {
+            "name": "KFMB CBS 8 San Diego",
+            "rss": "https://www.cbs8.com/feeds/syndication/rss/news/local",
+            "site": "https://www.cbs8.com",
+            "type": "tv"
+          },
+          {
+            "name": "KSWB Fox 5 San Diego",
+            "rss": "https://fox5sandiego.com/news/feed/",
+            "site": "https://fox5sandiego.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "sacramento": {
+        "coords": {
+          "lat": 38.5816,
+          "lon": -121.4944
         },
-        {
-          "name": "KNTV NBC Bay Area",
-          "rss": "https://www.nbcbayarea.com/?rss=y",
-          "site": "https://www.nbcbayarea.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KCRA 3 Sacramento (NBC)",
+            "rss": "https://www.kcra.com/topstories-rss",
+            "site": "https://www.kcra.com",
+            "type": "tv"
+          },
+          {
+            "name": "KXTV ABC 10 Sacramento",
+            "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
+            "site": "https://www.abc10.com",
+            "type": "tv"
+          },
+          {
+            "name": "KTXL Fox 40 Sacramento",
+            "rss": "https://www.fox40.com/news/feed/",
+            "site": "https://www.fox40.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "fresno": {
+        "coords": {
+          "lat": 36.7378,
+          "lon": -119.7871
         },
-        {
-          "name": "The San Francisco Standard",
-          "rss": "https://sfstandard.com/feed/",
-          "site": "https://sfstandard.com",
-          "type": "paper"
-        }
-      ],
-      "san diego": [
-        {
-          "name": "KGTV ABC 10 News San Diego",
-          "rss": "https://www.10news.com/news.rss",
-          "site": "https://www.10news.com",
-          "type": "tv"
-        },
-        {
-          "name": "KNSD NBC 7 San Diego",
-          "rss": "https://www.nbcsandiego.com/?rss=y",
-          "site": "https://www.nbcsandiego.com",
-          "type": "tv"
-        },
-        {
-          "name": "KFMB CBS 8 San Diego",
-          "rss": "https://www.cbs8.com/feeds/syndication/rss/news/local",
-          "site": "https://www.cbs8.com",
-          "type": "tv"
-        },
-        {
-          "name": "KSWB Fox 5 San Diego",
-          "rss": "https://fox5sandiego.com/news/feed/",
-          "site": "https://fox5sandiego.com",
-          "type": "tv"
-        }
-      ],
-      "sacramento": [
-        {
-          "name": "KCRA 3 Sacramento (NBC)",
-          "rss": "https://www.kcra.com/topstories-rss",
-          "site": "https://www.kcra.com",
-          "type": "tv"
-        },
-        {
-          "name": "KXTV ABC 10 Sacramento",
-          "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
-          "site": "https://www.abc10.com",
-          "type": "tv"
-        },
-        {
-          "name": "KTXL Fox 40 Sacramento",
-          "rss": "https://www.fox40.com/news/feed/",
-          "site": "https://www.fox40.com",
-          "type": "tv"
-        }
-      ],
-      "fresno": [
-        {
-          "name": "KFSN ABC 30 Fresno",
-          "rss": "https://abc30.com/feed/",
-          "site": "https://abc30.com",
-          "type": "tv"
-        },
-        {
-          "name": "KSEE 24 Central Valley (NBC)",
-          "rss": "https://www.yourcentralvalley.com/news/feed/",
-          "site": "https://www.yourcentralvalley.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "KFSN ABC 30 Fresno",
+            "rss": "https://abc30.com/feed/",
+            "site": "https://abc30.com",
+            "type": "tv"
+          },
+          {
+            "name": "KSEE 24 Central Valley (NBC)",
+            "rss": "https://www.yourcentralvalley.com/news/feed/",
+            "site": "https://www.yourcentralvalley.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "FL": {
-      "_state": [
-        {
-          "name": "Florida Phoenix (statewide)",
-          "rss": "https://floridaphoenix.com/feed/",
-          "site": "https://floridaphoenix.com",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 30.4383,
+          "lon": -84.2807
         },
-        {
-          "name": "Florida Politics",
-          "rss": "https://floridapolitics.com/feed/",
-          "site": "https://floridapolitics.com",
-          "type": "paper"
-        }
-      ],
-      "miami": [
-        {
-          "name": "WPLG Local 10 Miami (ABC)",
-          "rss": "https://www.local10.com/arc/outboundfeeds/rss/",
-          "site": "https://www.local10.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Florida Phoenix (statewide)",
+            "rss": "https://floridaphoenix.com/feed/",
+            "site": "https://floridaphoenix.com",
+            "type": "paper"
+          },
+          {
+            "name": "Florida Politics",
+            "rss": "https://floridapolitics.com/feed/",
+            "site": "https://floridapolitics.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "miami": {
+        "coords": {
+          "lat": 25.7617,
+          "lon": -80.1918
         },
-        {
-          "name": "WSVN Fox 7 Miami",
-          "rss": "https://wsvn.com/news/feed/",
-          "site": "https://wsvn.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WPLG Local 10 Miami (ABC)",
+            "rss": "https://www.local10.com/arc/outboundfeeds/rss/",
+            "site": "https://www.local10.com",
+            "type": "tv"
+          },
+          {
+            "name": "WSVN Fox 7 Miami",
+            "rss": "https://wsvn.com/news/feed/",
+            "site": "https://wsvn.com",
+            "type": "tv"
+          },
+          {
+            "name": "WTVJ NBC 6 South Florida",
+            "rss": "https://www.nbcmiami.com/?rss=y",
+            "site": "https://www.nbcmiami.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "tampa": {
+        "coords": {
+          "lat": 27.9506,
+          "lon": -82.4572
         },
-        {
-          "name": "WTVJ NBC 6 South Florida",
-          "rss": "https://www.nbcmiami.com/?rss=y",
-          "site": "https://www.nbcmiami.com",
-          "type": "tv"
-        }
-      ],
-      "tampa": [
-        {
-          "name": "WFLA News Channel 8 Tampa (NBC)",
-          "rss": "https://www.wfla.com/news/feed/",
-          "site": "https://www.wfla.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WFLA News Channel 8 Tampa (NBC)",
+            "rss": "https://www.wfla.com/news/feed/",
+            "site": "https://www.wfla.com",
+            "type": "tv"
+          },
+          {
+            "name": "WFTS ABC Action News Tampa",
+            "rss": "https://www.abcactionnews.com/news.rss",
+            "site": "https://www.abcactionnews.com",
+            "type": "tv"
+          },
+          {
+            "name": "WTSP 10 Tampa Bay (CBS)",
+            "rss": "https://www.wtsp.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wtsp.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "orlando": {
+        "coords": {
+          "lat": 28.5383,
+          "lon": -81.3792
         },
-        {
-          "name": "WFTS ABC Action News Tampa",
-          "rss": "https://www.abcactionnews.com/news.rss",
-          "site": "https://www.abcactionnews.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WESH 2 Orlando (NBC)",
+            "rss": "https://www.wesh.com/topstories-rss",
+            "site": "https://www.wesh.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "jacksonville": {
+        "coords": {
+          "lat": 30.3322,
+          "lon": -81.6557
         },
-        {
-          "name": "WTSP 10 Tampa Bay (CBS)",
-          "rss": "https://www.wtsp.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wtsp.com",
-          "type": "tv"
-        }
-      ],
-      "orlando": [
-        {
-          "name": "WESH 2 Orlando (NBC)",
-          "rss": "https://www.wesh.com/topstories-rss",
-          "site": "https://www.wesh.com",
-          "type": "tv"
-        }
-      ],
-      "jacksonville": [
-        {
-          "name": "WTLV First Coast News Jacksonville",
-          "rss": "https://www.firstcoastnews.com/feeds/syndication/rss/news/local",
-          "site": "https://www.firstcoastnews.com",
-          "type": "tv"
-        }
-      ],
-      "tallahassee": [
-        {
-          "name": "WTXL ABC 27 Tallahassee",
-          "rss": "https://www.wtxl.com/news.rss",
-          "site": "https://www.wtxl.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WTLV First Coast News Jacksonville",
+            "rss": "https://www.firstcoastnews.com/feeds/syndication/rss/news/local",
+            "site": "https://www.firstcoastnews.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "tallahassee": {
+        "coords": {
+          "lat": 30.4383,
+          "lon": -84.2807
+        },
+        "entries": [
+          {
+            "name": "WTXL ABC 27 Tallahassee",
+            "rss": "https://www.wtxl.com/news.rss",
+            "site": "https://www.wtxl.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "GA": {
-      "_state": [
-        {
-          "name": "Georgia Recorder",
-          "rss": "https://georgiarecorder.com/feed/",
-          "site": "https://georgiarecorder.com",
-          "type": "paper"
-        }
-      ],
-      "atlanta": [
-        {
-          "name": "WXIA 11Alive Atlanta (NBC)",
-          "rss": "https://www.11alive.com/feeds/syndication/rss/news/local",
-          "site": "https://www.11alive.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 33.749,
+          "lon": -84.388
         },
-        {
-          "name": "Atlanta Magazine",
-          "rss": "https://www.atlantamagazine.com/feed/",
-          "site": "https://www.atlantamagazine.com",
-          "type": "paper"
-        }
-      ],
-      "savannah": [
-        {
-          "name": "WSAV Savannah (NBC)",
-          "rss": "https://www.wsav.com/news/feed/",
-          "site": "https://www.wsav.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "Georgia Recorder",
+            "rss": "https://georgiarecorder.com/feed/",
+            "site": "https://georgiarecorder.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "atlanta": {
+        "coords": {
+          "lat": 33.749,
+          "lon": -84.388
+        },
+        "entries": [
+          {
+            "name": "WXIA 11Alive Atlanta (NBC)",
+            "rss": "https://www.11alive.com/feeds/syndication/rss/news/local",
+            "site": "https://www.11alive.com",
+            "type": "tv"
+          },
+          {
+            "name": "Atlanta Magazine",
+            "rss": "https://www.atlantamagazine.com/feed/",
+            "site": "https://www.atlantamagazine.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "savannah": {
+        "coords": {
+          "lat": 32.0809,
+          "lon": -81.0912
+        },
+        "entries": [
+          {
+            "name": "WSAV Savannah (NBC)",
+            "rss": "https://www.wsav.com/news/feed/",
+            "site": "https://www.wsav.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "IL": {
-      "_state": [
-        {
-          "name": "Capitol News Illinois (statewide)",
-          "rss": "https://capitolnewsillinois.com/feed/",
-          "site": "https://capitolnewsillinois.com",
-          "type": "paper"
-        }
-      ],
-      "chicago": [
-        {
-          "name": "ABC 7 Chicago (WLS)",
-          "rss": "https://abc7chicago.com/feed/",
-          "site": "https://abc7chicago.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 39.7817,
+          "lon": -89.6501
         },
-        {
-          "name": "NBC 5 Chicago (WMAQ)",
-          "rss": "https://www.nbcchicago.com/?rss=y",
-          "site": "https://www.nbcchicago.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Capitol News Illinois (statewide)",
+            "rss": "https://capitolnewsillinois.com/feed/",
+            "site": "https://capitolnewsillinois.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "chicago": {
+        "coords": {
+          "lat": 41.8781,
+          "lon": -87.6298
         },
-        {
-          "name": "WGN-TV Chicago",
-          "rss": "https://wgntv.com/news/feed/",
-          "site": "https://wgntv.com",
-          "type": "tv"
-        },
-        {
-          "name": "Chicago Sun-Times",
-          "rss": "https://chicago.suntimes.com/rss/index.xml",
-          "site": "https://chicago.suntimes.com",
-          "type": "paper"
-        },
-        {
-          "name": "Block Club Chicago (neighborhood)",
-          "rss": "https://blockclubchicago.org/feed/",
-          "site": "https://blockclubchicago.org",
-          "type": "paper"
-        }
-      ]
+        "entries": [
+          {
+            "name": "ABC 7 Chicago (WLS)",
+            "rss": "https://abc7chicago.com/feed/",
+            "site": "https://abc7chicago.com",
+            "type": "tv"
+          },
+          {
+            "name": "NBC 5 Chicago (WMAQ)",
+            "rss": "https://www.nbcchicago.com/?rss=y",
+            "site": "https://www.nbcchicago.com",
+            "type": "tv"
+          },
+          {
+            "name": "WGN-TV Chicago",
+            "rss": "https://wgntv.com/news/feed/",
+            "site": "https://wgntv.com",
+            "type": "tv"
+          },
+          {
+            "name": "Chicago Sun-Times",
+            "rss": "https://chicago.suntimes.com/rss/index.xml",
+            "site": "https://chicago.suntimes.com",
+            "type": "paper"
+          },
+          {
+            "name": "Block Club Chicago (neighborhood)",
+            "rss": "https://blockclubchicago.org/feed/",
+            "site": "https://blockclubchicago.org",
+            "type": "paper"
+          }
+        ]
+      }
     },
     "NY": {
-      "_state": [
-        {
-          "name": "New York Post (statewide)",
-          "rss": "https://nypost.com/feed/",
-          "site": "https://nypost.com",
-          "type": "paper"
-        }
-      ],
-      "new york": [
-        {
-          "name": "WABC Eyewitness News (ABC 7)",
-          "rss": "https://abc7ny.com/feed/",
-          "site": "https://abc7ny.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 42.6526,
+          "lon": -73.7562
         },
-        {
-          "name": "WNBC News 4 New York (NBC)",
-          "rss": "https://www.nbcnewyork.com/?rss=y",
-          "site": "https://www.nbcnewyork.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "New York Post (statewide)",
+            "rss": "https://nypost.com/feed/",
+            "site": "https://nypost.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "new york": {
+        "coords": {
+          "lat": 40.7128,
+          "lon": -74.006
         },
-        {
-          "name": "PIX 11 (WPIX)",
-          "rss": "https://pix11.com/news/feed/",
-          "site": "https://pix11.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WABC Eyewitness News (ABC 7)",
+            "rss": "https://abc7ny.com/feed/",
+            "site": "https://abc7ny.com",
+            "type": "tv"
+          },
+          {
+            "name": "WNBC News 4 New York (NBC)",
+            "rss": "https://www.nbcnewyork.com/?rss=y",
+            "site": "https://www.nbcnewyork.com",
+            "type": "tv"
+          },
+          {
+            "name": "PIX 11 (WPIX)",
+            "rss": "https://pix11.com/news/feed/",
+            "site": "https://pix11.com",
+            "type": "tv"
+          },
+          {
+            "name": "NYT — N.Y. / Region",
+            "rss": "https://www.nytimes.com/services/xml/rss/nyt/NYRegion.xml",
+            "site": "https://www.nytimes.com/section/nyregion",
+            "type": "paper"
+          },
+          {
+            "name": "Gothamist",
+            "rss": "https://gothamist.com/feed",
+            "site": "https://gothamist.com",
+            "type": "paper"
+          },
+          {
+            "name": "The City NYC",
+            "rss": "https://www.thecity.nyc/feed/",
+            "site": "https://www.thecity.nyc",
+            "type": "paper"
+          }
+        ]
+      },
+      "buffalo": {
+        "coords": {
+          "lat": 42.8864,
+          "lon": -78.8784
         },
-        {
-          "name": "NYT — N.Y. / Region",
-          "rss": "https://www.nytimes.com/services/xml/rss/nyt/NYRegion.xml",
-          "site": "https://www.nytimes.com/section/nyregion",
-          "type": "paper"
+        "entries": [
+          {
+            "name": "WIVB Buffalo (CBS 4)",
+            "rss": "https://www.wivb.com/news/feed/",
+            "site": "https://www.wivb.com",
+            "type": "tv"
+          },
+          {
+            "name": "WGRZ Buffalo (NBC 2)",
+            "rss": "https://www.wgrz.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wgrz.com",
+            "type": "tv"
+          },
+          {
+            "name": "WKBW Buffalo (ABC 7)",
+            "rss": "https://www.wkbw.com/news.rss",
+            "site": "https://www.wkbw.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "rochester": {
+        "coords": {
+          "lat": 43.1566,
+          "lon": -77.6088
         },
-        {
-          "name": "Gothamist",
-          "rss": "https://gothamist.com/feed",
-          "site": "https://gothamist.com",
-          "type": "paper"
+        "entries": [
+          {
+            "name": "WROC Rochester First (CBS 8)",
+            "rss": "https://www.rochesterfirst.com/news/feed/",
+            "site": "https://www.rochesterfirst.com",
+            "type": "tv"
+          },
+          {
+            "name": "WHEC Rochester (NBC 10)",
+            "rss": "https://www.whec.com/feed/",
+            "site": "https://www.whec.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "albany": {
+        "coords": {
+          "lat": 42.6526,
+          "lon": -73.7562
         },
-        {
-          "name": "The City NYC",
-          "rss": "https://www.thecity.nyc/feed/",
-          "site": "https://www.thecity.nyc",
-          "type": "paper"
-        }
-      ],
-      "buffalo": [
-        {
-          "name": "WIVB Buffalo (CBS 4)",
-          "rss": "https://www.wivb.com/news/feed/",
-          "site": "https://www.wivb.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WTEN Albany (ABC 10)",
+            "rss": "https://www.news10.com/news/feed/",
+            "site": "https://www.news10.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "syracuse": {
+        "coords": {
+          "lat": 43.0481,
+          "lon": -76.1474
         },
-        {
-          "name": "WGRZ Buffalo (NBC 2)",
-          "rss": "https://www.wgrz.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wgrz.com",
-          "type": "tv"
-        },
-        {
-          "name": "WKBW Buffalo (ABC 7)",
-          "rss": "https://www.wkbw.com/news.rss",
-          "site": "https://www.wkbw.com",
-          "type": "tv"
-        }
-      ],
-      "rochester": [
-        {
-          "name": "WROC Rochester First (CBS 8)",
-          "rss": "https://www.rochesterfirst.com/news/feed/",
-          "site": "https://www.rochesterfirst.com",
-          "type": "tv"
-        },
-        {
-          "name": "WHEC Rochester (NBC 10)",
-          "rss": "https://www.whec.com/feed/",
-          "site": "https://www.whec.com",
-          "type": "tv"
-        }
-      ],
-      "albany": [
-        {
-          "name": "WTEN Albany (ABC 10)",
-          "rss": "https://www.news10.com/news/feed/",
-          "site": "https://www.news10.com",
-          "type": "tv"
-        }
-      ],
-      "syracuse": [
-        {
-          "name": "WSYR Local SYR (ABC 9)",
-          "rss": "https://www.localsyr.com/news/feed/",
-          "site": "https://www.localsyr.com",
-          "type": "tv"
-        },
-        {
-          "name": "Syracuse.com",
-          "rss": "https://www.syracuse.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.syracuse.com",
-          "type": "paper"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WSYR Local SYR (ABC 9)",
+            "rss": "https://www.localsyr.com/news/feed/",
+            "site": "https://www.localsyr.com",
+            "type": "tv"
+          },
+          {
+            "name": "Syracuse.com",
+            "rss": "https://www.syracuse.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.syracuse.com",
+            "type": "paper"
+          }
+        ]
+      }
     },
     "OR": {
-      "_state": [
-        {
-          "name": "Oregon Capital Chronicle",
-          "rss": "https://oregoncapitalchronicle.com/feed/",
-          "site": "https://oregoncapitalchronicle.com",
-          "type": "paper"
-        }
-      ],
-      "portland": [
-        {
-          "name": "KGW Portland (NBC 8)",
-          "rss": "https://www.kgw.com/feeds/syndication/rss/news/local",
-          "site": "https://www.kgw.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 44.9429,
+          "lon": -123.0351
         },
-        {
-          "name": "KOIN Portland (CBS 6)",
-          "rss": "https://www.koin.com/news/feed/",
-          "site": "https://www.koin.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Oregon Capital Chronicle",
+            "rss": "https://oregoncapitalchronicle.com/feed/",
+            "site": "https://oregoncapitalchronicle.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "portland": {
+        "coords": {
+          "lat": 45.5152,
+          "lon": -122.6784
         },
-        {
-          "name": "OregonLive (The Oregonian)",
-          "rss": "https://www.oregonlive.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.oregonlive.com",
-          "type": "paper"
-        }
-      ],
-      "bend": [
-        {
-          "name": "KTVZ NewsChannel 21 Bend (NBC)",
-          "rss": "https://ktvz.com/feed/",
-          "site": "https://ktvz.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KGW Portland (NBC 8)",
+            "rss": "https://www.kgw.com/feeds/syndication/rss/news/local",
+            "site": "https://www.kgw.com",
+            "type": "tv"
+          },
+          {
+            "name": "KOIN Portland (CBS 6)",
+            "rss": "https://www.koin.com/news/feed/",
+            "site": "https://www.koin.com",
+            "type": "tv"
+          },
+          {
+            "name": "OregonLive (The Oregonian)",
+            "rss": "https://www.oregonlive.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.oregonlive.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "bend": {
+        "coords": {
+          "lat": 44.0582,
+          "lon": -121.3153
         },
-        {
-          "name": "The Bend Bulletin",
-          "rss": "https://www.bendbulletin.com/rss/",
-          "site": "https://www.bendbulletin.com",
-          "type": "paper"
-        }
-      ]
+        "entries": [
+          {
+            "name": "KTVZ NewsChannel 21 Bend (NBC)",
+            "rss": "https://ktvz.com/feed/",
+            "site": "https://ktvz.com",
+            "type": "tv"
+          },
+          {
+            "name": "The Bend Bulletin",
+            "rss": "https://www.bendbulletin.com/rss/",
+            "site": "https://www.bendbulletin.com",
+            "type": "paper"
+          }
+        ]
+      }
     },
     "PA": {
-      "_state": [
-        {
-          "name": "WHYY (Philly NPR/PBS)",
-          "rss": "https://whyy.org/feed/",
-          "site": "https://whyy.org",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 40.2732,
+          "lon": -76.8867
         },
-        {
-          "name": "StateImpact Pennsylvania",
-          "rss": "https://stateimpact.npr.org/pennsylvania/feed/",
-          "site": "https://stateimpact.npr.org/pennsylvania",
-          "type": "paper"
-        }
-      ],
-      "philadelphia": [
-        {
-          "name": "WPVI 6abc Philadelphia (ABC)",
-          "rss": "https://6abc.com/feed/",
-          "site": "https://6abc.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WHYY (Philly NPR/PBS)",
+            "rss": "https://whyy.org/feed/",
+            "site": "https://whyy.org",
+            "type": "paper"
+          },
+          {
+            "name": "StateImpact Pennsylvania",
+            "rss": "https://stateimpact.npr.org/pennsylvania/feed/",
+            "site": "https://stateimpact.npr.org/pennsylvania",
+            "type": "paper"
+          }
+        ]
+      },
+      "philadelphia": {
+        "coords": {
+          "lat": 39.9526,
+          "lon": -75.1652
         },
-        {
-          "name": "WCAU NBC10 Philadelphia",
-          "rss": "https://www.nbcphiladelphia.com/?rss=y",
-          "site": "https://www.nbcphiladelphia.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WPVI 6abc Philadelphia (ABC)",
+            "rss": "https://6abc.com/feed/",
+            "site": "https://6abc.com",
+            "type": "tv"
+          },
+          {
+            "name": "WCAU NBC10 Philadelphia",
+            "rss": "https://www.nbcphiladelphia.com/?rss=y",
+            "site": "https://www.nbcphiladelphia.com",
+            "type": "tv"
+          },
+          {
+            "name": "PHL17 (WPHL)",
+            "rss": "https://phl17.com/feed/",
+            "site": "https://phl17.com",
+            "type": "tv"
+          },
+          {
+            "name": "Billy Penn at WHYY (Philly community)",
+            "rss": "https://billypenn.com/feed/",
+            "site": "https://billypenn.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "pittsburgh": {
+        "coords": {
+          "lat": 40.4406,
+          "lon": -79.9959
         },
-        {
-          "name": "PHL17 (WPHL)",
-          "rss": "https://phl17.com/feed/",
-          "site": "https://phl17.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WTAE Pittsburgh (ABC 4)",
+            "rss": "https://www.wtae.com/topstories-rss",
+            "site": "https://www.wtae.com",
+            "type": "tv"
+          },
+          {
+            "name": "TribLive (Pittsburgh Tribune-Review)",
+            "rss": "https://triblive.com/rss/",
+            "site": "https://triblive.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "allentown": {
+        "coords": {
+          "lat": 40.6084,
+          "lon": -75.4902
         },
-        {
-          "name": "Billy Penn at WHYY (Philly community)",
-          "rss": "https://billypenn.com/feed/",
-          "site": "https://billypenn.com",
-          "type": "paper"
-        }
-      ],
-      "pittsburgh": [
-        {
-          "name": "WTAE Pittsburgh (ABC 4)",
-          "rss": "https://www.wtae.com/topstories-rss",
-          "site": "https://www.wtae.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Lehigh Valley Live",
+            "rss": "https://www.lehighvalleylive.com/arc/outboundfeeds/rss/",
+            "site": "https://www.lehighvalleylive.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "harrisburg": {
+        "coords": {
+          "lat": 40.2732,
+          "lon": -76.8867
         },
-        {
-          "name": "TribLive (Pittsburgh Tribune-Review)",
-          "rss": "https://triblive.com/rss/",
-          "site": "https://triblive.com",
-          "type": "paper"
-        }
-      ],
-      "allentown": [
-        {
-          "name": "Lehigh Valley Live",
-          "rss": "https://www.lehighvalleylive.com/arc/outboundfeeds/rss/",
-          "site": "https://www.lehighvalleylive.com",
-          "type": "paper"
-        }
-      ],
-      "harrisburg": [
-        {
-          "name": "WHTM ABC 27 Harrisburg",
-          "rss": "https://www.abc27.com/news/feed/",
-          "site": "https://www.abc27.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WHTM ABC 27 Harrisburg",
+            "rss": "https://www.abc27.com/news/feed/",
+            "site": "https://www.abc27.com",
+            "type": "tv"
+          },
+          {
+            "name": "WGAL Lancaster (NBC 8)",
+            "rss": "https://www.wgal.com/topstories-rss",
+            "site": "https://www.wgal.com",
+            "type": "tv"
+          },
+          {
+            "name": "PennLive (Harrisburg Patriot-News)",
+            "rss": "https://www.pennlive.com/arc/outboundfeeds/rss/",
+            "site": "https://www.pennlive.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "erie": {
+        "coords": {
+          "lat": 42.1292,
+          "lon": -80.0851
         },
-        {
-          "name": "WGAL Lancaster (NBC 8)",
-          "rss": "https://www.wgal.com/topstories-rss",
-          "site": "https://www.wgal.com",
-          "type": "tv"
-        },
-        {
-          "name": "PennLive (Harrisburg Patriot-News)",
-          "rss": "https://www.pennlive.com/arc/outboundfeeds/rss/",
-          "site": "https://www.pennlive.com",
-          "type": "paper"
-        }
-      ],
-      "erie": [
-        {
-          "name": "YourErie (WJET / WFXP)",
-          "rss": "https://www.yourerie.com/news/feed/",
-          "site": "https://www.yourerie.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "YourErie (WJET / WFXP)",
+            "rss": "https://www.yourerie.com/news/feed/",
+            "site": "https://www.yourerie.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "VA": {
-      "_state": [
-        {
-          "name": "Virginia Mercury",
-          "rss": "https://virginiamercury.com/feed/",
-          "site": "https://virginiamercury.com",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 37.5407,
+          "lon": -77.436
         },
-        {
-          "name": "Cardinal News (SW Virginia)",
-          "rss": "https://cardinalnews.org/feed/",
-          "site": "https://cardinalnews.org",
-          "type": "paper"
-        }
-      ],
-      "richmond": [
-        {
-          "name": "WRIC ABC 8 Richmond",
-          "rss": "https://www.wric.com/news/feed/",
-          "site": "https://www.wric.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Virginia Mercury",
+            "rss": "https://virginiamercury.com/feed/",
+            "site": "https://virginiamercury.com",
+            "type": "paper"
+          },
+          {
+            "name": "Cardinal News (SW Virginia)",
+            "rss": "https://cardinalnews.org/feed/",
+            "site": "https://cardinalnews.org",
+            "type": "paper"
+          }
+        ]
+      },
+      "richmond": {
+        "coords": {
+          "lat": 37.5407,
+          "lon": -77.436
         },
-        {
-          "name": "WTVR CBS 6 Richmond",
-          "rss": "https://www.wtvr.com/news.rss",
-          "site": "https://www.wtvr.com",
-          "type": "tv"
-        }
-      ],
-      "norfolk": [
-        {
-          "name": "WVEC 13News Hampton Roads (ABC)",
-          "rss": "https://www.13newsnow.com/feeds/syndication/rss/news/local",
-          "site": "https://www.13newsnow.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WRIC ABC 8 Richmond",
+            "rss": "https://www.wric.com/news/feed/",
+            "site": "https://www.wric.com",
+            "type": "tv"
+          },
+          {
+            "name": "WTVR CBS 6 Richmond",
+            "rss": "https://www.wtvr.com/news.rss",
+            "site": "https://www.wtvr.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "norfolk": {
+        "coords": {
+          "lat": 36.8508,
+          "lon": -76.2859
         },
-        {
-          "name": "WAVY 10 Hampton Roads (NBC)",
-          "rss": "https://www.wavy.com/news/feed/",
-          "site": "https://www.wavy.com",
-          "type": "tv"
-        },
-        {
-          "name": "WTKR News 3 Hampton Roads (CBS)",
-          "rss": "https://www.wtkr.com/news.rss",
-          "site": "https://www.wtkr.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WVEC 13News Hampton Roads (ABC)",
+            "rss": "https://www.13newsnow.com/feeds/syndication/rss/news/local",
+            "site": "https://www.13newsnow.com",
+            "type": "tv"
+          },
+          {
+            "name": "WAVY 10 Hampton Roads (NBC)",
+            "rss": "https://www.wavy.com/news/feed/",
+            "site": "https://www.wavy.com",
+            "type": "tv"
+          },
+          {
+            "name": "WTKR News 3 Hampton Roads (CBS)",
+            "rss": "https://www.wtkr.com/news.rss",
+            "site": "https://www.wtkr.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "WA": {
-      "_state": [
-        {
-          "name": "Washington State Standard",
-          "rss": "https://washingtonstatestandard.com/feed/",
-          "site": "https://washingtonstatestandard.com",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 47.0379,
+          "lon": -122.9007
         },
-        {
-          "name": "Cascade PBS (formerly Crosscut)",
-          "rss": "https://www.cascadepbs.org/feed",
-          "site": "https://www.cascadepbs.org",
-          "type": "paper"
+        "entries": [
+          {
+            "name": "Washington State Standard",
+            "rss": "https://washingtonstatestandard.com/feed/",
+            "site": "https://washingtonstatestandard.com",
+            "type": "paper"
+          },
+          {
+            "name": "Cascade PBS (formerly Crosscut)",
+            "rss": "https://www.cascadepbs.org/feed",
+            "site": "https://www.cascadepbs.org",
+            "type": "paper"
+          },
+          {
+            "name": "Crosscut",
+            "rss": "https://crosscut.com/feed",
+            "site": "https://crosscut.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "seattle": {
+        "coords": {
+          "lat": 47.6062,
+          "lon": -122.3321
         },
-        {
-          "name": "Crosscut",
-          "rss": "https://crosscut.com/feed",
-          "site": "https://crosscut.com",
-          "type": "paper"
-        }
-      ],
-      "seattle": [
-        {
-          "name": "KING 5 Seattle (NBC)",
-          "rss": "https://www.king5.com/feeds/syndication/rss/news/local",
-          "site": "https://www.king5.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KING 5 Seattle (NBC)",
+            "rss": "https://www.king5.com/feeds/syndication/rss/news/local",
+            "site": "https://www.king5.com",
+            "type": "tv"
+          },
+          {
+            "name": "The Stranger (Seattle alt-weekly)",
+            "rss": "https://www.thestranger.com/rss",
+            "site": "https://www.thestranger.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "spokane": {
+        "coords": {
+          "lat": 47.6588,
+          "lon": -117.426
         },
-        {
-          "name": "The Stranger (Seattle alt-weekly)",
-          "rss": "https://www.thestranger.com/rss",
-          "site": "https://www.thestranger.com",
-          "type": "paper"
-        }
-      ],
-      "spokane": [
-        {
-          "name": "KREM 2 Spokane (CBS)",
-          "rss": "https://www.krem.com/feeds/syndication/rss/news/local",
-          "site": "https://www.krem.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "KREM 2 Spokane (CBS)",
+            "rss": "https://www.krem.com/feeds/syndication/rss/news/local",
+            "site": "https://www.krem.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "TX": {
-      "_state": [
-        {
-          "name": "The Texas Tribune",
-          "rss": "https://www.texastribune.org/rss/",
-          "site": "https://www.texastribune.org",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 30.2672,
+          "lon": -97.7431
         },
-        {
-          "name": "Texas Standard (statewide radio)",
-          "rss": "https://www.texasstandard.org/feed/",
-          "site": "https://www.texasstandard.org",
-          "type": "paper"
+        "entries": [
+          {
+            "name": "The Texas Tribune",
+            "rss": "https://www.texastribune.org/rss/",
+            "site": "https://www.texastribune.org",
+            "type": "paper"
+          },
+          {
+            "name": "Texas Standard (statewide radio)",
+            "rss": "https://www.texasstandard.org/feed/",
+            "site": "https://www.texasstandard.org",
+            "type": "paper"
+          },
+          {
+            "name": "Texas Monthly",
+            "rss": "https://www.texasmonthly.com/feed/",
+            "site": "https://www.texasmonthly.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "houston": {
+        "coords": {
+          "lat": 29.7604,
+          "lon": -95.3698
         },
-        {
-          "name": "Texas Monthly",
-          "rss": "https://www.texasmonthly.com/feed/",
-          "site": "https://www.texasmonthly.com",
-          "type": "paper"
-        }
-      ],
-      "houston": [
-        {
-          "name": "KTRK ABC 13 Houston",
-          "rss": "https://abc13.com/feed/",
-          "site": "https://abc13.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KTRK ABC 13 Houston",
+            "rss": "https://abc13.com/feed/",
+            "site": "https://abc13.com",
+            "type": "tv"
+          },
+          {
+            "name": "KHOU 11 Houston (CBS)",
+            "rss": "https://www.khou.com/feeds/syndication/rss/news/local",
+            "site": "https://www.khou.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "san antonio": {
+        "coords": {
+          "lat": 29.4241,
+          "lon": -98.4936
         },
-        {
-          "name": "KHOU 11 Houston (CBS)",
-          "rss": "https://www.khou.com/feeds/syndication/rss/news/local",
-          "site": "https://www.khou.com",
-          "type": "tv"
-        }
-      ],
-      "san antonio": [
-        {
-          "name": "KENS 5 San Antonio (CBS)",
-          "rss": "https://www.kens5.com/feeds/syndication/rss/news/local",
-          "site": "https://www.kens5.com",
-          "type": "tv"
-        }
-      ],
-      "dallas": [
-        {
-          "name": "WFAA Dallas (ABC 8)",
-          "rss": "https://www.wfaa.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wfaa.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KENS 5 San Antonio (CBS)",
+            "rss": "https://www.kens5.com/feeds/syndication/rss/news/local",
+            "site": "https://www.kens5.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "dallas": {
+        "coords": {
+          "lat": 32.7767,
+          "lon": -96.797
         },
-        {
-          "name": "KXAS NBC 5 DFW",
-          "rss": "https://www.nbcdfw.com/?rss=y",
-          "site": "https://www.nbcdfw.com",
-          "type": "tv"
-        }
-      ],
-      "austin": [
-        {
-          "name": "KVUE Austin (ABC 24)",
-          "rss": "https://www.kvue.com/feeds/syndication/rss/news/local",
-          "site": "https://www.kvue.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WFAA Dallas (ABC 8)",
+            "rss": "https://www.wfaa.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wfaa.com",
+            "type": "tv"
+          },
+          {
+            "name": "KXAS NBC 5 DFW",
+            "rss": "https://www.nbcdfw.com/?rss=y",
+            "site": "https://www.nbcdfw.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "austin": {
+        "coords": {
+          "lat": 30.2672,
+          "lon": -97.7431
         },
-        {
-          "name": "KXAN Austin (NBC 36)",
-          "rss": "https://www.kxan.com/news/feed/",
-          "site": "https://www.kxan.com",
-          "type": "tv"
-        }
-      ],
-      "el paso": [
-        {
-          "name": "KTSM El Paso (NBC 9)",
-          "rss": "https://www.ktsm.com/news/feed/",
-          "site": "https://www.ktsm.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "KVUE Austin (ABC 24)",
+            "rss": "https://www.kvue.com/feeds/syndication/rss/news/local",
+            "site": "https://www.kvue.com",
+            "type": "tv"
+          },
+          {
+            "name": "KXAN Austin (NBC 36)",
+            "rss": "https://www.kxan.com/news/feed/",
+            "site": "https://www.kxan.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "el paso": {
+        "coords": {
+          "lat": 31.7619,
+          "lon": -106.485
         },
-        {
-          "name": "KVIA El Paso (ABC 7)",
-          "rss": "https://kvia.com/feed/",
-          "site": "https://kvia.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "KTSM El Paso (NBC 9)",
+            "rss": "https://www.ktsm.com/news/feed/",
+            "site": "https://www.ktsm.com",
+            "type": "tv"
+          },
+          {
+            "name": "KVIA El Paso (ABC 7)",
+            "rss": "https://kvia.com/feed/",
+            "site": "https://kvia.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "NC": {
-      "_state": [
-        {
-          "name": "NC Newsline",
-          "rss": "https://ncnewsline.com/feed/",
-          "site": "https://ncnewsline.com",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 35.7796,
+          "lon": -78.6382
         },
-        {
-          "name": "North Carolina Health News",
-          "rss": "https://www.northcarolinahealthnews.org/feed/",
-          "site": "https://www.northcarolinahealthnews.org",
-          "type": "paper"
-        }
-      ],
-      "charlotte": [
-        {
-          "name": "WCNC Charlotte (NBC 36)",
-          "rss": "https://www.wcnc.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wcnc.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "NC Newsline",
+            "rss": "https://ncnewsline.com/feed/",
+            "site": "https://ncnewsline.com",
+            "type": "paper"
+          },
+          {
+            "name": "North Carolina Health News",
+            "rss": "https://www.northcarolinahealthnews.org/feed/",
+            "site": "https://www.northcarolinahealthnews.org",
+            "type": "paper"
+          }
+        ]
+      },
+      "charlotte": {
+        "coords": {
+          "lat": 35.2271,
+          "lon": -80.8431
         },
-        {
-          "name": "WJZY Queen City News Charlotte (Fox 46)",
-          "rss": "https://www.fox46.com/feed/",
-          "site": "https://www.fox46.com",
-          "type": "tv"
-        }
-      ],
-      "raleigh": [
-        {
-          "name": "WTVD ABC 11 Raleigh-Durham",
-          "rss": "https://abc11.com/feed/",
-          "site": "https://abc11.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WCNC Charlotte (NBC 36)",
+            "rss": "https://www.wcnc.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wcnc.com",
+            "type": "tv"
+          },
+          {
+            "name": "WJZY Queen City News Charlotte (Fox 46)",
+            "rss": "https://www.fox46.com/feed/",
+            "site": "https://www.fox46.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "raleigh": {
+        "coords": {
+          "lat": 35.7796,
+          "lon": -78.6382
         },
-        {
-          "name": "WNCN CBS 17 Raleigh",
-          "rss": "https://www.cbs17.com/news/feed/",
-          "site": "https://www.cbs17.com",
-          "type": "tv"
-        }
-      ],
-      "greensboro": [
-        {
-          "name": "WFMY Greensboro (CBS 2)",
-          "rss": "https://www.wfmynews2.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wfmynews2.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WTVD ABC 11 Raleigh-Durham",
+            "rss": "https://abc11.com/feed/",
+            "site": "https://abc11.com",
+            "type": "tv"
+          },
+          {
+            "name": "WNCN CBS 17 Raleigh",
+            "rss": "https://www.cbs17.com/news/feed/",
+            "site": "https://www.cbs17.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "greensboro": {
+        "coords": {
+          "lat": 36.0726,
+          "lon": -79.792
         },
-        {
-          "name": "WXII Winston-Salem (NBC 12)",
-          "rss": "https://www.wxii12.com/topstories-rss",
-          "site": "https://www.wxii12.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WFMY Greensboro (CBS 2)",
+            "rss": "https://www.wfmynews2.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wfmynews2.com",
+            "type": "tv"
+          },
+          {
+            "name": "WXII Winston-Salem (NBC 12)",
+            "rss": "https://www.wxii12.com/topstories-rss",
+            "site": "https://www.wxii12.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "NJ": {
-      "_state": [
-        {
-          "name": "NJ Spotlight News",
-          "rss": "https://www.njspotlightnews.org/feed/",
-          "site": "https://www.njspotlightnews.org",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 40.2206,
+          "lon": -74.7597
         },
-        {
-          "name": "NJ.com",
-          "rss": "https://www.nj.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.nj.com",
-          "type": "paper"
-        }
-      ]
+        "entries": [
+          {
+            "name": "NJ Spotlight News",
+            "rss": "https://www.njspotlightnews.org/feed/",
+            "site": "https://www.njspotlightnews.org",
+            "type": "paper"
+          },
+          {
+            "name": "NJ.com",
+            "rss": "https://www.nj.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.nj.com",
+            "type": "paper"
+          }
+        ]
+      }
     },
     "OH": {
-      "_state": [
-        {
-          "name": "Ohio Capital Journal (statewide)",
-          "rss": "https://ohiocapitaljournal.com/feed/",
-          "site": "https://ohiocapitaljournal.com",
-          "type": "paper"
-        }
-      ],
-      "cleveland": [
-        {
-          "name": "WEWS News 5 Cleveland (ABC)",
-          "rss": "https://www.news5cleveland.com/news.rss",
-          "site": "https://www.news5cleveland.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 39.9612,
+          "lon": -82.9988
         },
-        {
-          "name": "WKYC Cleveland (NBC 3)",
-          "rss": "https://www.wkyc.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wkyc.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "Ohio Capital Journal (statewide)",
+            "rss": "https://ohiocapitaljournal.com/feed/",
+            "site": "https://ohiocapitaljournal.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "cleveland": {
+        "coords": {
+          "lat": 41.4993,
+          "lon": -81.6944
         },
-        {
-          "name": "WJW Fox 8 Cleveland",
-          "rss": "https://fox8.com/news/feed/",
-          "site": "https://fox8.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WEWS News 5 Cleveland (ABC)",
+            "rss": "https://www.news5cleveland.com/news.rss",
+            "site": "https://www.news5cleveland.com",
+            "type": "tv"
+          },
+          {
+            "name": "WKYC Cleveland (NBC 3)",
+            "rss": "https://www.wkyc.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wkyc.com",
+            "type": "tv"
+          },
+          {
+            "name": "WJW Fox 8 Cleveland",
+            "rss": "https://fox8.com/news/feed/",
+            "site": "https://fox8.com",
+            "type": "tv"
+          },
+          {
+            "name": "Cleveland.com",
+            "rss": "https://www.cleveland.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.cleveland.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "columbus": {
+        "coords": {
+          "lat": 39.9612,
+          "lon": -82.9988
         },
-        {
-          "name": "Cleveland.com",
-          "rss": "https://www.cleveland.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.cleveland.com",
-          "type": "paper"
-        }
-      ],
-      "columbus": [
-        {
-          "name": "WBNS 10TV Columbus (CBS)",
-          "rss": "https://www.10tv.com/feeds/syndication/rss/news/local",
-          "site": "https://www.10tv.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WBNS 10TV Columbus (CBS)",
+            "rss": "https://www.10tv.com/feeds/syndication/rss/news/local",
+            "site": "https://www.10tv.com",
+            "type": "tv"
+          },
+          {
+            "name": "WCMH NBC 4 Columbus",
+            "rss": "https://www.nbc4i.com/news/feed/",
+            "site": "https://www.nbc4i.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "cincinnati": {
+        "coords": {
+          "lat": 39.1031,
+          "lon": -84.512
         },
-        {
-          "name": "WCMH NBC 4 Columbus",
-          "rss": "https://www.nbc4i.com/news/feed/",
-          "site": "https://www.nbc4i.com",
-          "type": "tv"
-        }
-      ],
-      "cincinnati": [
-        {
-          "name": "WCPO Cincinnati (ABC 9)",
-          "rss": "https://www.wcpo.com/news.rss",
-          "site": "https://www.wcpo.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WCPO Cincinnati (ABC 9)",
+            "rss": "https://www.wcpo.com/news.rss",
+            "site": "https://www.wcpo.com",
+            "type": "tv"
+          },
+          {
+            "name": "WLWT Cincinnati (NBC 5)",
+            "rss": "https://www.wlwt.com/topstories-rss",
+            "site": "https://www.wlwt.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "toledo": {
+        "coords": {
+          "lat": 41.6528,
+          "lon": -83.5379
         },
-        {
-          "name": "WLWT Cincinnati (NBC 5)",
-          "rss": "https://www.wlwt.com/topstories-rss",
-          "site": "https://www.wlwt.com",
-          "type": "tv"
-        }
-      ],
-      "toledo": [
-        {
-          "name": "WTOL Toledo (CBS 11)",
-          "rss": "https://www.wtol.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wtol.com",
-          "type": "tv"
-        }
-      ],
-      "dayton": [
-        {
-          "name": "WDTN Dayton (NBC 2)",
-          "rss": "https://www.wdtn.com/news/feed/",
-          "site": "https://www.wdtn.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WTOL Toledo (CBS 11)",
+            "rss": "https://www.wtol.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wtol.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "dayton": {
+        "coords": {
+          "lat": 39.7589,
+          "lon": -84.1916
+        },
+        "entries": [
+          {
+            "name": "WDTN Dayton (NBC 2)",
+            "rss": "https://www.wdtn.com/news/feed/",
+            "site": "https://www.wdtn.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "MA": {
-      "_state": [
-        {
-          "name": "MassLive (statewide)",
-          "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.masslive.com",
-          "type": "paper"
+      "_state": {
+        "coords": {
+          "lat": 42.3601,
+          "lon": -71.0589
         },
-        {
-          "name": "CommonWealth Beacon",
-          "rss": "https://commonwealthbeacon.org/feed/",
-          "site": "https://commonwealthbeacon.org",
-          "type": "paper"
-        }
-      ],
-      "boston": [
-        {
-          "name": "WCVB Boston (ABC 5)",
-          "rss": "https://www.wcvb.com/topstories-rss",
-          "site": "https://www.wcvb.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "MassLive (statewide)",
+            "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.masslive.com",
+            "type": "paper"
+          },
+          {
+            "name": "CommonWealth Beacon",
+            "rss": "https://commonwealthbeacon.org/feed/",
+            "site": "https://commonwealthbeacon.org",
+            "type": "paper"
+          }
+        ]
+      },
+      "boston": {
+        "coords": {
+          "lat": 42.3601,
+          "lon": -71.0589
         },
-        {
-          "name": "WHDH 7News Boston",
-          "rss": "https://whdh.com/news/feed/",
-          "site": "https://whdh.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WCVB Boston (ABC 5)",
+            "rss": "https://www.wcvb.com/topstories-rss",
+            "site": "https://www.wcvb.com",
+            "type": "tv"
+          },
+          {
+            "name": "WHDH 7News Boston",
+            "rss": "https://whdh.com/news/feed/",
+            "site": "https://whdh.com",
+            "type": "tv"
+          },
+          {
+            "name": "NBC10 Boston (WBTS)",
+            "rss": "https://www.nbcboston.com/?rss=y",
+            "site": "https://www.nbcboston.com",
+            "type": "tv"
+          },
+          {
+            "name": "Boston.com",
+            "rss": "https://www.boston.com/feed/",
+            "site": "https://www.boston.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "springfield": {
+        "coords": {
+          "lat": 42.1015,
+          "lon": -72.5898
         },
-        {
-          "name": "NBC10 Boston (WBTS)",
-          "rss": "https://www.nbcboston.com/?rss=y",
-          "site": "https://www.nbcboston.com",
-          "type": "tv"
-        },
-        {
-          "name": "Boston.com",
-          "rss": "https://www.boston.com/feed/",
-          "site": "https://www.boston.com",
-          "type": "paper"
-        }
-      ],
-      "springfield": [
-        {
-          "name": "WWLP 22 Springfield (NBC)",
-          "rss": "https://www.wwlp.com/news/feed/",
-          "site": "https://www.wwlp.com",
-          "type": "tv"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WWLP 22 Springfield (NBC)",
+            "rss": "https://www.wwlp.com/news/feed/",
+            "site": "https://www.wwlp.com",
+            "type": "tv"
+          }
+        ]
+      }
     },
     "MI": {
-      "_state": [
-        {
-          "name": "MLive Michigan (statewide)",
-          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/",
-          "site": "https://www.mlive.com",
-          "type": "paper"
-        }
-      ],
-      "detroit": [
-        {
-          "name": "WXYZ Detroit (ABC)",
-          "rss": "https://www.wxyz.com/news.rss",
-          "site": "https://www.wxyz.com",
-          "type": "tv"
+      "_state": {
+        "coords": {
+          "lat": 42.7325,
+          "lon": -84.5555
         },
-        {
-          "name": "MLive Detroit",
-          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/detroit/",
-          "site": "https://www.mlive.com/detroit",
-          "type": "paper"
-        }
-      ],
-      "grand rapids": [
-        {
-          "name": "WZZM 13 Grand Rapids (ABC)",
-          "rss": "https://www.wzzm13.com/feeds/syndication/rss/news/local",
-          "site": "https://www.wzzm13.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "MLive Michigan (statewide)",
+            "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.mlive.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "detroit": {
+        "coords": {
+          "lat": 42.3314,
+          "lon": -83.0458
         },
-        {
-          "name": "WOOD-TV Grand Rapids (NBC)",
-          "rss": "https://www.woodtv.com/feed/",
-          "site": "https://www.woodtv.com",
-          "type": "tv"
+        "entries": [
+          {
+            "name": "WXYZ Detroit (ABC)",
+            "rss": "https://www.wxyz.com/news.rss",
+            "site": "https://www.wxyz.com",
+            "type": "tv"
+          },
+          {
+            "name": "MLive Detroit",
+            "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/detroit/",
+            "site": "https://www.mlive.com/detroit",
+            "type": "paper"
+          }
+        ]
+      },
+      "grand rapids": {
+        "coords": {
+          "lat": 42.9634,
+          "lon": -85.6681
         },
-        {
-          "name": "MLive Grand Rapids",
-          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/grand-rapids/",
-          "site": "https://www.mlive.com/grand-rapids",
-          "type": "paper"
-        }
-      ],
-      "jackson": [
-        {
-          "name": "MLive Jackson",
-          "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/jackson/",
-          "site": "https://www.mlive.com/jackson",
-          "type": "paper"
-        }
-      ]
+        "entries": [
+          {
+            "name": "WZZM 13 Grand Rapids (ABC)",
+            "rss": "https://www.wzzm13.com/feeds/syndication/rss/news/local",
+            "site": "https://www.wzzm13.com",
+            "type": "tv"
+          },
+          {
+            "name": "WOOD-TV Grand Rapids (NBC)",
+            "rss": "https://www.woodtv.com/feed/",
+            "site": "https://www.woodtv.com",
+            "type": "tv"
+          },
+          {
+            "name": "MLive Grand Rapids",
+            "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/grand-rapids/",
+            "site": "https://www.mlive.com/grand-rapids",
+            "type": "paper"
+          }
+        ]
+      },
+      "jackson": {
+        "coords": {
+          "lat": 42.2459,
+          "lon": -84.4013
+        },
+        "entries": [
+          {
+            "name": "MLive Jackson",
+            "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/jackson/",
+            "site": "https://www.mlive.com/jackson",
+            "type": "paper"
+          }
+        ]
+      }
     }
   }
 }

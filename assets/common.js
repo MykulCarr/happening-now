@@ -2961,6 +2961,29 @@
     return localStationsPromise;
   }
 
+  // True when the JSON has a city-level block for this geo with at least one
+  // entry. Different from `getStationsForGeo(...).length > 0` because that
+  // mixes in statewide entries; we want to know specifically whether we have
+  // *hyperlocal* coverage, since statewide-only doesn't satisfy "near me".
+  async function hasCitySources(geo){
+    if(!geo?.state || !geo?.city) return false;
+    const data = await loadLocalStations();
+    const state = data?.states?.[String(geo.state).toUpperCase()];
+    if(!state) return false;
+    const cityBlock = state[String(geo.city).toLowerCase()];
+    return entriesFromBlock(cityBlock).length > 0;
+  }
+
+  // Pulls the entry list out of a city/state block. The repo migrated from
+  // plain arrays to { coords, entries: [...] }; both shapes are tolerated so a
+  // contributor who omits coords doesn't break the picker (they just miss out
+  // on the nearest-city fallback).
+  function entriesFromBlock(block){
+    if(Array.isArray(block)) return block;
+    if(block && Array.isArray(block.entries)) return block.entries;
+    return [];
+  }
+
   // Returns [{ name, rss, site, type }] suitable for direct rendering as
   // suggestion checkboxes in the picker. Lookup is case-insensitive on city.
   // For local scope, returns the city's entries plus the state's `_state`
@@ -2975,10 +2998,9 @@
     const out = [];
     if(scope === "local"){
       const cityKey = String(geo.city || "").toLowerCase();
-      const cityEntries = state[cityKey];
-      if(Array.isArray(cityEntries)) out.push(...cityEntries);
+      out.push(...entriesFromBlock(state[cityKey]));
     }
-    if(Array.isArray(state._state)) out.push(...state._state);
+    out.push(...entriesFromBlock(state._state));
     // Dedupe by RSS URL in case a city entry duplicates a statewide one.
     const seen = new Set();
     return out.filter(s => {
@@ -2987,6 +3009,53 @@
       seen.add(k);
       return true;
     });
+  }
+
+  // Great-circle distance in miles between two lat/lon points.
+  function haversineMiles(lat1, lon1, lat2, lon2){
+    const toRad = d => d * Math.PI / 180;
+    const R = 3958.7613; // mean Earth radius in miles
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2) ** 2
+            + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+
+  // Returns the `limit` cities in the repo geographically closest to (lat, lon),
+  // each as { state, city, displayCity, lat, lon, distanceMi }. Only cities with
+  // coords participate; the synthetic `_state` block is excluded since picking
+  // "the whole state of Texas" isn't a useful local fallback. Used by the
+  // source picker to offer a fallback when the user's exact city isn't covered.
+  async function getNearestCities(lat, lon, limit = 3){
+    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
+    const data = await loadLocalStations();
+    const states = data?.states;
+    if(!states) return [];
+    const candidates = [];
+    for(const stateKey of Object.keys(states)){
+      const stateBlock = states[stateKey];
+      if(!stateBlock || typeof stateBlock !== "object") continue;
+      for(const innerKey of Object.keys(stateBlock)){
+        if(innerKey === "_state") continue;
+        const block = stateBlock[innerKey];
+        const coords = block && typeof block === "object" ? block.coords : null;
+        if(!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
+        const entries = entriesFromBlock(block);
+        if(!entries.length) continue;
+        const distanceMi = haversineMiles(lat, lon, coords.lat, coords.lon);
+        candidates.push({
+          state: stateKey,
+          city: innerKey,
+          displayCity: innerKey.replace(/\b\w/g, c => c.toUpperCase()),
+          lat: coords.lat,
+          lon: coords.lon,
+          distanceMi
+        });
+      }
+    }
+    candidates.sort((a, b) => a.distanceMi - b.distanceMi);
+    return candidates.slice(0, Math.max(0, limit));
   }
 
   async function searchRedditSubs(query){
@@ -3170,6 +3239,10 @@
         </div>
         <div class="hnPickerBody">
           <p class="hnPickerLead" id="hnPickerLead">Loading sources for your area…</p>
+          <div class="hnPickerSection" id="hnPickerFallbackSection" hidden>
+            <div class="hnPickerSectionLabel">📍 Nearest cities we cover</div>
+            <div class="hnPickerList" id="hnPickerFallbackList" role="list"></div>
+          </div>
           <div class="hnPickerSection" id="hnPickerStationsSection" hidden>
             <div class="hnPickerSectionLabel">📺 Local TV &amp; papers</div>
             <div class="hnPickerList" id="hnPickerStations" role="list"></div>
@@ -3199,6 +3272,8 @@
     const listEl   = overlay.querySelector("#hnPickerList");
     const stationsSection = overlay.querySelector("#hnPickerStationsSection");
     const stationsListEl  = overlay.querySelector("#hnPickerStations");
+    const fallbackSection = overlay.querySelector("#hnPickerFallbackSection");
+    const fallbackListEl  = overlay.querySelector("#hnPickerFallbackList");
     const leadEl   = overlay.querySelector("#hnPickerLead");
     const customIn = overlay.querySelector("#hnPickerCustomInput");
     const customAdd= overlay.querySelector("#hnPickerCustomAdd");
@@ -3320,9 +3395,11 @@
               return;
             }
             try { stations = await getStationsForGeo(newGeo, scope); } catch { stations = []; }
+            let newCityCovered = false;
+            try { newCityCovered = await hasCitySources(newGeo); } catch {}
             suggestions = newResults;
             preChecked = defaultPickedSubs(newResults, newGeo);
-            renderPickerSuggestions(newGeo, newResults);
+            renderPickerSuggestions(newGeo, newResults, newCityCovered);
           }
         });
       });
@@ -3334,23 +3411,39 @@
       stations = await getStationsForGeo(geo, scope);
     } catch { stations = []; }
 
+    let cityCovered = false;
+    try { cityCovered = await hasCitySources(geo); } catch { cityCovered = false; }
+
     suggestions = results;
     preChecked = defaultPickedSubs(results, geo);
 
-    // Friendly lead text varies by what we found.
-    const haveStations = stations.length > 0;
-    const haveSubs = results.length > 0;
-    renderPickerSuggestions(geo, results);
+    renderPickerSuggestions(geo, results, cityCovered);
 
     // ── nested helper so the inline "Set Location" path can re-render
     // after the user picks a location without reopening the modal ───────
-    function renderPickerSuggestions(g, subs){
+    function renderPickerSuggestions(g, subs, hasHyperlocalCoverage){
       const hasStations = stations.length > 0;
       const hasSubs = (subs || []).length > 0;
-      if(!hasStations && !hasSubs){
-        leadEl.textContent = `No suggestions for ${g.city}, ${g.state} yet. Add a custom RSS URL below.`;
+      // Fire the fallback when we don't have *city-level* coverage (statewide
+      // entries don't count — user wants local). Local scope only; need user
+      // lat/lon to compute nearest cities.
+      const canOfferFallback =
+        scope === "local"
+        && !hasHyperlocalCoverage
+        && Number.isFinite(g?.lat)
+        && Number.isFinite(g?.lon);
+
+      if(canOfferFallback){
+        leadEl.textContent = `No local sources for ${g.city}, ${g.state} yet — try the nearest city we cover.`;
+        renderFallbackList(g);
       } else {
-        leadEl.textContent = `Suggestions for ${g.city}, ${g.state} — pick what you want, then Save.`;
+        fallbackSection.hidden = true;
+        fallbackListEl.innerHTML = "";
+        if(!hasStations && !hasSubs){
+          leadEl.textContent = `No suggestions for ${g.city}, ${g.state} yet. Add a custom RSS URL below.`;
+        } else {
+          leadEl.textContent = `Suggestions for ${g.city}, ${g.state} — pick what you want, then Save.`;
+        }
       }
       if(hasStations){
         stationsSection.hidden = false;
@@ -3388,6 +3481,64 @@
           </div>
         `;
         listEl.appendChild(row);
+      });
+    }
+
+    // Renders the "Nearest cities we cover" picker. Clicking a row loads that
+    // city's stations into the regular stations section so the user can
+    // check/uncheck and save like any other local pick. We keep the user's
+    // original geo intact (their Reddit suggestions still match their actual
+    // location); only the station list is borrowed from the nearby city.
+    async function renderFallbackList(g){
+      fallbackSection.hidden = false;
+      fallbackListEl.innerHTML = '<div class="hnPickerLeadMuted">Loading nearby cities…</div>';
+      let nearest = [];
+      try { nearest = await getNearestCities(g.lat, g.lon, 3); }
+      catch { nearest = []; }
+      if(!nearest.length){
+        fallbackListEl.innerHTML = '<div class="hnPickerLeadMuted">No nearby cities in our repo yet. Add a custom RSS URL below.</div>';
+        return;
+      }
+      fallbackListEl.innerHTML = "";
+      nearest.forEach((n) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "hnPickerRow hnPickerRowBtn";
+        row.setAttribute("role", "listitem");
+        const miles = Math.round(n.distanceMi);
+        row.innerHTML = `
+          <div class="hnPickerRowMain">
+            <div class="hnPickerRowName">📍 ${escapeHtml(n.displayCity)}, ${escapeHtml(n.state)}</div>
+            <div class="hnPickerRowDesc">${miles} mi away · tap to load this city's sources</div>
+          </div>
+        `;
+        row.addEventListener("click", async () => {
+          const syntheticGeo = { state: n.state, city: n.city, lat: n.lat, lon: n.lon };
+          try { stations = await getStationsForGeo(syntheticGeo, scope); }
+          catch { stations = []; }
+          // Lead reflects what they're now seeing; the fallback list collapses
+          // so the stations section is the focus.
+          fallbackSection.hidden = true;
+          leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
+          // Re-render stations section without re-running the fallback check.
+          stationsSection.hidden = false;
+          stationsListEl.innerHTML = "";
+          stations.forEach((s, idx) => {
+            const stRow = document.createElement("label");
+            stRow.className = "hnPickerRow";
+            stRow.setAttribute("role", "listitem");
+            const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
+            stRow.innerHTML = `
+              <input type="checkbox" data-idx="${idx}" checked />
+              <div class="hnPickerRowMain">
+                <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
+                ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
+              </div>
+            `;
+            stationsListEl.appendChild(stRow);
+          });
+        });
+        fallbackListEl.appendChild(row);
       });
     }
   }
@@ -3442,6 +3593,8 @@
     openSourcePicker,
     loadLocalStations,
     getStationsForGeo,
+    getNearestCities,
+    hasCitySources,
     getActiveLocationOverride,
     setActiveLocationOverride,
     clearActiveLocationOverride,

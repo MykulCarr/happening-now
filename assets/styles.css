@@ -284,6 +284,20 @@ html[data-override-active] body{
   margin-top:3px;
   line-height:1.4;
 }
+.hnPickerRowBtn{
+  background:rgba(139,92,246,0.08);
+  border:1px solid rgba(139,92,246,0.25);
+  text-align:left;
+  width:100%;
+  color:inherit;
+  font:inherit;
+}
+.hnPickerRowBtn:hover{ background:rgba(139,92,246,0.16); }
+.hnPickerLeadMuted{
+  color:var(--muted);
+  font-size:12px;
+  padding:8px 4px;
+}
 .hnPickerCustom{
   border-top:1px solid var(--border);
   padding-top:14px;
