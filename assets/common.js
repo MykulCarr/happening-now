@@ -3011,6 +3011,77 @@
     });
   }
 
+  // ── Web-search feed builders ────────────────────────────────────────────
+  // Both Google News and Bing News expose RSS for free-text queries with no
+  // API key. We expose them as picker checkboxes alongside the curated
+  // station/Reddit lists so the user can opt into broader coverage for
+  // small markets where TV/paper RSS is thin.
+
+  function googleNewsSearchRss(query){
+    return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+  }
+  function bingNewsSearchRss(query){
+    return `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss`;
+  }
+
+  // Returns the picker's web-search rows for a given geo + scope. Each row
+  // is { name, rss, site, provider, angle, defaultChecked } — provider/angle
+  // are metadata for grouping / debugging; defaultChecked controls whether
+  // the checkbox starts ticked. We pre-check Headlines + Sports per
+  // provider to give users a reasonable starting bundle without
+  // overflowing the 8-feed cap in news.js.
+  function getWebSearchFeeds(geo, scope){
+    if(!geo?.state) return [];
+    const city = String(geo.city || "").trim();
+    const stateAbbr = String(geo.state || "").trim();
+    const fullState = expandStateName(stateAbbr) || stateAbbr;
+    const isLocal = scope === "local";
+
+    // Per-scope angle list. Traffic & Crime are local-only — a whole-state
+    // "traffic" query returns noise. Headlines lead so they're first in the
+    // saved-source list when the 8-cap trims later.
+    const angles = isLocal
+      ? ["Headlines", "Sports", "Business", "Weather", "Traffic", "Crime", "Politics"]
+      : ["Headlines", "Sports", "Business", "Weather", "Politics"];
+
+    // Build query text for an angle. Local uses '"City, ST"' as the
+    // disambiguator (proven reliable in news.js) plus the angle keyword;
+    // regional uses the full state name plus the angle keyword.
+    function queryFor(angle){
+      if(isLocal){
+        const baseLoc = city ? `"${city}, ${stateAbbr}"` : fullState;
+        return angle === "Headlines" ? baseLoc : `${baseLoc} ${angle.toLowerCase()}`;
+      }
+      return angle === "Headlines"
+        ? `${fullState} state news`
+        : `${fullState} ${angle.toLowerCase()}`;
+    }
+
+    const where = isLocal ? (city ? `${city}, ${stateAbbr}` : fullState) : fullState;
+    const out = [];
+    for(const angle of angles){
+      const q = queryFor(angle);
+      const defaultChecked = angle === "Headlines" || angle === "Sports";
+      out.push({
+        name: `Google News — ${angle} (${where})`,
+        rss: googleNewsSearchRss(q),
+        site: "https://news.google.com",
+        provider: "google",
+        angle,
+        defaultChecked
+      });
+      out.push({
+        name: `Bing News — ${angle} (${where})`,
+        rss: bingNewsSearchRss(q),
+        site: "https://www.bing.com/news",
+        provider: "bing",
+        angle,
+        defaultChecked
+      });
+    }
+    return out;
+  }
+
   // Great-circle distance in miles between two lat/lon points.
   function haversineMiles(lat1, lon1, lat2, lon2){
     const toRad = d => d * Math.PI / 180;
@@ -3275,6 +3346,10 @@
             <div class="hnPickerSectionLabel">📺 Local TV &amp; papers</div>
             <div class="hnPickerList" id="hnPickerStations" role="list"></div>
           </div>
+          <div class="hnPickerSection" id="hnPickerWebSection" hidden>
+            <div class="hnPickerSectionLabel">🌐 News searches (Google &amp; Bing)</div>
+            <div class="hnPickerList" id="hnPickerWebList" role="list"></div>
+          </div>
           <div class="hnPickerSection">
             <div class="hnPickerSectionLabel">💬 Reddit communities</div>
             <div class="hnPickerList" id="hnPickerList" role="list"></div>
@@ -3302,6 +3377,8 @@
     const stationsListEl  = overlay.querySelector("#hnPickerStations");
     const fallbackSection = overlay.querySelector("#hnPickerFallbackSection");
     const fallbackListEl  = overlay.querySelector("#hnPickerFallbackList");
+    const webSection      = overlay.querySelector("#hnPickerWebSection");
+    const webListEl       = overlay.querySelector("#hnPickerWebList");
     const leadEl   = overlay.querySelector("#hnPickerLead");
     const customIn = overlay.querySelector("#hnPickerCustomInput");
     const customAdd= overlay.querySelector("#hnPickerCustomAdd");
@@ -3312,6 +3389,7 @@
     const customSources = [];
     let suggestions = [];
     let stations = [];
+    let webFeeds = [];
     let preChecked = new Set();
 
     function close(){ overlay.remove(); }
@@ -3360,12 +3438,20 @@
         const idx = Number(cb.dataset.idx);
         return stations[idx];
       }).filter(Boolean);
+      const checkedWeb = Array.from(webListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
+        const idx = Number(cb.dataset.idx);
+        return webFeeds[idx];
+      }).filter(Boolean);
       const checkedSubs = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
         const idx = Number(cb.dataset.idx);
         return suggestions[idx];
       }).filter(Boolean);
+      // Order matters: news.js trims to the first 8 saved sources. Put
+      // curated TV/papers first (most trustworthy), then web searches
+      // (broad coverage), then Reddit (color/community), then customs.
       const sources = [
         ...checkedStations.map(s => ({ name: s.name, rss: s.rss, site: s.site || "", headlinesCount: 8 })),
+        ...checkedWeb.map(w => ({ name: w.name, rss: w.rss, site: w.site || "", headlinesCount: 8 })),
         ...checkedSubs.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
         ...customSources.map(s => ({ name: s.name, rss: s.rss, site: "", headlinesCount: 8 }))
       ];
@@ -3423,6 +3509,7 @@
               return;
             }
             try { stations = await getStationsForGeo(newGeo, scope); } catch { stations = []; }
+            try { webFeeds = getWebSearchFeeds(newGeo, scope); } catch { webFeeds = []; }
             let newCityCovered = false;
             try { newCityCovered = await hasCitySources(newGeo); } catch {}
             suggestions = newResults;
@@ -3438,6 +3525,7 @@
     try {
       stations = await getStationsForGeo(geo, scope);
     } catch { stations = []; }
+    try { webFeeds = getWebSearchFeeds(geo, scope); } catch { webFeeds = []; }
 
     let cityCovered = false;
     try { cityCovered = await hasCitySources(geo); } catch { cityCovered = false; }
@@ -3500,6 +3588,8 @@
         stationsSection.hidden = true;
       }
 
+      renderWebFeedRows();
+
       listEl.innerHTML = "";
       (subs || []).forEach((r, idx) => {
         const row = document.createElement("label");
@@ -3515,6 +3605,34 @@
           </div>
         `;
         listEl.appendChild(row);
+      });
+    }
+
+    // Renders the web-search section. Reads from the `webFeeds` closure
+    // variable so the fallback-click path can update webFeeds and call this
+    // without going through the full renderPickerSuggestions flow (which
+    // would re-fire the fallback detection).
+    function renderWebFeedRows(){
+      if(!webFeeds.length){
+        webSection.hidden = true;
+        webListEl.innerHTML = "";
+        return;
+      }
+      webSection.hidden = false;
+      webListEl.innerHTML = "";
+      webFeeds.forEach((w, idx) => {
+        const row = document.createElement("label");
+        row.className = "hnPickerRow";
+        row.setAttribute("role", "listitem");
+        const providerBadge = w.provider === "bing" ? "🅱️" : "🔎";
+        const checked = w.defaultChecked ? "checked" : "";
+        row.innerHTML = `
+          <input type="checkbox" data-idx="${idx}" ${checked} />
+          <div class="hnPickerRowMain">
+            <div class="hnPickerRowName">${providerBadge} ${escapeHtml(w.name)}</div>
+          </div>
+        `;
+        webListEl.appendChild(row);
       });
     }
 
@@ -3565,6 +3683,8 @@
             : { state: n.state, city: g.city, lat: n.lat, lon: n.lon };
           try { stations = await getStationsForGeo(syntheticGeo, scope); }
           catch { stations = []; }
+          try { webFeeds = getWebSearchFeeds(syntheticGeo, scope); }
+          catch { webFeeds = []; }
           fallbackSection.hidden = true;
           if(scope === "local"){
             leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
@@ -3589,6 +3709,7 @@
             `;
             stationsListEl.appendChild(stRow);
           });
+          renderWebFeedRows();
         });
         fallbackListEl.appendChild(row);
       });
@@ -3648,6 +3769,7 @@
     getNearestCities,
     getNearestStates,
     hasCitySources,
+    getWebSearchFeeds,
     getActiveLocationOverride,
     setActiveLocationOverride,
     clearActiveLocationOverride,
