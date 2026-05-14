@@ -3058,6 +3058,34 @@
     return candidates.slice(0, Math.max(0, limit));
   }
 
+  // Same idea as getNearestCities but ranges over statewide blocks. Used by
+  // the regional picker fallback when the user's state isn't in the repo —
+  // e.g., someone in Idaho gets offered Oregon / Washington / Utah.
+  async function getNearestStates(lat, lon, limit = 3){
+    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
+    const data = await loadLocalStations();
+    const states = data?.states;
+    if(!states) return [];
+    const candidates = [];
+    for(const stateKey of Object.keys(states)){
+      const stateBlock = states[stateKey];
+      const stateNode = stateBlock?._state;
+      const coords = stateNode && typeof stateNode === "object" ? stateNode.coords : null;
+      if(!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
+      const entries = entriesFromBlock(stateNode);
+      if(!entries.length) continue;
+      candidates.push({
+        state: stateKey,
+        displayState: expandStateName ? (expandStateName(stateKey) || stateKey) : stateKey,
+        lat: coords.lat,
+        lon: coords.lon,
+        distanceMi: haversineMiles(lat, lon, coords.lat, coords.lon)
+      });
+    }
+    candidates.sort((a, b) => a.distanceMi - b.distanceMi);
+    return candidates.slice(0, Math.max(0, limit));
+  }
+
   async function searchRedditSubs(query){
     try{
       const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=10`;
@@ -3424,17 +3452,23 @@
     function renderPickerSuggestions(g, subs, hasHyperlocalCoverage){
       const hasStations = stations.length > 0;
       const hasSubs = (subs || []).length > 0;
-      // Fire the fallback when we don't have *city-level* coverage (statewide
-      // entries don't count — user wants local). Local scope only; need user
-      // lat/lon to compute nearest cities.
-      const canOfferFallback =
-        scope === "local"
-        && !hasHyperlocalCoverage
-        && Number.isFinite(g?.lat)
-        && Number.isFinite(g?.lon);
+      const hasLatLon = Number.isFinite(g?.lat) && Number.isFinite(g?.lon);
+      // Fire fallback:
+      //   local    → no city-level coverage (statewide entries don't count;
+      //              the user wants "near me", not "across the state").
+      //   regional → no statewide entries for the user's state at all.
+      const canOfferFallback = hasLatLon && (
+        (scope === "local" && !hasHyperlocalCoverage)
+        || (scope === "regional" && !hasStations)
+      );
 
       if(canOfferFallback){
-        leadEl.textContent = `No local sources for ${g.city}, ${g.state} yet — try the nearest city we cover.`;
+        if(scope === "local"){
+          leadEl.textContent = `No local sources for ${g.city}, ${g.state} yet — try the nearest city we cover.`;
+        } else {
+          const fullState = expandStateName(g.state) || g.state;
+          leadEl.textContent = `No regional sources for ${fullState} yet — try the nearest state we cover.`;
+        }
         renderFallbackList(g);
       } else {
         fallbackSection.hidden = true;
@@ -3484,19 +3518,26 @@
       });
     }
 
-    // Renders the "Nearest cities we cover" picker. Clicking a row loads that
-    // city's stations into the regular stations section so the user can
-    // check/uncheck and save like any other local pick. We keep the user's
-    // original geo intact (their Reddit suggestions still match their actual
-    // location); only the station list is borrowed from the nearby city.
+    // Renders the "Nearest [cities|states] we cover" panel. Clicking a row
+    // loads that location's stations into the regular stations section so the
+    // user can check/uncheck and save like any other pick. The user's actual
+    // geo stays intact (Reddit suggestions, future location-aware features
+    // still see their real location); only the station list is borrowed.
     async function renderFallbackList(g){
       fallbackSection.hidden = false;
-      fallbackListEl.innerHTML = '<div class="hnPickerLeadMuted">Loading nearby cities…</div>';
+      const loadingLabel = scope === "local" ? "Loading nearby cities…" : "Loading nearby states…";
+      fallbackListEl.innerHTML = `<div class="hnPickerLeadMuted">${loadingLabel}</div>`;
       let nearest = [];
-      try { nearest = await getNearestCities(g.lat, g.lon, 3); }
-      catch { nearest = []; }
+      try {
+        nearest = scope === "local"
+          ? await getNearestCities(g.lat, g.lon, 3)
+          : await getNearestStates(g.lat, g.lon, 3);
+      } catch { nearest = []; }
       if(!nearest.length){
-        fallbackListEl.innerHTML = '<div class="hnPickerLeadMuted">No nearby cities in our repo yet. Add a custom RSS URL below.</div>';
+        const emptyLabel = scope === "local"
+          ? "No nearby cities in our repo yet. Add a custom RSS URL below."
+          : "No nearby states in our repo yet. Add a custom RSS URL below.";
+        fallbackListEl.innerHTML = `<div class="hnPickerLeadMuted">${emptyLabel}</div>`;
         return;
       }
       fallbackListEl.innerHTML = "";
@@ -3506,20 +3547,31 @@
         row.className = "hnPickerRow hnPickerRowBtn";
         row.setAttribute("role", "listitem");
         const miles = Math.round(n.distanceMi);
+        const label = scope === "local"
+          ? `${escapeHtml(n.displayCity)}, ${escapeHtml(n.state)}`
+          : `${escapeHtml(n.displayState)}`;
+        const action = scope === "local"
+          ? "tap to load this city's sources"
+          : "tap to load this state's sources";
         row.innerHTML = `
           <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">📍 ${escapeHtml(n.displayCity)}, ${escapeHtml(n.state)}</div>
-            <div class="hnPickerRowDesc">${miles} mi away · tap to load this city's sources</div>
+            <div class="hnPickerRowName">📍 ${label}</div>
+            <div class="hnPickerRowDesc">${miles} mi away · ${action}</div>
           </div>
         `;
         row.addEventListener("click", async () => {
-          const syntheticGeo = { state: n.state, city: n.city, lat: n.lat, lon: n.lon };
+          const syntheticGeo = scope === "local"
+            ? { state: n.state, city: n.city, lat: n.lat, lon: n.lon }
+            : { state: n.state, city: g.city, lat: n.lat, lon: n.lon };
           try { stations = await getStationsForGeo(syntheticGeo, scope); }
           catch { stations = []; }
-          // Lead reflects what they're now seeing; the fallback list collapses
-          // so the stations section is the focus.
           fallbackSection.hidden = true;
-          leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
+          if(scope === "local"){
+            leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
+          } else {
+            const fromState = expandStateName(g.state) || g.state;
+            leadEl.textContent = `Showing regional sources for ${n.displayState} (${miles} mi from ${fromState}).`;
+          }
           // Re-render stations section without re-running the fallback check.
           stationsSection.hidden = false;
           stationsListEl.innerHTML = "";
@@ -3594,6 +3646,7 @@
     loadLocalStations,
     getStationsForGeo,
     getNearestCities,
+    getNearestStates,
     hasCitySources,
     getActiveLocationOverride,
     setActiveLocationOverride,
