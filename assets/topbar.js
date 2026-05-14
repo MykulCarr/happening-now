@@ -47,10 +47,6 @@
           <div class="hn-time-section" id="hnTimeSection" aria-live="polite"></div>
           <div class="hn-host-search" id="hnSearchHost"></div>
           <div class="hn-host-weather" id="hnWeatherHost"></div>
-          <div class="hn-actions" id="hnActions">
-            <div class="hn-slot" id="hnSlot1"></div>
-            <div class="hn-slot" id="hnSlot2"></div>
-          </div>
         </div>
         <nav class="hn-mobile-menu" id="hnMobileMenu" aria-hidden="true">
           <div class="hn-mobile-nav" id="hnNavMobile">${navHtml}</div>

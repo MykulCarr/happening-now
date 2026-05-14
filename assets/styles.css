@@ -122,23 +122,6 @@ html{
   display:none !important;
 }
 
-/* Topbar pin button — opens the location picker from any page. Sits in
-   hnSlot1 (see topbar.js / scripts/topbar-template.html). */
-.hn-locationPinBtn{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--text);
-  border-radius:8px;
-  padding:4px 8px;
-  font-size:14px;
-  line-height:1;
-  cursor:pointer;
-  transition:background 0.15s ease, border-color 0.15s ease;
-}
-.hn-locationPinBtn:hover{
-  background:rgba(255,255,255,0.08);
-  border-color:rgba(255,255,255,0.25);
-}
 
 /* Location override banner — shows at the top of every page when the user
    has chosen a session-only "viewing X" location. CSS var --hn-override-height
@@ -1377,10 +1360,6 @@ header#topbar .pageHeadActions{
   text-decoration-thickness:2px;
   text-underline-offset:3px;
 }
-.hn-actions{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
-.hn-actions:empty{ display:none; }
-.hn-slot{ min-width:36px; min-height:36px; display:flex; align-items:center; justify-content:center }
-.hn-slot:empty{ display:none; min-width:0; min-height:0; }
 
 /* Hamburger menu styling */
 .hn-hamburger{
@@ -1829,9 +1808,6 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
     overflow:hidden;
   }
   
-  .hn-actions{ 
-    display:none;
-  }
   
   /* Compact time widget for mobile */
 
