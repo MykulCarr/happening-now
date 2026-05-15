@@ -29,6 +29,12 @@
   let criticalTickerHoverController = null;
   let criticalTickerHoverTimeout = null;
   let criticalTickerCloseTimeout = null;
+  // Monotonic id, incremented at the top of every renderCriticalTicker call.
+  // After each `await` we compare the captured value to the current one and
+  // bail if it changed — keeps stale fetches from overwriting fresh content
+  // (the "last-fetch-wins instead of last-click-wins" bug when scope buttons
+  // are clicked rapidly).
+  let criticalTickerGen = 0;
 
   function destroyCriticalTicker(){
     if(!criticalTickerState) return;
@@ -479,16 +485,35 @@
   async function renderCriticalTicker(force=false){
     if(!criticalNewsBar) return;
 
+    // Bump the generation and capture it locally. Each `await` below checks
+    // that nobody else has called renderCriticalTicker since — if they have,
+    // we discard the result silently rather than racing the fresher render
+    // to write innerHTML.
+    const myGen = ++criticalTickerGen;
+
+    // Tear down both the scroll AND hover state up front so the previous
+    // render's listeners don't linger during the (slow) fetch window. Old
+    // path only cleaned hover lazily inside setupCriticalTickerHover, which
+    // ran AFTER the fetch resolved — leaving the prior render's hover
+    // handlers wired to a stale `items` array.
     destroyCriticalTicker();
+    destroyCriticalTickerHover();
     criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading headlines...</span>`;
 
     try{
       const feeds = await getTickerFeedsForScope(currentScope);
+      if(myGen !== criticalTickerGen) return;
+
       const allItems = [];
       await Promise.all(feeds.map(async (feed) => {
         const items = await fetchNewsItems(feed.rss, 12, !force);
+        // Drop this feed's items if a newer render started while we waited.
+        // (No abort signal on fetchNewsItems, so the network call still
+        // runs to completion — we just refuse to consume its output.)
+        if(myGen !== criticalTickerGen) return;
         allItems.push(...normalizeTickerItems(items, feed.scope, feed.label));
       }));
+      if(myGen !== criticalTickerGen) return;
 
       const prioritized = dedupeTickerItems(allItems).slice(0, 16);
 
@@ -513,6 +538,7 @@
       setupCriticalTicker(criticalNewsBar);
       setupCriticalTickerHover(criticalNewsBar, prioritized);
     }catch(error){
+      if(myGen !== criticalTickerGen) return;
       handleError(error, "Critical ticker");
       criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Headlines unavailable right now.</span>`;
     }
