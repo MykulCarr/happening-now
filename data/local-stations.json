@@ -269,6 +269,12 @@
             "rss": "https://www.wesh.com/topstories-rss",
             "site": "https://www.wesh.com",
             "type": "tv"
+          },
+          {
+            "name": "WFTV ABC 9 Orlando",
+            "rss": "https://www.wftv.com/arc/outboundfeeds/rss/?outputType=xml",
+            "site": "https://www.wftv.com",
+            "type": "tv"
           }
         ]
       },
@@ -278,6 +284,12 @@
           "lon": -81.6557
         },
         "entries": [
+          {
+            "name": "Action News Jax (WJAX/WFOX)",
+            "rss": "https://www.actionnewsjax.com/arc/outboundfeeds/rss/?outputType=xml",
+            "site": "https://www.actionnewsjax.com",
+            "type": "tv"
+          },
           {
             "name": "WTLV First Coast News Jacksonville",
             "rss": "https://www.firstcoastnews.com/feeds/syndication/rss/news/local",
@@ -292,6 +304,12 @@
           "lon": -84.2807
         },
         "entries": [
+          {
+            "name": "Tallahassee Reports",
+            "rss": "https://tallahasseereports.com/feed/",
+            "site": "https://tallahasseereports.com",
+            "type": "paper"
+          },
           {
             "name": "WTXL ABC 27 Tallahassee",
             "rss": "https://www.wtxl.com/news.rss",
@@ -342,6 +360,12 @@
           "lon": -81.0912
         },
         "entries": [
+          {
+            "name": "WJCL ABC 22 Savannah",
+            "rss": "https://www.wjcl.com/topstories-rss",
+            "site": "https://www.wjcl.com",
+            "type": "tv"
+          },
           {
             "name": "WSAV Savannah (NBC)",
             "rss": "https://www.wsav.com/news/feed/",
@@ -516,6 +540,12 @@
           "lon": -73.7562
         },
         "entries": [
+          {
+            "name": "WNYT NewsChannel 13 Albany (NBC)",
+            "rss": "https://wnyt.com/feed/",
+            "site": "https://wnyt.com",
+            "type": "tv"
+          },
           {
             "name": "WTEN Albany (ABC 10)",
             "rss": "https://www.news10.com/news/feed/",
@@ -923,6 +953,12 @@
             "rss": "https://www.kens5.com/feeds/syndication/rss/news/local",
             "site": "https://www.kens5.com",
             "type": "tv"
+          },
+          {
+            "name": "San Antonio Report",
+            "rss": "https://sanantonioreport.org/feed/",
+            "site": "https://sanantonioreport.org",
+            "type": "paper"
           }
         ]
       },
@@ -1185,6 +1221,12 @@
         },
         "entries": [
           {
+            "name": "Toledo Blade",
+            "rss": "https://www.toledoblade.com/rss/",
+            "site": "https://www.toledoblade.com",
+            "type": "paper"
+          },
+          {
             "name": "WTOL Toledo (CBS 11)",
             "rss": "https://www.wtol.com/feeds/syndication/rss/news/local",
             "site": "https://www.wtol.com",
@@ -1203,6 +1245,12 @@
             "rss": "https://www.wdtn.com/news/feed/",
             "site": "https://www.wdtn.com",
             "type": "tv"
+          },
+          {
+            "name": "WHIO Dayton (CBS 7)",
+            "rss": "https://www.whio.com/arc/outboundfeeds/rss/?outputType=xml",
+            "site": "https://www.whio.com",
+            "type": "tv"
           }
         ]
       }
@@ -1215,15 +1263,21 @@
         },
         "entries": [
           {
-            "name": "MassLive (statewide)",
-            "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
-            "site": "https://www.masslive.com",
-            "type": "paper"
-          },
-          {
             "name": "CommonWealth Beacon",
             "rss": "https://commonwealthbeacon.org/feed/",
             "site": "https://commonwealthbeacon.org",
+            "type": "paper"
+          },
+          {
+            "name": "GBH News Boston (PBS)",
+            "rss": "https://www.wgbh.org/news.rss",
+            "site": "https://www.wgbh.org",
+            "type": "paper"
+          },
+          {
+            "name": "MassLive (statewide)",
+            "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.masslive.com",
             "type": "paper"
           }
         ]
