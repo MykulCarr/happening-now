@@ -29,6 +29,7 @@
   const CRITICAL_INTERNATIONAL_FEEDS = [
     { rss: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",     scope: "international", label: "WORLD" },
     { rss: "https://feeds.bbci.co.uk/news/world/rss.xml",                scope: "international", label: "WORLD" },
+    { rss: "https://www.theguardian.com/world/rss",                      scope: "international", label: "WORLD" },
     { rss: "https://www.aljazeera.com/xml/rss/all.xml",                  scope: "international", label: "WORLD" }
   ];
 
