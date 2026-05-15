@@ -4,7 +4,8 @@
       "WebFetch(domain:www.happening-now.net)",
       "Bash(xargs wc *)",
       "Bash(xargs ls *)",
-      "WebFetch(domain:happening-now.net)"
+      "WebFetch(domain:happening-now.net)",
+      "Bash(git push *)"
     ]
   }
 }
