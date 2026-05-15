@@ -1337,7 +1337,11 @@ button.hn-nav-link{
   letter-spacing:inherit;
 }
 .hn-nav-action{ display:inline-flex; align-items:center; gap:4px; }
-.hn-nav-action-icon{ font-size:1em; line-height:1; }
+.hn-nav-action-icon{ font-size:.65em; line-height:.65; }
+/* LOCATION button is intentionally subordinate to the page links —
+   ~2/3 the size of the surrounding NEWS/WEATHER/STOCKS/ASTROLAB nav. */
+.hn-nav-section .hn-nav-link.hn-nav-action{ font-size:9px; }
+.hn-mobile-nav .hn-nav-link.hn-nav-action{ font-size:10px; }
 .hn-nav-link:hover{ 
   color:var(--text); 
   background:rgba(255,255,255,0.08);
@@ -1553,6 +1557,12 @@ header#topbar{ width:100%; min-height:78px; }
 .hn-host-weather .weatherWidget .weatherWidgetTemp{ font-size:18px; }
 .hn-host-weather .weatherWidgetDesc{ font-size:12px; }
 .hn-host-weather .weatherWidgetLocation{ font-size:11px; }
+/* No-location state: pin + 'Set location'/'Tap to add' are placeholders,
+   shouldn't dominate the topbar. Roughly half size of the live-weather
+   display so the visual weight matches the surrounding nav. */
+.hn-host-weather .weatherWidget.isNoLocation .weatherWidgetIcon{ font-size:18px; }
+.hn-host-weather .weatherWidget.isNoLocation .weatherWidgetTemp{ font-size:12px; }
+.hn-host-weather .weatherWidget.isNoLocation .weatherWidgetRange{ font-size:9px; }
 .hn-host-weather .weatherWidgetContent{
   min-width:0;
 }
@@ -4202,6 +4212,13 @@ body.stockLookupModalOpen{
 /* ===== STOCKS PAGE STYLES ===== */
 
 /* Market Indices Bar */
+.marketIndicesLabel{
+  margin:0 0 12px;
+  font-size:calc(16px * var(--font-multiplier, 1));
+  font-weight:700;
+  color:var(--text);
+  letter-spacing:-0.2px;
+}
 .marketIndices{
   --ticker-distance:1200px;
   --ticker-duration:160s;

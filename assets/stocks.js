@@ -728,7 +728,7 @@
       const indices = await hydrateIndicesWithLiveQuotes(configured);
 
       if(indices.length === 0){
-        container.innerHTML = `<div class="hint">No markets selected. Enable items in <a href="settings.html">Settings</a>.</div>`;
+        container.innerHTML = `<h2 class="marketIndicesLabel">Market Indices</h2><div class="hint">No markets selected. Enable items in <a href="settings.html">Settings</a>.</div>`;
         return;
       }
 
@@ -767,6 +767,7 @@
       }).join('');
 
       container.innerHTML = `
+        <h2 class="marketIndicesLabel">Market Indices</h2>
         <div class="marketTickerViewport" aria-live="polite">
           <div class="marketTickerTrack">
             <div class="marketTickerGroup">${tickerItems}</div>
@@ -779,7 +780,7 @@
       setupMarketTicker(container);
     } catch (error) {
       console.error("Error rendering indices:", error);
-      container.innerHTML = `<div class="hint">Error loading market indices</div>`;
+      container.innerHTML = `<h2 class="marketIndicesLabel">Market Indices</h2><div class="hint">Error loading market indices</div>`;
       destroyMarketTicker();
     }
   }

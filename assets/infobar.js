@@ -214,7 +214,6 @@
       const windEl = widget.querySelector(".weatherWind");
       if(iconEl) iconEl.textContent = "📍";
       if(tempEl) tempEl.textContent = "Set location";
-      if(rangeEl) rangeEl.textContent = "Tap to add";
       if(feelsEl) feelsEl.textContent = "—";
       if(windEl) windEl.textContent = "—";
       const humidityFill = widget.querySelector(".humidityFill");
