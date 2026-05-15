@@ -3012,66 +3012,14 @@
   }
 
   // ── Web-search feed builders ────────────────────────────────────────────
-  // Bing News exposes RSS for free-text queries with no API key. We surface
-  // it as picker checkboxes alongside the curated station/Reddit lists so
-  // the user can opt into broader coverage for small markets where TV/paper
-  // RSS is thin.
-  // (Google News used to be offered too, but news.google.com hard-503s
-  // requests from Cloudflare Worker IP ranges regardless of UA/cookies —
-  // the rows would always come back empty, so we don't expose them.)
-
-  function bingNewsSearchRss(query){
-    return `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss`;
-  }
-
-  // Returns the picker's web-search rows for a given geo + scope. Each row
-  // is { name, rss, site, provider, angle, defaultChecked } — provider/angle
-  // are metadata for grouping / debugging; defaultChecked controls whether
-  // the checkbox starts ticked. We pre-check Headlines + Sports to give
-  // users a reasonable starting bundle without overflowing the 8-feed cap
-  // in news.js.
-  function getWebSearchFeeds(geo, scope){
-    if(!geo?.state) return [];
-    const city = String(geo.city || "").trim();
-    const stateAbbr = String(geo.state || "").trim();
-    const fullState = expandStateName(stateAbbr) || stateAbbr;
-    const isLocal = scope === "local";
-
-    // Per-scope angle list. Traffic & Crime are local-only — a whole-state
-    // "traffic" query returns noise. Headlines lead so they're first in the
-    // saved-source list when the 8-cap trims later.
-    const angles = isLocal
-      ? ["Headlines", "Sports", "Business", "Weather", "Traffic", "Crime", "Politics"]
-      : ["Headlines", "Sports", "Business", "Weather", "Politics"];
-
-    // Build query text for an angle. Local uses '"City, ST"' as the
-    // disambiguator plus the angle keyword; regional uses the full state
-    // name plus the angle keyword.
-    function queryFor(angle){
-      if(isLocal){
-        const baseLoc = city ? `"${city}, ${stateAbbr}"` : fullState;
-        return angle === "Headlines" ? baseLoc : `${baseLoc} ${angle.toLowerCase()}`;
-      }
-      return angle === "Headlines"
-        ? `${fullState} state news`
-        : `${fullState} ${angle.toLowerCase()}`;
-    }
-
-    const where = isLocal ? (city ? `${city}, ${stateAbbr}` : fullState) : fullState;
-    const out = [];
-    for(const angle of angles){
-      const q = queryFor(angle);
-      const defaultChecked = angle === "Headlines" || angle === "Sports";
-      out.push({
-        name: `Bing News — ${angle} (${where})`,
-        rss: bingNewsSearchRss(q),
-        site: "https://www.bing.com/news",
-        provider: "bing",
-        angle,
-        defaultChecked
-      });
-    }
-    return out;
+  // Disabled. Google News, Bing News, and Yahoo News all block traffic
+  // from Cloudflare Worker IP ranges (either hard 503 or 200-OK with an
+  // HTML anti-bot challenge instead of RSS). Returning [] keeps the
+  // picker's web-search section hidden; if a viable query-based news RSS
+  // ever surfaces, swap this body to build feeds again and the rest of
+  // the picker wiring will pick it up.
+  function getWebSearchFeeds(/* geo, scope */){
+    return [];
   }
 
   // Great-circle distance in miles between two lat/lon points.

@@ -16,12 +16,21 @@
   const NEWS_CACHE_KEY = "jas_cache_news_v1";
   const NEWS_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
-  // News-search fallback queries route through the worker RSS proxy. We
-  // moved off news.google.com because Cloudflare Worker IP ranges get a
-  // hard 503 from Google's RSS endpoints regardless of UA/cookies — Bing
-  // serves the same kind of aggregated-headlines feed without the block.
-  const CRITICAL_NATIONAL_RSS = "https://www.bing.com/news/search?q=US+breaking+news&format=rss";
-  const CRITICAL_INTERNATIONAL_RSS = "https://www.bing.com/news/search?q=world+breaking+news&format=rss";
+  // Generic curated top-headline feeds for the critical ticker. We can't
+  // use per-query search RSS (Google News / Bing News / Yahoo News are all
+  // blocked at the Cloudflare Worker IP range), so the ticker pulls from a
+  // small set of high-volume outlet feeds that proxy fine. Items from
+  // multiple feeds are deduped and trimmed downstream.
+  const CRITICAL_NATIONAL_FEEDS = [
+    { rss: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", scope: "national", label: "US" },
+    { rss: "https://feeds.npr.org/1001/rss.xml",                         scope: "national", label: "US" },
+    { rss: "https://feeds.feedburner.com/reuters/topNews",               scope: "national", label: "US" }
+  ];
+  const CRITICAL_INTERNATIONAL_FEEDS = [
+    { rss: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",     scope: "international", label: "WORLD" },
+    { rss: "https://feeds.bbci.co.uk/news/world/rss.xml",                scope: "international", label: "WORLD" },
+    { rss: "https://www.aljazeera.com/xml/rss/all.xml",                  scope: "international", label: "WORLD" }
+  ];
 
   // Single state for the four scope tabs (LOCAL/REGIONAL/NATIONAL/INTERNATIONAL).
   // Drives both the critical ticker and the main news grid. Reads the old
@@ -320,49 +329,49 @@
     }
   }
 
-  // Build a Bing News RSS search URL. Bing replaced Google News here
-  // because Cloudflare Worker IP ranges are blocked by news.google.com
-  // (hard 503 regardless of UA/cookies); Bing has no such block and
-  // serves the same kind of aggregated-headlines RSS.
-  function bingNewsRssFor(query){
-    return `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss`;
-  }
+  // (No query-based news-search helper here. Google News, Bing News, and
+  // Yahoo News all block the worker IP range — see CRITICAL_*_FEEDS for
+  // the curated-outlet path. Local/regional fall back to data/local-
+  // stations.json when the user hasn't curated sources via the picker.)
 
   // The picker modal + Reddit discovery moved to common.js so both news.js
   // and settings.js can open it. Use window.App.openSourcePicker(scope, onSaved).
 
   async function getTickerFeedsForScope(scope){
-    if(scope === "national"){
-      return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
+    if(scope === "national") return CRITICAL_NATIONAL_FEEDS;
+    if(scope === "international") return CRITICAL_INTERNATIONAL_FEEDS;
+
+    // local + regional: prefer the user's curated picker selection. The
+    // ticker only takes the top few so it doesn't fill up with one outlet.
+    // No saved picks → fall back to the national curated set so the bar is
+    // never empty (location-filtered news search is dead from the worker).
+    if(scope === "local" || scope === "regional"){
+      const liveCfg = window.App?.cfg || cfg;
+      const savedKey = scope === "local" ? "localSources" : "regionalSources";
+      const saved = Array.isArray(liveCfg?.[savedKey]) ? liveCfg[savedKey] : [];
+      if(saved.length > 0){
+        const label = scope === "local" ? "LOCAL" : "REGIONAL";
+        return saved.slice(0, 3).map((s) => ({ rss: s.rss, scope, label }));
+      }
+      // No user picks yet — pull station data for the active geo if we have
+      // a covered state/city. data/local-stations.json (loaded via
+      // window.App.getStationsForGeo) gives real local feeds without
+      // touching search engines.
+      const geo = await getGeoForScope();
+      try {
+        const stations = (geo && typeof window.App?.getStationsForGeo === "function")
+          ? await window.App.getStationsForGeo(geo, scope)
+          : [];
+        if(stations.length > 0){
+          const label = scope === "local"
+            ? (geo.city ? geo.city.toUpperCase() : "LOCAL")
+            : ((window.App?.expandStateName?.(geo.state) || geo.state || "").toUpperCase() || "REGIONAL");
+          return stations.slice(0, 3).map((s) => ({ rss: s.rss, scope, label }));
+        }
+      } catch { /* fall through */ }
+      return CRITICAL_NATIONAL_FEEDS;
     }
-    if(scope === "international"){
-      return [{ rss: CRITICAL_INTERNATIONAL_RSS, scope: "international", label: "WORLD" }];
-    }
-    const geo = await getGeoForScope();
-    if(scope === "local"){
-      if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      // Quoted "City, ST" disambiguates common-name cities (Jackson, MS vs
-      // Jackson, MI). Pair with unquoted "City StateName" for broader
-      // recall — both feed into the ticker dedupe.
-      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
-      const label = geo.city.toUpperCase();
-      return [
-        { rss: bingNewsRssFor(`"${geo.city}, ${geo.state}"`), scope: "local", label },
-        { rss: bingNewsRssFor(`${geo.city} ${fullState}`), scope: "local", label }
-      ];
-    }
-    if(scope === "regional"){
-      if(!geo) return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
-      // "${state} state news" is more reliable than "${state} news" — the
-      // latter returns 0 for some states (Michigan being the notable case).
-      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
-      const label = (fullState || geo.state).toUpperCase();
-      return [
-        { rss: bingNewsRssFor(`${fullState} state news`), scope: "regional", label },
-        { rss: bingNewsRssFor(`${fullState} headlines`), scope: "regional", label }
-      ];
-    }
-    return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
+    return CRITICAL_NATIONAL_FEEDS;
   }
 
   // Pick the news-grid widgets for the active scope.
@@ -385,76 +394,39 @@
 
       const geo = await getGeoForScope();
       if(!geo) return { widgets: [], reason: "no-geo" };
-      const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
 
       // No saved sources and the user hasn't opted to skip the picker → open it.
       // The picker will save selections (or set the skip flag) and the
       // onSaved callback re-runs render so the page picks up the new sources.
       if(!sourceCfg?.[skipKey]){
-        // Fire and forget; render below shows the auto-search fallback in the
-        // meantime so the page isn't empty while the modal is open.
         window.App?.openSourcePicker?.(scope, () => render(true));
       }
 
-      if(scope === "local"){
-        // Common-name cities (Jackson, Springfield, Madison, Albany) need a
-        // disambiguator or you get wrong-state homonyms. The quoted
-        // `"City, ST"` form is the strongest signal across providers.
-        // Per-category combos return inconsistent results so we use
-        // complementary angles instead of strict topical splits and add a
-        // state-level card so the row never feels empty for small markets.
-        return {
-          widgets: [
-            {
-              name: `Near You — ${geo.city}, ${geo.state}`,
-              rss: bingNewsRssFor(`"${geo.city}, ${geo.state}"`),
-              site: "https://www.bing.com/news",
+      // Auto-fallback widgets when no curated picks exist: pull from
+      // data/local-stations.json (real station/paper RSS). Replaces the old
+      // synthesized Google/Bing search widgets, which return nothing from
+      // the worker IP range. For local: city stations + statewide; for
+      // regional: only statewide. Returns [] (no-sources) if we don't
+      // cover this state.
+      try {
+        const stations = (typeof window.App?.getStationsForGeo === "function")
+          ? await window.App.getStationsForGeo(geo, scope)
+          : [];
+        if(stations.length > 0){
+          return {
+            widgets: stations.slice(0, 8).map(s => ({
+              name: s.name,
+              rss: s.rss,
+              site: s.site || "",
               headlinesCount: 6
-            },
-            {
-              name: `${geo.city} Headlines`,
-              rss: bingNewsRssFor(`${geo.city} ${fullState}`),
-              site: "https://www.bing.com/news",
-              headlinesCount: 6
-            },
-            {
-              name: `Across ${fullState}`,
-              rss: bingNewsRssFor(`${fullState} state news`),
-              site: "https://www.bing.com/news",
-              headlinesCount: 6
-            }
-          ],
-          reason: ""
-        };
-      }
-
-      // Regional: state-level fallback widgets. `"${state} state news"` is
-      // a more reliable query than bare `"${state} news"` (the latter
-      // returns 0 for some states across providers — Michigan is the
-      // worst case). Sports availability varies by state.
-      return {
-        widgets: [
-          {
-            name: `Across ${fullState}`,
-            rss: bingNewsRssFor(`${fullState} state news`),
-            site: "https://www.bing.com/news",
-            headlinesCount: 6
-          },
-          {
-            name: `${fullState} Headlines`,
-            rss: bingNewsRssFor(`${fullState} headlines`),
-            site: "https://www.bing.com/news",
-            headlinesCount: 6
-          },
-          {
-            name: `${fullState} Sports`,
-            rss: bingNewsRssFor(`${fullState} sports`),
-            site: "https://www.bing.com/news",
-            headlinesCount: 6
-          }
-        ],
-        reason: ""
-      };
+            })),
+            reason: ""
+          };
+        }
+      } catch { /* fall through */ }
+      // Truly nothing for this geo — return empty so the page surfaces the
+      // picker hint instead of a wall of empty cards.
+      return { widgets: [], reason: "no-coverage" };
     }
 
     const all = Array.isArray(sourceCfg?.widgets) ? sourceCfg.widgets : [];
@@ -741,6 +713,9 @@ function restoreNewsFromCache(){
       if(reason === "no-geo"){
         updateStatus("Set your location to see what's near you", true);
         hint = `Set your location in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope === "local" ? "what's near you" : "your state"}.`;
+      } else if(reason === "no-coverage"){
+        updateStatus(`No ${currentScope} sources for your area yet`, true);
+        hint = `We don't have built-in ${currentScope} sources for your area. <a class="subLink editSourcesLink" href="#" data-edit-scope="${currentScope}">Open the picker</a> to add Reddit communities, custom RSS feeds, or nearby cities we do cover.`;
       } else if(reason === "no-match"){
         updateStatus(`No sources tagged "${currentScope}"`, true);
         hint = `None of your configured sources are tagged for the ${currentScope.toUpperCase()} scope. Adjust their tags in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
