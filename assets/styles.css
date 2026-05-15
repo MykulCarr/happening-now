@@ -1319,15 +1319,25 @@ header#topbar .pageHeadActions{
 .hn-dot{ width:12px; height:12px; border-radius:999px; background:linear-gradient(135deg,var(--accent),var(--accentHover)); box-shadow:0 6px 24px rgba(0,0,0,.15); flex-shrink:0 }
 .hn-title{ font-weight:800; font-size:18px }
 .hn-nav{ display:flex; gap:2px; align-items:center; margin-left:8px; }
-.hn-nav-link{ 
-  color:var(--muted); 
-  text-decoration:none; 
+.hn-nav-link{
+  color:var(--muted);
+  text-decoration:none;
   font-weight:700;
   transition:color 0.15s ease, background-color 0.15s ease;
   padding:2px 4px;
   border-radius:4px;
   position:relative;
 }
+/* Native button reset so a <button> with .hn-nav-link matches the <a> variants. */
+button.hn-nav-link{
+  background:transparent;
+  border:0;
+  font:inherit;
+  cursor:pointer;
+  letter-spacing:inherit;
+}
+.hn-nav-action{ display:inline-flex; align-items:center; gap:4px; }
+.hn-nav-action-icon{ font-size:1em; line-height:1; }
 .hn-nav-link:hover{ 
   color:var(--text); 
   background:rgba(255,255,255,0.08);
@@ -2124,9 +2134,11 @@ header#topbar > .infoBar .infoBarRight{ margin-left:0; justify-self:end; }
   display:grid;
   grid-template-columns:repeat(12, 1fr);
   gap:var(--gap);
+  align-items:start;
 }
 .newsCard{
   grid-column:span 4;
+  align-self:start;
 }
 @media (max-width:1200px){ 
   .grid{grid-template-columns:repeat(6, 1fr);}
@@ -2454,13 +2466,10 @@ details.chip > .alertChipBody a{
   align-items:center;
 }
 
-/* Stabilize widget heights while async data is loading to reduce layout shifts.
-   --newsGridReserve is set by the inline script in index.html based on user's
-   widget count and viewport width; falls back to a conservative default that
-   covers most users until JS runs. */
-#newsGrid{
-  min-height:var(--newsGridReserve, 1700px);
-}
+/* News grid sizes to content — no min-height reservation. Cold loads will
+   show some layout shift as cards mount; the user preferred flex-to-content
+   over CLS prevention. The --newsGridReserve var is still computed by the
+   inline script in index.html but no rule consumes it. */
 
 #weatherCurrent{
   min-height:0;

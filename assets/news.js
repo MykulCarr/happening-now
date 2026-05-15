@@ -865,18 +865,9 @@ function restoreNewsFromCache(){
     }
   });
 
-  // "Location" button — opens the shared picker. Apply writes either cfg
-  // (home) or the session override; the hn:locationchange listener below
-  // re-renders the page once the new location takes effect.
-  document.getElementById("changeLocationBtn")?.addEventListener("click", () => {
-    window.App?.openLocationPicker?.({
-      onApply: () => {
-        geoCache = null;
-        renderCriticalTicker(true);
-        render(true);
-      }
-    });
-  });
+  // The Location action now lives in the topbar (handled by topbar.js).
+  // The hn:locationchange listener below re-renders this page when the
+  // picker applies a new location.
 
   // When the active session override flips from anywhere (Weather page,
   // topbar widget, banner reset), re-resolve geo and re-render this page.

@@ -30,7 +30,8 @@
       navLinkHtml('weather', 'weather.html', 'WEATHER') +
       navLinkHtml('stocks', 'stocks.html', 'STOCKS') +
       navLinkHtml('astrolab', 'AstroLab.html', 'ASTROLAB') +
-      '<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>';
+      '<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>' +
+      '<button type="button" class="hn-nav-link hn-nav-action hn-location-nav-btn" aria-label="Change location"><span class="hn-nav-action-icon" aria-hidden="true">📍</span> LOCATION</button>';
     mount.innerHTML = `
       <div class="hn-inner">
         <div class="hn-rowTop">
@@ -191,6 +192,15 @@
     window.location.href = 'index.html';
   });
 
+  // Topbar Location button — wired here once (not per-page) so all pages
+  // share the same affordance. The picker dispatches hn:locationchange on
+  // apply; pages already listen to that event and re-render, so no onApply
+  // hook is needed. Class selector covers both desktop + mobile nav copies.
+  mount.querySelectorAll('.hn-location-nav-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.App?.openLocationPicker?.();
+    });
+  });
 
   // (Search UI moved into the info bar)
 
