@@ -58,13 +58,17 @@
 
   function abbreviateState(stateName){
     if(!stateName) return "";
+    const raw = String(stateName).trim();
+    // ISO 3166-2 form ("US-MI") shows up in cached overrides + some geocoder
+    // responses. Strip the country prefix so downstream matchers see "MI".
+    const stripped = raw.replace(/^US[-_]/i, "");
     // Check direct match first (case-insensitive)
-    const abbr = STATE_ABBREVIATIONS[stateName];
+    const abbr = STATE_ABBREVIATIONS[stripped];
     if(abbr) return abbr;
     // If it's already 2 characters, assume it's an abbreviation
-    if(stateName.length === 2) return stateName.toUpperCase();
+    if(stripped.length === 2) return stripped.toUpperCase();
     // Return the full name if no abbreviation found
-    return stateName;
+    return stripped;
   }
 
   // Reverse lookup: "NY" -> "New York". Falls back to the input if it's
@@ -2968,7 +2972,9 @@
   async function hasCitySources(geo){
     if(!geo?.state || !geo?.city) return false;
     const data = await loadLocalStations();
-    const state = data?.states?.[String(geo.state).toUpperCase()];
+    // abbreviateState normalizes "Michigan"/"US-MI"/"mi" → "MI" so we can
+    // look up the JSON's two-letter keys regardless of how geo was stored.
+    const state = data?.states?.[abbreviateState(geo.state).toUpperCase()];
     if(!state) return false;
     const cityBlock = state[String(geo.city).toLowerCase()];
     return entriesFromBlock(cityBlock).length > 0;
@@ -2992,7 +2998,9 @@
   async function getStationsForGeo(geo, scope){
     if(!geo?.state) return [];
     const data = await loadLocalStations();
-    const stateKey = String(geo.state || "").toUpperCase();
+    // Normalize "Michigan"/"US-MI"/"mi" → "MI" so the JSON's two-letter
+    // keys resolve regardless of how the caller stored the state.
+    const stateKey = abbreviateState(geo.state).toUpperCase();
     const state = data?.states?.[stateKey];
     if(!state) return [];
     const out = [];
@@ -3205,7 +3213,13 @@
       }
     }
     if(!geo || !geo.city) return { results: [], geo: null };
-    const fullState = expandStateName(geo.state) || geo.state;
+    // Normalize "Michigan"/"US-MI"/"mi" → "MI" before expanding back to the
+    // full name, so Reddit queries use the human spelling regardless of how
+    // the caller stored geo.state. Also overwrite geo.state for downstream
+    // filters/scorers that compare to a 2-letter code.
+    const stateAbbr = abbreviateState(geo.state).toUpperCase();
+    geo = { ...geo, state: stateAbbr };
+    const fullState = expandStateName(stateAbbr) || stateAbbr;
 
     // For LOCAL: query "${city} ${stateName}" and "${city}, ${stateAbbrev}"
     // — both anchor on the city. Drop the bare-state query that used to
@@ -3279,7 +3293,7 @@
         <div class="hnPickerBody">
           <p class="hnPickerLead" id="hnPickerLead">Loading sources for your area…</p>
           <div class="hnPickerSection" id="hnPickerFallbackSection" hidden>
-            <div class="hnPickerSectionLabel">📍 Nearest cities we cover</div>
+            <div class="hnPickerSectionLabel" id="hnPickerFallbackLabel">📍 ${scope === "local" ? "Nearest cities we cover" : "Nearest states we cover"}</div>
             <div class="hnPickerList" id="hnPickerFallbackList" role="list"></div>
           </div>
           <div class="hnPickerSection" id="hnPickerStationsSection" hidden>
