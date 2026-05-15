@@ -3012,14 +3012,14 @@
   }
 
   // ── Web-search feed builders ────────────────────────────────────────────
-  // Both Google News and Bing News expose RSS for free-text queries with no
-  // API key. We expose them as picker checkboxes alongside the curated
-  // station/Reddit lists so the user can opt into broader coverage for
-  // small markets where TV/paper RSS is thin.
+  // Bing News exposes RSS for free-text queries with no API key. We surface
+  // it as picker checkboxes alongside the curated station/Reddit lists so
+  // the user can opt into broader coverage for small markets where TV/paper
+  // RSS is thin.
+  // (Google News used to be offered too, but news.google.com hard-503s
+  // requests from Cloudflare Worker IP ranges regardless of UA/cookies —
+  // the rows would always come back empty, so we don't expose them.)
 
-  function googleNewsSearchRss(query){
-    return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-  }
   function bingNewsSearchRss(query){
     return `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss`;
   }
@@ -3027,9 +3027,9 @@
   // Returns the picker's web-search rows for a given geo + scope. Each row
   // is { name, rss, site, provider, angle, defaultChecked } — provider/angle
   // are metadata for grouping / debugging; defaultChecked controls whether
-  // the checkbox starts ticked. We pre-check Headlines + Sports per
-  // provider to give users a reasonable starting bundle without
-  // overflowing the 8-feed cap in news.js.
+  // the checkbox starts ticked. We pre-check Headlines + Sports to give
+  // users a reasonable starting bundle without overflowing the 8-feed cap
+  // in news.js.
   function getWebSearchFeeds(geo, scope){
     if(!geo?.state) return [];
     const city = String(geo.city || "").trim();
@@ -3045,8 +3045,8 @@
       : ["Headlines", "Sports", "Business", "Weather", "Politics"];
 
     // Build query text for an angle. Local uses '"City, ST"' as the
-    // disambiguator (proven reliable in news.js) plus the angle keyword;
-    // regional uses the full state name plus the angle keyword.
+    // disambiguator plus the angle keyword; regional uses the full state
+    // name plus the angle keyword.
     function queryFor(angle){
       if(isLocal){
         const baseLoc = city ? `"${city}, ${stateAbbr}"` : fullState;
@@ -3062,14 +3062,6 @@
     for(const angle of angles){
       const q = queryFor(angle);
       const defaultChecked = angle === "Headlines" || angle === "Sports";
-      out.push({
-        name: `Google News — ${angle} (${where})`,
-        rss: googleNewsSearchRss(q),
-        site: "https://news.google.com",
-        provider: "google",
-        angle,
-        defaultChecked
-      });
       out.push({
         name: `Bing News — ${angle} (${where})`,
         rss: bingNewsSearchRss(q),
@@ -3347,7 +3339,7 @@
             <div class="hnPickerList" id="hnPickerStations" role="list"></div>
           </div>
           <div class="hnPickerSection" id="hnPickerWebSection" hidden>
-            <div class="hnPickerSectionLabel">🌐 News searches (Google &amp; Bing)</div>
+            <div class="hnPickerSectionLabel">🌐 News searches (Bing)</div>
             <div class="hnPickerList" id="hnPickerWebList" role="list"></div>
           </div>
           <div class="hnPickerSection">

@@ -16,8 +16,12 @@
   const NEWS_CACHE_KEY = "jas_cache_news_v1";
   const NEWS_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
-  const CRITICAL_NATIONAL_RSS = "https://news.google.com/rss/search?q=US+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
-  const CRITICAL_INTERNATIONAL_RSS = "https://news.google.com/rss/search?q=world+breaking+news+when%3A1d&hl=en-US&gl=US&ceid=US:en";
+  // News-search fallback queries route through the worker RSS proxy. We
+  // moved off news.google.com because Cloudflare Worker IP ranges get a
+  // hard 503 from Google's RSS endpoints regardless of UA/cookies — Bing
+  // serves the same kind of aggregated-headlines feed without the block.
+  const CRITICAL_NATIONAL_RSS = "https://www.bing.com/news/search?q=US+breaking+news&format=rss";
+  const CRITICAL_INTERNATIONAL_RSS = "https://www.bing.com/news/search?q=world+breaking+news&format=rss";
 
   // Single state for the four scope tabs (LOCAL/REGIONAL/NATIONAL/INTERNATIONAL).
   // Drives both the critical ticker and the main news grid. Reads the old
@@ -316,12 +320,12 @@
     }
   }
 
-  // Build a Google News RSS search URL. We deliberately drop the
-  // `when:1d` restriction we used to send: in many small/medium markets
-  // there isn't a fresh story every day, and Google's relevance/recency
-  // ranking already biases recent results to the top.
-  function googleNewsRssFor(query){
-    return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+  // Build a Bing News RSS search URL. Bing replaced Google News here
+  // because Cloudflare Worker IP ranges are blocked by news.google.com
+  // (hard 503 regardless of UA/cookies); Bing has no such block and
+  // serves the same kind of aggregated-headlines RSS.
+  function bingNewsRssFor(query){
+    return `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss`;
   }
 
   // The picker modal + Reddit discovery moved to common.js so both news.js
@@ -343,8 +347,8 @@
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
       const label = geo.city.toUpperCase();
       return [
-        { rss: googleNewsRssFor(`"${geo.city}, ${geo.state}"`), scope: "local", label },
-        { rss: googleNewsRssFor(`${geo.city} ${fullState}`), scope: "local", label }
+        { rss: bingNewsRssFor(`"${geo.city}, ${geo.state}"`), scope: "local", label },
+        { rss: bingNewsRssFor(`${geo.city} ${fullState}`), scope: "local", label }
       ];
     }
     if(scope === "regional"){
@@ -354,8 +358,8 @@
       const fullState = window.App?.expandStateName?.(geo.state) || geo.state;
       const label = (fullState || geo.state).toUpperCase();
       return [
-        { rss: googleNewsRssFor(`${fullState} state news`), scope: "regional", label },
-        { rss: googleNewsRssFor(`${fullState} headlines`), scope: "regional", label }
+        { rss: bingNewsRssFor(`${fullState} state news`), scope: "regional", label },
+        { rss: bingNewsRssFor(`${fullState} headlines`), scope: "regional", label }
       ];
     }
     return [{ rss: CRITICAL_NATIONAL_RSS, scope: "national", label: "US" }];
@@ -393,33 +397,30 @@
       }
 
       if(scope === "local"){
-        // Disambiguated by direct probing of Google News RSS. Common-name
-        // cities like Jackson, Springfield, Madison, Albany were returning
-        // results from the wrong-state homonym when we used bare ${city}
-        // queries. The quoted "City, ST" form (e.g. `"Jackson, MI"`) is the
-        // most reliable disambiguator across cities. Per-category combos
-        // ("Jackson sports", "Jackson entertainment", etc.) are highly
-        // inconsistent — many return 0 — so we use complementary angles
-        // instead of strict topical splits and add a state-level card so
-        // the row never feels empty for small markets.
+        // Common-name cities (Jackson, Springfield, Madison, Albany) need a
+        // disambiguator or you get wrong-state homonyms. The quoted
+        // `"City, ST"` form is the strongest signal across providers.
+        // Per-category combos return inconsistent results so we use
+        // complementary angles instead of strict topical splits and add a
+        // state-level card so the row never feels empty for small markets.
         return {
           widgets: [
             {
               name: `Near You — ${geo.city}, ${geo.state}`,
-              rss: googleNewsRssFor(`"${geo.city}, ${geo.state}"`),
-              site: "https://news.google.com",
+              rss: bingNewsRssFor(`"${geo.city}, ${geo.state}"`),
+              site: "https://www.bing.com/news",
               headlinesCount: 6
             },
             {
               name: `${geo.city} Headlines`,
-              rss: googleNewsRssFor(`${geo.city} ${fullState}`),
-              site: "https://news.google.com",
+              rss: bingNewsRssFor(`${geo.city} ${fullState}`),
+              site: "https://www.bing.com/news",
               headlinesCount: 6
             },
             {
               name: `Across ${fullState}`,
-              rss: googleNewsRssFor(`${fullState} state news`),
-              site: "https://news.google.com",
+              rss: bingNewsRssFor(`${fullState} state news`),
+              site: "https://www.bing.com/news",
               headlinesCount: 6
             }
           ],
@@ -427,28 +428,28 @@
         };
       }
 
-      // Regional: state-level fallback widgets. "${state} state news" returns
-      // content for states where bare "${state} news" returns 0 (Michigan,
-      // for example). Sports may be sparse for some states — Google News
-      // indexing limitation, not something we can fix client-side.
+      // Regional: state-level fallback widgets. `"${state} state news"` is
+      // a more reliable query than bare `"${state} news"` (the latter
+      // returns 0 for some states across providers — Michigan is the
+      // worst case). Sports availability varies by state.
       return {
         widgets: [
           {
             name: `Across ${fullState}`,
-            rss: googleNewsRssFor(`${fullState} state news`),
-            site: "https://news.google.com",
+            rss: bingNewsRssFor(`${fullState} state news`),
+            site: "https://www.bing.com/news",
             headlinesCount: 6
           },
           {
             name: `${fullState} Headlines`,
-            rss: googleNewsRssFor(`${fullState} headlines`),
-            site: "https://news.google.com",
+            rss: bingNewsRssFor(`${fullState} headlines`),
+            site: "https://www.bing.com/news",
             headlinesCount: 6
           },
           {
             name: `${fullState} Sports`,
-            rss: googleNewsRssFor(`${fullState} sports`),
-            site: "https://news.google.com",
+            rss: bingNewsRssFor(`${fullState} sports`),
+            site: "https://www.bing.com/news",
             headlinesCount: 6
           }
         ],
