@@ -260,7 +260,16 @@ async function fetchRssThroughProxy(request, env, url) {
     upstream = await fetch(parsed.target, {
       headers: {
         Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-        "User-Agent": "HAPPENING-NOW/1.0 RSS Proxy",
+        "Accept-Language": "en-US,en;q=0.9",
+        // Browser-style UA: Google News and Reddit started returning 503 to
+        // the previous "HAPPENING-NOW/1.0 RSS Proxy" UA from Cloudflare
+        // Worker IPs. A current Chrome UA bypasses the heuristic.
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        // CONSENT=YES+ is Google's documented bypass for the consent.google.com
+        // redirect that non-browser clients otherwise get steered into; without
+        // it, news.google.com RSS responses return a consent HTML page or 503.
+        Cookie: "CONSENT=YES+cb",
       },
       cf: {
         cacheEverything: true,
