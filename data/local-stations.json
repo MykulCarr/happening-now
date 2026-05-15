@@ -1343,10 +1343,42 @@
         },
         "entries": [
           {
+            "name": "Fox 47 News (Lansing/Jackson)",
+            "rss": "https://www.fox47news.com/news.rss",
+            "site": "https://www.fox47news.com",
+            "type": "tv"
+          },
+          {
             "name": "MLive Jackson",
             "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/jackson/",
             "site": "https://www.mlive.com/jackson",
             "type": "paper"
+          },
+          {
+            "name": "WLNS 6 (Lansing/Jackson, CBS)",
+            "rss": "https://www.wlns.com/feed/",
+            "site": "https://www.wlns.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "lansing": {
+        "coords": {
+          "lat": 42.7325,
+          "lon": -84.5555
+        },
+        "entries": [
+          {
+            "name": "Fox 47 News (Lansing/Jackson)",
+            "rss": "https://www.fox47news.com/news.rss",
+            "site": "https://www.fox47news.com",
+            "type": "tv"
+          },
+          {
+            "name": "WLNS 6 (Lansing/Jackson, CBS)",
+            "rss": "https://www.wlns.com/feed/",
+            "site": "https://www.wlns.com",
+            "type": "tv"
           }
         ]
       }
