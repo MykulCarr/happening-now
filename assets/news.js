@@ -804,6 +804,38 @@ function restoreNewsFromCache(){
       btn.classList.toggle("active", btn.dataset.scope === scope);
     });
     syncEditSourcesLink(scope);
+    updatePageHeading(scope);
+  }
+
+  // Rewrite the page H1 to reflect the active scope so the user sees what
+  // they're looking at without reading the (active) scope chip.
+  //   national      → "US News"
+  //   international → "International News"
+  //   regional      → "{Full State Name} News"  (e.g., "Michigan News")
+  //   local         → "{City} News"             (e.g., "Jackson News")
+  // For local/regional, geo may not be resolved yet — show a placeholder
+  // first and update asynchronously. We capture the scope at call time so a
+  // stale fetch can't overwrite a heading set by a later scope change.
+  async function updatePageHeading(scope){
+    const h1 = document.getElementById("newsPageHeading");
+    if(!h1) return;
+    if(scope === "national"){ h1.textContent = "US News"; return; }
+    if(scope === "international"){ h1.textContent = "International News"; return; }
+    // Local/regional: show generic placeholder while we wait for geo.
+    h1.textContent = scope === "local" ? "Local News" : "Regional News";
+    const requestedScope = scope;
+    try {
+      const geo = await getGeoForScope();
+      if(currentScope !== requestedScope) return; // scope changed mid-fetch
+      if(!geo) return; // leave the placeholder; user hasn't set a location
+      if(requestedScope === "local"){
+        const city = String(geo.city || "").trim();
+        if(city) h1.textContent = `${city} News`;
+      } else {
+        const fullState = window.App?.expandStateName?.(geo.state) || geo.state || "";
+        if(fullState) h1.textContent = `${fullState} News`;
+      }
+    } catch { /* keep placeholder */ }
   }
 
   // Show "Edit sources" only on local/regional and only when something is
@@ -876,6 +908,9 @@ function restoreNewsFromCache(){
     geoCache = null;
     renderCriticalTicker(true);
     render(true);
+    // City/state in the H1 (local/regional) is stale once the user switches
+    // location — re-resolve and rewrite it.
+    updatePageHeading(currentScope);
   });
 
   // "Sources" button — opens the picker for the current scope (local/regional)
