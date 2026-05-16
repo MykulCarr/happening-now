@@ -1337,7 +1337,7 @@ button.hn-nav-link{
   letter-spacing:inherit;
 }
 .hn-nav-action{ display:inline-flex; align-items:center; gap:4px; }
-.hn-nav-action-icon{ font-size:.65em; line-height:.65; }
+.hn-nav-action-icon{ font-size:.85em; line-height:.85; }
 /* LOCATION button is intentionally subordinate to the page links —
    ~2/3 the size of the surrounding NEWS/WEATHER/STOCKS/ASTROLAB nav. */
 .hn-nav-section .hn-nav-link.hn-nav-action{ font-size:9px; }
@@ -6705,6 +6705,10 @@ body.stockLookupModalOpen{
 .hnWelcomeSaveBtn:disabled{
   opacity:.4;
   cursor:not-allowed;
+}
+.hnWelcomeSetLocBtn{
+  flex:1;
+  font-weight:700;
 }
 .hnWelcomeSkipBtn{
   background:none;

@@ -240,18 +240,10 @@
           <div class="hnWelcomeDot" aria-hidden="true"></div>
           <h2 id="hnWelcomeTitle" class="hnWelcomeTitle">Welcome to Happening Now!</h2>
         </div>
-        <p class="hnWelcomeSub">Your personal dashboard for news, weather, stocks, and the night sky. Set your location to see a live weather summary everywhere in the app.</p>
-
-        <div class="hnWelcomeLocRow">
-          <input id="hnWelcomeZip" class="input hnWelcomeZipInput" type="text"
-            inputmode="numeric" maxlength="5" placeholder="Enter your ZIP code"
-            aria-label="ZIP code" />
-          <button id="hnWelcomeVerifyBtn" class="btn hnWelcomeVerifyBtn" type="button">Verify</button>
-        </div>
-        <div id="hnWelcomeLocStatus" class="hnWelcomeLocStatus" aria-live="polite"></div>
+        <p class="hnWelcomeSub">Your personal dashboard for news, weather, stocks, and the night sky. Set your location to see a live weather summary everywhere in the app — pick from ZIP code, city name, or GPS.</p>
 
         <div class="hnWelcomeActions">
-          <button id="hnWelcomeSaveBtn" class="btn hnWelcomeSaveBtn" type="button" disabled>Save &amp; Get Started</button>
+          <button id="hnWelcomeSetLocBtn" class="btn primary hnWelcomeSetLocBtn" type="button">📍 Set my location</button>
           <button id="hnWelcomeSkipBtn" class="btn hnWelcomeSkipBtn" type="button">Skip for now</button>
         </div>
         <p class="hnWelcomeSettingHint">You can always update your location in <a href="settings.html">Settings</a>.</p>
@@ -260,75 +252,29 @@
 
     document.body.appendChild(overlay);
 
-    const zipInput    = overlay.querySelector("#hnWelcomeZip");
-    const verifyBtn   = overlay.querySelector("#hnWelcomeVerifyBtn");
-    const statusEl    = overlay.querySelector("#hnWelcomeLocStatus");
-    const saveBtn     = overlay.querySelector("#hnWelcomeSaveBtn");
-    const skipBtn     = overlay.querySelector("#hnWelcomeSkipBtn");
-
-    let resolvedZip   = "";
-    let resolvedLabel = "";
-
-    function setStatus(msg, type = "default") {
-      statusEl.textContent = msg;
-      statusEl.className = "hnWelcomeLocStatus hnWelcomeLocStatus--" + type;
-    }
-
-    async function doVerify() {
-      const zip = zipInput.value.trim();
-      if (!/^\d{5}$/.test(zip)) {
-        setStatus("Please enter a 5-digit US ZIP code.", "error");
-        saveBtn.disabled = true;
-        return;
-      }
-      verifyBtn.disabled = true;
-      setStatus("Looking up…", "loading");
-      try {
-        const geo = await window.App.geocodeZip(zip);
-        if (geo?.city) {
-          resolvedZip   = zip;
-          resolvedLabel = `${geo.city}, ${geo.state}`;
-          setStatus(`✓ Found: ${resolvedLabel}`, "success");
-          saveBtn.disabled = false;
-        } else {
-          setStatus("ZIP not found. Double-check and try again.", "error");
-          saveBtn.disabled = true;
-        }
-      } catch {
-        setStatus("Lookup failed. Check your connection and try again.", "error");
-        saveBtn.disabled = true;
-      } finally {
-        verifyBtn.disabled = false;
-      }
-    }
-
-    verifyBtn.addEventListener("click", doVerify);
-    zipInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doVerify(); } });
-
-    // Clear resolved result if user edits the input after a successful verify
-    zipInput.addEventListener("input", () => {
-      resolvedZip = "";
-      saveBtn.disabled = true;
-      statusEl.textContent = "";
-    });
+    const setLocBtn = overlay.querySelector("#hnWelcomeSetLocBtn");
+    const skipBtn   = overlay.querySelector("#hnWelcomeSkipBtn");
 
     function closeModal() {
       overlay.remove();
     }
 
-    saveBtn.addEventListener("click", () => {
-      if (!resolvedZip) return;
-      try {
-        const { loadConfig, saveConfig, syncTimezoneFromZip } = window.App;
-        const cfg = loadConfig();
-        cfg.zipCode = resolvedZip;
-        saveConfig(cfg);
-        syncTimezoneFromZip?.(cfg);
-      } catch (err) {
-        console.warn("[welcome] could not save location:", err);
+    // Delegate to the shared location picker (ZIP / City / GPS tabs). It
+    // already handles geocoding, "Save as home", session overrides, and
+    // permission UX, so the welcome modal stays a friendly intro instead
+    // of duplicating that machinery. #locationPickerModal has a higher
+    // z-index than this overlay so it floats above when invoked.
+    setLocBtn.addEventListener("click", () => {
+      if (typeof window.App?.openLocationPicker !== "function") {
+        console.warn("[welcome] openLocationPicker not available");
+        return;
       }
-      markWelcomed();
-      closeModal();
+      window.App.openLocationPicker({
+        onApply: () => {
+          markWelcomed();
+          closeModal();
+        }
+      });
     });
 
     skipBtn.addEventListener("click", () => {
@@ -336,8 +282,7 @@
       closeModal();
     });
 
-    // Focus the ZIP input after a brief paint delay
-    requestAnimationFrame(() => zipInput.focus());
+    requestAnimationFrame(() => setLocBtn.focus());
   }
 
   // Expose the welcome modal so callers (news page when user clicks Local/
