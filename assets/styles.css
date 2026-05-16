@@ -5035,6 +5035,10 @@ body.stockLookupModalOpen{
 #locationPickerModal {
   background: transparent;
   pointer-events: none;
+  /* Sits above the source picker (.hnPickerOverlay z-index:9999) so the
+     "Set Location" CTA inside the source picker can summon this modal
+     and have it visible on top of its caller. */
+  z-index: 10000;
 }
 #locationPickerModal > .modalContent {
   pointer-events: auto;

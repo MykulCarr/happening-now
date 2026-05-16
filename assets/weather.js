@@ -1977,6 +1977,35 @@
     setMapLoadingState(false);
   });
 
+  // Recenter button: get a fresh GPS fix and reload the Windy iframe at
+  // those coords. If GPS isn't available (denied / no support / timeout),
+  // we still force-reload at the current lastGeo so the user's Windy pan
+  // and zoom state resets to their saved location. We can't programmatically
+  // pan/zoom inside the iframe — only reload it with a new URL.
+  const mapRecenterBtn = document.getElementById("mapRecenterBtn");
+  mapRecenterBtn?.addEventListener("click", async () => {
+    mapRecenterBtn.disabled = true;
+    const originalLabel = mapRecenterBtn.textContent;
+    mapRecenterBtn.textContent = "⌛";
+    try {
+      let lat, lon;
+      if (typeof getCurrentPositionAsync === "function") {
+        try {
+          const pos = await getCurrentPositionAsync({ timeout: 8000 });
+          lat = Number(pos?.coords?.latitude);
+          lon = Number(pos?.coords?.longitude);
+        } catch { /* permission denied, no fix, etc. — fall back below */ }
+      }
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        lastGeo = { ...(lastGeo || {}), lat, lon };
+      }
+      updateMap(true);
+    } finally {
+      mapRecenterBtn.textContent = originalLabel;
+      mapRecenterBtn.disabled = false;
+    }
+  });
+
   function scheduleMapLoad(){
     if(!weatherMapFrame || mapLoadScheduled) return;
     mapLoadScheduled = true;
