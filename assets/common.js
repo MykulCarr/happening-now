@@ -267,6 +267,8 @@
     { name:"BBC", rss:"https://feeds.bbci.co.uk/news/rss.xml", site:"https://www.bbc.com/news", headlinesCount:5, scopes:["international"] },
     { name:"The Guardian (US)", rss:"https://www.theguardian.com/us-news/rss", site:"https://www.theguardian.com/us-news", headlinesCount:5, scopes:["national"] },
     { name:"The Guardian (World)", rss:"https://www.theguardian.com/world/rss", site:"https://www.theguardian.com/world", headlinesCount:5, scopes:["international"] },
+    { name:"The Atlantic", rss:"https://www.theatlantic.com/feed/all/", site:"https://www.theatlantic.com", headlinesCount:5, scopes:["national"] },
+    { name:"The Atlantic", rss:"https://www.theatlantic.com/feed/all/", site:"https://www.theatlantic.com", headlinesCount:5, scopes:["national"] },
     { name:"ArsTechnica", rss:"https://feeds.arstechnica.com/arstechnica/index", site:"https://arstechnica.com", headlinesCount:5, scopes:["national"] },
     { name:"PBS NewsHour", rss:"https://www.pbs.org/newshour/feeds/rss/headlines", site:"https://www.pbs.org/newshour", headlinesCount:5, scopes:["national"] },
     { name:"Al Jazeera", rss:"https://www.aljazeera.com/xml/rss/all.xml", site:"https://www.aljazeera.com", headlinesCount:5, scopes:["international"] },
