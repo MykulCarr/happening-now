@@ -22,12 +22,10 @@
   // small set of high-volume outlet feeds that proxy fine. Items from
   // multiple feeds are deduped and trimmed downstream.
   const CRITICAL_NATIONAL_FEEDS = [
-    { rss: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", scope: "national", label: "US" },
     { rss: "https://feeds.npr.org/1001/rss.xml",                         scope: "national", label: "US" },
     { rss: "https://feeds.feedburner.com/reuters/topNews",               scope: "national", label: "US" }
   ];
   const CRITICAL_INTERNATIONAL_FEEDS = [
-    { rss: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",     scope: "international", label: "WORLD" },
     { rss: "https://feeds.bbci.co.uk/news/world/rss.xml",                scope: "international", label: "WORLD" },
     { rss: "https://www.theguardian.com/world/rss",                      scope: "international", label: "WORLD" },
     { rss: "https://www.aljazeera.com/xml/rss/all.xml",                  scope: "international", label: "WORLD" }

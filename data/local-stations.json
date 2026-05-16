@@ -469,12 +469,6 @@
             "type": "tv"
           },
           {
-            "name": "NYT — N.Y. / Region",
-            "rss": "https://www.nytimes.com/services/xml/rss/nyt/NYRegion.xml",
-            "site": "https://www.nytimes.com/section/nyregion",
-            "type": "paper"
-          },
-          {
             "name": "Gothamist",
             "rss": "https://gothamist.com/feed",
             "site": "https://gothamist.com",

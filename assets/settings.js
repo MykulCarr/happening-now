@@ -776,7 +776,6 @@
     // Major US news
     "apnews.com": "AP News",       "ap.org": "AP News",
     "reuters.com": "Reuters",
-    "nytimes.com": "NY Times",
     "washingtonpost.com": "Washington Post",
     "theguardian.com": "The Guardian",
     "usatoday.com": "USA Today",
@@ -976,13 +975,6 @@
       domain: "foxnews.com",
       aliases: ["fox", "fox news", "foxnews", "foxnews.com"],
       topicKeys: ["top", "world", "politics", "business", "health", "sports", "opinion"]
-    },
-    {
-      publisher: "The New York Times",
-      site: "https://www.nytimes.com",
-      domain: "nytimes.com",
-      aliases: ["new york times", "nytimes", "nyt", "nytimes.com"],
-      topicKeys: ["top", "world", "politics", "business", "technology", "science", "health", "sports", "culture", "opinion"]
     },
     {
       publisher: "The Washington Post",
@@ -1337,7 +1329,7 @@
     {
       id: "us-national",
       label: "US National",
-      publishers: ["ABC News", "CBS News", "NBC News", "CNN", "Fox News", "NPR", "PBS NewsHour", "AP News", "The New York Times", "The Washington Post", "USA Today", "Politico", "Axios", "Vox"]
+      publishers: ["ABC News", "CBS News", "NBC News", "CNN", "Fox News", "NPR", "PBS NewsHour", "AP News", "The Washington Post", "USA Today", "Politico", "Axios", "Vox"]
     },
     {
       id: "us-regional",
@@ -1352,7 +1344,7 @@
     {
       id: "business",
       label: "Business & Finance",
-      publishers: ["Bloomberg", "CNBC", "MarketWatch", "Financial Times", "The Wall Street Journal", "Fortune", "Reuters", "The New York Times", "The Washington Post"]
+      publishers: ["Bloomberg", "CNBC", "MarketWatch", "Financial Times", "The Wall Street Journal", "Fortune", "Reuters", "The Washington Post"]
     },
     {
       id: "technology",
@@ -1372,7 +1364,7 @@
     {
       id: "politics",
       label: "Politics",
-      publishers: ["Politico", "The Hill", "Axios", "ProPublica", "Reuters", "AP News", "The New York Times", "The Washington Post"]
+      publishers: ["Politico", "The Hill", "Axios", "ProPublica", "Reuters", "AP News", "The Washington Post"]
     }
   ];
   const NEWS_DISCOVERY_KNOWN_FEEDS = buildKnownNewsFeedCatalog();
