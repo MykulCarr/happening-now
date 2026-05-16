@@ -48,6 +48,26 @@
           }
         ]
       },
+      "fresno": {
+        "coords": {
+          "lat": 36.7378,
+          "lon": -119.7871
+        },
+        "entries": [
+          {
+            "name": "KFSN ABC 30 Fresno",
+            "rss": "https://abc30.com/feed/",
+            "site": "https://abc30.com",
+            "type": "tv"
+          },
+          {
+            "name": "KSEE 24 Central Valley (NBC)",
+            "rss": "https://www.yourcentralvalley.com/news/feed/",
+            "site": "https://www.yourcentralvalley.com",
+            "type": "tv"
+          }
+        ]
+      },
       "los angeles": {
         "coords": {
           "lat": 34.0522,
@@ -73,6 +93,18 @@
             "type": "tv"
           },
           {
+            "name": "LAist",
+            "rss": "https://laist.com/index.rss",
+            "site": "https://laist.com",
+            "type": "paper"
+          },
+          {
+            "name": "Los Angeles Magazine",
+            "rss": "https://www.lamag.com/feed/",
+            "site": "https://www.lamag.com",
+            "type": "paper"
+          },
+          {
             "name": "Los Angeles Times — California",
             "rss": "https://www.latimes.com/california/rss2.0.xml",
             "site": "https://www.latimes.com",
@@ -80,28 +112,68 @@
           }
         ]
       },
-      "san francisco": {
+      "nipomo": {
         "coords": {
-          "lat": 37.7749,
-          "lon": -122.4194
+          "lat": 35.0427,
+          "lon": -120.4763
         },
         "entries": [
           {
-            "name": "KGO ABC 7 News Bay Area",
-            "rss": "https://abc7news.com/feed/",
-            "site": "https://abc7news.com",
+            "name": "KEYT NewsChannel 3-12 (Central Coast)",
+            "rss": "https://keyt.com/feed/",
+            "site": "https://keyt.com",
             "type": "tv"
           },
           {
-            "name": "KNTV NBC Bay Area",
-            "rss": "https://www.nbcbayarea.com/?rss=y",
-            "site": "https://www.nbcbayarea.com",
+            "name": "Noozhawk (Central Coast)",
+            "rss": "https://www.noozhawk.com/feed/",
+            "site": "https://www.noozhawk.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "sacramento": {
+        "coords": {
+          "lat": 38.5816,
+          "lon": -121.4944
+        },
+        "entries": [
+          {
+            "name": "KCRA 3 Sacramento (NBC)",
+            "rss": "https://www.kcra.com/topstories-rss",
+            "site": "https://www.kcra.com",
             "type": "tv"
           },
           {
-            "name": "The San Francisco Standard",
-            "rss": "https://sfstandard.com/feed/",
-            "site": "https://sfstandard.com",
+            "name": "KXTV ABC 10 Sacramento",
+            "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
+            "site": "https://www.abc10.com",
+            "type": "tv"
+          },
+          {
+            "name": "KTXL Fox 40 Sacramento",
+            "rss": "https://www.fox40.com/news/feed/",
+            "site": "https://www.fox40.com",
+            "type": "tv"
+          }
+        ]
+      },
+      "san bernardino": {
+        "coords": {
+          "lat": 34.1083,
+          "lon": -117.2898
+        },
+        "entries": [
+          {
+            "name": "Coyote Chronicle (CSUSB)",
+            "rss": "https://coyotechronicle.net/feed/",
+            "site": "https://coyotechronicle.net",
+            "type": "paper"
+          },
+          {
+            "name": "Inland Empire Community News",
+            "rss": "https://iecn.com/feed/",
+            "site": "https://iecn.com",
             "type": "paper"
           }
         ]
@@ -138,49 +210,89 @@
           }
         ]
       },
-      "sacramento": {
+      "san francisco": {
         "coords": {
-          "lat": 38.5816,
-          "lon": -121.4944
+          "lat": 37.7749,
+          "lon": -122.4194
         },
         "entries": [
           {
-            "name": "KCRA 3 Sacramento (NBC)",
-            "rss": "https://www.kcra.com/topstories-rss",
-            "site": "https://www.kcra.com",
+            "name": "KGO ABC 7 News Bay Area",
+            "rss": "https://abc7news.com/feed/",
+            "site": "https://abc7news.com",
             "type": "tv"
           },
           {
-            "name": "KXTV ABC 10 Sacramento",
-            "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
-            "site": "https://www.abc10.com",
+            "name": "KNTV NBC Bay Area",
+            "rss": "https://www.nbcbayarea.com/?rss=y",
+            "site": "https://www.nbcbayarea.com",
             "type": "tv"
           },
           {
-            "name": "KTXL Fox 40 Sacramento",
-            "rss": "https://www.fox40.com/news/feed/",
-            "site": "https://www.fox40.com",
-            "type": "tv"
+            "name": "The San Francisco Standard",
+            "rss": "https://sfstandard.com/feed/",
+            "site": "https://sfstandard.com",
+            "type": "paper"
           }
         ]
       },
-      "fresno": {
+      "san luis obispo": {
         "coords": {
-          "lat": 36.7378,
-          "lon": -119.7871
+          "lat": 35.2828,
+          "lon": -120.6596
         },
         "entries": [
           {
-            "name": "KFSN ABC 30 Fresno",
-            "rss": "https://abc30.com/feed/",
-            "site": "https://abc30.com",
+            "name": "Cal Coast News",
+            "rss": "https://calcoastnews.com/feed/",
+            "site": "https://calcoastnews.com",
+            "type": "paper"
+          },
+          {
+            "name": "KEYT NewsChannel 3-12 (Central Coast)",
+            "rss": "https://keyt.com/feed/",
+            "site": "https://keyt.com",
             "type": "tv"
           },
           {
-            "name": "KSEE 24 Central Valley (NBC)",
-            "rss": "https://www.yourcentralvalley.com/news/feed/",
-            "site": "https://www.yourcentralvalley.com",
+            "name": "Mustang News (Cal Poly)",
+            "rss": "https://mustangnews.net/feed/",
+            "site": "https://mustangnews.net",
+            "type": "paper"
+          }
+        ]
+      },
+      "santa maria": {
+        "coords": {
+          "lat": 34.953,
+          "lon": -120.4358
+        },
+        "entries": [
+          {
+            "name": "KEYT NewsChannel 3-12 (Central Coast)",
+            "rss": "https://keyt.com/feed/",
+            "site": "https://keyt.com",
             "type": "tv"
+          },
+          {
+            "name": "Noozhawk (Central Coast)",
+            "rss": "https://www.noozhawk.com/feed/",
+            "site": "https://www.noozhawk.com",
+            "type": "paper"
+          }
+        ]
+      },
+      "victorville": {
+        "coords": {
+          "lat": 34.5362,
+          "lon": -117.2912
+        },
+        "entries": [
+          {
+            "name": "Victor Valley News (VVNG)",
+            "rss": "https://www.vvng.com/feed/",
+            "site": "https://www.vvng.com",
+            "type": "paper"
           }
         ]
       }
