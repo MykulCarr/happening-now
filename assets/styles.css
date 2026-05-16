@@ -1553,10 +1553,18 @@ header#topbar{ width:100%; min-height:78px; }
   align-items:center;
   overflow:hidden;
 }
-.hn-host-weather .weatherWidgetIcon{ font-size:30px; }
-.hn-host-weather .weatherWidget .weatherWidgetTemp{ font-size:18px; }
+.hn-host-weather .weatherWidgetIcon{ font-size:24px; }
+.hn-host-weather .weatherWidget .weatherWidgetTemp{ font-size:16px; }
 .hn-host-weather .weatherWidgetDesc{ font-size:12px; }
-.hn-host-weather .weatherWidgetLocation{ font-size:11px; }
+.hn-host-weather .weatherWidgetLocation{
+  font-size:10px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.2;
+  margin-top:1px;
+}
 /* No-location state: pin + 'Set location'/'Tap to add' are placeholders,
    shouldn't dominate the topbar. Roughly half size of the live-weather
    display so the visual weight matches the surrounding nav. */

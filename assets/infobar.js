@@ -56,6 +56,7 @@
       <div class="weatherWidgetContent">
         <div class="weatherWidgetTemp">--°</div>
         <div class="weatherWidgetRange"><span class="weatherLo">--</span>°/<span class="weatherHi">--</span>°</div>
+        <div class="weatherWidgetLocation"></div>
       </div>
       <div class="weatherWidgetDetails">
         <div class="weatherDetail">
@@ -212,10 +213,12 @@
       const rangeEl = widget.querySelector(".weatherWidgetRange");
       const feelsEl = widget.querySelector(".weatherFeels");
       const windEl = widget.querySelector(".weatherWind");
+      const locEl = widget.querySelector(".weatherWidgetLocation");
       if(iconEl) iconEl.textContent = "📍";
       if(tempEl) tempEl.textContent = "Set location";
       if(feelsEl) feelsEl.textContent = "—";
       if(windEl) windEl.textContent = "—";
+      if(locEl) locEl.textContent = "";
       const humidityFill = widget.querySelector(".humidityFill");
       if(humidityFill) humidityFill.style.width = "0%";
       const precipFill = widget.querySelector(".precipFill");
@@ -232,6 +235,8 @@
       widget.querySelector(".weatherWidgetRange").textContent = "--°/--°";
       widget.querySelector(".weatherFeels").textContent = "--°";
       widget.querySelector(".weatherWind").textContent = "--";
+      const locEl = widget.querySelector(".weatherWidgetLocation");
+      if(locEl) locEl.textContent = "";
       const humidityFill = widget.querySelector(".humidityFill");
       if(humidityFill) humidityFill.style.width = "0%";
       const precipFill = widget.querySelector(".precipFill");
@@ -253,6 +258,10 @@
     widget.querySelector(".weatherWidgetTemp").textContent = temp;
     widget.querySelector(".weatherLo").textContent = lo;
     widget.querySelector(".weatherHi").textContent = hi;
+    // loadWeather attaches `location` ("City, ST") to the data when a fresh
+    // fetch succeeds. Persisted snapshots also carry it forward via persistWeather.
+    const locEl = widget.querySelector(".weatherWidgetLocation");
+    if(locEl) locEl.textContent = weatherData.location || "";
     
     // Precipitation
     const precip = weatherData.precip != null ? `${Math.round(weatherData.precip * 100)}%` : "0%";
