@@ -174,13 +174,16 @@ html[data-override-active] body{
 }
 
 /* Local/regional news source picker modal */
+/* Note: no backdrop-filter:blur. The news critical-ticker animates
+   continuously (60fps rAF) behind this overlay; a 4px blur would have
+   to re-rasterize on every frame and the GPU drops frames mid-paint,
+   showing as flicker most visibly along the topbar edge. The darker
+   solid rgba below provides enough page separation without the cost. */
 .hnPickerOverlay{
   position:fixed;
   inset:0;
   z-index:9999;
-  background:rgba(0,0,0,0.6);
-  -webkit-backdrop-filter:blur(4px);
-  backdrop-filter:blur(4px);
+  background:rgba(0,0,0,0.72);
   display:flex;
   align-items:center;
   justify-content:center;
