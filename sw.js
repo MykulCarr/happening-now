@@ -6,7 +6,6 @@ const ASSETS_TO_CACHE = [
   '/index.html',
   '/weather.html',
   '/stocks.html',
-  '/AstroLab.html',
   '/settings.html',
   '/assets/common.js',
   '/assets/news.js',

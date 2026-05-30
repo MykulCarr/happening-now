@@ -12,7 +12,7 @@
     window.App.applyThemeDensity(cfg);
   }
 
-  const pageVis = cfg.pageVisibility || { news: true, weather: true, stocks: true, astrolab: true };
+  const pageVis = cfg.pageVisibility || { news: true, weather: true, stocks: true };
 
   // The deploy bundle injects the static topbar HTML into <header id="topbar">
   // (see scripts/stage-public-assets.ps1 + scripts/topbar-template.html) so the
@@ -29,7 +29,6 @@
       navLinkHtml('news', 'index.html', 'NEWS') +
       navLinkHtml('weather', 'weather.html', 'WEATHER') +
       navLinkHtml('stocks', 'stocks.html', 'STOCKS') +
-      navLinkHtml('astrolab', 'AstroLab.html', 'ASTROLAB') +
       '<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>' +
       '<button type="button" class="hn-nav-link hn-nav-action hn-location-nav-btn" aria-label="Change location"><span class="hn-nav-action-icon" aria-hidden="true">📍</span> LOCATION</button>';
     mount.innerHTML = `
@@ -58,7 +57,7 @@
     // Static topbar already present — hide any nav links the user has disabled
     // via cfg.pageVisibility. (When we built the markup ourselves above, we
     // emitted only the visible links, so this only runs on the staged path.)
-    for (const key of ['news', 'weather', 'stocks', 'astrolab']) {
+    for (const key of ['news', 'weather', 'stocks']) {
       if (pageVis[key] === false) {
         mount.querySelectorAll(`.hn-nav-link[data-nav-key="${key}"]`).forEach(a => {
           a.style.display = 'none';
@@ -286,10 +285,10 @@
   }
 
   // Expose the welcome modal so callers (news page when user clicks Local/
-  // Regional, weather page on load, AstroLab page on load) can prompt only
-  // when location is actually needed. No longer fires automatically on
-  // first visit — the bare landing page (News on National scope) doesn't
-  // require location, so prompting then was noise.
+  // Regional, weather page on load) can prompt only when location is
+  // actually needed. No longer fires automatically on first visit — the
+  // bare landing page (News on National scope) doesn't require location,
+  // so prompting then was noise.
   function openWelcomeIfNeeded(){
     if(!isFirstRun()) return false;
     if(document.getElementById("hnWelcomeModal")) return true;

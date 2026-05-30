@@ -92,8 +92,8 @@ html{
   background:var(--bg);
 }
 
-/* Per-page section visibility. Inline scripts in weather/stocks/AstroLab
-   read cfg.sectionVisibility from localStorage and set data-hide-{page}-{key}
+/* Per-page section visibility. Inline scripts in weather/stocks read
+   cfg.sectionVisibility from localStorage and set data-hide-{page}-{key}
    attributes on <html> before paint. The selectors below match those keys
    to the data-section attributes on each card. Adding a new section just
    needs a new attribute on the HTML and a one-line rule here. */
@@ -111,14 +111,7 @@ html{
 [data-hide-stocks-losers]           [data-section="losers"],
 [data-hide-stocks-trending]         [data-section="trending"],
 [data-hide-stocks-calendar]         [data-section="calendar"],
-[data-hide-stocks-diagnostic]       [data-section="diagnostic"],
-[data-hide-astrolab-sky]            [data-section="sky"],
-[data-hide-astrolab-calendar]       [data-section="calendar"],
-[data-hide-astrolab-highlights]     [data-section="highlights"],
-[data-hide-astrolab-events]         [data-section="events"],
-[data-hide-astrolab-launches]       [data-section="launches"],
-[data-hide-astrolab-headlines]      [data-section="headlines"],
-[data-hide-astrolab-artemis]        [data-section="artemis"]{
+[data-hide-stocks-diagnostic]       [data-section="diagnostic"]{
   display:none !important;
 }
 
@@ -1342,7 +1335,7 @@ button.hn-nav-link{
 .hn-nav-action{ display:inline-flex; align-items:center; gap:4px; }
 .hn-nav-action-icon{ font-size:.85em; line-height:.85; }
 /* LOCATION button is intentionally subordinate to the page links —
-   ~2/3 the size of the surrounding NEWS/WEATHER/STOCKS/ASTROLAB nav. */
+   ~2/3 the size of the surrounding NEWS/WEATHER/STOCKS nav. */
 .hn-nav-section .hn-nav-link.hn-nav-action{ font-size:9px; }
 .hn-mobile-nav .hn-nav-link.hn-nav-action{ font-size:10px; }
 .hn-nav-link:hover{ 
@@ -5581,267 +5574,6 @@ body.stockLookupModalOpen{
   padding: 10px 14px 12px;
 }
 
-.astrolabPanelGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  align-items: start;
-}
-
-.astrolabPanelGrid > .collapsibleSection {
-  margin-bottom: 0;
-}
-
-.astrolabPanelColumn {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.astrolabPanelColumn > .collapsibleSection {
-  margin-bottom: 0;
-  width: 100%;
-}
-
-.astrolabSection {
-  min-width: 0;
-}
-
-.astrolabSection--wide {
-  grid-column: 1 / -1;
-}
-
-.collapsibleHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 13px 16px;
-  background: rgba(255,255,255,0.04);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  border: none;
-  width: 100%;
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 700;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.collapsibleHeader:hover {
-  background: rgba(255,255,255,0.065);
-}
-
-.collapsibleHeader::after {
-  content: none;
-}
-
-.collapsibleHeaderMain{
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
-.collapsibleHeaderInfo{
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-left: 18px;
-  margin-right: 0;
-  max-width: min(46vw, 420px);
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.78);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 3px 6px;
-}
-
-.collapsibleHeaderInfo .usageGuideIcon{
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  font-size: 10px;
-}
-
-.collapsibleHeaderInfo:hover,
-.collapsibleHeaderInfo:focus{
-  color: var(--text);
-  background: rgba(255,255,255,.08);
-  outline: none;
-}
-
-.collapsibleArrowHit{
-  margin-left: auto;
-  padding: 2px 4px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform .2s ease, background .2s ease;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--text);
-}
-
-.collapsibleArrowHit:hover{
-  background: rgba(255,255,255,.08);
-}
-
-.collapsibleHeader.expanded .collapsibleArrowHit{
-  transform: rotate(90deg);
-}
-
-.headerGuidePanel{
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-4px);
-  margin-bottom: 0;
-  padding: 0 14px;
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 12px;
-  background: rgba(255,255,255,.035);
-  color: rgba(255,255,255,0.82);
-  font-size: 13px;
-  line-height: 1.5;
-  transition: max-height .22s ease, opacity .18s ease, transform .22s ease, padding .22s ease, margin .22s ease;
-}
-
-.headerGuidePanel.is-open{
-  max-height: 180px;
-  opacity: 1;
-  transform: translateY(0);
-  margin-bottom: 10px;
-  padding: 12px 14px;
-}
-
-.headerGuidePanel p{
-  margin: 0;
-}
-
-.headerGuidePanel p + p{
-  margin-top: 6px;
-}
-
-@media (prefers-reduced-motion: reduce){
-  .headerGuidePanel{
-    transition: none;
-  }
-}
-
-.collapsibleBody {
-  display: none;
-  padding: 14px 16px 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  background: transparent;
-}
-
-.collapsibleBody.expanded {
-  display: block;
-}
-
-.settingsTabContent[data-tab="astrolab"] .settingsPanelLead {
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.settingsTabContent[data-tab="astrolab"] .collapsibleHeader {
-  padding: 9px 12px;
-}
-
-.settingsTabContent[data-tab="astrolab"] .collapsibleBody {
-  padding: 10px 12px;
-}
-
-.settingsTabContent[data-tab="astrolab"] .settingRowGroup {
-  gap: 4px;
-}
-
-.settingsTabContent[data-tab="astrolab"] .settingRow {
-  padding: 6px 0;
-}
-
-.settingsTabContent[data-tab="astrolab"] .settingHint {
-  max-width: 44ch;
-}
-
-.settingsTabContent[data-tab="astrolab"] .toggleSwitch {
-  justify-content: flex-end;
-  min-width: 44px;
-}
-
-.astrolabDenseFields {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0 18px;
-  align-items: start;
-}
-
-.astrolabDenseField {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 16px;
-  row-gap: 2px;
-  align-items: center;
-  min-width: 0;
-  min-height: 0;
-  padding: 10px 0 12px;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: transparent;
-}
-
-.astrolabDenseField--wide {
-  grid-column: span 2;
-}
-
-.astrolabDenseField .settingHint {
-  max-width: none;
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.astrolabDenseField .settingLabel {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.astrolabDenseControl {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  justify-content: flex-end;
-  justify-self: end;
-  align-self: center;
-  min-width: 44px;
-  margin-top: 0;
-}
-
-.astrolabDenseInput {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  justify-self: end;
-  align-self: center;
-  width: min(100%, 180px);
-  margin-top: 0;
-}
-
-.astrolabDenseInput--wide {
-  width: min(100%, 260px);
-}
-
-.astrolabDenseInput--narrow {
-  width: min(100%, 96px);
-}
-
 .toggleSwitch {
   display: flex;
   align-items: center;
@@ -6236,25 +5968,6 @@ body.stockLookupModalOpen{
     flex-direction: column;
   }
 
-  .astrolabPanelGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .astrolabPanelColumn {
-    display: contents;
-  }
-  #astrolabPerformanceSection {
-    order: -1;
-  }
-
-  .astrolabDenseFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 14px;
-  }
-
-  .astrolabDenseField--wide {
-    grid-column: span 2;
-  }
 
   .settingRowPair {
     grid-template-columns: 1fr;

@@ -15,7 +15,6 @@ $publicFiles = @(
   "weather.html",
   "stocks.html",
   "settings.html",
-  "AstroLab.html",
   "privacy.html",
   "terms.html",
   "sources.html",

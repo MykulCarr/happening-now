@@ -125,59 +125,6 @@
     "BITCOIN": "bitcoin"
   };
 
-  const ASTROLAB_DEFAULTS = {
-    useDeviceLocationDefault: false,
-    fallbackLocation: "",
-    rememberLastLocation: true,
-    showLocationAccuracy: true,
-    defaultTimeMode: "now", // now | sunset | custom
-    customTime: "21:00",
-    sliderStepMinutes: 30,
-    autoAdvanceTime: false,
-    autoAdvanceSpeedSeconds: 5,
-    rememberLastTime: true,
-
-    showConstellationLines: true,
-    showConstellationLabels: true,
-    showPlanetLabels: true,
-    showDsoLabels: true,
-    showMilkyWay: true,
-    showHorizonOverlay: true,
-
-    magnitudeLimit: 6.0,
-    labelDensity: "standard", // minimal | standard | dense
-    highlightIntensity: 70,
-    nightLabelContrast: true,
-
-    showSkyConditions: true,
-    showCalendar: true,
-    showHighlights: true,
-    showResources: true,
-    showLaunches: true,
-    showAstroNews: true,
-    defaultCardState: "expanded", // expanded | collapsed | remember
-
-    autoRefreshMinutes: 15,
-    launchRefreshMinutes: 30,
-    newsRefreshMinutes: 30,
-    cacheMinutes: 30,
-
-    notifyIssPasses: false,
-    notifyTopEvents: false,
-    notifyLaunchWindows: false,
-    quietHoursStart: "23:00",
-    quietHoursEnd: "07:00",
-
-    timeFormat: "12h", // 12h | 24h
-    coordinateFormat: "hms", // hms | decimal
-    dateFormat: "us", // us | iso | eu
-    showSeconds: true,
-
-    lowPowerMode: false,
-    lightweightMobile: false,
-    disableHeavyOverlays: false
-  };
-
   const DEFAULTS = {
     theme: "dark",
     density: "compact",
@@ -188,7 +135,7 @@
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York",
 
     // Page visibility
-    pageVisibility: { news: true, weather: true, stocks: true, astrolab: true },
+    pageVisibility: { news: true, weather: true, stocks: true },
 
     // Weather preferences
     weatherAlertScope: "local",
@@ -242,20 +189,8 @@
         trending:   true,
         calendar:   true,
         diagnostic: true
-      },
-      astrolab: {
-        sky:        true,  // recommended
-        calendar:   true,
-        highlights: true,
-        events:     true,
-        launches:   true,
-        headlines:  true,
-        artemis:    true
       }
     },
-
-    // AstroLab preferences
-    astrolab: clone(ASTROLAB_DEFAULTS),
 
     // Content arrays
   widgets: [
@@ -302,7 +237,7 @@
     out.renderMode = ["smooth", "stable"].includes(String(out.renderMode || "").toLowerCase())
       ? String(out.renderMode).toLowerCase()
       : DEFAULTS.renderMode;
-    out.startupPage = ["news", "weather", "stocks", "astrolab"].includes(out.startupPage) ? out.startupPage : DEFAULTS.startupPage;
+    out.startupPage = ["news", "weather", "stocks"].includes(out.startupPage) ? out.startupPage : DEFAULTS.startupPage;
     out.stocksNewsMode = ["watchlist", "major"].includes(out.stocksNewsMode) ? out.stocksNewsMode : DEFAULTS.stocksNewsMode;
 
     out.zipCode = String(out.zipCode || "").trim();
@@ -414,63 +349,6 @@
     out.marketNewsSourceMode = ["google","direct"].includes(out.marketNewsSourceMode) ? out.marketNewsSourceMode : "google";
     out.marketNewsOpenMode = ["new-tab","same-tab"].includes(out.marketNewsOpenMode) ? out.marketNewsOpenMode : "new-tab";
     out.newsTickerScope = ["local","regional","national","international"].includes(out.newsTickerScope) ? out.newsTickerScope : "national";
-
-    const astro = (out.astrolab && typeof out.astrolab === "object") ? out.astrolab : {};
-    out.astrolab = {
-      ...clone(ASTROLAB_DEFAULTS),
-      ...astro
-    };
-
-    out.astrolab.useDeviceLocationDefault = out.astrolab.useDeviceLocationDefault !== false;
-    out.astrolab.fallbackLocation = String(out.astrolab.fallbackLocation || "").trim().slice(0, 120);
-    out.astrolab.rememberLastLocation = out.astrolab.rememberLastLocation !== false;
-    out.astrolab.showLocationAccuracy = out.astrolab.showLocationAccuracy !== false;
-    out.astrolab.defaultTimeMode = ["now", "sunset", "custom"].includes(out.astrolab.defaultTimeMode) ? out.astrolab.defaultTimeMode : ASTROLAB_DEFAULTS.defaultTimeMode;
-    out.astrolab.customTime = /^\d{2}:\d{2}$/.test(String(out.astrolab.customTime || "")) ? String(out.astrolab.customTime) : ASTROLAB_DEFAULTS.customTime;
-    out.astrolab.sliderStepMinutes = [15, 30, 60].includes(Number(out.astrolab.sliderStepMinutes)) ? Number(out.astrolab.sliderStepMinutes) : ASTROLAB_DEFAULTS.sliderStepMinutes;
-    out.astrolab.autoAdvanceTime = out.astrolab.autoAdvanceTime === true;
-    out.astrolab.autoAdvanceSpeedSeconds = Math.max(1, Math.min(120, Number(out.astrolab.autoAdvanceSpeedSeconds) || ASTROLAB_DEFAULTS.autoAdvanceSpeedSeconds));
-    out.astrolab.rememberLastTime = out.astrolab.rememberLastTime !== false;
-
-    out.astrolab.showConstellationLines = out.astrolab.showConstellationLines !== false;
-    out.astrolab.showConstellationLabels = out.astrolab.showConstellationLabels !== false;
-    out.astrolab.showPlanetLabels = out.astrolab.showPlanetLabels !== false;
-    out.astrolab.showDsoLabels = out.astrolab.showDsoLabels !== false;
-    out.astrolab.showMilkyWay = out.astrolab.showMilkyWay !== false;
-    out.astrolab.showHorizonOverlay = out.astrolab.showHorizonOverlay !== false;
-
-    out.astrolab.magnitudeLimit = Math.max(3, Math.min(8, Number(out.astrolab.magnitudeLimit) || ASTROLAB_DEFAULTS.magnitudeLimit));
-    out.astrolab.labelDensity = ["minimal", "standard", "dense"].includes(out.astrolab.labelDensity) ? out.astrolab.labelDensity : ASTROLAB_DEFAULTS.labelDensity;
-    out.astrolab.highlightIntensity = Math.max(0, Math.min(100, Number(out.astrolab.highlightIntensity) || ASTROLAB_DEFAULTS.highlightIntensity));
-    out.astrolab.nightLabelContrast = out.astrolab.nightLabelContrast !== false;
-
-    out.astrolab.showSkyConditions = out.astrolab.showSkyConditions !== false;
-    out.astrolab.showCalendar = out.astrolab.showCalendar !== false;
-    out.astrolab.showHighlights = out.astrolab.showHighlights !== false;
-    out.astrolab.showResources = out.astrolab.showResources !== false;
-    out.astrolab.showLaunches = out.astrolab.showLaunches !== false;
-    out.astrolab.showAstroNews = out.astrolab.showAstroNews !== false;
-    out.astrolab.defaultCardState = ["expanded", "collapsed", "remember"].includes(out.astrolab.defaultCardState) ? out.astrolab.defaultCardState : ASTROLAB_DEFAULTS.defaultCardState;
-
-    out.astrolab.autoRefreshMinutes = Math.max(2, Math.min(240, Number(out.astrolab.autoRefreshMinutes) || ASTROLAB_DEFAULTS.autoRefreshMinutes));
-    out.astrolab.launchRefreshMinutes = Math.max(2, Math.min(240, Number(out.astrolab.launchRefreshMinutes) || ASTROLAB_DEFAULTS.launchRefreshMinutes));
-    out.astrolab.newsRefreshMinutes = Math.max(2, Math.min(240, Number(out.astrolab.newsRefreshMinutes) || ASTROLAB_DEFAULTS.newsRefreshMinutes));
-    out.astrolab.cacheMinutes = Math.max(1, Math.min(240, Number(out.astrolab.cacheMinutes) || ASTROLAB_DEFAULTS.cacheMinutes));
-
-    out.astrolab.notifyIssPasses = out.astrolab.notifyIssPasses === true;
-    out.astrolab.notifyTopEvents = out.astrolab.notifyTopEvents === true;
-    out.astrolab.notifyLaunchWindows = out.astrolab.notifyLaunchWindows === true;
-    out.astrolab.quietHoursStart = /^\d{2}:\d{2}$/.test(String(out.astrolab.quietHoursStart || "")) ? String(out.astrolab.quietHoursStart) : ASTROLAB_DEFAULTS.quietHoursStart;
-    out.astrolab.quietHoursEnd = /^\d{2}:\d{2}$/.test(String(out.astrolab.quietHoursEnd || "")) ? String(out.astrolab.quietHoursEnd) : ASTROLAB_DEFAULTS.quietHoursEnd;
-
-    out.astrolab.timeFormat = ["12h", "24h"].includes(out.astrolab.timeFormat) ? out.astrolab.timeFormat : ASTROLAB_DEFAULTS.timeFormat;
-    out.astrolab.coordinateFormat = ["hms", "decimal"].includes(out.astrolab.coordinateFormat) ? out.astrolab.coordinateFormat : ASTROLAB_DEFAULTS.coordinateFormat;
-    out.astrolab.dateFormat = ["us", "iso", "eu"].includes(out.astrolab.dateFormat) ? out.astrolab.dateFormat : ASTROLAB_DEFAULTS.dateFormat;
-    out.astrolab.showSeconds = out.astrolab.showSeconds !== false;
-
-    out.astrolab.lowPowerMode = out.astrolab.lowPowerMode === true;
-    out.astrolab.lightweightMobile = out.astrolab.lightweightMobile === true;
-    out.astrolab.disableHeavyOverlays = out.astrolab.disableHeavyOverlays === true;
 
     if(!Array.isArray(out.marketIndices)) out.marketIndices = clone(DEFAULTS.marketIndices);
     const validKeys = new Set(MARKET_INDEX_DEFS.map(item => item.key));
@@ -1461,7 +1339,7 @@
           <div class="dot" aria-hidden="true"></div>
           <div>
             <div class="brandTitle">Happening Now!</div>
-            <div class="brandSub">News • Weather • Stocks • AstroLab</div>
+            <div class="brandSub">News • Weather • Stocks</div>
           </div>
         </a>
 
@@ -1484,10 +1362,6 @@
               ${active("stocks")
                 ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Stocks</span>`
                 : `<a class="btn btnMain" href="stocks.html">Stocks</a>`}
-            
-              ${active("astrolab")
-                ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">AstroLab</span>`
-                : `<a class="btn btnMain" href="AstroLab.html">AstroLab</a>`}
             </div>
 
             <div class="navSettings">

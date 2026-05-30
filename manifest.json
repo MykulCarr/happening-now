@@ -49,13 +49,6 @@
             "description": "Monitor stock prices",
             "url": "/stocks.html",
             "icons": []
-        },
-        {
-            "name": "AstroLab",
-            "short_name": "AstroLab",
-            "description": "View astronomy events",
-            "url": "/AstroLab.html",
-            "icons": []
         }
     ]
 }

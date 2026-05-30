@@ -24,7 +24,6 @@ Recommended path:
    - `https://happening-now.net/index.html`
    - `https://happening-now.net/weather.html`
    - `https://happening-now.net/stocks.html`
-   - `https://happening-now.net/AstroLab.html`
 5. Request indexing only if Search Console reports the URL is not yet indexed.
 
 Baseline metrics to capture:

@@ -9,7 +9,6 @@ Owner: Site operator
   - /weather.html
   - /stocks.html
   - /settings.html
-  - /AstroLab.html
 
 ## 2) Legal and SEO
 - [x] Legal pages return 200:
