@@ -443,6 +443,12 @@
             "rss": "https://georgiarecorder.com/feed/",
             "site": "https://georgiarecorder.com",
             "type": "paper"
+          },
+          {
+            "name": "Saporta Report (Atlanta-anchored, statewide coverage)",
+            "rss": "https://saportareport.com/feed/",
+            "site": "https://saportareport.com",
+            "type": "paper"
           }
         ]
       },
@@ -499,6 +505,12 @@
             "rss": "https://capitolnewsillinois.com/feed/",
             "site": "https://capitolnewsillinois.com",
             "type": "paper"
+          },
+          {
+            "name": "Illinois Newsroom (NPR consortium)",
+            "rss": "https://illinoisnewsroom.org/feed/",
+            "site": "https://illinoisnewsroom.org",
+            "type": "paper"
           }
         ]
       },
@@ -548,6 +560,12 @@
           "lon": -73.7562
         },
         "entries": [
+          {
+            "name": "New York Focus (States Newsroom)",
+            "rss": "https://nysfocus.com/feed",
+            "site": "https://nysfocus.com",
+            "type": "paper"
+          },
           {
             "name": "New York Post (statewide)",
             "rss": "https://nypost.com/feed/",
@@ -693,6 +711,12 @@
             "rss": "https://oregoncapitalchronicle.com/feed/",
             "site": "https://oregoncapitalchronicle.com",
             "type": "paper"
+          },
+          {
+            "name": "The Oregonian (OregonLive statewide)",
+            "rss": "https://www.oregonlive.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.oregonlive.com",
+            "type": "paper"
           }
         ]
       },
@@ -751,15 +775,21 @@
         },
         "entries": [
           {
-            "name": "WHYY (Philly NPR/PBS)",
-            "rss": "https://whyy.org/feed/",
-            "site": "https://whyy.org",
+            "name": "Pennsylvania Capital-Star (States Newsroom)",
+            "rss": "https://penncapital-star.com/feed/",
+            "site": "https://penncapital-star.com",
             "type": "paper"
           },
           {
             "name": "StateImpact Pennsylvania",
             "rss": "https://stateimpact.npr.org/pennsylvania/feed/",
             "site": "https://stateimpact.npr.org/pennsylvania",
+            "type": "paper"
+          },
+          {
+            "name": "WHYY (Philly NPR/PBS)",
+            "rss": "https://whyy.org/feed/",
+            "site": "https://whyy.org",
             "type": "paper"
           }
         ]
@@ -1009,9 +1039,21 @@
         },
         "entries": [
           {
-            "name": "The Texas Tribune",
-            "rss": "https://www.texastribune.org/rss/",
-            "site": "https://www.texastribune.org",
+            "name": "Houston Public Media (NPR/PBS)",
+            "rss": "https://www.houstonpublicmedia.org/feed/",
+            "site": "https://www.houstonpublicmedia.org",
+            "type": "paper"
+          },
+          {
+            "name": "KERA News (NPR North Texas)",
+            "rss": "https://www.keranews.org/news.rss",
+            "site": "https://www.keranews.org",
+            "type": "paper"
+          },
+          {
+            "name": "Texas Monthly",
+            "rss": "https://www.texasmonthly.com/feed/",
+            "site": "https://www.texasmonthly.com",
             "type": "paper"
           },
           {
@@ -1021,9 +1063,9 @@
             "type": "paper"
           },
           {
-            "name": "Texas Monthly",
-            "rss": "https://www.texasmonthly.com/feed/",
-            "site": "https://www.texasmonthly.com",
+            "name": "The Texas Tribune",
+            "rss": "https://www.texastribune.org/rss/",
+            "site": "https://www.texastribune.org",
             "type": "paper"
           }
         ]
@@ -1137,6 +1179,12 @@
         },
         "entries": [
           {
+            "name": "Carolina Journal",
+            "rss": "https://www.carolinajournal.com/feed/",
+            "site": "https://www.carolinajournal.com",
+            "type": "paper"
+          },
+          {
             "name": "NC Newsline",
             "rss": "https://ncnewsline.com/feed/",
             "site": "https://ncnewsline.com",
@@ -1146,6 +1194,12 @@
             "name": "North Carolina Health News",
             "rss": "https://www.northcarolinahealthnews.org/feed/",
             "site": "https://www.northcarolinahealthnews.org",
+            "type": "paper"
+          },
+          {
+            "name": "WUNC (NPR North Carolina)",
+            "rss": "https://www.wunc.org/news.rss",
+            "site": "https://www.wunc.org",
             "type": "paper"
           }
         ]
@@ -1219,6 +1273,12 @@
         },
         "entries": [
           {
+            "name": "New Jersey Monitor (States Newsroom)",
+            "rss": "https://newjerseymonitor.com/feed/",
+            "site": "https://newjerseymonitor.com",
+            "type": "paper"
+          },
+          {
             "name": "NJ Spotlight News",
             "rss": "https://www.njspotlightnews.org/feed/",
             "site": "https://www.njspotlightnews.org",
@@ -1240,6 +1300,12 @@
           "lon": -82.9988
         },
         "entries": [
+          {
+            "name": "Cleveland.com (statewide)",
+            "rss": "https://www.cleveland.com/arc/outboundfeeds/rss/category/news/",
+            "site": "https://www.cleveland.com",
+            "type": "paper"
+          },
           {
             "name": "Ohio Capital Journal (statewide)",
             "rss": "https://ohiocapitaljournal.com/feed/",
@@ -1385,6 +1451,12 @@
             "rss": "https://www.masslive.com/arc/outboundfeeds/rss/category/news/",
             "site": "https://www.masslive.com",
             "type": "paper"
+          },
+          {
+            "name": "WBUR (NPR Boston, statewide programs)",
+            "rss": "https://www.wbur.org/feed",
+            "site": "https://www.wbur.org",
+            "type": "paper"
           }
         ]
       },
@@ -1442,6 +1514,24 @@
           "lon": -84.5555
         },
         "entries": [
+          {
+            "name": "Bridge Michigan (nonprofit)",
+            "rss": "https://www.bridgemi.com/rss.xml",
+            "site": "https://www.bridgemi.com",
+            "type": "paper"
+          },
+          {
+            "name": "Michigan Advance (States Newsroom)",
+            "rss": "https://michiganadvance.com/feed/",
+            "site": "https://michiganadvance.com",
+            "type": "paper"
+          },
+          {
+            "name": "Michigan Radio (NPR statewide)",
+            "rss": "https://www.michiganradio.org/news.rss",
+            "site": "https://www.michiganradio.org",
+            "type": "paper"
+          },
           {
             "name": "MLive Michigan (statewide)",
             "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/",
