@@ -1,0 +1,16 @@
+# Explicit 301 Permanent redirects from legacy .html URLs to the canonical
+# extension-less paths. Cloudflare Workers Assets' default auto-stripping
+# returns 307 Temporary, which Search Console flags as "Page with redirect"
+# and which doesn't pass full canonical PageRank. _redirects rules are
+# evaluated before auto-handling so these 301s override the 307s. The
+# reverse direction (/weather → /weather.html) is still handled by the
+# default html_handling, so extension-less URLs serve content without a
+# redirect.
+
+/index.html       /          301
+/weather.html     /weather   301
+/stocks.html      /stocks    301
+/settings.html    /settings  301
+/privacy.html     /privacy   301
+/terms.html       /terms     301
+/sources.html     /sources   301

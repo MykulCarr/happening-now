@@ -6,6 +6,12 @@
   <meta name="description" content="Happening Now is a personal dashboard for news, weather, stocks, and astronomy — combining curated RSS headlines, live market data, radar maps, and launch updates in one place." />
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
   <meta name="google-site-verification" content="AftLn7Dxsq1nzC85AsIDgrFBGkHaZB-4M8koSnX7gfo" />
+  <!-- Perf hints: warm up TLS to the third-party origins our JS hits
+       so DNS + handshake happens in parallel with HTML parse. -->
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://api.zippopotam.us" crossorigin>
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
   <link rel="canonical" href="https://happening-now.net/" />
   <meta property="og:site_name" content="HAPPENING NOW" />
   <meta property="og:type" content="website" />

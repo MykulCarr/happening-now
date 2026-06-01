@@ -11,6 +11,7 @@ New-Item -ItemType Directory -Path $target | Out-Null
 
 $publicFiles = @(
   "_headers",
+  "_redirects",
   "index.html",
   "weather.html",
   "stocks.html",
@@ -21,7 +22,10 @@ $publicFiles = @(
   "robots.txt",
   "sitemap.xml",
   "manifest.json",
-  "sw.js"
+  "sw.js",
+  # IndexNow ownership-proof file. The filename IS the key; content matches.
+  # Bing & Yandex fetch /<key>.txt to verify before accepting submissions.
+  "a696f0db77a904974a99a9fa08cd18bb.txt"
 )
 
 foreach ($file in $publicFiles) {

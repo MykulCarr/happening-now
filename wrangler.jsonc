@@ -7,6 +7,11 @@
   },
   "assets": {
     "directory": ".deploy-public"
+    // html_handling stays at the default ("auto-trailing-slash") so requests
+    // to /weather still serve /weather.html's content without a redirect.
+    // Our _redirects file declares explicit 301s for the reverse direction
+    // (/weather.html → /weather), and Cloudflare evaluates _redirects rules
+    // before the auto-handling so the 301 wins over the default 307.
   },
   "compatibility_flags": [
     "nodejs_compat"
