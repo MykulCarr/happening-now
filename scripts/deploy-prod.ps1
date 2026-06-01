@@ -57,5 +57,35 @@ if ($urls.Count -gt 0) {
   Write-Warning "IndexNow: skipped — no URLs found in $sitemapPath"
 }
 
-# 3. Deploy the API Worker (happening-now-sync)
+# 3. Trigger an Internet Archive Wayback Machine snapshot for each public
+#    URL. Not a search engine — this is preservation/archival. The free
+#    Save Page Now (SPN) endpoint is one-URL-per-request, so we loop.
+#    A successful submission usually returns a 302 redirect to the
+#    captured snapshot; we just follow it. Same soft-fail posture as
+#    IndexNow: any individual failure is a warning, never blocks the
+#    deploy. SPN can take 20-40 seconds per page when queues are deep,
+#    so the per-URL timeout is generous.
+if ($urls.Count -gt 0) {
+  $archived = 0
+  $skipped = 0
+  foreach ($u in $urls) {
+    try {
+      $resp = Invoke-WebRequest `
+        -Uri "https://web.archive.org/save/$u" `
+        -Method Get `
+        -UserAgent "happening-now-deploy/1.0" `
+        -UseBasicParsing `
+        -TimeoutSec 45 `
+        -ErrorAction Stop | Out-Null
+      $archived++
+    } catch {
+      $skipped++
+    }
+  }
+  Write-Host "Wayback Machine: $archived snapshots queued, $skipped skipped"
+} else {
+  Write-Warning "Wayback Machine: skipped — no URLs"
+}
+
+# 4. Deploy the API Worker (happening-now-sync)
 & (Join-Path $PSScriptRoot "deploy-worker.ps1")
