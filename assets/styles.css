@@ -1043,6 +1043,18 @@ header#topbar .pageHeadActions{
   margin-right:0;
 }
 
+/* Static intro paragraph below the H1. Gives search crawlers real text on
+   pages where most content is JS-loaded (news cards, weather widgets, etc.)
+   so SEO tools don't flag them as "insufficient content". Visible to users
+   too — a small dashboard description for first-time visitors. */
+.pageIntro{
+  color:var(--muted);
+  font-size:calc(13px * var(--font-multiplier, 1));
+  line-height:1.55;
+  max-width:880px;
+  margin:0 0 16px;
+}
+
 .page-footer{
   padding:24px;
   background:var(--card-bg);
