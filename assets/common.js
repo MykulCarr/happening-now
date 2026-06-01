@@ -301,16 +301,34 @@
       };
     }).filter(w => w.rss).slice(0, 15); // Max 15 sources
 
+    // Auto-rewrite known-broken RSS URLs to their working replacements when
+    // we load a saved config. Necessary because a user's picker-saved
+    // localSources/regionalSources are stored in localStorage and outlive
+    // any updates we push to local-stations.json — so when a feed URL goes
+    // stale, only this migration step heals existing users without
+    // requiring them to re-open the picker and re-pick.
+    const RSS_URL_FIXUPS = {
+      // Bridge Michigan: /rss.xml only 301s to the canonical feed when there
+      // are zero query params. Our cache-buster ?t=<ms> broke the redirect.
+      // Pin to the canonical feed URL Bridge itself redirects to.
+      "https://www.bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles",
+      "https://bridgemi.com/rss.xml":     "https://bridgemi.com/feed/?partner-feed=latest-articles"
+    };
+
     // Normalize user-curated local/regional source lists. Each entry mirrors
     // a widget shape so the news.js render path can use them directly.
     function normalizeSourceList(list){
       if(!Array.isArray(list)) return [];
-      return list.map(s => ({
-        name: String(s?.name || "").trim() || "Source",
-        rss:  String(s?.rss  || "").trim(),
-        site: String(s?.site || "").trim() || "https://www.reddit.com",
-        headlinesCount: Math.max(1, Math.min(20, Number(s?.headlinesCount || 8)))
-      })).filter(s => s.rss).slice(0, 8);
+      return list.map(s => {
+        const rawRss = String(s?.rss || "").trim();
+        const rss = RSS_URL_FIXUPS[rawRss] || rawRss;
+        return {
+          name: String(s?.name || "").trim() || "Source",
+          rss,
+          site: String(s?.site || "").trim() || "https://www.reddit.com",
+          headlinesCount: Math.max(1, Math.min(20, Number(s?.headlinesCount || 8)))
+        };
+      }).filter(s => s.rss).slice(0, 8);
     }
     out.localSources = normalizeSourceList(out.localSources);
     out.regionalSources = normalizeSourceList(out.regionalSources);
