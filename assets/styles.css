@@ -5539,6 +5539,34 @@ body.stockLookupModalOpen{
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
 }
 
+/* Section header treatment. Without this rule the underlying <button>
+   gets browser default styling (white pill) which reads as a link/CTA
+   rather than a header. Collapse/expand intentionally disabled for now:
+   the JS-injected .collapsibleArrowHit is hidden and the cursor stays
+   default so the header reads purely as a label. */
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255,255,255,0.04);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  font: inherit;
+  font-size: calc(14px * var(--font-multiplier, 1));
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.1px;
+  cursor: default;
+}
+.collapsibleArrowHit { display: none; }
+.collapsibleHeaderMeta,
+.collapsibleHeaderInfo {
+  margin-left: auto;
+}
+
 .generalPanelRow > .collapsibleSection {
   margin-bottom: 0;
 }
