@@ -1516,7 +1516,7 @@
         "entries": [
           {
             "name": "Bridge Michigan (nonprofit)",
-            "rss": "https://www.bridgemi.com/rss.xml",
+            "rss": "https://bridgemi.com/feed/?partner-feed=latest-articles",
             "site": "https://www.bridgemi.com",
             "type": "paper"
           },
