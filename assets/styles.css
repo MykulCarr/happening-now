@@ -1043,16 +1043,46 @@ header#topbar .pageHeadActions{
   margin-right:0;
 }
 
-/* Static intro paragraph below the H1. Gives search crawlers real text on
-   pages where most content is JS-loaded (news cards, weather widgets, etc.)
-   so SEO tools don't flag them as "insufficient content". Visible to users
-   too — a small dashboard description for first-time visitors. */
+/* Static intro paragraph for search crawlers + curious users. Wrapped in
+   a <details> at the bottom of <main> so the page UI isn't visually
+   cluttered, but the content is still in the DOM and indexable by Google,
+   Bing, and LLM crawlers (none of them require visible-on-load content;
+   <details> is a standard semantic element they all index inside of). */
+.pageIntroDetails{
+  margin:24px 0 8px;
+  font-size:calc(12px * var(--font-multiplier, 1));
+  color:var(--muted);
+  max-width:880px;
+}
+.pageIntroDetails > summary{
+  cursor:pointer;
+  list-style:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 0;
+  color:var(--muted);
+  font-weight:600;
+  letter-spacing:0.02em;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.pageIntroDetails > summary::-webkit-details-marker{ display:none; }
+.pageIntroDetails > summary::before{
+  content:"▸";
+  display:inline-block;
+  font-size:10px;
+  width:10px;
+  transition:transform 0.15s ease;
+  color:var(--muted);
+}
+.pageIntroDetails[open] > summary::before{ transform:rotate(90deg); }
+.pageIntroDetails > summary:hover{ color:var(--text); }
 .pageIntro{
   color:var(--muted);
   font-size:calc(13px * var(--font-multiplier, 1));
   line-height:1.55;
-  max-width:880px;
-  margin:0 0 16px;
+  margin:8px 0 12px;
 }
 
 .page-footer{

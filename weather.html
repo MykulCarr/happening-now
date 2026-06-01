@@ -98,7 +98,6 @@
         <button id="weatherRefreshBtn" class="btn" type="button">Refresh</button>
       </div>
     </section>
-    <p class="pageIntro">Live local weather pulled directly from NOAA's National Weather Service and Open-Meteo. The page lays out current conditions, an hour-by-hour forecast for the next 24 hours, and a 3- to 14-day outlook — plus an interactive weather map (radar, wind, temperature, clouds, air quality) and any active severe-weather alerts for your area. All readings refresh automatically; use the pin button on the map to recenter on your GPS location, or change your home location from the topbar at any time. Supports ZIP code, city name, or device GPS for location lookup.</p>
     <!-- Top alerts ticker -->
     <div id="topAlertsBar" class="alertsBar" aria-live="polite" data-section="topAlertsTicker">Loading alerts…</div>
 
@@ -208,6 +207,10 @@
     <div class="pageDiagDock">
       <div class="sub diagLine" id="weatherDiag" aria-live="polite">Backend: checking...</div>
     </div>
+    <details class="pageIntroDetails">
+      <summary>About this page</summary>
+      <p class="pageIntro">Live local weather pulled directly from NOAA's National Weather Service and Open-Meteo. The page lays out current conditions, an hour-by-hour forecast for the next 24 hours, and a 3- to 14-day outlook — plus an interactive weather map (radar, wind, temperature, clouds, air quality) and any active severe-weather alerts for your area. All readings refresh automatically; use the pin button on the map to recenter on your GPS location, or change your home location from the topbar at any time. Supports ZIP code, city name, or device GPS for location lookup.</p>
+    </details>
   </main>
 
   <footer class="page-footer">
