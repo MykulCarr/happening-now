@@ -203,13 +203,13 @@
       { name: "The Guardian (US)", rss: "https://www.theguardian.com/us-news/rss", site: "https://www.theguardian.com/us-news", headlinesCount: 5, scopes: ["national"] },
       { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
       { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
-      { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
       { name: "ArsTechnica", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", headlinesCount: 5, scopes: ["national"] },
       { name: "PBS NewsHour", rss: "https://www.pbs.org/newshour/feeds/rss/headlines", site: "https://www.pbs.org/newshour", headlinesCount: 5, scopes: ["national"] },
       { name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", headlinesCount: 5, scopes: ["international"] },
       { name: "Hacker News", rss: "https://news.ycombinator.com/rss", site: "https://news.ycombinator.com", headlinesCount: 5, scopes: ["national"] },
       { name: "Deutsche Welle", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", headlinesCount: 5, scopes: ["international"] },
-      { name: "Nature", rss: "https://www.nature.com/nature.rss", site: "https://www.nature.com", headlinesCount: 5, scopes: ["international"] }
+      { name: "Nature", rss: "https://www.nature.com/nature.rss", site: "https://www.nature.com", headlinesCount: 5, scopes: ["international"] },
+      { name: "The Conversation (Global)", rss: "https://theconversation.com/global/articles.atom", site: "https://theconversation.com/global", headlinesCount: 5, scopes: ["international"] }
     ],
 
     stocks: [
@@ -299,7 +299,18 @@
         headlinesCount: Math.max(1, Math.min(20, Number(w?.headlinesCount || 6))),
         scopes
       };
-    }).filter(w => w.rss).slice(0, 15); // Max 15 sources
+    }).filter(w => w.rss);
+    // Dedupe by rss URL — keep first occurrence. Heals saved configs that
+    // accumulated duplicate entries (e.g. an Atlantic widget seeded twice).
+    {
+      const seenRss = new Set();
+      out.widgets = out.widgets.filter(w => {
+        if (seenRss.has(w.rss)) return false;
+        seenRss.add(w.rss);
+        return true;
+      });
+    }
+    out.widgets = out.widgets.slice(0, 15); // Max 15 sources
 
     // Auto-rewrite known-broken RSS URLs to their working replacements when
     // we load a saved config. Necessary because a user's picker-saved
@@ -1194,8 +1205,26 @@
       // Try primary feed, then fallback to backup RSSHub if using RSSHub
       const feedsToTry = getRssFeedVariants(rssUrl);
 
+      // Hosts whose CDN/origin redirects to auth or 4xx/5xx when an unknown
+      // query param is present. For these feeds we skip the cache-buster
+      // and rely on the proxy's own cache semantics. Past offenders: Bridge
+      // Michigan (303 to canonical feed only when query is empty), Nature
+      // (303 to idp.nature.com when an unrecognized param is set), and
+      // Google News RSS (503 when its search URL carries an unknown param,
+      // which broke both the stocks "market news" and weather news widgets).
+      const NO_CACHE_BUST_HOSTS = new Set([
+        "www.nature.com", "nature.com",
+        "news.google.com"
+      ]);
+      const skipCacheBust = (url) => {
+        try { return NO_CACHE_BUST_HOSTS.has(new URL(url).host); }
+        catch { return false; }
+      };
+
       for (let feedUrl of feedsToTry) {
-        const bustUrl = feedUrl.includes("?") ? feedUrl + "&t=" + Date.now() : feedUrl + "?t=" + Date.now();
+        const bustUrl = skipCacheBust(feedUrl)
+          ? feedUrl
+          : (feedUrl.includes("?") ? feedUrl + "&t=" + Date.now() : feedUrl + "?t=" + Date.now());
         const proxiesToTry = getRssProxyFallbacksForFeed(feedUrl);
         const requestTimeoutMs = getRssRequestTimeoutMs(feedUrl);
 
@@ -1229,20 +1258,29 @@
               throw new Error("Invalid RSS feed format");
             }
 
-            let items = Array.from(xml.querySelectorAll("item"));
-            if (items.length === 0) items = Array.from(xml.querySelectorAll("entry"));
+            // Use getElementsByTagName instead of querySelectorAll: in strict
+            // XML mode CSS selectors only match elements in the null namespace,
+            // so feeds with a default xmlns (RSS 1.0/RDF like Nature & DW, or
+            // Atom feeds) return zero items via querySelectorAll. getElementsByTagName
+            // matches by qualified name regardless of namespace.
+            let items = Array.from(xml.getElementsByTagName("item"));
+            if (items.length === 0) items = Array.from(xml.getElementsByTagName("entry"));
+
+            const firstText = (parent, ...tags) => {
+              for (const t of tags) {
+                const el = parent.getElementsByTagName(t)?.[0];
+                if (el && el.textContent) return el.textContent;
+              }
+              return "";
+            };
 
             const result = annotateNewsItems(items.slice(0, limit).map(it => {
-              const title = (it.querySelector("title")?.textContent || "Untitled").trim();
-              const linkNode = it.querySelector("link");
+              const title = (firstText(it, "title", "dc:title") || "Untitled").trim();
+              const linkNode = it.getElementsByTagName("link")?.[0];
               const link = (linkNode?.getAttribute("href") || linkNode?.textContent || "").trim();
-              const pubDate = (it.querySelector("pubDate")?.textContent || it.querySelector("updated")?.textContent || it.querySelector("published")?.textContent || "").trim();
+              const pubDate = firstText(it, "pubDate", "updated", "published", "dc:date").trim();
 
-              const descRaw =
-                (it.querySelector("description")?.textContent ||
-                  it.querySelector("content")?.textContent ||
-                  it.querySelector("content\\:encoded")?.textContent ||
-                  "").trim();
+              const descRaw = firstText(it, "description", "content:encoded", "content", "summary").trim();
 
               const desc = stripTags(descRaw).slice(0, 240);
 
