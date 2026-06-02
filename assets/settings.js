@@ -2635,7 +2635,6 @@
     updateButtonGroupState(marketNewsOpenButtons, cfg.marketNewsOpenMode || "new-tab");
     updateButtonGroupState(newsTickerScopeButtons, cfg.newsTickerScope || "national");
     renderMarketIndices();
-    loadAstrolabToUI();
 
     renderStocks();
     renderNews();
