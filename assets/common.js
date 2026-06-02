@@ -3048,95 +3048,6 @@
     return candidates.slice(0, Math.max(0, limit));
   }
 
-  async function searchRedditSubs(query){
-    try{
-      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=10`;
-      const proxied = "/v1/rss/raw?url=" + encodeURIComponent(url);
-      const res = await fetch(proxied, {
-        cache: "no-store",
-        signal: (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
-          ? AbortSignal.timeout(8000) : undefined
-      });
-      if(!res.ok) return [];
-      const data = await res.json();
-      return (data?.data?.children || []).map(c => c?.data).filter(Boolean);
-    }catch{ return []; }
-  }
-
-  function scoreSubForLocation(sub, city, state, fullState){
-    const name = String(sub.display_name || "").toLowerCase();
-    const desc = String(sub.public_description || sub.description || "").toLowerCase();
-    const cityL = String(city || "").toLowerCase();
-    const stateL = String(state || "").toLowerCase();
-    const fullL = String(fullState || "").toLowerCase();
-    const fullNoSpace = fullL.replace(/\s/g, "");
-    let s = 0;
-    // City name in sub name is the strongest signal — bias heavily toward
-    // city-named subs over state-level ones.
-    if(cityL && name.includes(cityL)) s += 100;
-    // Bare state name in sub name (r/Michigan) — second-strongest.
-    if(fullNoSpace && fullNoSpace.length > 2 && name.includes(fullNoSpace)) s += 50;
-    // State abbrev in sub name (r/JacksonMI). Only meaningful with city.
-    if(stateL && name.includes(stateL) && name.includes(cityL)) s += 30;
-    // Description signals (less weighty)
-    if(cityL && desc.includes(cityL)) s += 30;
-    if(fullL && desc.includes(fullL)) s += 20;
-    // Subscribers as small tiebreaker (log scale so 100-sub city beats 5M generic)
-    s += Math.min(10, Math.log10(Math.max(1, sub.subscribers || 0)));
-    return s;
-  }
-
-  // Reject personals / dating / NSFW subreddits — they pollute the location
-  // search even when they're correctly named for the area (e.g. r/r4rDetroit
-  // would pass the location filter but isn't what users want here).
-  //
-  // Drops on any of:
-  //   - over18 flag from Reddit's API (catches everything tagged NSFW)
-  //   - name or description contains personals/dating/r4r tokens
-  //   - name matches the r4r / m4m / f4f / t4t / etc. gender-ratio pattern
-  const PERSONALS_TOKENS = [
-    "r4r", "personals", "personal ads", "hookup", "hookups",
-    "dating", "dating ad", "sexting", "snapchat trade",
-    "onlyfans", "sugar baby", "sugar daddy", "escort", "kik",
-    "nsfw", "gonewild", "lonely"
-  ];
-  // Matches r4r-style codes anywhere in the sub name: t4t, m4m, f4f, m4f, f4m,
-  // r4r, mm4mm, ff4ff, etc. Two letters around a "4" with both being one of
-  // r/m/f/t.
-  const RATIO_CODE_RE = /\b([mfrt]+)4([mfrt]+)\b/i;
-  function subIsPersonalsOrAdult(sub){
-    if(!sub || typeof sub !== "object") return false;
-    if(sub.over18 === true) return true;
-    const name = String(sub.display_name || "").toLowerCase();
-    const desc = String(sub.public_description || sub.description || "").toLowerCase();
-    if(RATIO_CODE_RE.test(name)) return true;
-    for(const t of PERSONALS_TOKENS){
-      if(name.includes(t) || desc.includes(t)) return true;
-    }
-    return false;
-  }
-
-  // Filter out subs that have no recognizable city or state signal at all.
-  // Without this, Reddit's search bleeds in completely unrelated subs that
-  // happened to match a single keyword (e.g. searching "Jackson Michigan"
-  // would return r/mississippi because of Jackson, MS in some post — and
-  // a naive `name.includes("mi")` check would pass r/mississippi too).
-  function subHasLocationSignal(sub, city, state, fullState){
-    const name = String(sub.display_name || "").toLowerCase();
-    const desc = String(sub.public_description || sub.description || "").toLowerCase();
-    const cityL = String(city || "").toLowerCase();
-    const stateL = String(state || "").toLowerCase();
-    const fullL = String(fullState || "").toLowerCase();
-    const fullNoSpace = fullL.replace(/\s/g, "");
-    if(cityL && (name.includes(cityL) || desc.includes(cityL))) return true;
-    if(fullNoSpace && fullNoSpace.length > 3 && name.includes(fullNoSpace)) return true;
-    if(fullL && desc.includes(fullL)) return true;
-    // State abbrev only at the END of the name (e.g. "JacksonMI") or as a
-    // standalone word — avoids r/mississippi matching "mi" as a substring.
-    if(stateL && stateL.length === 2 && (name.endsWith(stateL) || new RegExp(`\\b${stateL}\\b`).test(name))) return true;
-    return false;
-  }
-
   async function discoverSourcesForScope(scope){
     const liveCfg = window.App?.cfg || cfg;
     // Honors GPS, saved device coords, OR ZIP — same resolver weather.js uses.
@@ -3155,47 +3066,44 @@
         try { geo = await geocodeZip(zip); } catch {}
       }
     }
-    if(!geo || !geo.city) return { results: [], geo: null };
-    // Normalize "Michigan"/"US-MI"/"mi" → "MI" before expanding back to the
-    // full name, so Reddit queries use the human spelling regardless of how
-    // the caller stored geo.state. Also overwrite geo.state for downstream
-    // filters/scorers that compare to a 2-letter code.
+    if(!geo) return { results: [], geo: null };
+    // Normalize "Michigan"/"US-MI"/"mi" → "MI" so we can look up the
+    // bundled subreddit list with the JSON's two-letter keys.
     const stateAbbr = abbreviateState(geo.state).toUpperCase();
     geo = { ...geo, state: stateAbbr };
     const fullState = expandStateName(stateAbbr) || stateAbbr;
 
-    // For LOCAL: query "${city} ${stateName}" and "${city}, ${stateAbbrev}"
-    // — both anchor on the city. Drop the bare-state query that used to
-    // pollute results with state-level subs.
-    // For REGIONAL: query the state name (r/Michigan etc.) plus a state-news
-    // angle. Both produce state-focused subs.
-    const queries = scope === "regional"
-      ? [fullState, `${fullState} news`]
-      : [`${geo.city} ${fullState}`, `${geo.city}, ${geo.state}`, `${geo.city} ${geo.state}`];
-    const buckets = await Promise.all(queries.map(q => searchRedditSubs(q)));
+    // Reddit's free /subreddits/search.json API now returns 403 to
+    // anonymous and worker-origin requests — discovery is dead. Replaced
+    // with a hand-curated, news-relevant subreddit list bundled in
+    // data/local-stations.json. For LOCAL, read the city's subreddits[]
+    // (+ the statewide ones as supplemental coverage). For REGIONAL, the
+    // statewide subreddits[] only.
+    const data = await loadLocalStations();
+    const stateBlock = data?.states?.[stateAbbr];
+    const stateSubs = stateBlock?._state?.subreddits || [];
+    const citySubs = scope === "local" && geo.city
+      ? (stateBlock?.[String(geo.city).toLowerCase()]?.subreddits || [])
+      : [];
+
     const seen = new Set();
     const merged = [];
-    for(const bucket of buckets){
-      for(const sub of bucket){
-        const name = sub.display_name;
-        if(!name || seen.has(name.toLowerCase())) continue;
-        seen.add(name.toLowerCase());
-        // Filter: drop personals/dating/NSFW subs — they correctly geo-match
-        // (r/r4rDetroit) but aren't what news-scope users are looking for.
-        if(subIsPersonalsOrAdult(sub)) continue;
-        // Filter: must have at least some city/state signal. This drops the
-        // r/mississippi-when-searching-for-Jackson-Michigan kind of noise.
-        if(!subHasLocationSignal(sub, geo.city, geo.state, fullState)) continue;
-        merged.push({
-          displayName: name,
-          subscribers: sub.subscribers || 0,
-          description: (sub.public_description || sub.description || "").trim().slice(0, 140),
-          rss: `https://www.reddit.com/r/${name}/.rss`,
-          score: scoreSubForLocation(sub, geo.city, geo.state, fullState)
-        });
-      }
-    }
-    merged.sort((a, b) => b.score - a.score);
+    const addSub = (name) => {
+      const key = String(name || "").trim();
+      if(!key || seen.has(key.toLowerCase())) return;
+      seen.add(key.toLowerCase());
+      merged.push({
+        displayName: key,
+        subscribers: 0,  // unknown without the API; picker shows "—"
+        description: "",
+        rss: `https://www.reddit.com/r/${key}/.rss`,
+        score: 0
+      });
+    };
+    // City subs first (more locally relevant), statewide second.
+    for(const s of citySubs) addSub(s);
+    for(const s of stateSubs) addSub(s);
+
     return { results: merged.slice(0, 10), geo: { ...geo, fullState } };
   }
 
@@ -3493,11 +3401,16 @@
         row.className = "hnPickerRow";
         row.setAttribute("role", "listitem");
         const checked = preChecked.has(r.displayName) ? "checked" : "";
-        const subsLabel = r.subscribers >= 1000 ? `${(r.subscribers/1000).toFixed(1)}K` : String(r.subscribers);
+        // Subscriber counts only show when known (Reddit's discovery API used
+        // to populate this; the curated-list path can't, so we hide the chip
+        // rather than print "0 subs" which looks broken).
+        const subsLabel = r.subscribers >= 1000
+          ? `${(r.subscribers/1000).toFixed(1)}K subs`
+          : (r.subscribers > 0 ? `${r.subscribers} subs` : "");
         row.innerHTML = `
           <input type="checkbox" data-idx="${idx}" ${checked} />
           <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)} <span class="hnPickerRowSubs">${subsLabel} subs</span></div>
+            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)}${subsLabel ? ` <span class="hnPickerRowSubs">${subsLabel}</span>` : ""}</div>
             ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
           </div>
         `;
