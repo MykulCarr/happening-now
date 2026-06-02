@@ -38,8 +38,25 @@ header#topbar {
   }
 }
 
+/* Site palette (six-color complementary scheme — dark navies vs warm
+   oranges, with a bright cyan-blue for secondary highlights):
+     --navy-darkest  #0c3142   page bg
+     --navy-mid      #14405d   panel-equivalent tint, badge bg
+     --blue-bright   #066284   secondary accent, info chips, ticker badges
+     --orange-deep   #b6510c   primary action button / "danger" warm
+     --orange        #c66f1c   --accent (links, primary highlights)
+     --amber-light   #ee9020   --accentHover, "active" highlights
+   The six palette tokens stay alongside the semantic ones so we can
+   reach for the raw color when a semantic name doesn't fit. */
 :root {
-  --bg: #1e3a5f;
+  --navy-darkest: #0c3142;
+  --navy-mid:     #14405d;
+  --blue-bright:  #066284;
+  --orange-deep:  #b6510c;
+  --orange:       #c66f1c;
+  --amber-light:  #ee9020;
+
+  --bg: var(--navy-darkest);
   --panel: rgba(255, 255, 255, .08);
   --panel2: rgba(255, 255, 255, .12);
   --panelHover: rgba(255, 255, 255, .14);
@@ -47,8 +64,12 @@ header#topbar {
   --text: rgba(255, 255, 255, .95);
   --muted: rgba(255, 255, 255, .70);
   --card-bg: rgba(255, 255, 255, .08);
-  --accent: #8b5cf6;
-  --accentHover: #a78bfa;
+  --accent: var(--orange);
+  --accentHover: var(--amber-light);
+  /* Secondary accent for things that should NOT be confused with the
+     primary action (e.g. info badges, the WORLD ticker label). Pulls
+     from the same palette so the page hangs together. */
+  --accent2: var(--blue-bright);
   --radius: 20px;
   --gap: 16px;
   --shadow: 0 8px 32px rgba(0, 0, 0, .4), 0 2px 8px rgba(0, 0, 0, .2);
@@ -72,8 +93,12 @@ header#topbar {
   --text: rgba(0, 0, 0, .87);
   --muted: rgba(0, 0, 0, .55);
   --card-bg: rgba(255, 255, 255, .65);
-  --accent: #5b21b6;
-  --accentHover: #4c1d95;
+  /* Light theme reuses the same orange family — toned down for contrast
+     on a light bg. The deeper burnt orange is more readable on near-white
+     surfaces than the brighter mid-orange used in dark mode. */
+  --accent: var(--orange-deep);
+  --accentHover: var(--orange);
+  --accent2: var(--blue-bright);
   --shadow: 0 8px 32px rgba(0, 0, 0, .13), 0 2px 8px rgba(0, 0, 0, .08);
   --shadowHover: 0 12px 48px rgba(0, 0, 0, .18), 0 4px 12px rgba(0, 0, 0, .10);
 }
@@ -364,8 +389,8 @@ html[data-override-active] body {
 }
 
 .hnPickerRowBtn {
-  background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: rgba(198, 111, 28, 0.08);
+  border: 1px solid rgba(198, 111, 28, 0.25);
   text-align: left;
   width: 100%;
   color: inherit;
@@ -373,7 +398,7 @@ html[data-override-active] body {
 }
 
 .hnPickerRowBtn:hover {
-  background: rgba(139, 92, 246, 0.16);
+  background: rgba(198, 111, 28, 0.16);
 }
 
 .hnPickerLeadMuted {
@@ -493,7 +518,7 @@ html[data-override-active] body {
 }
 
 .sourceCard--global::before {
-  background: linear-gradient(90deg, #6366f1, #a78bfa);
+  background: linear-gradient(90deg, #066284, #ee9020);
 }
 
 .sourceCardMeta {
@@ -729,8 +754,8 @@ body {
   padding: 78px var(--site-h-margin) 32px var(--site-h-margin);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
   background:
-    radial-gradient(1000px 700px at 15% 10%, rgba(139, 92, 246, .25), transparent 65%),
-    radial-gradient(1000px 700px at 85% 15%, rgba(99, 102, 241, .20), transparent 60%),
+    radial-gradient(1000px 700px at 15% 10%, rgba(198, 111, 28, .25), transparent 65%),
+    radial-gradient(1000px 700px at 85% 15%, rgba(6, 98, 132, .20), transparent 60%),
     radial-gradient(1000px 700px at 55% 90%, rgba(16, 185, 129, .15), transparent 60%),
     var(--bg);
   color: var(--text);
@@ -1048,7 +1073,7 @@ header#topbar .pageHeadActions {
   height: 14px;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent), var(--accentHover));
-  box-shadow: 0 0 20px rgba(139, 92, 246, .6), 0 0 40px rgba(139, 92, 246, .3);
+  box-shadow: 0 0 20px rgba(198, 111, 28, .6), 0 0 40px rgba(198, 111, 28, .3);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -1125,7 +1150,7 @@ header#topbar .pageHeadActions {
 .searchBar:focus {
   background: var(--panel2);
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, .15);
+  box-shadow: 0 0 0 3px rgba(198, 111, 28, .15);
 }
 
 .nav {
@@ -1721,13 +1746,13 @@ button.hn-nav-link {
 }
 
 .hn-nav-link.active {
-  color: #a78bfa;
+  color: #ee9020;
   font-weight: 800;
   text-decoration: underline;
-  text-decoration-color: #a78bfa;
+  text-decoration-color: #ee9020;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
-  background: rgba(139, 92, 246, 0.25);
+  background: rgba(198, 111, 28, 0.25);
   padding: 4px 8px;
 }
 
@@ -1747,7 +1772,7 @@ button.hn-nav-link {
 .hn-settings-link.active {
   color: var(--accent);
   opacity: 1;
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(198, 111, 28, 0.15);
   font-weight: 700;
 }
 
@@ -2553,7 +2578,7 @@ header#topbar>.infoBar .infoBarRight {
   .hn-mobile-nav .hn-nav-link.active {
     color: var(--accent);
     font-weight: 700;
-    background: rgba(139, 92, 246, 0.15);
+    background: rgba(198, 111, 28, 0.15);
   }
 
   [data-theme="light"] .hn-mobile-nav .hn-nav-link.active {
@@ -3436,8 +3461,8 @@ details.chip>.alertChipBody a {
 
 .criticalNewsBar .criticalBadge.regional {
   color: #ede9fe;
-  background: rgba(139, 92, 246, .22);
-  border-color: rgba(139, 92, 246, .48);
+  background: rgba(198, 111, 28, .22);
+  border-color: rgba(198, 111, 28, .48);
 }
 
 .tickerScopeBar {
@@ -3467,9 +3492,9 @@ details.chip>.alertChipBody a {
 }
 
 .tickerScopeBtn.active {
-  background: rgba(99, 102, 241, .2);
+  background: rgba(6, 98, 132, .2);
   color: var(--accent);
-  border-color: rgba(99, 102, 241, .5);
+  border-color: rgba(6, 98, 132, .5);
 }
 
 .skeleton {
@@ -3520,7 +3545,7 @@ details.chip>.alertChipBody a {
 .textarea:focus {
   border-color: var(--accent);
   background: rgba(255, 255, 255, .10);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, .1);
+  box-shadow: 0 0 0 3px rgba(198, 111, 28, .1);
 }
 
 .select:disabled,
@@ -3787,7 +3812,7 @@ select.input optgroup,
   margin-top: 4px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(139, 92, 246, .18);
+  background: rgba(198, 111, 28, .18);
   color: var(--text);
   font-size: 11px;
   font-weight: 700;
@@ -3844,8 +3869,8 @@ select.input optgroup,
   margin: 0 0 8px;
   padding: 3px 9px;
   border-radius: 999px;
-  border: 1px solid rgba(139, 92, 246, .38);
-  background: rgba(139, 92, 246, .12);
+  border: 1px solid rgba(198, 111, 28, .38);
+  background: rgba(198, 111, 28, .12);
   color: var(--text);
   font-size: 11px;
   font-weight: 700;
@@ -4043,7 +4068,7 @@ select.input optgroup,
 
 .newsEditorRow.drag-over {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, .18) inset;
+  box-shadow: 0 0 0 2px rgba(198, 111, 28, .18) inset;
 }
 
 .newsEditorRow.drag-over-before::before,
@@ -4061,7 +4086,7 @@ select.input optgroup,
   width: 100%;
   min-height: 92px;
   border-radius: 12px;
-  border: 1px dashed rgba(139, 92, 246, .45);
+  border: 1px dashed rgba(198, 111, 28, .45);
   background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .02));
   font-size: 14px;
   font-weight: 700;
@@ -4076,7 +4101,7 @@ select.input optgroup,
 .addNewsCardBtn:hover,
 .addNewsCardBtn:focus {
   border-color: var(--accent);
-  background: linear-gradient(180deg, rgba(139, 92, 246, .16), rgba(139, 92, 246, .08));
+  background: linear-gradient(180deg, rgba(198, 111, 28, .16), rgba(198, 111, 28, .08));
   box-shadow: 0 8px 20px rgba(0, 0, 0, .14);
   transform: translateY(-1px);
 }
@@ -4254,8 +4279,8 @@ body.newsDiscoveryModalOpen {
 
 .newsDiscoveryCatPill.active {
   color: var(--text);
-  background: linear-gradient(180deg, rgba(139, 92, 246, .26), rgba(139, 92, 246, .14));
-  border-color: rgba(139, 92, 246, .45);
+  background: linear-gradient(180deg, rgba(198, 111, 28, .26), rgba(198, 111, 28, .14));
+  border-color: rgba(198, 111, 28, .45);
 }
 
 /* Source chips */
@@ -4592,7 +4617,7 @@ body.stockLookupModalOpen {
 
 .stockEditorRow.drag-over {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, .18) inset;
+  box-shadow: 0 0 0 2px rgba(198, 111, 28, .18) inset;
 }
 
 .stockEditorRow.drag-over-before::before,
@@ -4611,8 +4636,8 @@ body.stockLookupModalOpen {
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(139, 92, 246, .35);
-  background: rgba(139, 92, 246, .14);
+  border: 1px solid rgba(198, 111, 28, .35);
+  background: rgba(198, 111, 28, .14);
   opacity: 0;
   transform: translateY(3px);
   transition: opacity .14s ease, transform .14s ease;
@@ -4744,11 +4769,11 @@ body.stockLookupModalOpen {
 }
 
 .tabPill.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, .25), rgba(139, 92, 246, .15));
-  border-color: rgba(139, 92, 246, .40);
+  background: linear-gradient(135deg, rgba(198, 111, 28, .25), rgba(198, 111, 28, .15));
+  border-color: rgba(198, 111, 28, .40);
   color: var(--accentHover);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, .2);
+  box-shadow: 0 2px 8px rgba(198, 111, 28, .2);
 }
 
 .weatherGrid {
@@ -5304,8 +5329,8 @@ body.stockLookupModalOpen {
 
 .indexItemLink:hover,
 .indexItemLink:focus-visible {
-  border-color: rgba(139, 92, 246, .55);
-  background: rgba(139, 92, 246, .14);
+  border-color: rgba(198, 111, 28, .55);
+  background: rgba(198, 111, 28, .14);
   transform: translateY(-1px);
   outline: none;
 }
@@ -5445,8 +5470,8 @@ body.stockLookupModalOpen {
 
 .indexSourceTag.isCboe {
   color: #ede9fe;
-  border-color: rgba(139, 92, 246, .45);
-  background: rgba(139, 92, 246, .18);
+  border-color: rgba(198, 111, 28, .45);
+  background: rgba(198, 111, 28, .18);
 }
 
 .indexSourceTag.isWsj,
@@ -5549,7 +5574,7 @@ body.stockLookupModalOpen {
 .tabPill.active {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(198, 111, 28, 0.3);
 }
 
 /* Enhanced Stock Item */
@@ -5829,9 +5854,9 @@ body.stockLookupModalOpen {
 }
 
 .pinBtn.pinned {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(124, 58, 237, 0.20));
-  color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, rgba(198, 111, 28, 0.25), rgba(124, 58, 237, 0.20));
+  color: #ee9020;
+  border-color: rgba(198, 111, 28, 0.5);
 }
 
 /* News Article Item */
@@ -6323,8 +6348,8 @@ body.stockLookupModalOpen {
 
 .settingsTab.active {
   color: var(--text);
-  border-color: rgba(139, 92, 246, 0.38);
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.22), rgba(139, 92, 246, 0.14));
+  border-color: rgba(198, 111, 28, 0.38);
+  background: linear-gradient(180deg, rgba(198, 111, 28, 0.22), rgba(198, 111, 28, 0.14));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
@@ -6495,7 +6520,7 @@ body.stockLookupModalOpen {
 .installModalTip {
   margin-top: 16px;
   padding: 12px;
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(198, 111, 28, 0.1);
   border: 1px solid var(--accent);
   border-radius: 8px;
 }
@@ -6874,7 +6899,7 @@ body.stockLookupModalOpen {
 
 .marketIndicesList.grouped .marketIndexRow.drag-over {
   border: 1px solid var(--accent);
-  background: rgba(139, 92, 246, .10);
+  background: rgba(198, 111, 28, .10);
 }
 
 .marketIndexSectionHeader {
@@ -6934,13 +6959,13 @@ body.stockLookupModalOpen {
 
 .marketIndexRow:hover {
   background: var(--panel2);
-  border-color: rgba(139, 92, 246, .35);
+  border-color: rgba(198, 111, 28, .35);
   transform: translateY(-1px);
 }
 
 .marketIndexRow.drag-over {
   border-color: var(--accent);
-  background: rgba(139, 92, 246, .12);
+  background: rgba(198, 111, 28, .12);
 }
 
 .marketIndexRow.dragging {
@@ -7341,8 +7366,8 @@ body.stockLookupModalOpen {
 .settingsTabContent select:focus,
 .settingsTabContent textarea:focus {
   background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(139, 92, 246, 0.70);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
+  border-color: rgba(198, 111, 28, 0.70);
+  box-shadow: 0 0 0 3px rgba(198, 111, 28, 0.14);
 }
 
 .settingsTabContent .settingsInlineUnitRow .input,
@@ -7595,7 +7620,7 @@ body.stockLookupModalOpen {
 }
 
 .hnWelcomeSettingHint a {
-  color: var(--accent, #a78bfa);
+  color: var(--accent, #ee9020);
   text-decoration: none;
 }
 
