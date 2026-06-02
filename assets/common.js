@@ -1099,6 +1099,47 @@
     }));
   }
 
+  // Inject missing xmlns declarations for namespace prefixes that show up in
+  // element names but are never declared on the <rss>/<feed> root. Defensive
+  // patch for malformed publisher RSS — e.g. Bridge Michigan's WordPress
+  // plugin emits <media:content> elements without xmlns:media on root, which
+  // causes browser DOMParser to reject the whole document. Common prefixes
+  // and their canonical URIs are listed below; if a feed introduces a new
+  // prefix not in the table, the parse can still fail and we surface it.
+  function repairFeedNamespaces(xmlText){
+    const KNOWN_NAMESPACES = {
+      media:   "http://search.yahoo.com/mrss/",
+      content: "http://purl.org/rss/1.0/modules/content/",
+      dc:      "http://purl.org/dc/elements/1.1/",
+      atom:    "http://www.w3.org/2005/Atom",
+      sy:      "http://purl.org/rss/1.0/modules/syndication/",
+      slash:   "http://purl.org/rss/1.0/modules/slash/",
+      wfw:     "http://wellformedweb.org/CommentAPI/",
+      itunes:  "http://www.itunes.com/dtds/podcast-1.0.dtd",
+      georss:  "http://www.georss.org/georss"
+    };
+    // Find the root <rss> or <feed> opening tag.
+    const rootMatch = xmlText.match(/<(rss|feed)(\s[^>]*)?>/i);
+    if(!rootMatch) return xmlText;
+    const rootTag = rootMatch[0];
+    const rootName = rootMatch[1];
+    // Collect prefixes the root already declares.
+    const declared = new Set();
+    const declRe = /xmlns:([A-Za-z_][\w.-]*)\s*=\s*['"][^'"]+['"]/g;
+    for(let m; (m = declRe.exec(rootTag)); ) declared.add(m[1]);
+    // Find every prefix actually used as an element-name prefix in the body.
+    const used = new Set();
+    const usageRe = /<\/?([A-Za-z_][\w.-]*):[A-Za-z_]/g;
+    for(let m; (m = usageRe.exec(xmlText)); ) used.add(m[1]);
+    // Anything used + known + not-already-declared = needs injection.
+    const missing = [...used].filter(p => KNOWN_NAMESPACES[p] && !declared.has(p));
+    if(missing.length === 0) return xmlText;
+    const additions = missing.map(p => ` xmlns:${p}="${KNOWN_NAMESPACES[p]}"`).join("");
+    // Append the declarations inside the opening root tag (before its `>`).
+    const fixedRoot = rootTag.replace(/(\s*)>$/, additions + "$1>");
+    return xmlText.replace(rootTag, fixedRoot);
+  }
+
   function getGoogleNewsSearchQuery(rssUrl){
     try{
       const url = new URL(rssUrl);
@@ -1174,7 +1215,14 @@
             }
 
             const xmlText = await res.text();
-            const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+            // Repair common feed bugs before parsing. Some publisher plugins
+            // (WordPress Media RSS plugin, e.g. Bridge Michigan) emit
+            // <media:content> / <media:thumbnail> elements without ever
+            // declaring xmlns:media on the <rss> root — that's malformed XML
+            // and browser DOMParser rejects the whole document, returning
+            // zero items. Inject the standard namespace if it's missing.
+            const repairedXmlText = repairFeedNamespaces(xmlText);
+            const xml = new DOMParser().parseFromString(repairedXmlText, "text/xml");
 
             const parseError = xml.querySelector("parsererror");
             if(parseError){
