@@ -57,7 +57,16 @@
   const STOCKS_NEWS_CACHE_MAX_AGE_MS = 8 * 60 * 60 * 1000;
   const STOCKS_NEWS_ARTICLE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
   const WATCHLIST_NEWS_SYMBOL_LIMIT = 6;
-  const MAJOR_NEWS_QUERY_URL = `https://news.google.com/rss/search?q=${encodeURIComponent("stock market when:2d")}&hl=en-US&gl=US&ceid=US:en`;
+  // Publisher-direct RSS feeds for "major" market headlines. Used to be a
+  // single news.google.com/rss/search?q=... URL, but Google News rate-limits
+  // Cloudflare Worker egress IPs (503s with no edge-cache populated), so
+  // the major-news widget would silently render zero items. These three
+  // feeds are reachable through the worker proxy and refresh hourly.
+  const MAJOR_NEWS_FEED_URLS = [
+    "https://feeds.content.dowjones.io/public/rss/mw_topstories",                                  // MarketWatch top stories
+    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839069",         // CNBC Markets
+    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"         // CNBC Top News
+  ];
   const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
   const stocksDiag = document.getElementById("stocksDiag");
 
@@ -76,9 +85,9 @@
   function getNewsDiagnosticQueries(){
     if(newsMode === "watchlist"){
       const watchlist = Array.isArray(cfg.stocks) ? cfg.stocks.slice(0, WATCHLIST_NEWS_SYMBOL_LIMIT) : [];
-      return watchlist.map((stock) => googleNewsRssQueryForSymbol(stock.symbol, stock.label));
+      return watchlist.map((stock) => stocksNewsRssQueryForSymbol(stock.symbol, stock.label));
     }
-    return [MAJOR_NEWS_QUERY_URL];
+    return MAJOR_NEWS_FEED_URLS.slice();
   }
 
   async function updateStocksDiagnostics(){
@@ -1203,14 +1212,15 @@
       if (newsMode === "watchlist") {
         const watchlist = Array.isArray(cfg.stocks) ? cfg.stocks.slice(0, WATCHLIST_NEWS_SYMBOL_LIMIT) : [];
         const tasks = watchlist.map(async (stock) => {
-          // Mutual-fund tickers (e.g. FNIPX, VSMPX, TLYIX) almost never have Google
-          // News results. Both proxies just time out, producing console noise with
-          // zero user-visible benefit. Same heuristic as common-stocks.js's
-          // shouldSkipFinnhubSymbol: ≥5 chars ending in X.
+          // Mutual-fund tickers (e.g. FNIPX, VSMPX, TLYIX) rarely have meaningful
+          // per-symbol news on Yahoo Finance, so skip them to keep the console
+          // clean. Same heuristic as common-stocks.js's shouldSkipFinnhubSymbol:
+          // ≥5 chars ending in X.
           if(isFundLikeSymbol(stock.symbol)){
             return [];
           }
-          const query = googleNewsRssQueryForSymbol(stock.symbol, stock.label);
+          const query = stocksNewsRssQueryForSymbol(stock.symbol, stock.label);
+          if(!query) return [];
           const items = await withTimeout(
             fetchRssItems(query, 3, true),
             NEWS_FETCH_TIMEOUT_MS,
@@ -1234,7 +1244,7 @@
 
         if(typeof getRssCooldownStatus === "function"){
           watchlist.forEach((stock) => {
-            const query = googleNewsRssQueryForSymbol(stock.symbol, stock.label);
+            const query = stocksNewsRssQueryForSymbol(stock.symbol, stock.label);
             const status = getRssCooldownStatus(query);
             if(status?.retryInSec > cooldownRetrySec) cooldownRetrySec = status.retryInSec;
 
@@ -1257,29 +1267,51 @@
         });
         
       } else {
-        // Major headlines - top 18 only
-        try {
-          const googleNewsUrl = MAJOR_NEWS_QUERY_URL;
-          const items = await withTimeout(
-            fetchRssItems(googleNewsUrl, 18, true),
+        // Major headlines — fan out to MAJOR_NEWS_FEED_URLS and merge.
+        const perFeedLimit = Math.max(6, Math.ceil(18 / MAJOR_NEWS_FEED_URLS.length));
+        const settled = await Promise.allSettled(
+          MAJOR_NEWS_FEED_URLS.map((feedUrl) => withTimeout(
+            fetchRssItems(feedUrl, perFeedLimit, true),
             NEWS_FETCH_TIMEOUT_MS,
-            "Major headlines fetch"
-          );
-          fallbackLabel = items.find((item) => item?._newsFallback && item?._newsSourceLabel)?._newsSourceLabel || fallbackLabel;
-          articles.push(...items);
-
-          if(typeof getRssCooldownStatus === "function"){
-            const status = getRssCooldownStatus(googleNewsUrl);
-            if(status?.retryInSec > 0) cooldownRetrySec = status.retryInSec;
+            `Major headlines fetch (${feedUrl})`
+          ))
+        );
+        settled.forEach((result, idx) => {
+          if(result.status !== "fulfilled" || !Array.isArray(result.value)) {
+            if(result.status === "rejected"){
+              console.warn(`Failed to fetch ${MAJOR_NEWS_FEED_URLS[idx]}:`, result.reason);
+            }
+            return;
           }
-
-          if(typeof getRssLastSuccessAgeMs === "function"){
-            const ageMs = getRssLastSuccessAgeMs(googleNewsUrl);
-            if(ageMs != null) lastSuccessAgeMs = ageMs;
+          if(!fallbackLabel){
+            fallbackLabel = result.value.find((item) => item?._newsFallback && item?._newsSourceLabel)?._newsSourceLabel || fallbackLabel;
           }
-        } catch(err) {
-          console.warn("Failed to fetch major headlines:", err);
+          articles.push(...result.value);
+        });
+
+        if(typeof getRssCooldownStatus === "function"){
+          MAJOR_NEWS_FEED_URLS.forEach((feedUrl) => {
+            const status = getRssCooldownStatus(feedUrl);
+            if(status?.retryInSec > cooldownRetrySec) cooldownRetrySec = status.retryInSec;
+          });
         }
+        if(typeof getRssLastSuccessAgeMs === "function"){
+          MAJOR_NEWS_FEED_URLS.forEach((feedUrl) => {
+            const ageMs = getRssLastSuccessAgeMs(feedUrl);
+            if(ageMs != null && (lastSuccessAgeMs == null || ageMs < lastSuccessAgeMs)){
+              lastSuccessAgeMs = ageMs;
+            }
+          });
+        }
+
+        // Dedupe by URL+title since CNBC top news + CNBC markets overlap.
+        const seen = new Set();
+        articles = articles.filter((a) => {
+          const key = `${String(a?.url || "").trim()}::${String(a?.title || "").trim().toLowerCase()}`;
+          if(!a?.title || !a?.url || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
       }
 
       if (articles.length > 0) {
@@ -1327,9 +1359,16 @@
     }
   }
 
-  function googleNewsRssQueryForSymbol(symbol, label) {
-    const q = encodeURIComponent(`${label} ${symbol} stock when:2d`);
-    return `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`;
+  // Yahoo Finance per-symbol headline RSS. Strips an "EXCHANGE:" prefix
+  // ("NASDAQ:CLOV" → "CLOV") since Yahoo expects a bare ticker. Returns
+  // an empty string for inputs we can't sensibly query so the caller can
+  // skip the fetch.
+  function stocksNewsRssQueryForSymbol(symbol/*, label*/) {
+    const raw = String(symbol || "").trim();
+    if(!raw) return "";
+    const bare = raw.includes(":") ? raw.split(":").pop() : raw;
+    if(!bare) return "";
+    return `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(bare)}&region=US&lang=en-US`;
   }
 
   function isFundLikeSymbol(symbol){

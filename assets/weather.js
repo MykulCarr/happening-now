@@ -46,7 +46,15 @@
   const NATIONAL_ALERTS_CACHE_KEY = "jas_weather_alerts_national_v1";
   const WEATHER_NEWS_CACHE_KEY = "jas_weather_news_cache_v1";
   const WEATHER_NEWS_ARTICLE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
-  const WEATHER_NEWS_PRIMARY_QUERY = "https://news.google.com/rss/search?q=weather+climate+environment+when:2d&hl=en-US&gl=US&ceid=US:en";
+  // Publisher-direct RSS feeds for weather/environment headlines. Replaced
+  // a trio of news.google.com/rss/search queries because Google News
+  // rate-limits Cloudflare Worker egress IPs (503s with no edge-cache
+  // populated) — the widget would intermittently render empty.
+  const WEATHER_NEWS_PRIMARY_QUERY = "https://www.theguardian.com/environment/rss";
+  const WEATHER_NEWS_SECONDARY_QUERIES = [
+    "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",   // BBC Science & Environment
+    "https://www.nhc.noaa.gov/index-at.xml"                            // NOAA NHC Atlantic tropical
+  ];
   const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
 
   async function probeEndpoint(url, timeoutMs = 4500){
@@ -1368,11 +1376,7 @@
       weatherNews.innerHTML = `<div class="hint">Loading news…</div>`;
       scheduleSlowNotice();
 
-      const newsQueries = [
-        WEATHER_NEWS_PRIMARY_QUERY,
-        `https://news.google.com/rss/search?q=storm+forecast+NOAA+when:2d&hl=en-US&gl=US&ceid=US:en`,
-        `https://news.google.com/rss/search?q=hurricane+tornado+flood+wildfire+weather+when:2d&hl=en-US&gl=US&ceid=US:en`
-      ];
+      const newsQueries = [WEATHER_NEWS_PRIMARY_QUERY, ...WEATHER_NEWS_SECONDARY_QUERIES];
 
       const settled = await Promise.allSettled(
         newsQueries.map((url) => fetchRssItems(url, 4, true))
