@@ -22,13 +22,13 @@
   // small set of high-volume outlet feeds that proxy fine. Items from
   // multiple feeds are deduped and trimmed downstream.
   const CRITICAL_NATIONAL_FEEDS = [
-    { rss: "https://feeds.npr.org/1001/rss.xml",                         scope: "national", label: "US" },
-    { rss: "https://feeds.feedburner.com/reuters/topNews",               scope: "national", label: "US" }
+    { rss: "https://feeds.npr.org/1001/rss.xml", scope: "national", label: "US" },
+    { rss: "https://feeds.feedburner.com/reuters/topNews", scope: "national", label: "US" }
   ];
   const CRITICAL_INTERNATIONAL_FEEDS = [
-    { rss: "https://feeds.bbci.co.uk/news/world/rss.xml",                scope: "international", label: "WORLD" },
-    { rss: "https://www.theguardian.com/world/rss",                      scope: "international", label: "WORLD" },
-    { rss: "https://www.aljazeera.com/xml/rss/all.xml",                  scope: "international", label: "WORLD" }
+    { rss: "https://feeds.bbci.co.uk/news/world/rss.xml", scope: "international", label: "WORLD" },
+    { rss: "https://www.theguardian.com/world/rss", scope: "international", label: "WORLD" },
+    { rss: "https://www.aljazeera.com/xml/rss/all.xml", scope: "international", label: "WORLD" }
   ];
 
   // Single state for the four scope tabs (LOCAL/REGIONAL/NATIONAL/INTERNATIONAL).
@@ -48,37 +48,37 @@
   // are clicked rapidly).
   let criticalTickerGen = 0;
 
-  function destroyCriticalTicker(){
-    if(!criticalTickerState) return;
-    if(criticalTickerState.resumeTimer) window.clearTimeout(criticalTickerState.resumeTimer);
-    if(criticalTickerState.rafId) window.cancelAnimationFrame(criticalTickerState.rafId);
-    if(criticalTickerState.abortController) criticalTickerState.abortController.abort();
+  function destroyCriticalTicker() {
+    if (!criticalTickerState) return;
+    if (criticalTickerState.resumeTimer) window.clearTimeout(criticalTickerState.resumeTimer);
+    if (criticalTickerState.rafId) window.cancelAnimationFrame(criticalTickerState.rafId);
+    if (criticalTickerState.abortController) criticalTickerState.abortController.abort();
     criticalTickerState = null;
   }
 
-  function clearCriticalTickerPopup(){
-    if(criticalTickerPopup){ criticalTickerPopup.remove(); criticalTickerPopup = null; }
+  function clearCriticalTickerPopup() {
+    if (criticalTickerPopup) { criticalTickerPopup.remove(); criticalTickerPopup = null; }
   }
 
-  function clearCriticalTickerTimers(){
-    if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
-    if(criticalTickerCloseTimeout){ window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
+  function clearCriticalTickerTimers() {
+    if (criticalTickerHoverTimeout) { window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+    if (criticalTickerCloseTimeout) { window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
   }
 
-  function destroyCriticalTickerHover(){
+  function destroyCriticalTickerHover() {
     clearCriticalTickerTimers();
     clearCriticalTickerPopup();
-    if(criticalTickerHoverController){ criticalTickerHoverController.abort(); criticalTickerHoverController = null; }
+    if (criticalTickerHoverController) { criticalTickerHoverController.abort(); criticalTickerHoverController = null; }
   }
 
-  function setupCriticalTicker(container){
+  function setupCriticalTicker(container) {
     destroyCriticalTicker();
     container.classList.add("criticalTickerReady");
 
     const viewport = container.querySelector(".criticalTickerViewport");
-    const track    = container.querySelector(".criticalTickerTrack");
+    const track = container.querySelector(".criticalTickerTrack");
     const firstGroup = container.querySelector(".criticalTickerGroup");
-    if(!viewport || !track || !firstGroup) return;
+    if (!viewport || !track || !firstGroup) return;
 
     const abortController = new AbortController();
     const speedPxPerSecond = 22;
@@ -99,74 +99,74 @@
     let rafId = 0;
     let resumeTimer = 0;
 
-    function measure(resetPosition = false){
+    function measure(resetPosition = false) {
       // offsetWidth (integer) avoids sub-pixel drift that makes the cycle wrap
       // look jumpy when offsetPx wraps from cycleWidth back to 0.
       cycleWidth = firstGroup.offsetWidth + gap;
-      if(resetPosition && cycleWidth > 0){ offsetPx = 0; applyTrackTransform(); }
+      if (resetPosition && cycleWidth > 0) { offsetPx = 0; applyTrackTransform(); }
     }
 
-    function applyTrackTransform(){
+    function applyTrackTransform() {
       track.style.transform = `translate3d(${-Math.round(offsetPx)}px, 0, 0)`;
     }
 
-    function normalizeScroll(){
-      if(cycleWidth <= 0) return;
-      while(offsetPx >= cycleWidth) offsetPx -= cycleWidth;
-      while(offsetPx < 0) offsetPx += cycleWidth;
+    function normalizeScroll() {
+      if (cycleWidth <= 0) return;
+      while (offsetPx >= cycleWidth) offsetPx -= cycleWidth;
+      while (offsetPx < 0) offsetPx += cycleWidth;
     }
 
-    function clearResumeTimer(){
-      if(resumeTimer){ window.clearTimeout(resumeTimer); resumeTimer = 0; }
+    function clearResumeTimer() {
+      if (resumeTimer) { window.clearTimeout(resumeTimer); resumeTimer = 0; }
     }
 
-    function queueAutoResume(delayMs = 600){
+    function queueAutoResume(delayMs = 600) {
       clearResumeTimer();
       resumeTimer = window.setTimeout(() => { paused = false; }, delayMs);
     }
 
-    function tick(timestamp){
-      if(!lastFrameTs) lastFrameTs = timestamp;
+    function tick(timestamp) {
+      if (!lastFrameTs) lastFrameTs = timestamp;
       const dt = (timestamp - lastFrameTs) / 1000;
       lastFrameTs = timestamp;
       const hoverPaused = timestamp >= hoverPauseReadyAt && viewport.matches(":hover") && !dragging;
 
-      if(paused && !dragging && !hoverPaused && !resumeTimer) paused = false;
+      if (paused && !dragging && !hoverPaused && !resumeTimer) paused = false;
 
-      if(cycleWidth <= 0){
-        if(!lastMeasureTs || (timestamp - lastMeasureTs) >= 250){
+      if (cycleWidth <= 0) {
+        if (!lastMeasureTs || (timestamp - lastMeasureTs) >= 250) {
           lastMeasureTs = timestamp;
           measure(false);
-          if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+          if (cycleWidth > 0) { normalizeScroll(); applyTrackTransform(); }
         }
-      } else if(!paused && !dragging && !hoverPaused){
+      } else if (!paused && !dragging && !hoverPaused) {
         offsetPx += speedPxPerSecond * dt;
         normalizeScroll();
         applyTrackTransform();
       }
 
       rafId = window.requestAnimationFrame(tick);
-      if(criticalTickerState){ criticalTickerState.rafId = rafId; criticalTickerState.resumeTimer = resumeTimer; }
+      if (criticalTickerState) { criticalTickerState.rafId = rafId; criticalTickerState.resumeTimer = resumeTimer; }
     }
 
     measure(true);
     hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
     window.requestAnimationFrame(() => {
       measure(false);
-      if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+      if (cycleWidth > 0) { normalizeScroll(); applyTrackTransform(); }
     });
-    if(document.fonts && document.fonts.ready){
+    if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => {
         measure(false);
-        if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
-      }).catch(() => {});
+        if (cycleWidth > 0) { normalizeScroll(); applyTrackTransform(); }
+      }).catch(() => { });
     }
 
     viewport.addEventListener("pointerdown", (event) => {
-      if(event.pointerType === "mouse" && event.button !== 0) return;
-      if(activePointerId !== null) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (activePointerId !== null) return;
       event.preventDefault();
-      if(cycleWidth <= 0) measure(false);
+      if (cycleWidth <= 0) measure(false);
       clearResumeTimer();
       dragging = true;
       paused = true;
@@ -179,7 +179,7 @@
     }, { signal: abortController.signal });
 
     viewport.addEventListener("pointermove", (event) => {
-      if(!dragging || event.pointerId !== activePointerId) return;
+      if (!dragging || event.pointerId !== activePointerId) return;
       event.preventDefault();
       const dx = event.clientX - lastPointerX;
       lastPointerX = event.clientX;
@@ -189,28 +189,28 @@
       applyTrackTransform();
     }, { signal: abortController.signal });
 
-    function endDrag(event){
-      if(!dragging || event.pointerId !== activePointerId) return;
+    function endDrag(event) {
+      if (!dragging || event.pointerId !== activePointerId) return;
       const shouldOpenLink = event.type === "pointerup" && dragDistancePx < 8 && pointerDownUrl;
       dragging = false;
       activePointerId = null;
       viewport.classList.remove("isDragging");
-      if(viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
       dragDistancePx = 0;
-      if(shouldOpenLink) window.open(pointerDownUrl, "_blank", "noopener,noreferrer");
+      if (shouldOpenLink) window.open(pointerDownUrl, "_blank", "noopener,noreferrer");
       pointerDownUrl = "";
       queueAutoResume(350);
       hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
     }
 
-    viewport.addEventListener("pointerup",           endDrag, { signal: abortController.signal });
-    viewport.addEventListener("pointercancel",        endDrag, { signal: abortController.signal });
-    viewport.addEventListener("lostpointercapture",   endDrag, { signal: abortController.signal });
+    viewport.addEventListener("pointerup", endDrag, { signal: abortController.signal });
+    viewport.addEventListener("pointercancel", endDrag, { signal: abortController.signal });
+    viewport.addEventListener("lostpointercapture", endDrag, { signal: abortController.signal });
     viewport.addEventListener("dragstart", (event) => { event.preventDefault(); }, { signal: abortController.signal });
 
     viewport.addEventListener("wheel", (event) => {
       const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      if(!delta) return;
+      if (!delta) return;
       event.preventDefault();
       clearResumeTimer();
       paused = true;
@@ -222,46 +222,46 @@
 
     window.addEventListener("resize", () => {
       measure(false);
-      if(cycleWidth > 0){ normalizeScroll(); applyTrackTransform(); }
+      if (cycleWidth > 0) { normalizeScroll(); applyTrackTransform(); }
     }, { signal: abortController.signal });
 
     rafId = window.requestAnimationFrame(tick);
     criticalTickerState = { abortController, rafId, resumeTimer };
   }
 
-  function setupCriticalTickerHover(container, items){
+  function setupCriticalTickerHover(container, items) {
     destroyCriticalTickerHover();
     const controller = new AbortController();
     criticalTickerHoverController = controller;
 
     const clearCloseTimeout = () => {
-      if(criticalTickerCloseTimeout){ window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
+      if (criticalTickerCloseTimeout) { window.clearTimeout(criticalTickerCloseTimeout); criticalTickerCloseTimeout = null; }
     };
 
     const schedulePopupClose = (delayMs = 500) => {
       clearCloseTimeout();
-      if(!criticalTickerPopup) return;
+      if (!criticalTickerPopup) return;
       criticalTickerCloseTimeout = window.setTimeout(() => {
-        if(criticalTickerPopup && !criticalTickerPopup.matches(":hover")) clearCriticalTickerPopup();
+        if (criticalTickerPopup && !criticalTickerPopup.matches(":hover")) clearCriticalTickerPopup();
       }, delayMs);
     };
 
     container.addEventListener("mousemove", (e) => {
       const viewport = container.querySelector(".criticalTickerViewport");
-      if(viewport?.classList.contains("isDragging")) return;
+      if (viewport?.classList.contains("isDragging")) return;
 
       const itemEl = e.target.closest(".criticalTickerItem[data-item-idx]");
-      if(!itemEl){
-        if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+      if (!itemEl) {
+        if (criticalTickerHoverTimeout) { window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
         schedulePopupClose(400);
         return;
       }
 
       const idx = parseInt(itemEl.dataset.itemIdx, 10);
       const item = items[idx];
-      if(!item) return;
+      if (!item) return;
 
-      if(criticalTickerHoverTimeout) window.clearTimeout(criticalTickerHoverTimeout);
+      if (criticalTickerHoverTimeout) window.clearTimeout(criticalTickerHoverTimeout);
       clearCloseTimeout();
 
       criticalTickerHoverTimeout = window.setTimeout(() => {
@@ -275,7 +275,7 @@
         `;
 
         popup.style.left = Math.min(e.clientX + 12, window.innerWidth - 420) + "px";
-        popup.style.top  = Math.min(e.clientY + 12, window.innerHeight - 300) + "px";
+        popup.style.top = Math.min(e.clientY + 12, window.innerHeight - 300) + "px";
 
         document.body.appendChild(popup);
         criticalTickerPopup = popup;
@@ -286,14 +286,14 @@
     }, { signal: controller.signal });
 
     container.addEventListener("mouseleave", () => {
-      if(criticalTickerHoverTimeout){ window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
+      if (criticalTickerHoverTimeout) { window.clearTimeout(criticalTickerHoverTimeout); criticalTickerHoverTimeout = null; }
       schedulePopupClose(400);
     }, { signal: controller.signal });
 
     container.addEventListener("mouseenter", () => { clearCloseTimeout(); }, { signal: controller.signal });
   }
 
-  function normalizeTickerItems(items, scope, label){
+  function normalizeTickerItems(items, scope, label) {
     return items.map((item) => ({
       scope,
       label: label || scope.toUpperCase(),
@@ -303,27 +303,27 @@
     })).filter((item) => Boolean(item.url));
   }
 
-  async function getGeoForScope(){
-    if(geoCache) return geoCache;
+  async function getGeoForScope() {
+    if (geoCache) return geoCache;
     // Honor whatever source the user set their location with — GPS, saved
     // device coords, or ZIP. Same resolver that weather.js uses, so the
     // user only sets location once.
     const liveCfg = window.App?.cfg || cfg;
     try {
-      if(typeof window.App?.resolvePreferredLocation === "function"){
+      if (typeof window.App?.resolvePreferredLocation === "function") {
         const loc = await window.App.resolvePreferredLocation({ cfg: liveCfg, autoDetect: false });
-        if(loc?.city){
+        if (loc?.city) {
           geoCache = { lat: Number(loc.lat), lon: Number(loc.lon), city: loc.city, state: loc.state || "" };
           return geoCache;
         }
       }
-    } catch {}
+    } catch { }
     const zip = liveCfg.zipCode;
-    if(!zip || !/^\d{5}$/.test(zip)) return null;
-    try{
+    if (!zip || !/^\d{5}$/.test(zip)) return null;
+    try {
       geoCache = await geocodeZip(zip);
       return geoCache;
-    }catch{
+    } catch {
       return null;
     }
   }
@@ -336,19 +336,19 @@
   // The picker modal + Reddit discovery moved to common.js so both news.js
   // and settings.js can open it. Use window.App.openSourcePicker(scope, onSaved).
 
-  async function getTickerFeedsForScope(scope){
-    if(scope === "national") return CRITICAL_NATIONAL_FEEDS;
-    if(scope === "international") return CRITICAL_INTERNATIONAL_FEEDS;
+  async function getTickerFeedsForScope(scope) {
+    if (scope === "national") return CRITICAL_NATIONAL_FEEDS;
+    if (scope === "international") return CRITICAL_INTERNATIONAL_FEEDS;
 
     // local + regional: prefer the user's curated picker selection. The
     // ticker only takes the top few so it doesn't fill up with one outlet.
     // No saved picks → fall back to the national curated set so the bar is
     // never empty (location-filtered news search is dead from the worker).
-    if(scope === "local" || scope === "regional"){
+    if (scope === "local" || scope === "regional") {
       const liveCfg = window.App?.cfg || cfg;
       const savedKey = scope === "local" ? "localSources" : "regionalSources";
       const saved = Array.isArray(liveCfg?.[savedKey]) ? liveCfg[savedKey] : [];
-      if(saved.length > 0){
+      if (saved.length > 0) {
         const label = scope === "local" ? "LOCAL" : "REGIONAL";
         return saved.slice(0, 3).map((s) => ({ rss: s.rss, scope, label }));
       }
@@ -361,7 +361,7 @@
         const stations = (geo && typeof window.App?.getStationsForGeo === "function")
           ? await window.App.getStationsForGeo(geo, scope)
           : [];
-        if(stations.length > 0){
+        if (stations.length > 0) {
           const label = scope === "local"
             ? (geo.city ? geo.city.toUpperCase() : "LOCAL")
             : ((window.App?.expandStateName?.(geo.state) || geo.state || "").toUpperCase() || "REGIONAL");
@@ -379,25 +379,25 @@
   //   so older saved configs keep rendering on those views.
   // - local / regional: synthesize a Google News search widget from the user's
   //   geocoded city/state. If no ZIP, returns []; the caller renders a hint.
-  async function getWidgetsForScope(scope, sourceCfg){
-    if(scope === "local" || scope === "regional"){
+  async function getWidgetsForScope(scope, sourceCfg) {
+    if (scope === "local" || scope === "regional") {
       // If the user has curated sources for this scope, use them directly —
       // no Google News guesswork. This is the fast path on every visit
       // after the first scope selection.
       const savedKey = scope === "local" ? "localSources" : "regionalSources";
-      const skipKey  = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
+      const skipKey = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
       const saved = Array.isArray(sourceCfg?.[savedKey]) ? sourceCfg[savedKey] : [];
-      if(saved.length > 0){
+      if (saved.length > 0) {
         return { widgets: saved.slice(0, 8), reason: "" };
       }
 
       const geo = await getGeoForScope();
-      if(!geo) return { widgets: [], reason: "no-geo" };
+      if (!geo) return { widgets: [], reason: "no-geo" };
 
       // No saved sources and the user hasn't opted to skip the picker → open it.
       // The picker will save selections (or set the skip flag) and the
       // onSaved callback re-runs render so the page picks up the new sources.
-      if(!sourceCfg?.[skipKey]){
+      if (!sourceCfg?.[skipKey]) {
         window.App?.openSourcePicker?.(scope, () => render(true));
       }
 
@@ -411,7 +411,7 @@
         const stations = (typeof window.App?.getStationsForGeo === "function")
           ? await window.App.getStationsForGeo(geo, scope)
           : [];
-        if(stations.length > 0){
+        if (stations.length > 0) {
           return {
             widgets: stations.slice(0, 8).map(s => ({
               name: s.name,
@@ -444,18 +444,18 @@
     };
   }
 
-  function dedupeTickerItems(items){
+  function dedupeTickerItems(items) {
     const seen = new Set();
     return items.filter((item) => {
       const key = `${item.title}|${item.url}`;
-      if(seen.has(key)) return false;
+      if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
   }
 
-  async function renderCriticalTicker(force=false){
-    if(!criticalNewsBar) return;
+  async function renderCriticalTicker(force = false) {
+    if (!criticalNewsBar) return;
 
     // Bump the generation and capture it locally. Each `await` below checks
     // that nobody else has called renderCriticalTicker since — if they have,
@@ -472,9 +472,9 @@
     destroyCriticalTickerHover();
     criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading headlines...</span>`;
 
-    try{
+    try {
       const feeds = await getTickerFeedsForScope(currentScope);
-      if(myGen !== criticalTickerGen) return;
+      if (myGen !== criticalTickerGen) return;
 
       const allItems = [];
       await Promise.all(feeds.map(async (feed) => {
@@ -482,14 +482,14 @@
         // Drop this feed's items if a newer render started while we waited.
         // (No abort signal on fetchNewsItems, so the network call still
         // runs to completion — we just refuse to consume its output.)
-        if(myGen !== criticalTickerGen) return;
+        if (myGen !== criticalTickerGen) return;
         allItems.push(...normalizeTickerItems(items, feed.scope, feed.label));
       }));
-      if(myGen !== criticalTickerGen) return;
+      if (myGen !== criticalTickerGen) return;
 
       const prioritized = dedupeTickerItems(allItems).slice(0, 16);
 
-      if(prioritized.length === 0){
+      if (prioritized.length === 0) {
         criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">No headlines right now.</span>`;
         return;
       }
@@ -509,34 +509,34 @@
 
       setupCriticalTicker(criticalNewsBar);
       setupCriticalTickerHover(criticalNewsBar, prioritized);
-    }catch(error){
-      if(myGen !== criticalTickerGen) return;
+    } catch (error) {
+      if (myGen !== criticalTickerGen) return;
       handleError(error, "Critical ticker");
       criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Headlines unavailable right now.</span>`;
     }
   }
 
-  function applyNewsStamps(savedAt){
+  function applyNewsStamps(savedAt) {
     const age = window.App.cacheAgeMs(savedAt);
     const stale = age > NEWS_MAX_AGE_MS;
     const tz = (window.App?.cfg?.timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  document.querySelectorAll(".newsCard .modStamp").forEach(el => {
-    const t = window.App.formatTime(new Date(savedAt), tz);
-    el.innerHTML = `<b>${t}</b> • ${window.App.formatAge(age)}${stale ? ` • <span class="stale">Stale</span>` : ""}`;
-  });
-}
+    document.querySelectorAll(".newsCard .modStamp").forEach(el => {
+      const t = window.App.formatTime(new Date(savedAt), tz);
+      el.innerHTML = `<b>${t}</b> • ${window.App.formatAge(age)}${stale ? ` • <span class="stale">Stale</span>` : ""}`;
+    });
+  }
 
-function restoreNewsFromCache(){
-  const cached = window.App.cacheGet(NEWS_CACHE_KEY);
-  if(!cached?.html || !cached?.savedAt) return false;
+  function restoreNewsFromCache() {
+    const cached = window.App.cacheGet(NEWS_CACHE_KEY);
+    if (!cached?.html || !cached?.savedAt) return false;
 
-  newsGrid.innerHTML = cached.html;
-  applyNewsStamps(cached.savedAt);
-  return true;
-}
+    newsGrid.innerHTML = cached.html;
+    applyNewsStamps(cached.savedAt);
+    return true;
+  }
 
-  function buildCard(widget){
+  function buildCard(widget) {
     const card = document.createElement("article");
     card.className = "card newsCard";
     card.setAttribute("aria-label", `News feed from ${widget.name}`);
@@ -553,7 +553,7 @@ function restoreNewsFromCache(){
     const widgetName = String(widget?.name || "").trim();
     const categoryParts = widgetName.split(" - ");
     const category = categoryParts.length > 1 ? String(categoryParts.slice(1).join(" - ")).trim() : "";
-    if(category){
+    if (category) {
       const categoryBadge = document.createElement("div");
       categoryBadge.className = "newsSourceCategory";
       categoryBadge.textContent = category;
@@ -565,7 +565,7 @@ function restoreNewsFromCache(){
 
     // Create skeleton loaders
     const skeletonCount = Math.max(3, widget.headlinesCount || 6);
-    for(let i=0; i<skeletonCount; i++){
+    for (let i = 0; i < skeletonCount; i++) {
       const sk = document.createElement("div");
       sk.className = "skeleton";
       sk.setAttribute("aria-hidden", "true");
@@ -581,18 +581,18 @@ function restoreNewsFromCache(){
 
   let inFlight = false;
 
-  function updateStatus(message, isError=false){
-    if(statusLine){
+  function updateStatus(message, isError = false) {
+    if (statusLine) {
       statusLine.textContent = message;
       statusLine.setAttribute("aria-live", "polite");
-      if(isError){
+      if (isError) {
         statusLine.setAttribute("aria-label", `Error: ${message}`);
       }
     }
   }
 
-  async function probeRssProxy(){
-    try{
+  async function probeRssProxy() {
+    try {
       const signal = (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
         ? AbortSignal.timeout(4500)
         : undefined;
@@ -601,26 +601,26 @@ function restoreNewsFromCache(){
         signal
       });
       return res.ok;
-    }catch{
+    } catch {
       return false;
     }
   }
 
-  function summarizeRssRouteHealth(widgets){
+  function summarizeRssRouteHealth(widgets) {
     let totalRoutes = 0;
     let routesOnCooldown = 0;
     let bestSuccessAgeMs = Infinity;
 
     widgets.forEach((widget) => {
       const source = String(widget?.rss || "").trim();
-      if(!source) return;
+      if (!source) return;
 
       const status = window.App.getRssCooldownStatus(source);
       totalRoutes += Number(status?.totalRoutes || 0);
       routesOnCooldown += Number(status?.routesOnCooldown || 0);
 
       const lastAgeMs = window.App.getRssLastSuccessAgeMs(source);
-      if(Number.isFinite(lastAgeMs)){
+      if (Number.isFinite(lastAgeMs)) {
         bestSuccessAgeMs = Math.min(bestSuccessAgeMs, lastAgeMs);
       }
     });
@@ -636,8 +636,8 @@ function restoreNewsFromCache(){
     };
   }
 
-  async function appendRssDiagnostics(baseMessage, widgets, isError=false){
-    if(!statusLine) return;
+  async function appendRssDiagnostics(baseMessage, widgets, isError = false) {
+    if (!statusLine) return;
 
     const proxyOk = await probeRssProxy();
     const route = summarizeRssRouteHealth(widgets);
@@ -648,7 +648,7 @@ function restoreNewsFromCache(){
     updateStatus(`${baseMessage} • ${detail}`, isError || !proxyOk);
   }
 
-  function createRssItem(item){
+  function createRssItem(item) {
     const container = document.createElement("a");
     container.className = "rssItem";
     container.href = item.url;
@@ -658,43 +658,43 @@ function restoreNewsFromCache(){
     // (date + title + description), which already includes the article title.
     // axe's label-content-name-mismatch rule fails when aria-label omits any
     // visible substring (e.g. the date), so let the natural name win.
-    
+
     // Publication date
     const dateDiv = document.createElement("div");
     dateDiv.className = "rssItemDate";
-    if(item.pubDate){
+    if (item.pubDate) {
       dateDiv.textContent = item.pubDate;
     } else {
       dateDiv.textContent = "Date unavailable";
     }
-    
+
     // Article title
     const titleDiv = document.createElement("div");
     titleDiv.className = "rssItemTitle";
     titleDiv.textContent = item.title;
-    
+
     // Article description/blurb
     const descDiv = document.createElement("div");
     descDiv.className = "rssItemDesc";
-    if(item.desc){
+    if (item.desc) {
       descDiv.textContent = item.desc;
     } else {
       descDiv.textContent = "No description available";
     }
-    
+
     container.appendChild(dateDiv);
     container.appendChild(titleDiv);
     container.appendChild(descDiv);
-    
+
     return container;
   }
 
-  async function render(force=false){
-    if(inFlight && !force) return;
+  async function render(force = false) {
+    if (inFlight && !force) return;
     inFlight = true;
 
     const priorGridHeight = Math.ceil(newsGrid.getBoundingClientRect().height || 0);
-    if(priorGridHeight > 0){
+    if (priorGridHeight > 0) {
       newsGrid.style.minHeight = `${priorGridHeight}px`;
     }
 
@@ -707,15 +707,15 @@ function restoreNewsFromCache(){
     const { widgets: scopeWidgets, reason } = await getWidgetsForScope(currentScope, liveCfg);
     const widgets = scopeWidgets.slice(0, 15);
 
-    if(widgets.length === 0){
+    if (widgets.length === 0) {
       let hint;
-      if(reason === "no-geo"){
-        updateStatus("Set your location to see what's near you", true);
-        hint = `Set your location in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope === "local" ? "what's near you" : "your state"}.`;
-      } else if(reason === "no-coverage"){
+      if (reason === "no-geo") {
+        updateStatus("Set your location to see what's happening near you", true);
+        hint = `Set your location in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope === "local" ? "what's happening near you" : "your state"}.`;
+      } else if (reason === "no-coverage") {
         updateStatus(`No ${currentScope} sources for your area yet`, true);
         hint = `We don't have built-in ${currentScope} sources for your area. <a class="subLink editSourcesLink" href="#" data-edit-scope="${currentScope}">Open the picker</a> to add Reddit communities, custom RSS feeds, or nearby cities we do cover.`;
-      } else if(reason === "no-match"){
+      } else if (reason === "no-match") {
         updateStatus(`No sources tagged "${currentScope}"`, true);
         hint = `None of your configured sources are tagged for the ${currentScope.toUpperCase()} scope. Adjust their tags in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
       } else {
@@ -737,10 +737,10 @@ function restoreNewsFromCache(){
 
     await Promise.all(widgets.map(async (w, idx) => {
       const { card, list } = shells[idx];
-      try{
+      try {
         const items = await fetchNewsItems(w.rss, w.headlinesCount || 6, !force);
-        
-        if(items.length === 0){
+
+        if (items.length === 0) {
           list.innerHTML = "";
           const emptyMsg = document.createElement("div");
           emptyMsg.className = "hint";
@@ -756,7 +756,7 @@ function restoreNewsFromCache(){
           list.appendChild(createRssItem(item));
         });
         successCount++;
-      }catch(error){
+      } catch (error) {
         handleError(error, `Loading ${w.name}`);
         showError(`Failed to load ${w.name}. Please try again.`, list);
         errorCount++;
@@ -764,17 +764,17 @@ function restoreNewsFromCache(){
     }));
 
     newsGrid.setAttribute("aria-busy", "false");
-    
+
     let statusMsg = "";
     let isErrorStatus = false;
-    if(errorCount > 0 && successCount === 0){
+    if (errorCount > 0 && successCount === 0) {
       statusMsg = `Failed to load news (${errorCount} errors)`;
       isErrorStatus = true;
       updateStatus(statusMsg, true);
-    }else if(errorCount > 0){
+    } else if (errorCount > 0) {
       statusMsg = `Loaded with ${errorCount} error${errorCount > 1 ? 's' : ''}`;
       updateStatus(statusMsg);
-    }else{
+    } else {
       statusMsg = `Ready • ${successCount} source${successCount > 1 ? 's' : ''} loaded`;
       updateStatus(statusMsg);
     }
@@ -782,13 +782,13 @@ function restoreNewsFromCache(){
     await appendRssDiagnostics(statusMsg, widgets, isErrorStatus);
 
     // Update stats widget if available
-    if(typeof window.updateNewsStats === "function"){
+    if (typeof window.updateNewsStats === "function") {
       const totalArticles = shells.reduce((sum, shell) => {
         return sum + shell.list.querySelectorAll(".rssItem").length;
       }, 0);
       window.updateNewsStats(`${successCount} source${successCount !== 1 ? 's' : ''} • ${totalArticles} article${totalArticles !== 1 ? 's' : ''}`);
     }
-    
+
     inFlight = false;
     newsGrid.style.removeProperty("min-height");
   }
@@ -799,7 +799,7 @@ function restoreNewsFromCache(){
   window.App.clearRssCache();
 
   // Initialize scope button active state from saved config
-  function syncScopeButtons(scope){
+  function syncScopeButtons(scope) {
     document.querySelectorAll(".tickerScopeBtn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.scope === scope);
     });
@@ -816,40 +816,40 @@ function restoreNewsFromCache(){
   // For local/regional, geo may not be resolved yet — show a placeholder
   // first and update asynchronously. We capture the scope at call time so a
   // stale fetch can't overwrite a heading set by a later scope change.
-  async function updatePageHeading(scope){
+  async function updatePageHeading(scope) {
     const h1 = document.getElementById("newsPageHeading");
-    if(!h1) return;
-    if(scope === "national"){ h1.textContent = "US News"; return; }
-    if(scope === "international"){ h1.textContent = "International News"; return; }
+    if (!h1) return;
+    if (scope === "national") { h1.textContent = "US News"; return; }
+    if (scope === "international") { h1.textContent = "International News"; return; }
     // Local/regional: show generic placeholder while we wait for geo.
     h1.textContent = scope === "local" ? "Local News" : "Regional News";
     const requestedScope = scope;
     try {
       const geo = await getGeoForScope();
-      if(currentScope !== requestedScope) return; // scope changed mid-fetch
-      if(!geo) return; // leave the placeholder; user hasn't set a location
-      if(requestedScope === "local"){
+      if (currentScope !== requestedScope) return; // scope changed mid-fetch
+      if (!geo) return; // leave the placeholder; user hasn't set a location
+      if (requestedScope === "local") {
         const city = String(geo.city || "").trim();
-        if(city) h1.textContent = `${city} News`;
+        if (city) h1.textContent = `${city} News`;
       } else {
         const fullState = window.App?.expandStateName?.(geo.state) || geo.state || "";
-        if(fullState) h1.textContent = `${fullState} News`;
+        if (fullState) h1.textContent = `${fullState} News`;
       }
     } catch { /* keep placeholder */ }
   }
 
   // Show "Edit sources" only on local/regional and only when something is
   // saved (or skipped) — gives users a way back to the picker.
-  function syncEditSourcesLink(scope){
+  function syncEditSourcesLink(scope) {
     const host = document.getElementById("editSourcesHost");
-    if(!host) return;
+    if (!host) return;
     const liveCfg = window.App?.cfg || cfg;
     const showable = scope === "local" || scope === "regional";
     const key = scope === "local" ? "localSources" : "regionalSources";
     const skipKey = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
     const has = (liveCfg?.[key] || []).length > 0 || liveCfg?.[skipKey] === true;
     host.innerHTML = (showable && has)
-      ? `<a href="#" class="subLink editSourcesLink" data-edit-scope="${scope}">${scope === "local" ? "• Edit Near You sources" : "• Edit state sources"}</a>`
+      ? `<a href="#" class="subLink editSourcesLink" data-edit-scope="${scope}">${scope === "local" ? "• Edit Local news sources" : "• Edit state sources"}</a>`
       : "";
     host.querySelector(".editSourcesLink")?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -859,7 +859,7 @@ function restoreNewsFromCache(){
       // (custom URLs the user previously added would need re-adding — kept
       // intentionally simple for now).
       const next = { ...window.App.cfg };
-      if(sc === "local") next.localSourcesSkipped = false;
+      if (sc === "local") next.localSourcesSkipped = false;
       else next.regionalSourcesSkipped = false;
       saveConfig(next);
       window.App?.openSourcePicker?.(sc, () => render(true));
@@ -872,7 +872,7 @@ function restoreNewsFromCache(){
   tickerScopeBar?.querySelectorAll(".tickerScopeBtn").forEach(btn => {
     btn.addEventListener("click", () => {
       const scope = btn.dataset.scope;
-      if(scope === currentScope) return;
+      if (scope === currentScope) return;
       currentScope = scope;
       syncScopeButtons(scope);
       // Persist as newsScope; keep newsTickerScope in sync for any older code
@@ -883,7 +883,7 @@ function restoreNewsFromCache(){
       render(true);
       // Local/Regional need a saved location to be useful. Prompt the
       // first-run welcome if no cfg.zipCode or device coords are set.
-      if(scope === "local" || scope === "regional"){
+      if (scope === "local" || scope === "regional") {
         window.App?.openWelcomeIfNeeded?.();
       }
     });
@@ -892,7 +892,7 @@ function restoreNewsFromCache(){
   // Keyboard accessibility for refresh button
   refreshBtn?.addEventListener("click", () => render(true));
   refreshBtn?.addEventListener("keydown", (e) => {
-    if(e.key === "Enter" || e.key === " "){
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       render(true);
     }
@@ -917,10 +917,10 @@ function restoreNewsFromCache(){
   // or sends the user to Settings > News for national/international, where the
   // existing News Sources editor manages the cfg.widgets list.
   document.getElementById("manageSourcesBtn")?.addEventListener("click", () => {
-    if(currentScope === "local" || currentScope === "regional"){
+    if (currentScope === "local" || currentScope === "regional") {
       // Clear skip flag so the picker opens fresh.
       const next = { ...window.App.cfg };
-      if(currentScope === "local") next.localSourcesSkipped = false;
+      if (currentScope === "local") next.localSourcesSkipped = false;
       else next.regionalSourcesSkipped = false;
       saveConfig(next);
       window.App?.openSourcePicker?.(currentScope, () => render(true));
@@ -931,9 +931,9 @@ function restoreNewsFromCache(){
   });
 
   // Initial render
-  if(document.readyState === "loading"){
+  if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => { render(true); }); // force=true to bypass cache
-  }else{
+  } else {
     render(true); // force=true to bypass cache on page load
   }
 })();

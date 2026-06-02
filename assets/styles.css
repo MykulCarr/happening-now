@@ -39,7 +39,7 @@ header#topbar {
 }
 
 :root {
-  --bg: #4a79c1;
+  --bg: #1e3a5f;
   --panel: rgba(255, 255, 255, .08);
   --panel2: rgba(255, 255, 255, .12);
   --panelHover: rgba(255, 255, 255, .14);

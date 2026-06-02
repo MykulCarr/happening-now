@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 1,
-    "purpose": "Curated local TV-station and newspaper RSS feeds used by the Near You / Across Your State source picker. Bundled because no free location-aware news API gave us reliable hyperlocal coverage; see commit history for the rabbit hole.",
+    "purpose": "Curated local TV-station and newspaper RSS feeds used by the Local News/ Across Your State source picker. Bundled because no free location-aware news API gave us reliable hyperlocal coverage; see commit history for the rabbit hole.",
     "schema": {
       "states": {
         "<state-abbrev>": {

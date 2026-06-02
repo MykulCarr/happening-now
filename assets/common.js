@@ -10,14 +10,14 @@
     RSS_PROXY_BASE,
     "https://api.codetabs.com/v1/proxy?quest="
   ];
-  
+
   // RSS Aggregator endpoints - RSSHub is a robust alternative for hard-to-reach feeds
   const RSS_AGGREGATORS = {
     rsshub: "https://rsshub.app",           // Primary: RSSHub (open-source, reliable)
     rsshubBackup: "https://rss.shab.fun",   // Backup RSSHub instance
     feedbin: "https://feedbin.com",         // Feedly alternative (requires account)
   };
-  
+
   // Stock API keys — Finnhub and TwelveData are proxied through /v1/stocks/* on the
   // Cloudflare Worker. Set FINNHUB_KEY and TWELVEDATA_KEY as Worker secrets in the
   // Cloudflare dashboard (Workers → your worker → Settings → Variables & Secrets).
@@ -34,7 +34,7 @@
   const NEWS_API_KEY = "";
 
   const GNEWS_API_KEY = "";
-  
+
   // MediaStack API (free tier: 1000 requests/month, ~33/day)
   // Sign up at https://mediastack.com to get your API key
   const MEDIASTACK_API_KEY = ""; // Add your MediaStack API key here for fallback
@@ -56,29 +56,29 @@
     "Wisconsin": "WI", "Wyoming": "WY", "District of Columbia": "DC"
   };
 
-  function abbreviateState(stateName){
-    if(!stateName) return "";
+  function abbreviateState(stateName) {
+    if (!stateName) return "";
     const raw = String(stateName).trim();
     // ISO 3166-2 form ("US-MI") shows up in cached overrides + some geocoder
     // responses. Strip the country prefix so downstream matchers see "MI".
     const stripped = raw.replace(/^US[-_]/i, "");
     // Check direct match first (case-insensitive)
     const abbr = STATE_ABBREVIATIONS[stripped];
-    if(abbr) return abbr;
+    if (abbr) return abbr;
     // If it's already 2 characters, assume it's an abbreviation
-    if(stripped.length === 2) return stripped.toUpperCase();
+    if (stripped.length === 2) return stripped.toUpperCase();
     // Return the full name if no abbreviation found
     return stripped;
   }
 
   // Reverse lookup: "NY" -> "New York". Falls back to the input if it's
   // already a full name or doesn't match any known abbreviation.
-  function expandStateName(stateAbbrOrName){
-    if(!stateAbbrOrName) return "";
+  function expandStateName(stateAbbrOrName) {
+    if (!stateAbbrOrName) return "";
     const upper = String(stateAbbrOrName).toUpperCase();
-    if(upper.length === 2){
-      for(const [name, abbr] of Object.entries(STATE_ABBREVIATIONS)){
-        if(abbr === upper) return name;
+    if (upper.length === 2) {
+      for (const [name, abbr] of Object.entries(STATE_ABBREVIATIONS)) {
+        if (abbr === upper) return name;
       }
     }
     return stateAbbrOrName;
@@ -88,29 +88,29 @@
   // value/change/changePercent are populated at runtime from live quotes; no defaults here
   // so that failed fetches render "—" rather than convincing-looking stale numbers.
   const MARKET_INDEX_DEFS = [
-    { key: "dow",       name: "DOW" },
-    { key: "sp500",     name: "S&P 500" },
-    { key: "nasdaq",    name: "NASDAQ" },
+    { key: "dow", name: "DOW" },
+    { key: "sp500", name: "S&P 500" },
+    { key: "nasdaq", name: "NASDAQ" },
     { key: "russell2000", name: "RUSSELL 2000" },
-    { key: "sp400",     name: "S&P MIDCAP 400" },
-    { key: "sp600",     name: "S&P SMALLCAP 600" },
-    { key: "microcap",  name: "MICROCAP" },
-    { key: "vix",       name: "VIX" },
-    { key: "ftse100",   name: "FTSE 100" },
-    { key: "dax",       name: "DAX" },
+    { key: "sp400", name: "S&P MIDCAP 400" },
+    { key: "sp600", name: "S&P SMALLCAP 600" },
+    { key: "microcap", name: "MICROCAP" },
+    { key: "vix", name: "VIX" },
+    { key: "ftse100", name: "FTSE 100" },
+    { key: "dax", name: "DAX" },
     { key: "nikkei225", name: "NIKKEI 225" },
-    { key: "hangseng",  name: "HANG SENG" },
-    { key: "gold",      name: "GOLD" },
-    { key: "silver",    name: "SILVER" },
-    { key: "copper",    name: "COPPER" },
-    { key: "crudeoil",  name: "CRUDE OIL" },
-    { key: "brent",     name: "BRENT" },
-    { key: "natgas",    name: "NAT GAS" },
-    { key: "us10y",     name: "US 10Y" },
-    { key: "dxy",       name: "DXY" },
-    { key: "eurusd",    name: "EUR/USD" },
-    { key: "bitcoin",   name: "BITCOIN" },
-    { key: "ethereum",  name: "ETHEREUM" }
+    { key: "hangseng", name: "HANG SENG" },
+    { key: "gold", name: "GOLD" },
+    { key: "silver", name: "SILVER" },
+    { key: "copper", name: "COPPER" },
+    { key: "crudeoil", name: "CRUDE OIL" },
+    { key: "brent", name: "BRENT" },
+    { key: "natgas", name: "NAT GAS" },
+    { key: "us10y", name: "US 10Y" },
+    { key: "dxy", name: "DXY" },
+    { key: "eurusd", name: "EUR/USD" },
+    { key: "bitcoin", name: "BITCOIN" },
+    { key: "ethereum", name: "ETHEREUM" }
   ];
 
   const LEGACY_MARKET_INDEX_NAME_TO_KEY = {
@@ -173,67 +173,67 @@
     sectionVisibility: {
       weather: {
         topAlertsTicker: true,
-        current:   true,   // recommended
-        hourly:    true,
-        forecast:  true,   // recommended
-        radar:     true,
-        alerts:    true,
-        news:      true
+        current: true,   // recommended
+        hourly: true,
+        forecast: true,   // recommended
+        radar: true,
+        alerts: true,
+        news: true
       },
       stocks: {
-        indices:    true,  // recommended
-        watchlist:  true,  // recommended
-        news:       true,
-        gainers:    true,
-        losers:     true,
-        trending:   true,
-        calendar:   true,
+        indices: true,  // recommended
+        watchlist: true,  // recommended
+        news: true,
+        gainers: true,
+        losers: true,
+        trending: true,
+        calendar: true,
         diagnostic: true
       }
     },
 
     // Content arrays
-  widgets: [
-    // All working RSS feeds - verified and tested.
-    // `scopes` controls which scope tab(s) on the news page show this widget.
-    // Widgets without a `scopes` field are treated as ["national","international"]
-    // by getWidgetsForScope so older saved configs still render.
-    { name:"NPR", rss:"https://feeds.npr.org/1001/rss.xml", site:"https://www.npr.org", headlinesCount:5, scopes:["national"] },
-    { name:"BBC", rss:"https://feeds.bbci.co.uk/news/rss.xml", site:"https://www.bbc.com/news", headlinesCount:5, scopes:["international"] },
-    { name:"The Guardian (US)", rss:"https://www.theguardian.com/us-news/rss", site:"https://www.theguardian.com/us-news", headlinesCount:5, scopes:["national"] },
-    { name:"The Guardian (World)", rss:"https://www.theguardian.com/world/rss", site:"https://www.theguardian.com/world", headlinesCount:5, scopes:["international"] },
-    { name:"The Atlantic", rss:"https://www.theatlantic.com/feed/all/", site:"https://www.theatlantic.com", headlinesCount:5, scopes:["national"] },
-    { name:"The Atlantic", rss:"https://www.theatlantic.com/feed/all/", site:"https://www.theatlantic.com", headlinesCount:5, scopes:["national"] },
-    { name:"ArsTechnica", rss:"https://feeds.arstechnica.com/arstechnica/index", site:"https://arstechnica.com", headlinesCount:5, scopes:["national"] },
-    { name:"PBS NewsHour", rss:"https://www.pbs.org/newshour/feeds/rss/headlines", site:"https://www.pbs.org/newshour", headlinesCount:5, scopes:["national"] },
-    { name:"Al Jazeera", rss:"https://www.aljazeera.com/xml/rss/all.xml", site:"https://www.aljazeera.com", headlinesCount:5, scopes:["international"] },
-    { name:"Hacker News", rss:"https://news.ycombinator.com/rss", site:"https://news.ycombinator.com", headlinesCount:5, scopes:["national"] },
-    { name:"Deutsche Welle", rss:"https://rss.dw.com/rdf/rss-en-all", site:"https://www.dw.com", headlinesCount:5, scopes:["international"] },
-    { name:"Nature", rss:"https://www.nature.com/nature.rss", site:"https://www.nature.com", headlinesCount:5, scopes:["international"] }
-  ],
+    widgets: [
+      // All working RSS feeds - verified and tested.
+      // `scopes` controls which scope tab(s) on the news page show this widget.
+      // Widgets without a `scopes` field are treated as ["national","international"]
+      // by getWidgetsForScope so older saved configs still render.
+      { name: "NPR", rss: "https://feeds.npr.org/1001/rss.xml", site: "https://www.npr.org", headlinesCount: 5, scopes: ["national"] },
+      { name: "BBC", rss: "https://feeds.bbci.co.uk/news/rss.xml", site: "https://www.bbc.com/news", headlinesCount: 5, scopes: ["international"] },
+      { name: "The Guardian (US)", rss: "https://www.theguardian.com/us-news/rss", site: "https://www.theguardian.com/us-news", headlinesCount: 5, scopes: ["national"] },
+      { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
+      { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "ArsTechnica", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "PBS NewsHour", rss: "https://www.pbs.org/newshour/feeds/rss/headlines", site: "https://www.pbs.org/newshour", headlinesCount: 5, scopes: ["national"] },
+      { name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", headlinesCount: 5, scopes: ["international"] },
+      { name: "Hacker News", rss: "https://news.ycombinator.com/rss", site: "https://news.ycombinator.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "Deutsche Welle", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", headlinesCount: 5, scopes: ["international"] },
+      { name: "Nature", rss: "https://www.nature.com/nature.rss", site: "https://www.nature.com", headlinesCount: 5, scopes: ["international"] }
+    ],
 
-  stocks: [
-    { symbol:"NASDAQ:CLOV", label:"Clover Health Investments Corp" },
-    { symbol:"NASDAQ:FNIPX", label:"Fidelity Freedom Index 2035 Fund Premier Class" },
-    { symbol:"NASDAQ:TLYIX", label:"Nuveen Lifecycle Index 2035 Fund R6" },
-    { symbol:"NASDAQ:VIIIX", label:"Vanguard Institutional Index Fund Institutional Plus" },
-    { symbol:"NASDAQ:VSMPX", label:"Vanguard Total Stock Market Index Fund Institutional Plus" },
-  ]
-};
+    stocks: [
+      { symbol: "NASDAQ:CLOV", label: "Clover Health Investments Corp" },
+      { symbol: "NASDAQ:FNIPX", label: "Fidelity Freedom Index 2035 Fund Premier Class" },
+      { symbol: "NASDAQ:TLYIX", label: "Nuveen Lifecycle Index 2035 Fund R6" },
+      { symbol: "NASDAQ:VIIIX", label: "Vanguard Institutional Index Fund Institutional Plus" },
+      { symbol: "NASDAQ:VSMPX", label: "Vanguard Total Stock Market Index Fund Institutional Plus" },
+    ]
+  };
 
-  function clone(x){ return JSON.parse(JSON.stringify(x)); }
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
   // Migrate old RSS feeds to working alternatives
-  function migrateWidgets(widgets){
-    if(!Array.isArray(widgets)) return clone(DEFAULTS.widgets);
+  function migrateWidgets(widgets) {
+    if (!Array.isArray(widgets)) return clone(DEFAULTS.widgets);
     return widgets;
   }
 
-  function normalizeConfig(cfg){
+  function normalizeConfig(cfg) {
     const out = { ...clone(DEFAULTS), ...(cfg || {}) };
 
     out.theme = out.theme === "light" ? "light" : "dark";
-    out.density = ["compact","cozy","comfortable"].includes(out.density) ? out.density : "comfortable";
+    out.density = ["compact", "cozy", "comfortable"].includes(out.density) ? out.density : "comfortable";
     out.renderMode = ["smooth", "stable"].includes(String(out.renderMode || "").toLowerCase())
       ? String(out.renderMode).toLowerCase()
       : DEFAULTS.renderMode;
@@ -241,12 +241,12 @@
     out.stocksNewsMode = ["watchlist", "major"].includes(out.stocksNewsMode) ? out.stocksNewsMode : DEFAULTS.stocksNewsMode;
 
     out.zipCode = String(out.zipCode || "").trim();
-    if(!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;
+    if (!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;
 
     out.useDeviceLocation = out.useDeviceLocation === true;
     out.deviceLat = Number(out.deviceLat);
     out.deviceLon = Number(out.deviceLon);
-    if(!Number.isFinite(out.deviceLat) || !Number.isFinite(out.deviceLon)){
+    if (!Number.isFinite(out.deviceLat) || !Number.isFinite(out.deviceLon)) {
       out.useDeviceLocation = false;
       out.deviceLat = null;
       out.deviceLon = null;
@@ -254,27 +254,27 @@
     out.deviceLocationLabel = String(out.deviceLocationLabel || "").trim().slice(0, 120);
 
     out.weatherRefreshMinutes = Number(out.weatherRefreshMinutes || DEFAULTS.weatherRefreshMinutes);
-    if(!Number.isFinite(out.weatherRefreshMinutes) || out.weatherRefreshMinutes < 2) out.weatherRefreshMinutes = 10;
+    if (!Number.isFinite(out.weatherRefreshMinutes) || out.weatherRefreshMinutes < 2) out.weatherRefreshMinutes = 10;
 
     out.timezone = String(out.timezone || DEFAULTS.timezone).trim();
     // Validate timezone exists in our list or is a valid IANA timezone
-    if(!TIMEZONES.find(t => t.value === out.timezone)){
-      try{
+    if (!TIMEZONES.find(t => t.value === out.timezone)) {
+      try {
         Intl.DateTimeFormat(undefined, { timeZone: out.timezone });
-      }catch{
+      } catch {
         out.timezone = DEFAULTS.timezone;
       }
     }
 
-    if(!Array.isArray(out.widgets)) out.widgets = clone(DEFAULTS.widgets);
+    if (!Array.isArray(out.widgets)) out.widgets = clone(DEFAULTS.widgets);
     // Migrate old feeds to NewsAPI
     out.widgets = migrateWidgets(out.widgets);
     // Lookup table for restoring `scopes` on legacy saved configs whose
     // widgets predate the field. Built from DEFAULTS.widgets so the 9
     // canonical sources keep their intended scope after a config reload.
     const defaultScopesByRss = {};
-    for(const dw of DEFAULTS.widgets || []){
-      if(dw?.rss && Array.isArray(dw?.scopes) && dw.scopes.length){
+    for (const dw of DEFAULTS.widgets || []) {
+      if (dw?.rss && Array.isArray(dw?.scopes) && dw.scopes.length) {
         defaultScopesByRss[dw.rss] = clone(dw.scopes);
       }
     }
@@ -285,9 +285,9 @@
       // (single scope) so an unrecognized custom widget doesn't pollute
       // every scope tab the way ["national","international"] would.
       let scopes;
-      if(Array.isArray(w?.scopes) && w.scopes.length){
+      if (Array.isArray(w?.scopes) && w.scopes.length) {
         scopes = w.scopes.filter(s => typeof s === "string");
-      } else if(defaultScopesByRss[rss]){
+      } else if (defaultScopesByRss[rss]) {
         scopes = clone(defaultScopesByRss[rss]);
       } else {
         scopes = ["national"];
@@ -312,13 +312,13 @@
       // are zero query params. Our cache-buster ?t=<ms> broke the redirect.
       // Pin to the canonical feed URL Bridge itself redirects to.
       "https://www.bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles",
-      "https://bridgemi.com/rss.xml":     "https://bridgemi.com/feed/?partner-feed=latest-articles"
+      "https://bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles"
     };
 
     // Normalize user-curated local/regional source lists. Each entry mirrors
     // a widget shape so the news.js render path can use them directly.
-    function normalizeSourceList(list){
-      if(!Array.isArray(list)) return [];
+    function normalizeSourceList(list) {
+      if (!Array.isArray(list)) return [];
       return list.map(s => {
         const rawRss = String(s?.rss || "").trim();
         const rss = RSS_URL_FIXUPS[rawRss] || rawRss;
@@ -335,15 +335,15 @@
     out.localSourcesSkipped = out.localSourcesSkipped === true;
     out.regionalSourcesSkipped = out.regionalSourcesSkipped === true;
 
-    if(!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
+    if (!Array.isArray(out.stocks)) out.stocks = clone(DEFAULTS.stocks);
     out.stocks = out.stocks.map(s => ({
       symbol: String(s?.symbol || "").trim(),
-      label:  String(s?.label || "").trim() || String(s?.symbol || "").trim(),
+      label: String(s?.label || "").trim() || String(s?.symbol || "").trim(),
       market: String(s?.market || "").trim()
     })).filter(s => s.symbol);
 
     // Normalize new preference fields
-    if(typeof out.pageVisibility !== "object" || !out.pageVisibility){
+    if (typeof out.pageVisibility !== "object" || !out.pageVisibility) {
       out.pageVisibility = clone(DEFAULTS.pageVisibility);
     } else {
       out.pageVisibility = {
@@ -353,44 +353,44 @@
       };
     }
 
-    out.weatherAlertScope = ["local","national","both"].includes(out.weatherAlertScope) ? out.weatherAlertScope : "local";
+    out.weatherAlertScope = ["local", "national", "both"].includes(out.weatherAlertScope) ? out.weatherAlertScope : "local";
     out.forecastLength = [3, 7, 14].includes(out.forecastLength) ? out.forecastLength : 7;
-    out.weatherDefaultMapLayer = ["radar","wind","temp","clouds","air"].includes(out.weatherDefaultMapLayer) ? out.weatherDefaultMapLayer : "radar";
-    out.weatherTempUnit = ["fahrenheit","celsius"].includes(out.weatherTempUnit) ? out.weatherTempUnit : "fahrenheit";
-    out.weatherWindUnit = ["mph","kmh","ms"].includes(out.weatherWindUnit) ? out.weatherWindUnit : "mph";
-    out.weatherPrecipUnit = ["inch","mm"].includes(out.weatherPrecipUnit) ? out.weatherPrecipUnit : "inch";
+    out.weatherDefaultMapLayer = ["radar", "wind", "temp", "clouds", "air"].includes(out.weatherDefaultMapLayer) ? out.weatherDefaultMapLayer : "radar";
+    out.weatherTempUnit = ["fahrenheit", "celsius"].includes(out.weatherTempUnit) ? out.weatherTempUnit : "fahrenheit";
+    out.weatherWindUnit = ["mph", "kmh", "ms"].includes(out.weatherWindUnit) ? out.weatherWindUnit : "mph";
+    out.weatherPrecipUnit = ["inch", "mm"].includes(out.weatherPrecipUnit) ? out.weatherPrecipUnit : "inch";
     out.weatherShowMap = out.weatherShowMap !== false;
     out.weatherStaleWarnMinutes = Number(out.weatherStaleWarnMinutes ?? DEFAULTS.weatherStaleWarnMinutes);
-    if(!Number.isFinite(out.weatherStaleWarnMinutes)) out.weatherStaleWarnMinutes = DEFAULTS.weatherStaleWarnMinutes;
+    if (!Number.isFinite(out.weatherStaleWarnMinutes)) out.weatherStaleWarnMinutes = DEFAULTS.weatherStaleWarnMinutes;
     out.weatherStaleWarnMinutes = Math.max(5, Math.min(180, Math.round(out.weatherStaleWarnMinutes)));
-    out.stockSortMode = ["pinned","az","symbol"].includes(out.stockSortMode) ? out.stockSortMode : "pinned";
-    out.marketNewsSourceMode = ["google","direct"].includes(out.marketNewsSourceMode) ? out.marketNewsSourceMode : "google";
-    out.marketNewsOpenMode = ["new-tab","same-tab"].includes(out.marketNewsOpenMode) ? out.marketNewsOpenMode : "new-tab";
-    out.newsTickerScope = ["local","regional","national","international"].includes(out.newsTickerScope) ? out.newsTickerScope : "national";
+    out.stockSortMode = ["pinned", "az", "symbol"].includes(out.stockSortMode) ? out.stockSortMode : "pinned";
+    out.marketNewsSourceMode = ["google", "direct"].includes(out.marketNewsSourceMode) ? out.marketNewsSourceMode : "google";
+    out.marketNewsOpenMode = ["new-tab", "same-tab"].includes(out.marketNewsOpenMode) ? out.marketNewsOpenMode : "new-tab";
+    out.newsTickerScope = ["local", "regional", "national", "international"].includes(out.newsTickerScope) ? out.newsTickerScope : "national";
 
-    if(!Array.isArray(out.marketIndices)) out.marketIndices = clone(DEFAULTS.marketIndices);
+    if (!Array.isArray(out.marketIndices)) out.marketIndices = clone(DEFAULTS.marketIndices);
     const validKeys = new Set(MARKET_INDEX_DEFS.map(item => item.key));
 
     // Migrate older string-based arrays (stored as market names) to key+visible objects.
     const isLegacyMarketArray = out.marketIndices.every(item => typeof item === "string");
-    if(isLegacyMarketArray){
+    if (isLegacyMarketArray) {
       const selectedOrdered = [];
       const selectedSeen = new Set();
 
       out.marketIndices.forEach((name) => {
         const key = LEGACY_MARKET_INDEX_NAME_TO_KEY[name] || String(name || "").trim().toLowerCase();
-        if(!validKeys.has(key) || selectedSeen.has(key)) return;
+        if (!validKeys.has(key) || selectedSeen.has(key)) return;
         selectedSeen.add(key);
         selectedOrdered.push(key);
       });
 
       out.marketIndices = selectedOrdered.length > 0
         ? [
-            ...selectedOrdered.map((key) => ({ key, visible: true })),
-            ...MARKET_INDEX_DEFS
-              .filter((item) => !selectedSeen.has(item.key))
-              .map((item) => ({ key: item.key, visible: false }))
-          ]
+          ...selectedOrdered.map((key) => ({ key, visible: true })),
+          ...MARKET_INDEX_DEFS
+            .filter((item) => !selectedSeen.has(item.key))
+            .map((item) => ({ key: item.key, visible: false }))
+        ]
         : clone(DEFAULTS.marketIndices);
     } else {
       const explicitVisibility = new Map();
@@ -398,9 +398,9 @@
       const seenKeys = new Set();
 
       out.marketIndices.forEach((entry) => {
-        if(!entry || typeof entry !== "object") return;
+        if (!entry || typeof entry !== "object") return;
         const key = String(entry.key || "").trim().toLowerCase();
-        if(!validKeys.has(key) || seenKeys.has(key)) return;
+        if (!validKeys.has(key) || seenKeys.has(key)) return;
         seenKeys.add(key);
         explicitOrder.push(key);
         explicitVisibility.set(key, entry.visible !== false);
@@ -419,60 +419,60 @@
     return out;
   }
 
-  function loadConfig(){
-    try{
+  function loadConfig() {
+    try {
       const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return normalizeConfig(clone(DEFAULTS));
-      
+      if (!raw) return normalizeConfig(clone(DEFAULTS));
+
       const stored = JSON.parse(raw);
       const normalized = normalizeConfig(stored);
-      
+
       // Check if migration occurred by comparing widgets
       const needsSave = JSON.stringify(stored.widgets) !== JSON.stringify(normalized.widgets);
-      
-      if(needsSave){
+
+      if (needsSave) {
         console.log("Config migrated to reliable RSS feeds, clearing cache and saving...");
         localStorage.setItem(LS_KEY, JSON.stringify(normalized));
         // Clear localStorage news cache
-        try{ localStorage.removeItem("jas_cache_news_v1"); }catch{}
+        try { localStorage.removeItem("jas_cache_news_v1"); } catch { }
       }
-      
+
       return normalized;
-    }catch{
+    } catch {
       return normalizeConfig(clone(DEFAULTS));
     }
   }
 
-  function saveConfig(cfg){
+  function saveConfig(cfg) {
     const clean = normalizeConfig(cfg);
     localStorage.setItem(LS_KEY, JSON.stringify(clean));
-    if(window.App) window.App.cfg = clean;  // keep global in sync
+    if (window.App) window.App.cfg = clean;  // keep global in sync
     return clean;
   }
 
-  function hasValidDeviceCoords(config){
+  function hasValidDeviceCoords(config) {
     return Number.isFinite(Number(config?.deviceLat)) && Number.isFinite(Number(config?.deviceLon));
   }
 
-  function loadGeoPref(){
-    try{
+  function loadGeoPref() {
+    try {
       const raw = localStorage.getItem(GEO_PREF_KEY);
       return raw ? JSON.parse(raw) : null;
-    }catch{
+    } catch {
       return null;
     }
   }
 
-  function saveGeoPref(pref){
-    try{
+  function saveGeoPref(pref) {
+    try {
       localStorage.setItem(GEO_PREF_KEY, JSON.stringify(pref || {}));
-    }catch{}
+    } catch { }
   }
 
-  function shouldAutoDetectLocation(config){
-    if(typeof navigator === "undefined" || !navigator.geolocation) return false;
-    if(typeof window !== "undefined" && window.isSecureContext === false) return false;
-    if(hasValidDeviceCoords(config) && config?.useDeviceLocation) return false;
+  function shouldAutoDetectLocation(config) {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return false;
+    if (typeof window !== "undefined" && window.isSecureContext === false) return false;
+    if (hasValidDeviceCoords(config) && config?.useDeviceLocation) return false;
 
     // Only silently re-use geolocation if the user has previously explicitly granted it.
     // Never trigger the browser permission prompt without a direct user gesture.
@@ -480,9 +480,9 @@
     return pref?.granted === true;
   }
 
-  function getCurrentPositionAsync(options = {}){
+  function getCurrentPositionAsync(options = {}) {
     return new Promise((resolve, reject) => {
-      if(typeof navigator === "undefined" || !navigator.geolocation){
+      if (typeof navigator === "undefined" || !navigator.geolocation) {
         reject(new Error("Geolocation unavailable"));
         return;
       }
@@ -494,43 +494,43 @@
     });
   }
 
-  async function reverseGeocodeCoords(lat, lon){
-    try{
+  async function reverseGeocodeCoords(lat, lon) {
+    try {
       // Try Nominatim first (more reliable for city names)
-      try{
+      try {
         const nominatimUrl =
           `https://nominatim.openstreetmap.org/reverse` +
           `?lat=${encodeURIComponent(lat)}` +
           `&lon=${encodeURIComponent(lon)}` +
           `&format=json&language=en&zoom=10&addressdetails=1`;
-        
-        const res = await fetch(nominatimUrl, { 
+
+        const res = await fetch(nominatimUrl, {
           cache: "no-store",
           headers: { "User-Agent": "HAPPENING-NOW/1.0" }
         });
-        
-        if(res.ok){
+
+        if (res.ok) {
           const j = await res.json();
           const address = j?.address || {};
-          
+
           // Try to extract city/town from Nominatim response (in priority order)
           const city = String(
-            address.city || 
-            address.town || 
-            address.village || 
-            address.hamlet || 
+            address.city ||
+            address.town ||
+            address.village ||
+            address.hamlet ||
             address.county ||
             address.municipality ||
             address.district ||
             ""
           ).trim();
-          
+
           const state = String(address.state || address.province || "").trim();
           const abbrevState = abbreviateState(state);
           const zip = String(address.postcode || "").trim();
           const label = [city, abbrevState].filter(Boolean).join(", ");
 
-          if(city){
+          if (city) {
             console.log("[geocode] Nominatim found:", { city, state });
             return {
               city,
@@ -540,24 +540,24 @@
             };
           }
         }
-      }catch(nomErr){
+      } catch (nomErr) {
         console.log("[geocode] Nominatim error:", nomErr.message);
       }
 
       // Fallback: try open-meteo reverse geocoding
-      try{
+      try {
         const openMeteoUrl =
           `https://geocoding-api.open-meteo.com/v1/reverse` +
           `?latitude=${encodeURIComponent(lat)}` +
           `&longitude=${encodeURIComponent(lon)}` +
           `&language=en&format=json`;
-        
+
         const res = await fetch(openMeteoUrl, { cache: "no-store" });
-        if(res.ok){
+        if (res.ok) {
           const j = await res.json();
           const row = Array.isArray(j?.results) ? j.results[0] : null;
 
-          if(row && String(row.name || "").trim()){
+          if (row && String(row.name || "").trim()) {
             const city = String(row.name || "").trim();
             const state = String(row.admin1 || "").trim();
             const abbrevState = abbreviateState(state);
@@ -573,27 +573,27 @@
             };
           }
         }
-      }catch(omErr){
+      } catch (omErr) {
         console.log("[geocode] OpenMeteo error:", omErr.message);
       }
 
       // Return null if both services failed
       console.log("[geocode] No city found for", { lat, lon });
       return null;
-    }catch(e){
+    } catch (e) {
       console.error("[geocode] reverseGeocodeCoords error:", e);
       return null;
     }
   }
 
-  function startTopClock(getCfg){
+  function startTopClock(getCfg) {
     const timeEl = document.getElementById("topClockTime");
     const dateEl = document.getElementById("topClockDate");
     const tzEl = document.getElementById("topClockTz");
-    if(!timeEl || !dateEl || !tzEl) return;
-  
-    if(window.__jasTopClockTimer) clearInterval(window.__jasTopClockTimer);
-  
+    if (!timeEl || !dateEl || !tzEl) return;
+
+    if (window.__jasTopClockTimer) clearInterval(window.__jasTopClockTimer);
+
     const tick = () => {
       const cfgNow = (typeof getCfg === "function" ? getCfg() : null) || loadConfig();
       const tz = cfgNow.timezone || DEFAULTS.timezone;
@@ -603,28 +603,28 @@
       tzEl.textContent = getTimezoneAbbrev(tz);
       tzEl.title = getTimezoneLabel(tz);
     };
-  
+
     tick();
     window.__jasTopClockTimer = setInterval(tick, 1000);
-  }  
+  }
 
-  function applyThemeDensity(cfg){
+  function applyThemeDensity(cfg) {
     document.documentElement.setAttribute("data-theme", cfg.theme);
     document.documentElement.setAttribute("data-density", cfg.density);
     document.documentElement.setAttribute("data-render-mode", cfg.renderMode || "smooth");
     document.documentElement.setAttribute("data-font-size", "normal");
   }
 
-  function escapeHtml(s){
+  function escapeHtml(s) {
     return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  function stripTags(html){
+  function stripTags(html) {
     return String(html || "")
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
@@ -633,34 +633,34 @@
       .trim();
   }
 
-  function faviconUrl(site){
-    try{
+  function faviconUrl(site) {
+    try {
       const u = new URL(site);
       // Google's favicon service: 32x32 PNG, cached/optimized, gracefully
       // returns a generic globe icon for sites without a favicon. Avoids
       // 404s and the 5-22 KB per-source /favicon.ico downloads PSI flags.
       return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
-    }catch{
+    } catch {
       return "";
     }
   }
 
-  function normalizeOutboundLink(url){
-    try{
-      if(!url) return url;
+  function normalizeOutboundLink(url) {
+    try {
+      if (!url) return url;
       const u = new URL(url);
 
       // Google News RSS often wraps outbound links
-      if(u.hostname.includes("news.google.com")){
+      if (u.hostname.includes("news.google.com")) {
         const real = u.searchParams.get("url") || u.searchParams.get("u");
-        if(real) return decodeURIComponent(real);
+        if (real) return decodeURIComponent(real);
       }
-      if(u.hostname.includes("google.com") && u.pathname === "/url"){
+      if (u.hostname.includes("google.com") && u.pathname === "/url") {
         const q = u.searchParams.get("q");
-        if(q) return q;
+        if (q) return q;
       }
       return url;
-    }catch{
+    } catch {
       return url;
     }
   }
@@ -689,32 +689,32 @@
   const RSS_LS_MAX_ENTRIES = 60;
   let rssLsSaveTimer = null;
 
-  function hydrateRssCacheFromStorage(){
+  function hydrateRssCacheFromStorage() {
     try {
       const raw = localStorage.getItem(RSS_LS_KEY);
-      if(!raw) return;
+      if (!raw) return;
       const obj = JSON.parse(raw);
-      if(!obj || typeof obj !== "object") return;
+      if (!obj || typeof obj !== "object") return;
       const now = Date.now();
       const maxAge = CACHE_TTL + RSS_STALE_CACHE_MAX_AGE_MS;
-      for(const [k, v] of Object.entries(obj)){
-        if(!v || typeof v.timestamp !== "number") continue;
-        if((now - v.timestamp) > maxAge) continue;
+      for (const [k, v] of Object.entries(obj)) {
+        if (!v || typeof v.timestamp !== "number") continue;
+        if ((now - v.timestamp) > maxAge) continue;
         cache.set(k, v);
       }
-    } catch {}
+    } catch { }
   }
 
-  function persistRssCacheToStorage(){
-    if(rssLsSaveTimer) return;
+  function persistRssCacheToStorage() {
+    if (rssLsSaveTimer) return;
     // Coalesce bursts of setCached calls (e.g. 5 widgets settling on
     // load) into a single localStorage write a tick later.
     rssLsSaveTimer = setTimeout(() => {
       rssLsSaveTimer = null;
       try {
         const entries = [];
-        for(const [k, v] of cache.entries()){
-          if(typeof k === "string" && k.startsWith("rss:") && v?.timestamp){
+        for (const [k, v] of cache.entries()) {
+          if (typeof k === "string" && k.startsWith("rss:") && v?.timestamp) {
             entries.push([k, v]);
           }
         }
@@ -722,7 +722,7 @@
         entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
         const trimmed = Object.fromEntries(entries.slice(0, RSS_LS_MAX_ENTRIES));
         localStorage.setItem(RSS_LS_KEY, JSON.stringify(trimmed));
-      } catch {}
+      } catch { }
     }, 250);
   }
 
@@ -731,99 +731,99 @@
   // results when proxies are slow / 5xx'ing.
   hydrateRssCacheFromStorage();
 
-  function timeoutSignal(timeoutMs){
-    if(typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"){
+  function timeoutSignal(timeoutMs) {
+    if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
       return AbortSignal.timeout(timeoutMs);
     }
     return null;
   }
 
-  function getCached(key){
+  function getCached(key) {
     const entry = cache.get(key);
-    if(!entry) return null;
-    if(Date.now() - entry.timestamp > CACHE_TTL){
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
       cache.delete(key);
       return null;
     }
     return entry.data;
   }
 
-  function setCached(key, data){
+  function setCached(key, data) {
     cache.set(key, { data, timestamp: Date.now() });
     // Persist RSS results so a later page load can show content
     // immediately even if the upstream fetch is failing.
-    if(typeof key === "string" && key.startsWith("rss:")){
+    if (typeof key === "string" && key.startsWith("rss:")) {
       persistRssCacheToStorage();
     }
   }
 
-  function getCachedStale(key, maxStaleAgeMs = RSS_STALE_CACHE_MAX_AGE_MS){
+  function getCachedStale(key, maxStaleAgeMs = RSS_STALE_CACHE_MAX_AGE_MS) {
     const entry = cache.get(key);
-    if(!entry) return null;
-    if(Date.now() - entry.timestamp > CACHE_TTL + maxStaleAgeMs){
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > CACHE_TTL + maxStaleAgeMs) {
       return null;
     }
     return entry.data;
   }
 
-  function getRssRouteKey(feedUrl, proxyBase){
+  function getRssRouteKey(feedUrl, proxyBase) {
     return `${proxyBase}|${feedUrl}`;
   }
 
-  function getRssFeedVariants(rssUrl){
+  function getRssFeedVariants(rssUrl) {
     const feeds = [rssUrl];
-    if(rssUrl.includes("rsshub.app")){
+    if (rssUrl.includes("rsshub.app")) {
       feeds.push(rssUrl.replace("rsshub.app", "rss.shab.fun"));
     }
     return feeds;
   }
 
-  function isGoogleNewsRssUrl(rssUrl){
-    try{
+  function isGoogleNewsRssUrl(rssUrl) {
+    try {
       const url = new URL(rssUrl);
       return url.hostname.includes("news.google.com") && url.pathname.includes("/rss/");
-    }catch{
+    } catch {
       return false;
     }
   }
 
-  function getRssProxyFallbacksForFeed(feedUrl){
+  function getRssProxyFallbacksForFeed(feedUrl) {
     // Google News feeds are generally reachable through the primary worker and one fallback.
     // Keeping this list short avoids long serial timeouts that block widget rendering.
-    if(isGoogleNewsRssUrl(feedUrl)){
+    if (isGoogleNewsRssUrl(feedUrl)) {
       return RSS_PROXY_FALLBACKS.slice(0, 2);
     }
     return RSS_PROXY_FALLBACKS;
   }
 
-  function getRssRequestTimeoutMs(feedUrl){
+  function getRssRequestTimeoutMs(feedUrl) {
     return isGoogleNewsRssUrl(feedUrl) ? RSS_REQUEST_TIMEOUT_FAST_MS : RSS_REQUEST_TIMEOUT_MS;
   }
 
-  function getRssRouteCooldownMs(routeKey){
+  function getRssRouteCooldownMs(routeKey) {
     const cooldown = rssRouteCooldowns.get(routeKey);
-    if(!cooldown) return 0;
+    if (!cooldown) return 0;
     const remaining = cooldown.until - Date.now();
-    if(remaining <= 0){
+    if (remaining <= 0) {
       rssRouteCooldowns.delete(routeKey);
       return 0;
     }
     return remaining;
   }
 
-  function getRssCooldownStatus(rssUrl){
+  function getRssCooldownStatus(rssUrl) {
     const feedUrls = getRssFeedVariants(rssUrl);
     let totalRoutes = 0;
     let routesOnCooldown = 0;
     let minRetryMs = Infinity;
 
-    for(const feedUrl of feedUrls){
+    for (const feedUrl of feedUrls) {
       const proxiesToTry = getRssProxyFallbacksForFeed(feedUrl);
-      for(const proxyBase of proxiesToTry){
+      for (const proxyBase of proxiesToTry) {
         totalRoutes += 1;
         const routeKey = getRssRouteKey(feedUrl, proxyBase);
         const cooldownMs = getRssRouteCooldownMs(routeKey);
-        if(cooldownMs > 0){
+        if (cooldownMs > 0) {
           routesOnCooldown += 1;
           minRetryMs = Math.min(minRetryMs, cooldownMs);
         }
@@ -842,22 +842,22 @@
     };
   }
 
-  function noteRssFeedSuccess(rssUrl){
-    if(!rssUrl) return;
+  function noteRssFeedSuccess(rssUrl) {
+    if (!rssUrl) return;
     rssLastSuccessAt.set(rssUrl, Date.now());
   }
 
-  function getRssLastSuccessAgeMs(rssUrl){
-    if(!rssUrl) return null;
+  function getRssLastSuccessAgeMs(rssUrl) {
+    if (!rssUrl) return null;
     const ts = rssLastSuccessAt.get(rssUrl);
-    if(!ts) return null;
+    if (!ts) return null;
     return Math.max(0, Date.now() - ts);
   }
 
-  function noteRssRouteFailure(routeKey, error){
+  function noteRssRouteFailure(routeKey, error) {
     const msg = String(error?.message || "");
     const shouldBackoff = /503|timeout|timed out|network|failed to fetch/i.test(msg);
-    if(!shouldBackoff) return;
+    if (!shouldBackoff) return;
 
     const prev = rssRouteCooldowns.get(routeKey);
     const failCount = Math.min((prev?.failCount || 0) + 1, 5);
@@ -865,14 +865,14 @@
     rssRouteCooldowns.set(routeKey, { failCount, until: Date.now() + waitMs });
   }
 
-  function noteRssRouteSuccess(routeKey){
+  function noteRssRouteSuccess(routeKey) {
     rssRouteCooldowns.delete(routeKey);
   }
 
-  function clearRssCache(){
+  function clearRssCache() {
     // Clear all RSS cache entries
-    for(let key of cache.keys()){
-      if(key.startsWith("rss:") || key.startsWith("newsapi:")){
+    for (let key of cache.keys()) {
+      if (key.startsWith("rss:") || key.startsWith("newsapi:")) {
         cache.delete(key);
       }
     }
@@ -882,48 +882,48 @@
   }
 
   // Rate-limit tracking for API calls
-  function getRateLimits(){
-    try{
+  function getRateLimits() {
+    try {
       const raw = localStorage.getItem("jas_rate_limits_v1");
       return raw ? JSON.parse(raw) : {
         newsapi: { remaining: 100, limit: 100, resetTime: Date.now() + 86400000 },
         gnews: { remaining: 100, limit: 100, resetTime: Date.now() + 86400000 },
         mediastack: { remaining: 999, limit: 1000, resetTime: Date.now() + 2592000000 } // 30 days
       };
-    }catch{
+    } catch {
       return {};
     }
   }
 
-  function updateRateLimit(apiName, remainingHeader, limitHeader){
-    try{
+  function updateRateLimit(apiName, remainingHeader, limitHeader) {
+    try {
       const limits = getRateLimits();
-      if(!limits[apiName]) limits[apiName] = { remaining: 999, limit: 1000, resetTime: Date.now() + 86400000 };
-      
-      if(remainingHeader) limits[apiName].remaining = parseInt(remainingHeader) || limits[apiName].remaining;
-      if(limitHeader) limits[apiName].limit = parseInt(limitHeader) || limits[apiName].limit;
-      
+      if (!limits[apiName]) limits[apiName] = { remaining: 999, limit: 1000, resetTime: Date.now() + 86400000 };
+
+      if (remainingHeader) limits[apiName].remaining = parseInt(remainingHeader) || limits[apiName].remaining;
+      if (limitHeader) limits[apiName].limit = parseInt(limitHeader) || limits[apiName].limit;
+
       localStorage.setItem("jas_rate_limits_v1", JSON.stringify(limits));
       console.log(`[${apiName}] Rate limit: ${limits[apiName].remaining}/${limits[apiName].limit}`);
       return limits[apiName];
-    }catch{
+    } catch {
       return null;
     }
   }
 
-  function getAvailableNewsApis(){
+  function getAvailableNewsApis() {
     const limits = getRateLimits();
     return [
       { name: "newsapi", remaining: limits.newsapi?.remaining || 0, key: NEWS_API_KEY },
       { name: "gnews", remaining: limits.gnews?.remaining || 0, key: GNEWS_API_KEY },
       { name: "mediastack", remaining: limits.mediastack?.remaining || 0, key: MEDIASTACK_API_KEY }
     ]
-    .filter(api => api.key && api.remaining > 0)
-    .sort((a, b) => b.remaining - a.remaining); // Sort by most remaining first
+      .filter(api => api.key && api.remaining > 0)
+      .sort((a, b) => b.remaining - a.remaining); // Sort by most remaining first
   }
 
   // Error handling utility
-  function handleError(error, context="Operation"){
+  function handleError(error, context = "Operation") {
     console.error(`[${context}]`, error);
     return {
       error: true,
@@ -933,8 +933,8 @@
   }
 
   // Show user-friendly error message
-  function showError(message, element){
-    if(!element) return;
+  function showError(message, element) {
+    if (!element) return;
     const errorEl = document.createElement("div");
     errorEl.className = "errorMessage";
     errorEl.setAttribute("role", "alert");
@@ -944,42 +944,42 @@
     element.appendChild(errorEl);
   }
 
-  async function fetchNewsApiItems(domain, limit=10, useCache=true){
-    if(!NEWS_API_KEY){
+  async function fetchNewsApiItems(domain, limit = 10, useCache = true) {
+    if (!NEWS_API_KEY) {
       console.warn("NewsAPI key not configured");
       return [];
     }
 
     const cacheKey = `newsapi:${domain}:${limit}`;
-    
-    if(useCache){
+
+    if (useCache) {
       const cached = getCached(cacheKey);
-      if(cached) return cached;
+      if (cached) return cached;
     }
 
-    try{
+    try {
       // Try using the /v2/everything endpoint with proper headers
       const url = `https://newsapi.org/v2/everything?domains=${domain}&pageSize=${limit}&sortBy=publishedAt&language=en`;
-      const res = await fetch(url, { 
-        cache:"no-store", 
+      const res = await fetch(url, {
+        cache: "no-store",
         signal: AbortSignal.timeout(10000),
         headers: {
           'X-Api-Key': NEWS_API_KEY
         }
       });
-      
+
       // Track rate limits from response headers
       updateRateLimit("newsapi", res.headers.get("X-RateLimit-Remaining"), res.headers.get("X-RateLimit-Limit"));
-      
-      if(!res.ok){
+
+      if (!res.ok) {
         const errorText = await res.text();
         console.error(`NewsAPI error (${res.status}):`, errorText);
         throw new Error(`NewsAPI request failed: ${res.status}`);
       }
 
       const data = await res.json();
-      
-      if(data.status !== "ok"){
+
+      if (data.status !== "ok") {
         throw new Error(data.message || "NewsAPI error");
       }
 
@@ -991,43 +991,43 @@
         image: article.urlToImage || ""
       }));
 
-      if(useCache && result.length > 0){
+      if (useCache && result.length > 0) {
         setCached(cacheKey, result);
       }
 
       return result;
-    }catch(error){
+    } catch (error) {
       handleError(error, "NewsAPI Fetch");
       return [];
     }
   }
 
-  async function fetchGNewsItems(query, limit=10, useCache=true){
-    if(!GNEWS_API_KEY){
+  async function fetchGNewsItems(query, limit = 10, useCache = true) {
+    if (!GNEWS_API_KEY) {
       return [];
     }
 
     const cacheKey = `gnews:${query}:${limit}`;
-    
-    if(useCache){
+
+    if (useCache) {
       const cached = getCached(cacheKey);
-      if(cached) return cached;
+      if (cached) return cached;
     }
 
-    try{
+    try {
       const gNewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&max=${limit}&sortby=publishedAt&token=${GNEWS_API_KEY}`;
       const url = `https://corsproxy.io/?${encodeURIComponent(gNewsUrl)}`;
-      const res = await fetch(url, { 
-        cache:"no-store", 
+      const res = await fetch(url, {
+        cache: "no-store",
         signal: AbortSignal.timeout(10000)
       });
-      
+
       updateRateLimit("gnews", res.headers.get("X-RateLimit-Remaining"), res.headers.get("X-RateLimit-Limit"));
-      
-      if(!res.ok) throw new Error(`GNews error: ${res.status}`);
+
+      if (!res.ok) throw new Error(`GNews error: ${res.status}`);
 
       const data = await res.json();
-      
+
       const result = (data.articles || []).slice(0, limit).map(article => ({
         title: article.title || "Untitled",
         url: article.url || "",
@@ -1036,42 +1036,42 @@
         image: article.image || ""
       }));
 
-      if(useCache && result.length > 0){
+      if (useCache && result.length > 0) {
         setCached(cacheKey, result);
       }
 
       return result;
-    }catch(error){
+    } catch (error) {
       handleError(error, "GNews Fetch");
       return [];
     }
   }
 
-  async function fetchMediaStackItems(keywords, limit=10, useCache=true){
-    if(!MEDIASTACK_API_KEY){
+  async function fetchMediaStackItems(keywords, limit = 10, useCache = true) {
+    if (!MEDIASTACK_API_KEY) {
       return [];
     }
 
     const cacheKey = `mediastack:${keywords}:${limit}`;
-    
-    if(useCache){
+
+    if (useCache) {
       const cached = getCached(cacheKey);
-      if(cached) return cached;
+      if (cached) return cached;
     }
 
-    try{
+    try {
       const url = `https://api.mediastack.com/v1/news?keywords=${encodeURIComponent(keywords)}&limit=${limit}&sort=published_desc&access_key=${MEDIASTACK_API_KEY}`;
-      const res = await fetch(url, { 
-        cache:"no-store", 
+      const res = await fetch(url, {
+        cache: "no-store",
         signal: AbortSignal.timeout(10000)
       });
-      
+
       updateRateLimit("mediastack", res.headers.get("X-RateLimit-Remaining"), res.headers.get("X-RateLimit-Limit"));
-      
-      if(!res.ok) throw new Error(`MediaStack error: ${res.status}`);
+
+      if (!res.ok) throw new Error(`MediaStack error: ${res.status}`);
 
       const data = await res.json();
-      
+
       const result = (data.data || []).slice(0, limit).map(article => ({
         title: article.title || "Untitled",
         url: article.url || "",
@@ -1080,18 +1080,18 @@
         image: article.image || ""
       }));
 
-      if(useCache && result.length > 0){
+      if (useCache && result.length > 0) {
         setCached(cacheKey, result);
       }
 
       return result;
-    }catch(error){
+    } catch (error) {
       handleError(error, "MediaStack Fetch");
       return [];
     }
   }
 
-  function annotateNewsItems(items, sourceLabel, isFallback){
+  function annotateNewsItems(items, sourceLabel, isFallback) {
     return (Array.isArray(items) ? items : []).map((item) => ({
       ...item,
       _newsSourceLabel: sourceLabel,
@@ -1106,58 +1106,58 @@
   // causes browser DOMParser to reject the whole document. Common prefixes
   // and their canonical URIs are listed below; if a feed introduces a new
   // prefix not in the table, the parse can still fail and we surface it.
-  function repairFeedNamespaces(xmlText){
+  function repairFeedNamespaces(xmlText) {
     const KNOWN_NAMESPACES = {
-      media:   "http://search.yahoo.com/mrss/",
+      media: "http://search.yahoo.com/mrss/",
       content: "http://purl.org/rss/1.0/modules/content/",
-      dc:      "http://purl.org/dc/elements/1.1/",
-      atom:    "http://www.w3.org/2005/Atom",
-      sy:      "http://purl.org/rss/1.0/modules/syndication/",
-      slash:   "http://purl.org/rss/1.0/modules/slash/",
-      wfw:     "http://wellformedweb.org/CommentAPI/",
-      itunes:  "http://www.itunes.com/dtds/podcast-1.0.dtd",
-      georss:  "http://www.georss.org/georss"
+      dc: "http://purl.org/dc/elements/1.1/",
+      atom: "http://www.w3.org/2005/Atom",
+      sy: "http://purl.org/rss/1.0/modules/syndication/",
+      slash: "http://purl.org/rss/1.0/modules/slash/",
+      wfw: "http://wellformedweb.org/CommentAPI/",
+      itunes: "http://www.itunes.com/dtds/podcast-1.0.dtd",
+      georss: "http://www.georss.org/georss"
     };
     // Find the root <rss> or <feed> opening tag.
     const rootMatch = xmlText.match(/<(rss|feed)(\s[^>]*)?>/i);
-    if(!rootMatch) return xmlText;
+    if (!rootMatch) return xmlText;
     const rootTag = rootMatch[0];
     const rootName = rootMatch[1];
     // Collect prefixes the root already declares.
     const declared = new Set();
     const declRe = /xmlns:([A-Za-z_][\w.-]*)\s*=\s*['"][^'"]+['"]/g;
-    for(let m; (m = declRe.exec(rootTag)); ) declared.add(m[1]);
+    for (let m; (m = declRe.exec(rootTag));) declared.add(m[1]);
     // Find every prefix actually used as an element-name prefix in the body.
     const used = new Set();
     const usageRe = /<\/?([A-Za-z_][\w.-]*):[A-Za-z_]/g;
-    for(let m; (m = usageRe.exec(xmlText)); ) used.add(m[1]);
+    for (let m; (m = usageRe.exec(xmlText));) used.add(m[1]);
     // Anything used + known + not-already-declared = needs injection.
     const missing = [...used].filter(p => KNOWN_NAMESPACES[p] && !declared.has(p));
-    if(missing.length === 0) return xmlText;
+    if (missing.length === 0) return xmlText;
     const additions = missing.map(p => ` xmlns:${p}="${KNOWN_NAMESPACES[p]}"`).join("");
     // Append the declarations inside the opening root tag (before its `>`).
     const fixedRoot = rootTag.replace(/(\s*)>$/, additions + "$1>");
     return xmlText.replace(rootTag, fixedRoot);
   }
 
-  function getGoogleNewsSearchQuery(rssUrl){
-    try{
+  function getGoogleNewsSearchQuery(rssUrl) {
+    try {
       const url = new URL(rssUrl);
-      if(!url.hostname.includes("news.google.com") || !url.pathname.includes("/rss/search")){
+      if (!url.hostname.includes("news.google.com") || !url.pathname.includes("/rss/search")) {
         return "";
       }
       return String(url.searchParams.get("q") || "").trim();
-    }catch{
+    } catch {
       return "";
     }
   }
 
-  async function fetchGoogleNewsFallbackItems(rssUrl, limit=10, useCache=true){
+  async function fetchGoogleNewsFallbackItems(rssUrl, limit = 10, useCache = true) {
     const rawQuery = getGoogleNewsSearchQuery(rssUrl);
-    if(!rawQuery) return [];
+    if (!rawQuery) return [];
 
     const query = decodeURIComponent(rawQuery).replace(/\+/g, " ").trim();
-    if(!query) return [];
+    if (!query) return [];
 
     // API fallbacks are stricter than RSS query syntax; normalize symbol-heavy search text.
     const apiQuery = query
@@ -1170,22 +1170,22 @@
     const fallbackQuery = apiQuery || query;
 
     let items = await fetchGNewsItems(fallbackQuery, limit, useCache);
-    if(items.length > 0) return annotateNewsItems(items, "Fallback news source in use", true);
+    if (items.length > 0) return annotateNewsItems(items, "Fallback news source in use", true);
 
     items = await fetchMediaStackItems(fallbackQuery, limit, useCache);
     return annotateNewsItems(items, "Fallback news source in use", true);
   }
 
-  async function fetchRssItems(rssUrl, limit=10, useCache=true){
+  async function fetchRssItems(rssUrl, limit = 10, useCache = true) {
     const cacheKey = `rss:${rssUrl}:${limit}`;
-    
-    if(useCache){
+
+    if (useCache) {
       const cached = getCached(cacheKey);
-      if(cached) return cached;
+      if (cached) return cached;
     }
 
     const inFlightKey = `${cacheKey}:${useCache ? "cache" : "nocache"}`;
-    if(rssInFlight.has(inFlightKey)){
+    if (rssInFlight.has(inFlightKey)) {
       return rssInFlight.get(inFlightKey);
     }
 
@@ -1194,23 +1194,23 @@
       // Try primary feed, then fallback to backup RSSHub if using RSSHub
       const feedsToTry = getRssFeedVariants(rssUrl);
 
-      for(let feedUrl of feedsToTry){
+      for (let feedUrl of feedsToTry) {
         const bustUrl = feedUrl.includes("?") ? feedUrl + "&t=" + Date.now() : feedUrl + "?t=" + Date.now();
         const proxiesToTry = getRssProxyFallbacksForFeed(feedUrl);
         const requestTimeoutMs = getRssRequestTimeoutMs(feedUrl);
 
-        for(let proxyBase of proxiesToTry){
+        for (let proxyBase of proxiesToTry) {
           const routeKey = getRssRouteKey(feedUrl, proxyBase);
           const cooldownMs = getRssRouteCooldownMs(routeKey);
-          if(cooldownMs > 0){
+          if (cooldownMs > 0) {
             continue;
           }
 
-          try{
+          try {
             const proxied = proxyBase + encodeURIComponent(bustUrl);
-            const res = await fetch(proxied, { cache:"no-store", signal: timeoutSignal(requestTimeoutMs) });
+            const res = await fetch(proxied, { cache: "no-store", signal: timeoutSignal(requestTimeoutMs) });
 
-            if(!res.ok){
+            if (!res.ok) {
               throw new Error(`Failed to fetch RSS feed: ${res.status} ${res.statusText}`);
             }
 
@@ -1225,12 +1225,12 @@
             const xml = new DOMParser().parseFromString(repairedXmlText, "text/xml");
 
             const parseError = xml.querySelector("parsererror");
-            if(parseError){
+            if (parseError) {
               throw new Error("Invalid RSS feed format");
             }
 
             let items = Array.from(xml.querySelectorAll("item"));
-            if(items.length === 0) items = Array.from(xml.querySelectorAll("entry"));
+            if (items.length === 0) items = Array.from(xml.querySelectorAll("entry"));
 
             const result = annotateNewsItems(items.slice(0, limit).map(it => {
               const title = (it.querySelector("title")?.textContent || "Untitled").trim();
@@ -1240,9 +1240,9 @@
 
               const descRaw =
                 (it.querySelector("description")?.textContent ||
-                 it.querySelector("content")?.textContent ||
-                 it.querySelector("content\\:encoded")?.textContent ||
-                 "").trim();
+                  it.querySelector("content")?.textContent ||
+                  it.querySelector("content\\:encoded")?.textContent ||
+                  "").trim();
 
               const desc = stripTags(descRaw).slice(0, 240);
 
@@ -1250,34 +1250,34 @@
               const mediaContentNode = it.getElementsByTagName("media:content")?.[0];
               const mediaThumbNode = it.getElementsByTagName("media:thumbnail")?.[0];
               const mediaContent = it.querySelector("media\\:content");
-              if(mediaContent || mediaContentNode){
+              if (mediaContent || mediaContentNode) {
                 const node = mediaContent || mediaContentNode;
                 const mediaUrl = node.getAttribute("url") || "";
                 const mediaType = String(node.getAttribute("type") || "").toLowerCase();
                 const mediaMedium = String(node.getAttribute("medium") || "").toLowerCase();
-                if(mediaUrl && (mediaType.includes("image") || mediaMedium === "image" || (!mediaType && !mediaMedium))){
+                if (mediaUrl && (mediaType.includes("image") || mediaMedium === "image" || (!mediaType && !mediaMedium))) {
                   image = mediaUrl;
                 }
               } else {
                 const mediaThumb = it.querySelector("media\\:thumbnail") || mediaThumbNode;
-                if(mediaThumb) image = mediaThumb.getAttribute("url");
+                if (mediaThumb) image = mediaThumb.getAttribute("url");
               }
-              if(!image){
+              if (!image) {
                 const enclosure = it.querySelector("enclosure");
-                if(enclosure && enclosure.getAttribute("type")?.includes("image")){
+                if (enclosure && enclosure.getAttribute("type")?.includes("image")) {
                   image = enclosure.getAttribute("url");
                 }
               }
-              if(!image){
+              if (!image) {
                 const imageTag = it.querySelector("image");
-                if(imageTag) image = imageTag.textContent?.trim();
+                if (imageTag) image = imageTag.textContent?.trim();
               }
-              if(!image && descRaw){
+              if (!image && descRaw) {
                 const imgMatch = descRaw.match(/<img[^>]+src=["']([^"']+)["']/i);
-                if(imgMatch && imgMatch[1]){
+                if (imgMatch && imgMatch[1]) {
                   image = imgMatch[1].trim();
                 }
-                if(!image){
+                if (!image) {
                   const decodedDesc = descRaw
                     .replace(/&lt;/g, "<")
                     .replace(/&gt;/g, ">")
@@ -1285,29 +1285,29 @@
                     .replace(/&#39;/g, "'")
                     .replace(/&amp;/g, "&");
                   const decodedMatch = decodedDesc.match(/<img[^>]+src=["']([^"']+)["']/i);
-                  if(decodedMatch && decodedMatch[1]){
+                  if (decodedMatch && decodedMatch[1]) {
                     image = decodedMatch[1].trim();
                   }
                 }
               }
-              if(image && image.startsWith("//")){
+              if (image && image.startsWith("//")) {
                 image = `https:${image}`;
               }
 
               return { title, url: normalizeOutboundLink(link), pubDate, desc, image };
             }), proxyBase === RSS_PROXY_BASE ? "" : "Fallback news source in use", proxyBase !== RSS_PROXY_BASE);
 
-            if(useCache && result.length > 0){
+            if (useCache && result.length > 0) {
               setCached(cacheKey, result);
             }
 
-            if(result.length > 0){
+            if (result.length > 0) {
               noteRssFeedSuccess(rssUrl);
             }
 
             noteRssRouteSuccess(routeKey);
             return result;
-          }catch(error){
+          } catch (error) {
             noteRssRouteFailure(routeKey, error);
             console.warn(`RSS fetch failed for ${feedUrl} via ${proxyBase}:`, error.message);
           }
@@ -1315,17 +1315,17 @@
       }
 
       const fallbackItems = await fetchGoogleNewsFallbackItems(rssUrl, limit, useCache);
-      if(useCache && fallbackItems.length > 0){
+      if (useCache && fallbackItems.length > 0) {
         setCached(cacheKey, fallbackItems);
       }
-      if(fallbackItems.length > 0){
+      if (fallbackItems.length > 0) {
         noteRssFeedSuccess(rssUrl);
         return fallbackItems;
       }
 
-      if(useCache){
+      if (useCache) {
         const staleCached = getCachedStale(cacheKey);
-        if(staleCached && staleCached.length > 0){
+        if (staleCached && staleCached.length > 0) {
           return annotateNewsItems(staleCached, "Showing cached news (stale)", true);
         }
       }
@@ -1339,65 +1339,65 @@
     })();
 
     rssInFlight.set(inFlightKey, request);
-    try{
+    try {
       return await request;
-    }finally{
+    } finally {
       rssInFlight.delete(inFlightKey);
     }
   }
 
   // Unified news fetch - automatically uses NewsAPI or RSS based on URL format
-  async function fetchNewsItems(source, limit=10, useCache=true){
+  async function fetchNewsItems(source, limit = 10, useCache = true) {
     // Handle GNews queries (legacy support, auto-converts to RSS)
-    if(source.startsWith("gnews:")){
+    if (source.startsWith("gnews:")) {
       // Already handled by migration - shouldn't reach here
       return fetchRssItems(source, limit, useCache);
     }
-    
+
     // Handle NewsAPI queries (legacy support, auto-converts to RSS)
-    if(source.startsWith("newsapi:")){
+    if (source.startsWith("newsapi:")) {
       // Already handled by migration - shouldn't reach here
       return fetchRssItems(source, limit, useCache);
     }
-    
+
     // Otherwise use RSS (all sources are now RSS)
     return fetchRssItems(source, limit, useCache);
   }
 
-  async function syncTimezoneFromZip(cfg){
-    try{
+  async function syncTimezoneFromZip(cfg) {
+    try {
       const zip = String(cfg?.zipCode || "").trim();
-      if(!/^\d{5}$/.test(zip)) return cfg;
+      if (!/^\d{5}$/.test(zip)) return cfg;
 
-      if(cfg?._zipTz === zip && cfg.timezone) return cfg;
+      if (cfg?._zipTz === zip && cfg.timezone) return cfg;
 
       const loc = await geocodeZip(zip);
       const wx = await fetchCurrentWeather(loc.lat, loc.lon);
       const tz = wx?.timezone;
 
-      if(tz && tz !== cfg.timezone){
+      if (tz && tz !== cfg.timezone) {
         return saveConfig({ ...cfg, timezone: tz, _zipTz: zip });
       }
-      if(tz && tz === cfg.timezone && cfg?._zipTz !== zip){
+      if (tz && tz === cfg.timezone && cfg?._zipTz !== zip) {
         return saveConfig({ ...cfg, _zipTz: zip });
       }
-      if(!cfg.timezone) return saveConfig({ ...cfg, timezone: DEFAULTS.timezone });
+      if (!cfg.timezone) return saveConfig({ ...cfg, timezone: DEFAULTS.timezone });
       return cfg;
-    }catch{
+    } catch {
       return cfg;
     }
   }
 
-  function renderTopbar(cfg){
+  function renderTopbar(cfg) {
     const key = (p) => String(p || "").toLowerCase();
     const path = key(location.pathname.split("/").pop());
     const active = (name) => {
-      if(name === "news" && (path === "" || path === "index.html" || path === "index")) return true;
+      if (name === "news" && (path === "" || path === "index.html" || path === "index")) return true;
       return path === `${name}.html` || path === name;
     };
 
     const topbar = document.getElementById("topbar");
-    if(!topbar) return;
+    if (!topbar) return;
 
     topbar.innerHTML = `
       <div class="topbarInner">
@@ -1418,22 +1418,22 @@
           <nav class="nav" role="navigation" aria-label="Main navigation">
             <div class="navMain">
               ${active("news")
-                ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">News</span>`
-                : `<a class="btn btnMain" href="index.html">News</a>`}
+        ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">News</span>`
+        : `<a class="btn btnMain" href="index.html">News</a>`}
             
               ${active("weather")
-                ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Weather</span>`
-                : `<a class="btn btnMain" href="weather.html">Weather</a>`}
+        ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Weather</span>`
+        : `<a class="btn btnMain" href="weather.html">Weather</a>`}
             
               ${active("stocks")
-                ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Stocks</span>`
-                : `<a class="btn btnMain" href="stocks.html">Stocks</a>`}
+        ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Stocks</span>`
+        : `<a class="btn btnMain" href="stocks.html">Stocks</a>`}
             </div>
 
             <div class="navSettings">
               ${active("settings")
-                ? `<span class="btn btnSettings btnActive btnDisabled" aria-current="page">Settings</span>`
-                : `<a class="btn btnSettings" href="settings.html">Settings</a>`}
+        ? `<span class="btn btnSettings btnActive btnDisabled" aria-current="page">Settings</span>`
+        : `<a class="btn btnSettings" href="settings.html">Settings</a>`}
             </div>
           </nav>
         </div>
@@ -1455,8 +1455,8 @@
     });
   }
 
-  async function fetchAndDisplayWeather(_cfg){
-    try{
+  async function fetchAndDisplayWeather(_cfg) {
+    try {
       // Always read the latest cfg so stale references after saveConfig don't break this
       const cfg = window.App?.cfg || loadConfig();
       console.log("[topbar] fetchAndDisplayWeather start", cfg);
@@ -1464,10 +1464,10 @@
         cfg,
         autoDetect: false
       });
-      if(!loc || !Number.isFinite(Number(loc.lat)) || !Number.isFinite(Number(loc.lon))){
+      if (!loc || !Number.isFinite(Number(loc.lat)) || !Number.isFinite(Number(loc.lon))) {
         console.warn("[topbar] fetchAndDisplayWeather: unable to resolve location");
         const weatherEl = document.getElementById("topWeather");
-        if(weatherEl){
+        if (weatherEl) {
           weatherEl.innerHTML = `
             <a href="settings.html#weather" class="topWeatherSetLoc" aria-label="Set location for weather">
               <span class="topWeatherSetLocIcon">📍</span>
@@ -1485,17 +1485,17 @@
         `&daily=temperature_2m_max,temperature_2m_min` +
         `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
 
-      const res = await fetch(url, { cache:"no-store" });
-      if(!res.ok) return;
-      
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) return;
+
       const data = await res.json();
       const current = data.current || {};
       const daily = (data.daily?.temperature_2m_max || [])[0];
       const dailyMin = (data.daily?.temperature_2m_min || [])[0];
-      
+
       const weatherEl = document.getElementById("topWeather");
-      if(!weatherEl) return;
-      
+      if (!weatherEl) return;
+
       const temp = current.temperature_2m;
       const code = current.weather_code;
       const icon = getWeatherIcon(code);
@@ -1514,11 +1514,11 @@
           <div class="weatherLoc">${escapeHtml(loc.city || loc.label || "Current")}</div>
         </div>
       `;
-    }catch{/* best-effort only */}
+    } catch {/* best-effort only */ }
   }
 
   // Reusable component: News Card Header
-  function createCardHeader({ name, site, onOpen }){
+  function createCardHeader({ name, site, onOpen }) {
     const head = document.createElement("div");
     head.className = "cardHead";
 
@@ -1553,7 +1553,7 @@
     open.setAttribute("aria-label", `Open ${name} website`);
     open.title = `Open ${name}`;
     open.textContent = "↗";
-    if(onOpen){
+    if (onOpen) {
       open.addEventListener("click", () => onOpen(site));
     }
 
@@ -1564,7 +1564,7 @@
   }
 
   // Reusable component: Page Header
-  function createPageHeader({ title, subtitle, actions=[] }){
+  function createPageHeader({ title, subtitle, actions = [] }) {
     const header = document.createElement("section");
     header.className = "pageHead";
 
@@ -1573,7 +1573,7 @@
     h1.textContent = title;
     const sub = document.createElement("div");
     sub.className = "sub";
-    if(subtitle) sub.textContent = subtitle;
+    if (subtitle) sub.textContent = subtitle;
     titleSection.appendChild(h1);
     titleSection.appendChild(sub);
 
@@ -1603,8 +1603,8 @@
     { value: "UTC", label: "UTC", offset: 0 }
   ];
 
-  function formatTime(date, timezone){
-    try{
+  function formatTime(date, timezone) {
+    try {
       return new Intl.DateTimeFormat("en-US", {
         timeZone: timezone,
         hour: "numeric",
@@ -1612,39 +1612,39 @@
         second: "2-digit",
         hour12: true
       }).format(date);
-    }catch{
+    } catch {
       return date.toLocaleTimeString();
     }
   }
 
-  function formatDate(date, timezone){
-    try{
+  function formatDate(date, timezone) {
+    try {
       return new Intl.DateTimeFormat("en-US", {
         timeZone: timezone,
         weekday: "short",
         month: "short",
         day: "numeric"
       }).format(date);
-    }catch{
+    } catch {
       return date.toLocaleDateString();
     }
   }
 
-  function getTimezoneLabel(timezone){
+  function getTimezoneLabel(timezone) {
     const tz = TIMEZONES.find(t => t.value === timezone);
     return tz ? tz.label : timezone.split("/").pop();
   }
 
-  function getTimezoneAbbrev(timezone){
+  function getTimezoneAbbrev(timezone) {
     const full = getTimezoneLabel(timezone);       // e.g. "Eastern (ET)"
     const m = /\(([^)]+)\)/.exec(full);
     return m ? m[1] : full;                         // => "ET"
   }
-  
-  function maybeRenderLegacyTopbar(cfg){
+
+  function maybeRenderLegacyTopbar(cfg) {
     const topbar = document.getElementById("topbar");
-    if(!topbar) return;
-    if(topbar.classList.contains("hn-topbar")) return;
+    if (!topbar) return;
+    if (topbar.classList.contains("hn-topbar")) return;
     renderTopbar(cfg);
   }
 
@@ -1660,131 +1660,131 @@
       window.location.replace(cfg.startupPage + ".html");
     }
   }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once:true });
-  }else{
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => maybeRenderLegacyTopbar(cfg), { once: true });
+  } else {
     maybeRenderLegacyTopbar(cfg);
   }
 
-  function cacheSet(key, value){
-    try{
+  function cacheSet(key, value) {
+    try {
       localStorage.setItem(key, JSON.stringify(value));
-    }catch{}
+    } catch { }
   }
-  
-  function cacheGet(key){
-    try{
+
+  function cacheGet(key) {
+    try {
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
-    }catch{
+    } catch {
       return null;
     }
   }
 
-  function parseDateOnlyLocal(value){
-    if(typeof value !== "string") return null;
+  function parseDateOnlyLocal(value) {
+    if (typeof value !== "string") return null;
     const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(!m) return null;
+    if (!m) return null;
 
     const year = Number(m[1]);
     const month = Number(m[2]);
     const day = Number(m[3]);
-    if(!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
 
     return new Date(year, month - 1, day);
   }
 
-  function parseTimeValue(value){
-    if(typeof value === "number") return value;
-    if(typeof value !== "string") return NaN;
+  function parseTimeValue(value) {
+    if (typeof value === "number") return value;
+    if (typeof value !== "string") return NaN;
 
     const localDate = parseDateOnlyLocal(value);
-    if(localDate) return localDate.getTime();
+    if (localDate) return localDate.getTime();
 
     return Date.parse(value);
   }
-  
-  function cacheAgeMs(savedAt){
+
+  function cacheAgeMs(savedAt) {
     const t = parseTimeValue(savedAt);
     return Number.isFinite(t) ? (Date.now() - t) : Infinity;
   }
-  
-  function formatAge(ms){
-    if(!Number.isFinite(ms) || ms < 0) return "";
+
+  function formatAge(ms) {
+    if (!Number.isFinite(ms) || ms < 0) return "";
     const s = Math.floor(ms / 1000);
-    if(s < 60) return `${s}s`;
+    if (s < 60) return `${s}s`;
     const m = Math.floor(s / 60);
-    if(m < 60) return `${m}m`;
+    if (m < 60) return `${m}m`;
     const h = Math.floor(m / 60);
     return `${h}h`;
   }
 
   // Stock price fetching - uses multiple free APIs with fallback
-  async function fetchStockPrice(symbol){
+  async function fetchStockPrice(symbol) {
     const cacheKey = `stock:${symbol}`;
     const cached = getCached(cacheKey);
-    if(cached && Number.isFinite(Number(cached.price)) && Number(cached.price) > 0) return cached;
+    if (cached && Number.isFinite(Number(cached.price)) && Number(cached.price) > 0) return cached;
 
-    try{
+    try {
       // Normalize symbol: remove exchange prefix like NASDAQ:, BITSTAMP:, etc.
       const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
-      
+
       // Try Finnhub first (if API key is configured)
-      if(STOCK_API_KEYS.finnhub){
+      if (STOCK_API_KEYS.finnhub) {
         const result = await fetchStockPriceFromFinnhub(baseSymbol);
-        if(result){
+        if (result) {
           setCached(cacheKey, result);
           return result;
         }
       }
-      
+
       // Try Alpha Vantage (if API key is configured)
-      if(STOCK_API_KEYS.alphaVantage){
+      if (STOCK_API_KEYS.alphaVantage) {
         const result = await fetchStockPriceFromAlphaVantage(baseSymbol);
-        if(result){
+        if (result) {
           setCached(cacheKey, result);
           return result;
         }
       }
-      
+
       // Try IEX Cloud (if API key is configured)
-      if(STOCK_API_KEYS.iex){
+      if (STOCK_API_KEYS.iex) {
         const result = await fetchStockPriceFromIex(baseSymbol);
-        if(result){
+        if (result) {
           setCached(cacheKey, result);
           return result;
         }
       }
-      
+
       // Try Twelve Data free endpoint as last resort
       const result = await fetchStockPriceFromTwelveData(baseSymbol);
-      if(result){
+      if (result) {
         setCached(cacheKey, result);
         return result;
       }
 
       // Fallback: Yahoo chart endpoint (works for many mutual funds, incl. FNIPX)
       const yahooResult = await fetchStockPriceFromYahooChart(baseSymbol);
-      if(yahooResult){
+      if (yahooResult) {
         setCached(cacheKey, yahooResult);
         return yahooResult;
       }
 
       // Final fallback (no API key): Stooq end-of-day quote via CORS-friendly relay
       const stooqResult = await fetchStockPriceFromStooq(baseSymbol);
-      if(stooqResult){
+      if (stooqResult) {
         setCached(cacheKey, stooqResult);
         return stooqResult;
       }
-      
+
       return null;
-    }catch(error){
+    } catch (error) {
       handleError(error, "Stock Price Fetch");
       return null;
     }
   }
 
-  async function fetchStockCandles(symbol, options = {}){
+  async function fetchStockCandles(symbol, options = {}) {
     const resolution = String(options.resolution || "30");
     const days = Number.isFinite(options.days) ? options.days : 5;
 
@@ -1795,12 +1795,12 @@
     const from = to - Math.max(1, days) * 24 * 60 * 60;
     const cacheKey = `candles:${baseSymbol}:${resolution}:${from}:${to}`;
     const cached = getCached(cacheKey);
-    if(cached) return { data: cached, error: null, source: "cache" };
+    if (cached) return { data: cached, error: null, source: "cache" };
 
     let finnhubError = "";
-    if(STOCK_API_KEYS.finnhub){
+    if (STOCK_API_KEYS.finnhub) {
       const res = await fetchStockCandlesFromFinnhub(baseSymbol, resolution, from, to);
-      if(res.data){
+      if (res.data) {
         setCached(cacheKey, res.data);
         return { data: res.data, error: null, source: "finnhub" };
       }
@@ -1810,19 +1810,19 @@
     }
 
     const tdRes = await fetchStockCandlesFromTwelveData(baseSymbol, resolution, days);
-    if(tdRes.data){
+    if (tdRes.data) {
       setCached(cacheKey, tdRes.data);
       return { data: tdRes.data, error: null, source: "twelvedata" };
     }
 
     const yahooRes = await fetchStockCandlesFromYahooChart(baseSymbol, days);
-    if(yahooRes.data){
+    if (yahooRes.data) {
       setCached(cacheKey, yahooRes.data);
       return { data: yahooRes.data, error: null, source: "yahoo" };
     }
 
     const stooqRes = await fetchStockCandlesFromStooq(baseSymbol, days);
-    if(stooqRes.data){
+    if (stooqRes.data) {
       setCached(cacheKey, stooqRes.data);
       return { data: stooqRes.data, error: null, source: "stooq" };
     }
@@ -1833,22 +1833,22 @@
     return { data: null, error: `${finnhubError}; ${twelveError}; ${yahooError}; ${stooqError}`, source: null };
   }
 
-  async function fetchStockPriceFromYahooChart(symbol){
-    try{
+  async function fetchStockPriceFromYahooChart(symbol) {
+    try {
       const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
       const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
       const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return null;
+      if (!res.ok) return null;
 
       const payload = await res.json();
       const result = payload?.chart?.result?.[0];
-      if(!result) return null;
+      if (!result) return null;
 
       const closes = result?.indicators?.quote?.[0]?.close;
-      if(!Array.isArray(closes)) return null;
+      if (!Array.isArray(closes)) return null;
 
       const finiteCloses = closes.filter(v => Number.isFinite(Number(v))).map(v => Number(v));
-      if(finiteCloses.length === 0) return null;
+      if (finiteCloses.length === 0) return null;
 
       const last = finiteCloses[finiteCloses.length - 1];
       const prev = finiteCloses.length >= 2 ? finiteCloses[finiteCloses.length - 2] : null;
@@ -1870,48 +1870,48 @@
         low: Number.isFinite(lo) ? lo : null,
         timestamp: new Date().toISOString()
       };
-    }catch{
+    } catch {
       return null;
     }
   }
 
-  async function fetchStockCandlesFromYahooChart(symbol, days){
-    try{
+  async function fetchStockCandlesFromYahooChart(symbol, days) {
+    try {
       const range = Math.max(1, Number(days) || 5) <= 5 ? "1mo" : "3mo";
       const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
       const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
       const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return { data: null, error: `Yahoo error (${res.status})` };
+      if (!res.ok) return { data: null, error: `Yahoo error (${res.status})` };
 
       const payload = await res.json();
       const closes = payload?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-      if(!Array.isArray(closes)) return { data: null, error: "Yahoo: no data" };
+      if (!Array.isArray(closes)) return { data: null, error: "Yahoo: no data" };
 
       const points = closes.filter(v => Number.isFinite(Number(v))).map(v => Number(v));
-      if(points.length < 2) return { data: null, error: "Yahoo: invalid data" };
+      if (points.length < 2) return { data: null, error: "Yahoo: invalid data" };
 
       const desired = Math.max(5, Math.min(60, Math.round((Number(days) || 5) * 2)));
       return { data: points.slice(-desired), error: null };
-    }catch(err){
+    } catch (err) {
       return { data: null, error: `Yahoo fetch error (${err?.message || "unknown"})` };
     }
   }
 
-  function normalizeSymbolForStooq(symbol){
+  function normalizeSymbolForStooq(symbol) {
     const base = String(symbol || "").trim().toUpperCase();
-    if(!base) return "";
+    if (!base) return "";
     const cleaned = base.replace(/\./g, "-");
     return `${cleaned}.US`;
   }
 
-  function shouldSkipFinnhubSymbol(symbol){
+  function shouldSkipFinnhubSymbol(symbol) {
     const normalized = String(symbol || "").trim().toUpperCase();
-    if(!normalized) return true;
+    if (!normalized) return true;
 
     const base = normalized.includes(":") ? normalized.split(":").pop() : normalized;
 
     // Finnhub free plans commonly reject many index/futures/forex synthetic symbols.
-    if(base.startsWith("^") || base.includes("=") || base.includes("/")){
+    if (base.startsWith("^") || base.includes("=") || base.includes("/")) {
       return true;
     }
 
@@ -1919,23 +1919,23 @@
     return base.length >= 5 && base.endsWith("X");
   }
 
-  async function fetchStockPriceFromStooq(symbol){
-    try{
+  async function fetchStockPriceFromStooq(symbol) {
+    try {
       const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if(!stooqSymbol) return null;
+      if (!stooqSymbol) return null;
 
       const targetUrl = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSymbol)}&f=sd2t2ohlcv&h&e=csv`;
       const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
       const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return null;
+      if (!res.ok) return null;
 
       const csv = (await res.text()).trim();
       const rows = csv.split(/\r?\n/);
-      if(rows.length < 2) return null;
+      if (rows.length < 2) return null;
 
       const [sym, , , open, high, low, close] = rows[1].split(",").map(v => String(v || "").replace(/^"|"$/g, "").trim());
       const price = Number(close);
-      if(!Number.isFinite(price) || price <= 0) return null;
+      if (!Number.isFinite(price) || price <= 0) return null;
 
       const openNum = Number(open);
       const highNum = Number(high);
@@ -1954,24 +1954,24 @@
         low: Number.isFinite(lowNum) ? lowNum : null,
         timestamp: new Date().toISOString()
       };
-    }catch{
+    } catch {
       return null;
     }
   }
 
-  async function fetchStockCandlesFromStooq(symbol, days){
-    try{
+  async function fetchStockCandlesFromStooq(symbol, days) {
+    try {
       const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if(!stooqSymbol) return { data: null, error: "Stooq symbol invalid" };
+      if (!stooqSymbol) return { data: null, error: "Stooq symbol invalid" };
 
       const targetUrl = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqSymbol)}&i=d`;
       const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
       const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return { data: null, error: `Stooq error (${res.status})` };
+      if (!res.ok) return { data: null, error: `Stooq error (${res.status})` };
 
       const csv = (await res.text()).trim();
       const rows = csv.split(/\r?\n/);
-      if(rows.length < 3) return { data: null, error: "Stooq: no data" };
+      if (rows.length < 3) return { data: null, error: "Stooq: no data" };
 
       const closes = rows
         .slice(1)
@@ -1979,32 +1979,32 @@
         .map(v => Number(String(v || "").replace(/^"|"$/g, "").trim()))
         .filter(v => Number.isFinite(v));
 
-      if(closes.length < 2) return { data: null, error: "Stooq: invalid data" };
+      if (closes.length < 2) return { data: null, error: "Stooq: invalid data" };
 
       const desired = Math.max(5, Math.min(60, Math.round((Number(days) || 5) * 2)));
       const sliced = closes.slice(-desired);
       return { data: sliced, error: null };
-    }catch(err){
+    } catch (err) {
       return { data: null, error: `Stooq fetch error (${err?.message || "unknown"})` };
     }
   }
 
-  async function fetchStockCandlesFromFinnhub(symbol, resolution, from, to){
-    if(shouldSkipFinnhubSymbol(symbol)){
+  async function fetchStockCandlesFromFinnhub(symbol, resolution, from, to) {
+    if (shouldSkipFinnhubSymbol(symbol)) {
       return { data: null, error: "Finnhub skipped for unsupported fund symbol" };
     }
-    try{
+    try {
       const url = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${resolution}&from=${from}&to=${to}&token=${STOCK_API_KEYS.finnhub}`;
       const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok){
-        if(res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
-        if(res.status === 403) return { data: null, error: "Finnhub forbidden (403)" };
-        if(res.status === 429) return { data: null, error: "Finnhub rate limit (429)" };
+      if (!res.ok) {
+        if (res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
+        if (res.status === 403) return { data: null, error: "Finnhub forbidden (403)" };
+        if (res.status === 429) return { data: null, error: "Finnhub rate limit (429)" };
         return { data: null, error: `Finnhub error (${res.status})` };
       }
 
       const data = await res.json();
-      if(data.s !== "ok" || !Array.isArray(data.c) || data.c.length < 2){
+      if (data.s !== "ok" || !Array.isArray(data.c) || data.c.length < 2) {
         return { data: null, error: `Finnhub ${data.s || "no_data"}` };
       }
 
@@ -2012,30 +2012,30 @@
       const step = Math.max(1, Math.floor(data.c.length / maxPoints));
       const compact = data.c.filter((_, i) => i % step === 0);
       return { data: compact, error: null };
-    }catch(err){
+    } catch (err) {
       return { data: null, error: `Finnhub fetch error (${err?.message || "unknown"})` };
     }
   }
 
-  async function fetchStockCandlesFromTwelveData(symbol, resolution, days){
-    try{
+  async function fetchStockCandlesFromTwelveData(symbol, resolution, days) {
+    try {
       const apiKey = STOCK_API_KEYS.twelvedata || "";
-      if(!apiKey) return { data: null, error: "Twelve Data key not configured" };
+      if (!apiKey) return { data: null, error: "Twelve Data key not configured" };
 
       const interval = Number(resolution) >= 60 ? `${Math.round(Number(resolution) / 60)}h` : `${resolution}min`;
       const outputSize = Math.max(24, Math.min(240, Math.round(days * 24 * 60 / Math.max(1, Number(resolution)))));
       const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputSize}&apikey=${apiKey}`;
       const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok){
+      if (!res.ok) {
         return { data: null, error: `Twelve Data error (${res.status})` };
       }
 
       const data = await res.json();
-      if(data?.status === "error"){
+      if (data?.status === "error") {
         return { data: null, error: `Twelve Data: ${data?.message || "error"}` };
       }
 
-      if(!Array.isArray(data?.values) || data.values.length < 2){
+      if (!Array.isArray(data?.values) || data.values.length < 2) {
         return { data: null, error: "Twelve Data: no data" };
       }
 
@@ -2044,53 +2044,53 @@
         .filter(v => Number.isFinite(v))
         .reverse();
 
-      if(closes.length < 2) return { data: null, error: "Twelve Data: invalid data" };
+      if (closes.length < 2) return { data: null, error: "Twelve Data: invalid data" };
 
       const maxPoints = 60;
       const step = Math.max(1, Math.floor(closes.length / maxPoints));
       const compact = closes.filter((_, i) => i % step === 0);
       return { data: compact, error: null };
-    }catch(err){
+    } catch (err) {
       return { data: null, error: `Twelve Data fetch error (${err?.message || "unknown"})` };
     }
   }
 
   // Finnhub API
-  async function fetchStockPriceFromFinnhub(symbol){
-    if(shouldSkipFinnhubSymbol(symbol)){
+  async function fetchStockPriceFromFinnhub(symbol) {
+    if (shouldSkipFinnhubSymbol(symbol)) {
       return null;
     }
-    try{
+    try {
       const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${STOCK_API_KEYS.finnhub}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const res = await fetch(url, { 
+
+      const res = await fetch(url, {
         cache: "no-store",
         signal: controller.signal
       });
       clearTimeout(timeoutId);
-      
-      if(!res.ok){
+
+      if (!res.ok) {
         // 403 Forbidden = symbol not supported by Finnhub (e.g. mutual funds)
         // 401 Unauthorized = invalid API key
         // 429 Too Many Requests = rate limit hit
-        if(res.status === 403){
+        if (res.status === 403) {
           console.info(`Finnhub: ${symbol} not supported on this plan; trying fallback providers.`);
         } else {
           console.warn(`Finnhub error for ${symbol}: ${res.status}`);
         }
         return null;
       }
-      
+
       const data = await res.json();
-      if(data.error){
+      if (data.error) {
         console.warn(`Finnhub API error for ${symbol}:`, data.error);
         return null;
       }
-      
+
       const price = Number(data.c);
-      if(Number.isFinite(price) && price > 0){ 
+      if (Number.isFinite(price) && price > 0) {
         const prevClose = Number(data.pc);
         const safePrevClose = Number.isFinite(prevClose) && prevClose > 0 ? prevClose : null;
         const rawChange = Number(data.d);
@@ -2111,50 +2111,50 @@
         };
       }
       return null;
-    }catch(err){
+    } catch (err) {
       console.warn(`Finnhub fetch error for ${symbol}:`, err.message);
       return null;
     }
   }
 
   // Alpha Vantage API
-  async function fetchStockPriceFromAlphaVantage(symbol){
-    try{
+  async function fetchStockPriceFromAlphaVantage(symbol) {
+    try {
       const res = await fetch(
         `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${STOCK_API_KEYS.alphaVantage}`,
         { cache: "no-store" }
       );
-      if(res.ok){
+      if (res.ok) {
         const data = await res.json();
         const quote = data["Global Quote"];
-        if(quote && quote["05. price"]){
+        if (quote && quote["05. price"]) {
           return {
             symbol,
             price: parseFloat(quote["05. price"]),
             change: parseFloat(quote["09. change"]) || 0,
-            changePercent: parseFloat(quote["10. change percent"]?.replace('%','')) || 0,
+            changePercent: parseFloat(quote["10. change percent"]?.replace('%', '')) || 0,
             previousClose: parseFloat(quote["08. previous close"]),
             timestamp: new Date().toISOString()
           };
         }
       }
-    }catch{}
+    } catch { }
     return null;
   }
 
   // Try IEX Cloud free tier
-  async function fetchStockPriceFromIex(symbol){
-    try{
-      if(!STOCK_API_KEYS.iex){
+  async function fetchStockPriceFromIex(symbol) {
+    try {
+      if (!STOCK_API_KEYS.iex) {
         return null; // API key not configured
       }
       const res = await fetch(
         `https://cloud.iexapis.com/stable/quote/${encodeURIComponent(symbol)}?token=${STOCK_API_KEYS.iex}&displayPercent=true`,
         { cache: "no-store" }
       );
-      if(res.ok){
+      if (res.ok) {
         const data = await res.json();
-        if(data.latestPrice){
+        if (data.latestPrice) {
           return {
             symbol,
             price: data.latestPrice,
@@ -2168,27 +2168,27 @@
           };
         }
       }
-    }catch{}
+    } catch { }
     return null;
   }
 
   // Try Twelve Data free endpoint
-  async function fetchStockPriceFromTwelveData(symbol){
-    try{
+  async function fetchStockPriceFromTwelveData(symbol) {
+    try {
       const apiKey = STOCK_API_KEYS.twelvedata || "demo";
       const res = await fetch(
         `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`,
         { cache: "no-store" }
       );
-      if(!res.ok){
+      if (!res.ok) {
         return null;
       }
       const data = await res.json();
-      if(data?.status === "error"){
+      if (data?.status === "error") {
         return null;
       }
       const price = Number(data.price ?? data.close);
-      if(Number.isFinite(price) && price > 0){
+      if (Number.isFinite(price) && price > 0) {
         const rawChange = Number(data.change);
         const change = Number.isFinite(rawChange)
           ? rawChange
@@ -2211,7 +2211,7 @@
           timestamp: data.timestamp || new Date().toISOString()
         };
       }
-    }catch{}
+    } catch { }
     return null;
   }
 
@@ -2232,16 +2232,16 @@
   // Market movers fallback provider (works without a paid key using demo limits).
   const FMP_API_KEY = "demo";
 
-  function parsePercentLike(value){
-    if(value === null || value === undefined) return 0;
+  function parsePercentLike(value) {
+    if (value === null || value === undefined) return 0;
     const cleaned = String(value).replace(/[()%+]/g, "").trim();
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
   }
 
-  function normalizeFmpMover(item){
+  function normalizeFmpMover(item) {
     const symbol = String(item?.symbol || "").trim();
-    if(!symbol) return null;
+    if (!symbol) return null;
 
     const price = Number(item?.price);
     const change = Number(item?.change);
@@ -2256,18 +2256,18 @@
     };
   }
 
-  async function fetchFmpMovers(kind, limit){
-    try{
+  async function fetchFmpMovers(kind, limit) {
+    try {
       const route = String(kind || "").trim().toLowerCase();
-      if(!["gainers", "losers", "actives"].includes(route)) return null;
+      if (!["gainers", "losers", "actives"].includes(route)) return null;
 
       const url = `https://financialmodelingprep.com/api/v3/stock_market/${route}?apikey=${encodeURIComponent(FMP_API_KEY)}`;
       const proxied = `${RSS_PROXY_BASE}${encodeURIComponent(url)}`;
       const res = await fetch(proxied, { cache: "no-store" });
-      if(!res.ok) return null;
+      if (!res.ok) return null;
 
       const data = await res.json();
-      if(!Array.isArray(data) || data.length === 0) return null;
+      if (!Array.isArray(data) || data.length === 0) return null;
 
       const normalized = data
         .map(normalizeFmpMover)
@@ -2276,34 +2276,34 @@
         .slice(0, Math.max(1, Number(limit) || 5));
 
       return normalized.length > 0 ? normalized : null;
-    }catch(err){
+    } catch (err) {
       console.warn(`FMP ${kind} fetch failed:`, err?.message || err);
       return null;
     }
   }
 
-  async function fetchYahooMovers(scrId, limit){
-    try{
+  async function fetchYahooMovers(scrId, limit) {
+    try {
       const allowed = new Set(["day_gainers", "day_losers", "most_actives"]);
       const key = String(scrId || "").trim().toLowerCase();
-      if(!allowed.has(key)) return null;
+      if (!allowed.has(key)) return null;
 
       const count = Math.max(1, Math.min(25, Number(limit) || 5));
       const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?count=${count}&scrIds=${encodeURIComponent(key)}`;
       const proxied = `${RSS_PROXY_BASE}${encodeURIComponent(url)}`;
       const res = await fetch(proxied, { cache: "no-store" });
-      if(!res.ok) return null;
+      if (!res.ok) return null;
 
       const data = await res.json();
       const quotes = data?.finance?.result?.[0]?.quotes;
-      if(!Array.isArray(quotes) || quotes.length === 0) return null;
+      if (!Array.isArray(quotes) || quotes.length === 0) return null;
 
       const normalized = quotes.map((q) => {
         const symbol = String(q?.symbol || "").trim();
         const price = Number(q?.regularMarketPrice);
         const change = Number(q?.regularMarketChange);
         const changePercent = Number(q?.regularMarketChangePercent);
-        if(!symbol || !Number.isFinite(price)) return null;
+        if (!symbol || !Number.isFinite(price)) return null;
         return {
           symbol,
           name: String(q?.shortName || q?.longName || symbol).trim() || symbol,
@@ -2314,13 +2314,13 @@
       }).filter(Boolean);
 
       return normalized.length > 0 ? normalized.slice(0, count) : null;
-    }catch(err){
+    } catch (err) {
       console.warn(`Yahoo ${scrId} fetch failed:`, err?.message || err);
       return null;
     }
   }
 
-  function withMoverSource(items, source){
+  function withMoverSource(items, source) {
     return {
       items: Array.isArray(items) ? items : [],
       source: String(source || "unknown")
@@ -2331,17 +2331,17 @@
   async function fetchStockGainers() {
     const cacheKey = "market:gainers";
     const cached = getCached(cacheKey);
-    if(cached) return cached;
+    if (cached) return cached;
 
     try {
       // Try Alpha Vantage first for real market gainers
-      if(STOCK_API_KEYS.alphaVantage) {
+      if (STOCK_API_KEYS.alphaVantage) {
         const url = `https://www.alphavantage.co/query?function=TOP_GAINERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
         const res = await fetch(url, { cache: "no-store" });
-        
-        if(res.ok) {
+
+        if (res.ok) {
           const data = await res.json();
-          if(data.top_gainers && Array.isArray(data.top_gainers)) {
+          if (data.top_gainers && Array.isArray(data.top_gainers)) {
             const result = data.top_gainers.slice(0, 5).map(stock => ({
               symbol: stock.ticker,
               name: stock.symbol || stock.ticker,
@@ -2357,7 +2357,7 @@
       }
 
       const yahooGainers = await fetchYahooMovers("day_gainers", 5);
-      if(yahooGainers && yahooGainers.length > 0){
+      if (yahooGainers && yahooGainers.length > 0) {
         const payload = withMoverSource(yahooGainers, "yahoo");
         setCached(cacheKey, payload);
         return payload;
@@ -2365,29 +2365,29 @@
 
       // Secondary dynamic source: FMP market gainers list via proxy.
       const fmpGainers = await fetchFmpMovers("gainers", 5);
-      if(fmpGainers && fmpGainers.length > 0){
+      if (fmpGainers && fmpGainers.length > 0) {
         const payload = withMoverSource(fmpGainers, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }
-      
+
       // Fallback to fixed list with real prices
       const pricePromises = POPULAR_STOCKS.map(stock => fetchStockPrice(stock.symbol));
       const prices = await Promise.all(pricePromises);
-      
+
       const gainers = POPULAR_STOCKS
         .map((stock, i) => ({ ...stock, ...prices[i] }))
         .filter(s => s.price && s.changePercent !== undefined)
         .sort((a, b) => (b.changePercent || 0) - (a.changePercent || 0))
         .slice(0, 5);
-      
-      if(gainers.length > 0) {
+
+      if (gainers.length > 0) {
         const payload = withMoverSource(gainers, "preset-list");
         setCached(cacheKey, payload);
         return payload;
       }
       return null;
-    } catch(err) {
+    } catch (err) {
       console.error("Finnhub gainers fetch error:", err.message);
       return null;
     }
@@ -2396,17 +2396,17 @@
   async function fetchStockLosers() {
     const cacheKey = "market:losers";
     const cached = getCached(cacheKey);
-    if(cached) return cached;
+    if (cached) return cached;
 
     try {
       // Try Alpha Vantage first for real market losers
-      if(STOCK_API_KEYS.alphaVantage) {
+      if (STOCK_API_KEYS.alphaVantage) {
         const url = `https://www.alphavantage.co/query?function=TOP_LOSERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
         const res = await fetch(url, { cache: "no-store" });
-        
-        if(res.ok) {
+
+        if (res.ok) {
           const data = await res.json();
-          if(data.top_losers && Array.isArray(data.top_losers)) {
+          if (data.top_losers && Array.isArray(data.top_losers)) {
             const result = data.top_losers.slice(0, 5).map(stock => ({
               symbol: stock.ticker,
               name: stock.symbol || stock.ticker,
@@ -2422,7 +2422,7 @@
       }
 
       const yahooLosers = await fetchYahooMovers("day_losers", 5);
-      if(yahooLosers && yahooLosers.length > 0){
+      if (yahooLosers && yahooLosers.length > 0) {
         const payload = withMoverSource(yahooLosers, "yahoo");
         setCached(cacheKey, payload);
         return payload;
@@ -2430,29 +2430,29 @@
 
       // Secondary dynamic source: FMP market losers list via proxy.
       const fmpLosers = await fetchFmpMovers("losers", 5);
-      if(fmpLosers && fmpLosers.length > 0){
+      if (fmpLosers && fmpLosers.length > 0) {
         const payload = withMoverSource(fmpLosers, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }
-      
+
       // Fallback to fixed list with real prices
       const pricePromises = POPULAR_STOCKS.map(stock => fetchStockPrice(stock.symbol));
       const prices = await Promise.all(pricePromises);
-      
+
       const losers = POPULAR_STOCKS
         .map((stock, i) => ({ ...stock, ...prices[i] }))
         .filter(s => s.price && s.changePercent !== undefined)
         .sort((a, b) => (a.changePercent || 0) - (b.changePercent || 0))
         .slice(0, 5);
-      
-      if(losers.length > 0) {
+
+      if (losers.length > 0) {
         const payload = withMoverSource(losers, "preset-list");
         setCached(cacheKey, payload);
         return payload;
       }
       return null;
-    } catch(err) {
+    } catch (err) {
       console.error("Finnhub losers fetch error:", err.message);
       return null;
     }
@@ -2461,33 +2461,33 @@
   async function fetchStockMovers() {
     const cacheKey = "market:movers";
     const cached = getCached(cacheKey);
-    if(cached) return cached;
+    if (cached) return cached;
 
     try {
       // Combine both gainers and losers data to get most active/volatile stocks
       let allStocks = [];
-      
-      if(STOCK_API_KEYS.alphaVantage) {
+
+      if (STOCK_API_KEYS.alphaVantage) {
         try {
           const gainerUrl = `https://www.alphavantage.co/query?function=TOP_GAINERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
           const gainerRes = await fetch(gainerUrl, { cache: "no-store" });
-          if(gainerRes.ok) {
+          if (gainerRes.ok) {
             const gainerData = await gainerRes.json();
-            if(gainerData.top_gainers) {
+            if (gainerData.top_gainers) {
               allStocks = allStocks.concat(gainerData.top_gainers.slice(0, 3));
             }
           }
-          
+
           const loserUrl = `https://www.alphavantage.co/query?function=TOP_LOSERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
           const loserRes = await fetch(loserUrl, { cache: "no-store" });
-          if(loserRes.ok) {
+          if (loserRes.ok) {
             const loserData = await loserRes.json();
-            if(loserData.top_losers) {
+            if (loserData.top_losers) {
               allStocks = allStocks.concat(loserData.top_losers.slice(0, 3));
             }
           }
-          
-          if(allStocks.length > 0) {
+
+          if (allStocks.length > 0) {
             const result = allStocks.slice(0, 6).map(stock => ({
               symbol: stock.ticker,
               name: stock.symbol || stock.ticker,
@@ -2499,13 +2499,13 @@
             setCached(cacheKey, payload);
             return payload;
           }
-        } catch(err) {
+        } catch (err) {
           console.warn("Alpha Vantage movers failed, falling back:", err.message);
         }
       }
 
       const yahooActives = await fetchYahooMovers("most_actives", 6);
-      if(yahooActives && yahooActives.length > 0){
+      if (yahooActives && yahooActives.length > 0) {
         const payload = withMoverSource(yahooActives, "yahoo");
         setCached(cacheKey, payload);
         return payload;
@@ -2513,29 +2513,29 @@
 
       // Secondary dynamic source: FMP most-active list.
       const fmpActives = await fetchFmpMovers("actives", 6);
-      if(fmpActives && fmpActives.length > 0){
+      if (fmpActives && fmpActives.length > 0) {
         const payload = withMoverSource(fmpActives, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }
-      
+
       // Fallback to fixed list with real prices, sorted by volatility
       const pricePromises = POPULAR_STOCKS.map(stock => fetchStockPrice(stock.symbol));
       const prices = await Promise.all(pricePromises);
-      
+
       const movers = POPULAR_STOCKS
         .map((stock, i) => ({ ...stock, ...prices[i] }))
         .filter(s => s.price && s.changePercent !== undefined)
         .sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0))
         .slice(0, 6);
-      
-      if(movers.length > 0) {
+
+      if (movers.length > 0) {
         const payload = withMoverSource(movers, "preset-list");
         setCached(cacheKey, payload);
         return payload;
       }
       return null;
-    } catch(err) {
+    } catch (err) {
       console.error("Finnhub movers fetch error:", err.message);
       return null;
     }
@@ -2551,22 +2551,22 @@
 
   // Lightweight city-name geocoding via Open-Meteo (no API key needed).
   // Powers the location picker's "City Name" tab.
-  async function geocodeCityName(query){
+  async function geocodeCityName(query) {
     const q = String(query || "").trim();
-    if(!q) return null;
+    if (!q) return null;
     try {
       const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
       const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok) return null;
+      if (!res.ok) return null;
       const j = await res.json();
       const row = Array.isArray(j?.results) ? j.results[0] : null;
-      if(!row) return null;
+      if (!row) return null;
       const city = String(row.name || "").trim();
       const state = String(row.admin1 || "").trim();
       const label = [city, abbreviateState(state)].filter(Boolean).join(", ") || city;
       const lat = Number(row.latitude);
       const lon = Number(row.longitude);
-      if(!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
       return { city, state, lat, lon, label, zipCode: "" };
     } catch (err) {
       console.warn("[geocodeCity] failed:", err?.message || err);
@@ -2586,21 +2586,21 @@
   // resolvePreferredLocation handles partial overrides gracefully.
   const ACTIVE_LOC_KEY = "hn_active_location_v1";
 
-  function getActiveLocationOverride(){
+  function getActiveLocationOverride() {
     try {
       const raw = sessionStorage.getItem(ACTIVE_LOC_KEY);
-      if(!raw) return null;
+      if (!raw) return null;
       const obj = JSON.parse(raw);
       // Must have at least coords or a ZIP to be useful.
       const hasCoords = Number.isFinite(Number(obj?.lat)) && Number.isFinite(Number(obj?.lon));
       const hasZip = typeof obj?.zip === "string" && /^\d{5}$/.test(obj.zip);
-      if(!hasCoords && !hasZip) return null;
+      if (!hasCoords && !hasZip) return null;
       return obj;
     } catch { return null; }
   }
 
-  function setActiveLocationOverride(loc){
-    if(!loc) return;
+  function setActiveLocationOverride(loc) {
+    if (!loc) return;
     try {
       sessionStorage.setItem(ACTIVE_LOC_KEY, JSON.stringify(loc));
       window.dispatchEvent(new CustomEvent("hn:locationchange", { detail: { override: loc, cleared: false } }));
@@ -2609,27 +2609,27 @@
     }
   }
 
-  function clearActiveLocationOverride(){
+  function clearActiveLocationOverride() {
     try {
       sessionStorage.removeItem(ACTIVE_LOC_KEY);
       window.dispatchEvent(new CustomEvent("hn:locationchange", { detail: { override: null, cleared: true } }));
-    } catch {}
+    } catch { }
   }
 
   // Renders / updates a thin banner across the top of every page whenever a
   // session location override is active. Shows the override label and a
   // "Reset to home" link. Hidden (and CSS var cleared) when at home.
-  function renderLocationOverrideBanner(){
-    if(typeof document === "undefined") return;
+  function renderLocationOverrideBanner() {
+    if (typeof document === "undefined") return;
     const override = getActiveLocationOverride();
     let bar = document.getElementById("locationOverrideBar");
-    if(!override){
-      if(bar) bar.remove();
+    if (!override) {
+      if (bar) bar.remove();
       document.documentElement.style.removeProperty("--hn-override-height");
       document.documentElement.removeAttribute("data-override-active");
       return;
     }
-    if(!bar){
+    if (!bar) {
       bar = document.createElement("div");
       bar.id = "locationOverrideBar";
       bar.className = "locationOverrideBar";
@@ -2652,9 +2652,9 @@
   }
 
   // Render on DOM ready and on every change.
-  function initLocationOverrideBanner(){
-    if(typeof document === "undefined") return;
-    if(document.readyState === "loading"){
+  function initLocationOverrideBanner() {
+    if (typeof document === "undefined") return;
+    if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", renderLocationOverrideBanner, { once: true });
     } else {
       renderLocationOverrideBanner();
@@ -2675,8 +2675,8 @@
   // The modal fires "hn:locationchange" via setActiveLocationOverride /
   // clearActiveLocationOverride so pages can re-render. Optional onApply
   // callback fires the chosen geo for callers that want immediate action.
-  function openLocationPicker(options = {}){
-    if(document.getElementById("locationPickerModal")) return;
+  function openLocationPicker(options = {}) {
+    if (document.getElementById("locationPickerModal")) return;
     const onApply = typeof options?.onApply === "function" ? options.onApply : null;
 
     const modal = document.createElement("div");
@@ -2735,21 +2735,21 @@
     let pendingGeo = null;
     const closeModal = () => modal.remove();
 
-    function showStatus(id, msg, type = ""){
+    function showStatus(id, msg, type = "") {
       const el = document.getElementById(id);
-      if(!el) return;
+      if (!el) return;
       el.textContent = msg;
       el.className = "locationPickerStatus" + (type ? " " + type : "");
     }
-    function showConfirm(geo, label){
+    function showConfirm(geo, label) {
       pendingGeo = geo;
       const box = document.getElementById("locationPickerConfirmBox");
       const found = document.getElementById("locationPickerFound");
-      if(box && found){ found.textContent = "Found: " + label; box.hidden = false; }
+      if (box && found) { found.textContent = "Found: " + label; box.hidden = false; }
     }
-    function hideConfirm(){
+    function hideConfirm() {
       const box = document.getElementById("locationPickerConfirmBox");
-      if(box) box.hidden = true;
+      if (box) box.hidden = true;
       pendingGeo = null;
     }
 
@@ -2768,50 +2768,50 @@
       });
     });
 
-    async function doZipLookup(){
+    async function doZipLookup() {
       const val = (document.getElementById("locationZipInput")?.value || "").trim();
-      if(!/^\d{5}$/.test(val)){ showStatus("locationZipStatus", "Enter a 5-digit ZIP code.", "isError"); return; }
+      if (!/^\d{5}$/.test(val)) { showStatus("locationZipStatus", "Enter a 5-digit ZIP code.", "isError"); return; }
       showStatus("locationZipStatus", "Looking up…"); hideConfirm();
       try {
         const geo = await geocodeZip(val);
-        if(geo?.lat && geo?.lon){
+        if (geo?.lat && geo?.lon) {
           const label = geo.city && geo.state ? `${geo.city}, ${abbreviateState(geo.state)}` : val;
           showStatus("locationZipStatus", "");
           showConfirm({ ...geo, label, source: "manual-zip", _zip: val }, label);
         } else {
           showStatus("locationZipStatus", "No location found for that ZIP.", "isError");
         }
-      } catch (err){
+      } catch (err) {
         showStatus("locationZipStatus", "Lookup failed. Try again.", "isError");
         console.error("[locationPicker] ZIP error:", err);
       }
     }
     document.getElementById("locationZipLookupBtn")?.addEventListener("click", doZipLookup);
-    document.getElementById("locationZipInput")?.addEventListener("keydown", e => { if(e.key === "Enter") doZipLookup(); });
+    document.getElementById("locationZipInput")?.addEventListener("keydown", e => { if (e.key === "Enter") doZipLookup(); });
 
-    async function doCityLookup(){
+    async function doCityLookup() {
       const val = (document.getElementById("locationCityInput")?.value || "").trim();
-      if(!val){ showStatus("locationCityStatus", "Enter a city name.", "isError"); return; }
+      if (!val) { showStatus("locationCityStatus", "Enter a city name.", "isError"); return; }
       showStatus("locationCityStatus", "Looking up…"); hideConfirm();
       try {
         const geo = await geocodeCityName(val);
-        if(geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)){
+        if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
           const label = geo.label || val;
           showStatus("locationCityStatus", "");
           showConfirm({ ...geo, source: "manual-city" }, label);
         } else {
           showStatus("locationCityStatus", "City not found. Try 'City, ST' format.", "isError");
         }
-      } catch (err){
+      } catch (err) {
         showStatus("locationCityStatus", "Lookup failed. Try again.", "isError");
         console.error("[locationPicker] City error:", err);
       }
     }
     document.getElementById("locationCityLookupBtn")?.addEventListener("click", doCityLookup);
-    document.getElementById("locationCityInput")?.addEventListener("keydown", e => { if(e.key === "Enter") doCityLookup(); });
+    document.getElementById("locationCityInput")?.addEventListener("keydown", e => { if (e.key === "Enter") doCityLookup(); });
 
     document.getElementById("locationGpsBtn")?.addEventListener("click", async () => {
-      if(!("geolocation" in navigator)){ showStatus("locationGpsStatus", "GPS is not available in this browser.", "isError"); return; }
+      if (!("geolocation" in navigator)) { showStatus("locationGpsStatus", "GPS is not available in this browser.", "isError"); return; }
       showStatus("locationGpsStatus", "Requesting location…"); hideConfirm();
       try {
         const gp = window.App?.getCurrentPositionAsync;
@@ -2820,13 +2820,13 @@
           : await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }));
         const lat = Number(pos?.coords?.latitude);
         const lon = Number(pos?.coords?.longitude);
-        if(!Number.isFinite(lat) || !Number.isFinite(lon)){ showStatus("locationGpsStatus", "Could not read GPS coordinates.", "isError"); return; }
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) { showStatus("locationGpsStatus", "Could not read GPS coordinates.", "isError"); return; }
         showStatus("locationGpsStatus", "Resolving address…");
         const rev = typeof rg === "function" ? await rg(lat, lon) : null;
         const label = rev?.label || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
         showStatus("locationGpsStatus", "");
         showConfirm({ lat, lon, city: rev?.city || "", state: rev?.state || "", label, source: "gps", zipCode: rev?.zipCode || "" }, label);
-      } catch (err){
+      } catch (err) {
         const denied = err?.code === 1 || /denied/i.test(err?.message || "");
         showStatus("locationGpsStatus",
           denied ? "Location permission denied. Allow access in your browser settings." : "GPS lookup failed. Try again.",
@@ -2836,15 +2836,15 @@
     });
 
     document.getElementById("locationPickerApplyBtn")?.addEventListener("click", () => {
-      if(!pendingGeo) return;
+      if (!pendingGeo) return;
       const saveAsHome = document.getElementById("locationPickerSaveCheck")?.checked;
       const geo = pendingGeo;
 
-      if(saveAsHome){
+      if (saveAsHome) {
         // Update cfg's saved home location and clear any active override.
         const liveCfg = window.App?.cfg || cfg;
         const next = { ...liveCfg };
-        if(geo.source === "manual-zip" && geo._zip){
+        if (geo.source === "manual-zip" && geo._zip) {
           next.zipCode = geo._zip;
           next.useDeviceLocation = false;
         } else {
@@ -2853,7 +2853,7 @@
           next.deviceLon = Number(geo.lon);
           next.deviceLocationLabel = geo.label;
         }
-        if(geo.zipCode && /^\d{5}$/.test(geo.zipCode)) next.zipCode = geo.zipCode;
+        if (geo.zipCode && /^\d{5}$/.test(geo.zipCode)) next.zipCode = geo.zipCode;
         saveConfig(next);
         clearActiveLocationOverride();
       } else {
@@ -2868,13 +2868,13 @@
         });
       }
       closeModal();
-      try { onApply?.(geo, saveAsHome); } catch {}
+      try { onApply?.(geo, saveAsHome); } catch { }
     });
 
     document.getElementById("locationPickerCancelBtn")?.addEventListener("click", hideConfirm);
     document.getElementById("locationPickerClose")?.addEventListener("click", closeModal);
-    modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
-    modal.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+    modal.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -2888,13 +2888,13 @@
   let localStationsCache = null;
   let localStationsPromise = null;
 
-  async function loadLocalStations(){
-    if(localStationsCache) return localStationsCache;
-    if(localStationsPromise) return localStationsPromise;
+  async function loadLocalStations() {
+    if (localStationsCache) return localStationsCache;
+    if (localStationsPromise) return localStationsPromise;
     localStationsPromise = (async () => {
       try {
         const res = await fetch("/data/local-stations.json", { cache: "default" });
-        if(!res.ok) throw new Error(`stations fetch failed: ${res.status}`);
+        if (!res.ok) throw new Error(`stations fetch failed: ${res.status}`);
         const data = await res.json();
         localStationsCache = (data && typeof data === "object") ? data : { states: {} };
       } catch (err) {
@@ -2912,13 +2912,13 @@
   // entry. Different from `getStationsForGeo(...).length > 0` because that
   // mixes in statewide entries; we want to know specifically whether we have
   // *hyperlocal* coverage, since statewide-only doesn't satisfy "near me".
-  async function hasCitySources(geo){
-    if(!geo?.state || !geo?.city) return false;
+  async function hasCitySources(geo) {
+    if (!geo?.state || !geo?.city) return false;
     const data = await loadLocalStations();
     // abbreviateState normalizes "Michigan"/"US-MI"/"mi" → "MI" so we can
     // look up the JSON's two-letter keys regardless of how geo was stored.
     const state = data?.states?.[abbreviateState(geo.state).toUpperCase()];
-    if(!state) return false;
+    if (!state) return false;
     const cityBlock = state[String(geo.city).toLowerCase()];
     return entriesFromBlock(cityBlock).length > 0;
   }
@@ -2927,9 +2927,9 @@
   // plain arrays to { coords, entries: [...] }; both shapes are tolerated so a
   // contributor who omits coords doesn't break the picker (they just miss out
   // on the nearest-city fallback).
-  function entriesFromBlock(block){
-    if(Array.isArray(block)) return block;
-    if(block && Array.isArray(block.entries)) return block.entries;
+  function entriesFromBlock(block) {
+    if (Array.isArray(block)) return block;
+    if (block && Array.isArray(block.entries)) return block.entries;
     return [];
   }
 
@@ -2938,16 +2938,16 @@
   // For local scope, returns the city's entries plus the state's `_state`
   // entries (so a hyperlocal user still sees the statewide paper). For
   // regional, returns only the `_state` entries.
-  async function getStationsForGeo(geo, scope){
-    if(!geo?.state) return [];
+  async function getStationsForGeo(geo, scope) {
+    if (!geo?.state) return [];
     const data = await loadLocalStations();
     // Normalize "Michigan"/"US-MI"/"mi" → "MI" so the JSON's two-letter
     // keys resolve regardless of how the caller stored the state.
     const stateKey = abbreviateState(geo.state).toUpperCase();
     const state = data?.states?.[stateKey];
-    if(!state) return [];
+    if (!state) return [];
     const out = [];
-    if(scope === "local"){
+    if (scope === "local") {
       const cityKey = String(geo.city || "").toLowerCase();
       out.push(...entriesFromBlock(state[cityKey]));
     }
@@ -2956,7 +2956,7 @@
     const seen = new Set();
     return out.filter(s => {
       const k = String(s?.rss || "").toLowerCase();
-      if(!k || seen.has(k)) return false;
+      if (!k || seen.has(k)) return false;
       seen.add(k);
       return true;
     });
@@ -2969,18 +2969,18 @@
   // picker's web-search section hidden; if a viable query-based news RSS
   // ever surfaces, swap this body to build feeds again and the rest of
   // the picker wiring will pick it up.
-  function getWebSearchFeeds(/* geo, scope */){
+  function getWebSearchFeeds(/* geo, scope */) {
     return [];
   }
 
   // Great-circle distance in miles between two lat/lon points.
-  function haversineMiles(lat1, lon1, lat2, lon2){
+  function haversineMiles(lat1, lon1, lat2, lon2) {
     const toRad = d => d * Math.PI / 180;
     const R = 3958.7613; // mean Earth radius in miles
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2) ** 2
-            + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+    const a = Math.sin(dLat / 2) ** 2
+      + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
   }
 
@@ -2989,22 +2989,22 @@
   // coords participate; the synthetic `_state` block is excluded since picking
   // "the whole state of Texas" isn't a useful local fallback. Used by the
   // source picker to offer a fallback when the user's exact city isn't covered.
-  async function getNearestCities(lat, lon, limit = 3){
-    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
+  async function getNearestCities(lat, lon, limit = 3) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
     const data = await loadLocalStations();
     const states = data?.states;
-    if(!states) return [];
+    if (!states) return [];
     const candidates = [];
-    for(const stateKey of Object.keys(states)){
+    for (const stateKey of Object.keys(states)) {
       const stateBlock = states[stateKey];
-      if(!stateBlock || typeof stateBlock !== "object") continue;
-      for(const innerKey of Object.keys(stateBlock)){
-        if(innerKey === "_state") continue;
+      if (!stateBlock || typeof stateBlock !== "object") continue;
+      for (const innerKey of Object.keys(stateBlock)) {
+        if (innerKey === "_state") continue;
         const block = stateBlock[innerKey];
         const coords = block && typeof block === "object" ? block.coords : null;
-        if(!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
+        if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
         const entries = entriesFromBlock(block);
-        if(!entries.length) continue;
+        if (!entries.length) continue;
         const distanceMi = haversineMiles(lat, lon, coords.lat, coords.lon);
         candidates.push({
           state: stateKey,
@@ -3023,19 +3023,19 @@
   // Same idea as getNearestCities but ranges over statewide blocks. Used by
   // the regional picker fallback when the user's state isn't in the repo —
   // e.g., someone in Idaho gets offered Oregon / Washington / Utah.
-  async function getNearestStates(lat, lon, limit = 3){
-    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
+  async function getNearestStates(lat, lon, limit = 3) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
     const data = await loadLocalStations();
     const states = data?.states;
-    if(!states) return [];
+    if (!states) return [];
     const candidates = [];
-    for(const stateKey of Object.keys(states)){
+    for (const stateKey of Object.keys(states)) {
       const stateBlock = states[stateKey];
       const stateNode = stateBlock?._state;
       const coords = stateNode && typeof stateNode === "object" ? stateNode.coords : null;
-      if(!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
+      if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) continue;
       const entries = entriesFromBlock(stateNode);
-      if(!entries.length) continue;
+      if (!entries.length) continue;
       candidates.push({
         state: stateKey,
         displayState: expandStateName ? (expandStateName(stateKey) || stateKey) : stateKey,
@@ -3048,25 +3048,25 @@
     return candidates.slice(0, Math.max(0, limit));
   }
 
-  async function discoverSourcesForScope(scope){
+  async function discoverSourcesForScope(scope) {
     const liveCfg = window.App?.cfg || cfg;
     // Honors GPS, saved device coords, OR ZIP — same resolver weather.js uses.
     let geo = null;
     try {
-      if(typeof window.App?.resolvePreferredLocation === "function"){
+      if (typeof window.App?.resolvePreferredLocation === "function") {
         const loc = await window.App.resolvePreferredLocation({ cfg: liveCfg, autoDetect: false });
-        if(loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon))){
+        if (loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon))) {
           geo = { lat: Number(loc.lat), lon: Number(loc.lon), city: loc.city || "", state: loc.state || "" };
         }
       }
-    } catch {}
-    if(!geo){
+    } catch { }
+    if (!geo) {
       const zip = liveCfg?.zipCode;
-      if(zip && /^\d{5}$/.test(zip)){
-        try { geo = await geocodeZip(zip); } catch {}
+      if (zip && /^\d{5}$/.test(zip)) {
+        try { geo = await geocodeZip(zip); } catch { }
       }
     }
-    if(!geo) return { results: [], geo: null };
+    if (!geo) return { results: [], geo: null };
     // Normalize "Michigan"/"US-MI"/"mi" → "MI" so we can look up the
     // bundled subreddit list with the JSON's two-letter keys.
     const stateAbbr = abbreviateState(geo.state).toUpperCase();
@@ -3090,7 +3090,7 @@
     const merged = [];
     const addSub = (name) => {
       const key = String(name || "").trim();
-      if(!key || seen.has(key.toLowerCase())) return;
+      if (!key || seen.has(key.toLowerCase())) return;
       seen.add(key.toLowerCase());
       merged.push({
         displayName: key,
@@ -3101,23 +3101,23 @@
       });
     };
     // City subs first (more locally relevant), statewide second.
-    for(const s of citySubs) addSub(s);
-    for(const s of stateSubs) addSub(s);
+    for (const s of citySubs) addSub(s);
+    for (const s of stateSubs) addSub(s);
 
     return { results: merged.slice(0, 10), geo: { ...geo, fullState } };
   }
 
-  function defaultPickedSubs(results, geo){
+  function defaultPickedSubs(results, geo) {
     const picks = new Set();
     const cityL = (geo?.city || "").toLowerCase();
     const fullL = (geo?.fullState || "").toLowerCase();
-    for(const r of results){
+    for (const r of results) {
       const n = r.displayName.toLowerCase();
-      if(cityL && n.includes(cityL)) picks.add(r.displayName);
-      if(fullL && n === fullL.replace(/\s/g, "")) picks.add(r.displayName);
+      if (cityL && n.includes(cityL)) picks.add(r.displayName);
+      if (fullL && n === fullL.replace(/\s/g, "")) picks.add(r.displayName);
     }
-    if(picks.size === 0){
-      for(const r of results.slice(0, 2)) picks.add(r.displayName);
+    if (picks.size === 0) {
+      for (const r of results.slice(0, 2)) picks.add(r.displayName);
     }
     return picks;
   }
@@ -3125,9 +3125,9 @@
   // Modal that lets the user curate which Reddit subs (and any custom RSS
   // URLs) feed the local/regional scopes. Calls `onSaved` after the user
   // saves or skips so the caller can re-render its UI.
-  async function openSourcePicker(scope, onSaved){
-    if(scope !== "local" && scope !== "regional") return; // not supported (yet)
-    if(document.getElementById("hnSourcePicker")) return; // block reentry
+  async function openSourcePicker(scope, onSaved) {
+    if (scope !== "local" && scope !== "regional") return; // not supported (yet)
+    if (document.getElementById("hnSourcePicker")) return; // block reentry
 
     const overlay = document.createElement("div");
     overlay.id = "hnSourcePicker";
@@ -3138,7 +3138,7 @@
     overlay.innerHTML = `
       <div class="hnPickerSheet">
         <div class="hnPickerHead">
-          <h2 id="hnPickerTitle" class="hnPickerTitle">${scope === "local" ? "Sources Near You" : "State & Regional Sources"}</h2>
+          <h2 id="hnPickerTitle" class="hnPickerTitle">${scope === "local" ? "News Sources Near You" : "State & Regional Sources"}</h2>
           <button type="button" class="hnPickerClose" aria-label="Close">×</button>
         </div>
         <div class="hnPickerBody">
@@ -3177,19 +3177,19 @@
     document.body.appendChild(overlay);
 
     const closeBtn = overlay.querySelector(".hnPickerClose");
-    const listEl   = overlay.querySelector("#hnPickerList");
+    const listEl = overlay.querySelector("#hnPickerList");
     const stationsSection = overlay.querySelector("#hnPickerStationsSection");
-    const stationsListEl  = overlay.querySelector("#hnPickerStations");
+    const stationsListEl = overlay.querySelector("#hnPickerStations");
     const fallbackSection = overlay.querySelector("#hnPickerFallbackSection");
-    const fallbackListEl  = overlay.querySelector("#hnPickerFallbackList");
-    const webSection      = overlay.querySelector("#hnPickerWebSection");
-    const webListEl       = overlay.querySelector("#hnPickerWebList");
-    const leadEl   = overlay.querySelector("#hnPickerLead");
+    const fallbackListEl = overlay.querySelector("#hnPickerFallbackList");
+    const webSection = overlay.querySelector("#hnPickerWebSection");
+    const webListEl = overlay.querySelector("#hnPickerWebList");
+    const leadEl = overlay.querySelector("#hnPickerLead");
     const customIn = overlay.querySelector("#hnPickerCustomInput");
-    const customAdd= overlay.querySelector("#hnPickerCustomAdd");
+    const customAdd = overlay.querySelector("#hnPickerCustomAdd");
     const customLi = overlay.querySelector("#hnPickerCustomList");
-    const saveBtn  = overlay.querySelector("#hnPickerSave");
-    const skipBtn  = overlay.querySelector("#hnPickerSkip");
+    const saveBtn = overlay.querySelector("#hnPickerSave");
+    const skipBtn = overlay.querySelector("#hnPickerSkip");
 
     const customSources = [];
     let suggestions = [];
@@ -3197,11 +3197,11 @@
     let webFeeds = [];
     let preChecked = new Set();
 
-    function close(){ overlay.remove(); }
+    function close() { overlay.remove(); }
     closeBtn.addEventListener("click", close);
-    overlay.addEventListener("click", (e) => { if(e.target === overlay) close(); });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 
-    function renderCustomList(){
+    function renderCustomList() {
       customLi.innerHTML = "";
       customSources.forEach((src, idx) => {
         const row = document.createElement("div");
@@ -3220,22 +3220,22 @@
 
     customAdd.addEventListener("click", () => {
       const url = customIn.value.trim();
-      if(!url) return;
-      try{ new URL(url); }catch{ leadEl.textContent = "That doesn't look like a valid URL."; return; }
+      if (!url) return;
+      try { new URL(url); } catch { leadEl.textContent = "That doesn't look like a valid URL."; return; }
       const name = url.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
       customSources.push({ name, rss: url });
       customIn.value = "";
       renderCustomList();
     });
-    customIn.addEventListener("keydown", (e) => { if(e.key === "Enter"){ e.preventDefault(); customAdd.click(); } });
+    customIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); customAdd.click(); } });
 
     skipBtn.addEventListener("click", () => {
       const next = { ...window.App.cfg };
-      if(scope === "local") next.localSourcesSkipped = true;
+      if (scope === "local") next.localSourcesSkipped = true;
       else next.regionalSourcesSkipped = true;
       saveConfig(next);
       close();
-      try { onSaved?.(); } catch {}
+      try { onSaved?.(); } catch { }
     });
 
     saveBtn.addEventListener("click", () => {
@@ -3260,16 +3260,16 @@
         ...checkedSubs.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
         ...customSources.map(s => ({ name: s.name, rss: s.rss, site: "", headlinesCount: 8 }))
       ];
-      if(sources.length === 0){
+      if (sources.length === 0) {
         leadEl.textContent = "Pick at least one source, or click Skip to use auto search.";
         return;
       }
       const next = { ...window.App.cfg };
-      if(scope === "local"){ next.localSources = sources; next.localSourcesSkipped = false; }
+      if (scope === "local") { next.localSources = sources; next.localSourcesSkipped = false; }
       else { next.regionalSources = sources; next.regionalSourcesSkipped = false; }
       saveConfig(next);
       close();
-      try { onSaved?.(); } catch {}
+      try { onSaved?.(); } catch { }
     });
 
     // Run station catalog lookup and Reddit discovery in parallel.
@@ -3285,7 +3285,7 @@
       discoverSourcesForScope(scope)
     ]);
     const { results, geo } = discoverRes;
-    if(!geo){
+    if (!geo) {
       // Don't dead-end the user. Replace the lead with a clear CTA that
       // opens the location picker inline. After they Apply, we re-run the
       // discovery in place so the source picker populates without them
@@ -3300,7 +3300,7 @@
       stationsSection.hidden = true;
       listEl.innerHTML = "";
       overlay.querySelector("#hnPickerSetLocationBtn")?.addEventListener("click", () => {
-        if(typeof window.App?.openLocationPicker !== "function") return;
+        if (typeof window.App?.openLocationPicker !== "function") return;
         window.App.openLocationPicker({
           onApply: async () => {
             // Re-run discovery now that location is set. Reuses the same
@@ -3309,14 +3309,14 @@
             const fresh = await discoverSourcesForScope(scope);
             const newGeo = fresh.geo;
             const newResults = fresh.results;
-            if(!newGeo){
+            if (!newGeo) {
               leadEl.textContent = "Couldn't resolve that location. Try again or add a custom RSS URL below.";
               return;
             }
             try { stations = await getStationsForGeo(newGeo, scope); } catch { stations = []; }
             try { webFeeds = getWebSearchFeeds(newGeo, scope); } catch { webFeeds = []; }
             let newCityCovered = false;
-            try { newCityCovered = await hasCitySources(newGeo); } catch {}
+            try { newCityCovered = await hasCitySources(newGeo); } catch { }
             suggestions = newResults;
             preChecked = defaultPickedSubs(newResults, newGeo);
             renderPickerSuggestions(newGeo, newResults, newCityCovered);
@@ -3342,7 +3342,7 @@
 
     // ── nested helper so the inline "Set Location" path can re-render
     // after the user picks a location without reopening the modal ───────
-    function renderPickerSuggestions(g, subs, hasHyperlocalCoverage){
+    function renderPickerSuggestions(g, subs, hasHyperlocalCoverage) {
       const hasStations = stations.length > 0;
       const hasSubs = (subs || []).length > 0;
       const hasLatLon = Number.isFinite(g?.lat) && Number.isFinite(g?.lon);
@@ -3355,8 +3355,8 @@
         || (scope === "regional" && !hasStations)
       );
 
-      if(canOfferFallback){
-        if(scope === "local"){
+      if (canOfferFallback) {
+        if (scope === "local") {
           leadEl.textContent = `No local sources for ${g.city}, ${g.state} yet — try the nearest city we cover.`;
         } else {
           const fullState = expandStateName(g.state) || g.state;
@@ -3366,13 +3366,13 @@
       } else {
         fallbackSection.hidden = true;
         fallbackListEl.innerHTML = "";
-        if(!hasStations && !hasSubs){
+        if (!hasStations && !hasSubs) {
           leadEl.textContent = `No suggestions for ${g.city}, ${g.state} yet. Add a custom RSS URL below.`;
         } else {
           leadEl.textContent = `Suggestions for ${g.city}, ${g.state} — pick what you want, then Save.`;
         }
       }
-      if(hasStations){
+      if (hasStations) {
         stationsSection.hidden = false;
         stationsListEl.innerHTML = "";
         stations.forEach((s, idx) => {
@@ -3405,7 +3405,7 @@
         // to populate this; the curated-list path can't, so we hide the chip
         // rather than print "0 subs" which looks broken).
         const subsLabel = r.subscribers >= 1000
-          ? `${(r.subscribers/1000).toFixed(1)}K subs`
+          ? `${(r.subscribers / 1000).toFixed(1)}K subs`
           : (r.subscribers > 0 ? `${r.subscribers} subs` : "");
         row.innerHTML = `
           <input type="checkbox" data-idx="${idx}" ${checked} />
@@ -3422,8 +3422,8 @@
     // variable so the fallback-click path can update webFeeds and call this
     // without going through the full renderPickerSuggestions flow (which
     // would re-fire the fallback detection).
-    function renderWebFeedRows(){
-      if(!webFeeds.length){
+    function renderWebFeedRows() {
+      if (!webFeeds.length) {
         webSection.hidden = true;
         webListEl.innerHTML = "";
         return;
@@ -3451,7 +3451,7 @@
     // user can check/uncheck and save like any other pick. The user's actual
     // geo stays intact (Reddit suggestions, future location-aware features
     // still see their real location); only the station list is borrowed.
-    async function renderFallbackList(g){
+    async function renderFallbackList(g) {
       fallbackSection.hidden = false;
       const loadingLabel = scope === "local" ? "Loading nearby cities…" : "Loading nearby states…";
       fallbackListEl.innerHTML = `<div class="hnPickerLeadMuted">${loadingLabel}</div>`;
@@ -3461,7 +3461,7 @@
           ? await getNearestCities(g.lat, g.lon, 3)
           : await getNearestStates(g.lat, g.lon, 3);
       } catch { nearest = []; }
-      if(!nearest.length){
+      if (!nearest.length) {
         const emptyLabel = scope === "local"
           ? "No nearby cities in our repo yet. Add a custom RSS URL below."
           : "No nearby states in our repo yet. Add a custom RSS URL below.";
@@ -3496,7 +3496,7 @@
           try { webFeeds = getWebSearchFeeds(syntheticGeo, scope); }
           catch { webFeeds = []; }
           fallbackSection.hidden = true;
-          if(scope === "local"){
+          if (scope === "local") {
             leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
           } else {
             const fromState = expandStateName(g.state) || g.state;
@@ -3589,10 +3589,10 @@
 
   // Returns true when the user has disabled the given section in Settings.
   // Missing keys (not yet configured / older saved cfg) count as visible (false).
-  function isSectionHidden(page, key){
+  function isSectionHidden(page, key) {
     try {
       const v = window.App?.cfg?.sectionVisibility?.[page];
-      if(!v) return false;
+      if (!v) return false;
       return v[key] === false;
     } catch { return false; }
   }
@@ -3612,7 +3612,7 @@
           console.log('[SW] Service Worker registered:', registration.scope);
 
           // Proactively check for updates on each load.
-          registration.update().catch(() => {});
+          registration.update().catch(() => { });
 
           // If an update is found, ask it to install immediately.
           registration.addEventListener('updatefound', () => {

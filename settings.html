@@ -1,9 +1,11 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
+  <meta name="description"
+    content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <meta name="robots" content="noindex,follow" />
   <!-- Perf hints: warm up TLS to the third-party origins our JS hits
        so DNS + handshake happens in parallel with HTML parse. -->
@@ -15,11 +17,13 @@
   <meta property="og:site_name" content="HAPPENING NOW" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Happening Now! - Settings" />
-  <meta property="og:description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
+  <meta property="og:description"
+    content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <meta property="og:url" content="https://happening-now.net/settings" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Happening Now! - Settings" />
-  <meta name="twitter:description" content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
+  <meta name="twitter:description"
+    content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <title>Happening Now! - Settings</title>
   <script type="application/ld+json">
     {
@@ -36,7 +40,13 @@
       "inLanguage": "en"
     }
   </script>
-  <style>html,body{background:#4a79c1;margin:0}</style>
+  <style>
+    html,
+    body {
+      background: #4a79c1;
+      margin: 0
+    }
+  </style>
   <link rel="stylesheet" href="assets/styles.css">
   <script>
     if (location.protocol !== "file:") {
@@ -52,7 +62,7 @@
 
     const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
     const applyThemeColor = () => {
-      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#4a79c1";
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#1e3a5f";
     };
 
     applyThemeColor();
@@ -64,12 +74,14 @@
       }
     }
   </script>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%232d2a5a'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%238b5cf6'/%3E%3C/svg%3E" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
 </head>
+
 <body>
   <header id="topbar"></header>
 
@@ -106,15 +118,16 @@
             <div class="collapsibleBody expanded">
               <div id="settLocCurrentDisplay" class="settLocCurrentDisplay"></div>
               <div class="tabsRow locationPickerTabs" role="tablist">
-                <button class="tabPill active" data-sett-loc-mode="zip" role="tab" aria-selected="true">ZIP Code</button>
+                <button class="tabPill active" data-sett-loc-mode="zip" role="tab" aria-selected="true">ZIP
+                  Code</button>
                 <button class="tabPill" data-sett-loc-mode="city" role="tab" aria-selected="false">City Name</button>
                 <button class="tabPill" data-sett-loc-mode="gps" role="tab" aria-selected="false">GPS</button>
               </div>
 
               <div class="locationPickerPanel" data-sett-loc-panel="zip">
                 <div class="locationPickerRow">
-                  <input id="zipInput" class="input" maxlength="5" inputmode="numeric"
-                    placeholder="e.g. 10001" autocomplete="postal-code" aria-label="ZIP code" />
+                  <input id="zipInput" class="input" maxlength="5" inputmode="numeric" placeholder="e.g. 10001"
+                    autocomplete="postal-code" aria-label="ZIP code" />
                   <button id="settLocZipVerifyBtn" class="btn" type="button">Verify</button>
                 </div>
                 <div class="locationPickerStatus" id="settLocZipStatus"></div>
@@ -122,8 +135,8 @@
 
               <div class="locationPickerPanel" data-sett-loc-panel="city" hidden>
                 <div class="locationPickerRow">
-                  <input id="settLocCityInput" class="input" type="text"
-                    placeholder="e.g. Lansing, MI" autocomplete="address-level2" aria-label="City name" />
+                  <input id="settLocCityInput" class="input" type="text" placeholder="e.g. Lansing, MI"
+                    autocomplete="address-level2" aria-label="City name" />
                   <button id="settLocCityFindBtn" class="btn" type="button">Find</button>
                 </div>
                 <div class="locationPickerStatus" id="settLocCityStatus"></div>
@@ -158,121 +171,129 @@
           </div>
 
           <div class="weatherPanelRight">
-          <div class="collapsibleSection weatherPanelAlerting">
-            <button class="collapsibleHeader expanded" data-section="weather-alerting">
-              Alerting &amp; Forecast
-            </button>
-            <div class="collapsibleBody expanded">
-              <div class="settingRowGroup">
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Alert Scope</div>
-                    <div class="settingHint">Which weather alerts are shown</div>
+            <div class="collapsibleSection weatherPanelAlerting">
+              <button class="collapsibleHeader expanded" data-section="weather-alerting">
+                Alerting &amp; Forecast
+              </button>
+              <div class="collapsibleBody expanded">
+                <div class="settingRowGroup">
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Alert Scope</div>
+                      <div class="settingHint">Which weather alerts are shown</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="local" data-field="weatherAlertScope">Local</button>
+                      <button class="buttonGroupItem" data-value="national"
+                        data-field="weatherAlertScope">National</button>
+                      <button class="buttonGroupItem" data-value="both" data-field="weatherAlertScope">Both</button>
+                    </div>
                   </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="local" data-field="weatherAlertScope">Local</button>
-                    <button class="buttonGroupItem" data-value="national" data-field="weatherAlertScope">National</button>
-                    <button class="buttonGroupItem" data-value="both" data-field="weatherAlertScope">Both</button>
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Forecast Length</div>
+                      <div class="settingHint">Daily forecast rows to render</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="3" data-field="forecastLength">3 Days</button>
+                      <button class="buttonGroupItem" data-value="7" data-field="forecastLength">7 Days</button>
+                      <button class="buttonGroupItem" data-value="14" data-field="forecastLength">14 Days</button>
+                    </div>
                   </div>
-                </div>
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Forecast Length</div>
-                    <div class="settingHint">Daily forecast rows to render</div>
-                  </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="3" data-field="forecastLength">3 Days</button>
-                    <button class="buttonGroupItem" data-value="7" data-field="forecastLength">7 Days</button>
-                    <button class="buttonGroupItem" data-value="14" data-field="forecastLength">14 Days</button>
-                  </div>
-                </div>
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Stale Warning Threshold</div>
-                    <div class="settingHint">Minutes before weather data is marked stale</div>
-                  </div>
-                  <div class="settingsInlineUnitRow">
-                    <input id="weatherStaleWarnInput" class="input settingsInput70" inputmode="numeric" placeholder="30" />
-                    <span class="settingsUnitSuffix">min</span>
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Stale Warning Threshold</div>
+                      <div class="settingHint">Minutes before weather data is marked stale</div>
+                    </div>
+                    <div class="settingsInlineUnitRow">
+                      <input id="weatherStaleWarnInput" class="input settingsInput70" inputmode="numeric"
+                        placeholder="30" />
+                      <span class="settingsUnitSuffix">min</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="collapsibleSection weatherPanelMap">
-            <button class="collapsibleHeader expanded" data-section="weather-map">
-              Map &amp; Display
-            </button>
-            <div class="collapsibleBody expanded">
-              <div class="settingRowGroup">
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Default Map Layer</div>
-                    <div class="settingHint">Which overlay loads when you open Weather</div>
+            <div class="collapsibleSection weatherPanelMap">
+              <button class="collapsibleHeader expanded" data-section="weather-map">
+                Map &amp; Display
+              </button>
+              <div class="collapsibleBody expanded">
+                <div class="settingRowGroup">
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Default Map Layer</div>
+                      <div class="settingHint">Which overlay loads when you open Weather</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="radar"
+                        data-field="weatherDefaultMapLayer">Radar</button>
+                      <button class="buttonGroupItem" data-value="wind"
+                        data-field="weatherDefaultMapLayer">Wind</button>
+                      <button class="buttonGroupItem" data-value="temp"
+                        data-field="weatherDefaultMapLayer">Temp</button>
+                      <button class="buttonGroupItem" data-value="clouds"
+                        data-field="weatherDefaultMapLayer">Clouds</button>
+                      <button class="buttonGroupItem" data-value="air" data-field="weatherDefaultMapLayer">Air
+                        Quality</button>
+                    </div>
                   </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="radar" data-field="weatherDefaultMapLayer">Radar</button>
-                    <button class="buttonGroupItem" data-value="wind" data-field="weatherDefaultMapLayer">Wind</button>
-                    <button class="buttonGroupItem" data-value="temp" data-field="weatherDefaultMapLayer">Temp</button>
-                    <button class="buttonGroupItem" data-value="clouds" data-field="weatherDefaultMapLayer">Clouds</button>
-                    <button class="buttonGroupItem" data-value="air" data-field="weatherDefaultMapLayer">Air Quality</button>
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Show Weather Map</div>
+                      <div class="settingHint">Display the Windy radar map widget</div>
+                    </div>
+                    <label class="toggleSwitch">
+                      <input type="checkbox" class="toggleInput" id="weatherShowMapToggle"
+                        aria-label="Show weather map" />
+                      <span class="toggleTrack"><span class="toggleThumb"></span></span>
+                    </label>
                   </div>
-                </div>
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Show Weather Map</div>
-                    <div class="settingHint">Display the Windy radar map widget</div>
-                  </div>
-                  <label class="toggleSwitch">
-                    <input type="checkbox" class="toggleInput" id="weatherShowMapToggle" aria-label="Show weather map" />
-                    <span class="toggleTrack"><span class="toggleThumb"></span></span>
-                  </label>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="collapsibleSection weatherPanelUnits">
-            <button class="collapsibleHeader expanded" data-section="weather-units">
-              Units
-            </button>
-            <div class="collapsibleBody expanded">
-              <div class="settingRowGroup">
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Temperature</div>
-                    <div class="settingHint">Units for temp display and API</div>
+            <div class="collapsibleSection weatherPanelUnits">
+              <button class="collapsibleHeader expanded" data-section="weather-units">
+                Units
+              </button>
+              <div class="collapsibleBody expanded">
+                <div class="settingRowGroup">
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Temperature</div>
+                      <div class="settingHint">Units for temp display and API</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="fahrenheit" data-field="weatherTempUnit">°F</button>
+                      <button class="buttonGroupItem" data-value="celsius" data-field="weatherTempUnit">°C</button>
+                    </div>
                   </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="fahrenheit" data-field="weatherTempUnit">°F</button>
-                    <button class="buttonGroupItem" data-value="celsius" data-field="weatherTempUnit">°C</button>
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Wind Speed</div>
+                      <div class="settingHint">Units for wind and gust display</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="mph" data-field="weatherWindUnit">mph</button>
+                      <button class="buttonGroupItem" data-value="kmh" data-field="weatherWindUnit">km/h</button>
+                      <button class="buttonGroupItem" data-value="ms" data-field="weatherWindUnit">m/s</button>
+                    </div>
                   </div>
-                </div>
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Wind Speed</div>
-                    <div class="settingHint">Units for wind and gust display</div>
-                  </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="mph" data-field="weatherWindUnit">mph</button>
-                    <button class="buttonGroupItem" data-value="kmh" data-field="weatherWindUnit">km/h</button>
-                    <button class="buttonGroupItem" data-value="ms" data-field="weatherWindUnit">m/s</button>
-                  </div>
-                </div>
-                <div class="settingRow">
-                  <div>
-                    <div class="settingLabel">Precipitation</div>
-                    <div class="settingHint">Units for rainfall and snow totals</div>
-                  </div>
-                  <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="inch" data-field="weatherPrecipUnit">in</button>
-                    <button class="buttonGroupItem" data-value="mm" data-field="weatherPrecipUnit">mm</button>
+                  <div class="settingRow">
+                    <div>
+                      <div class="settingLabel">Precipitation</div>
+                      <div class="settingHint">Units for rainfall and snow totals</div>
+                    </div>
+                    <div class="buttonGroup">
+                      <button class="buttonGroupItem" data-value="inch" data-field="weatherPrecipUnit">in</button>
+                      <button class="buttonGroupItem" data-value="mm" data-field="weatherPrecipUnit">mm</button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           </div><!-- /.weatherPanelRight -->
 
         </div><!-- /.weatherPanelGrid -->
@@ -282,15 +303,25 @@
             <span class="collapsibleHeaderMain">Page Sections</span>
           </button>
           <div class="collapsibleBody expanded" data-page-sections="weather">
-            <div class="hint hintMt10">Show or hide the cards on the Weather page. Recommended sections are flagged.</div>
+            <div class="hint hintMt10">Show or hide the cards on the Weather page. Recommended sections are flagged.
+            </div>
             <div class="sectionToggleList">
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="topAlertsTicker" /><span>Top alerts ticker</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="current" /><span>Current Conditions <span class="sectionToggleHint">(recommended)</span></span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="hourly" /><span>24 Hour Forecast</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="forecast" /><span>7/14 Day Forecast <span class="sectionToggleHint">(recommended)</span></span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="radar" /><span>Weather Map</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="alerts" /><span>Active Alerts</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather" data-section-key="news" /><span>Top Weather News</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="topAlertsTicker" /><span>Top alerts ticker</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="current" /><span>Current Conditions <span
+                    class="sectionToggleHint">(recommended)</span></span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="hourly" /><span>24 Hour Forecast</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="forecast" /><span>7/14 Day Forecast <span
+                    class="sectionToggleHint">(recommended)</span></span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="radar" /><span>Weather Map</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="alerts" /><span>Active Alerts</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="weather"
+                  data-section-key="news" /><span>Top Weather News</span></label>
             </div>
           </div>
         </div>
@@ -303,14 +334,16 @@
              tile cards in a 3-column grid that mirrors the news page layout. -->
         <div class="collapsibleSection sourceCard sourceCard--local" id="news-local-sources">
           <button class="collapsibleHeader expanded" data-section="news-local-sources-body">
-            <span class="collapsibleHeaderMain">📍 Near You</span>
+            <span class="collapsibleHeaderMain">📍 Local News</span>
             <span class="collapsibleHeaderMeta sourceCardMeta">Communities, papers and TV in your city</span>
           </button>
           <div class="collapsibleBody expanded sourceCardBody" id="localSourcesBody">
-            <div class="sourceCardHint" id="localSourcesHint">Open the picker to discover Reddit communities for your city, or paste any RSS URL below to add it directly.</div>
+            <div class="sourceCardHint" id="localSourcesHint">Open the picker to discover Reddit communities for your
+              city, or paste any RSS URL below to add it directly.</div>
             <div class="sourceTileGrid" id="localSourcesList"></div>
             <div class="sourceCardActions">
-              <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
+                picker</button>
               <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
             <div class="sourceCardCustomRow">
@@ -330,14 +363,17 @@
             <span class="collapsibleHeaderMeta sourceCardMeta">State-level communities and outlets</span>
           </button>
           <div class="collapsibleBody expanded sourceCardBody" id="regionalSourcesBody">
-            <div class="sourceCardHint" id="regionalSourcesHint">Open the picker to find state-wide Reddit communities, or paste any RSS URL below.</div>
+            <div class="sourceCardHint" id="regionalSourcesHint">Open the picker to find state-wide Reddit communities,
+              or paste any RSS URL below.</div>
             <div class="sourceTileGrid" id="regionalSourcesList"></div>
             <div class="sourceCardActions">
-              <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open picker</button>
+              <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
+                picker</button>
               <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
             <div class="sourceCardCustomRow">
-              <input id="regionalCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
+              <input id="regionalCustomRssInput" type="url" class="input"
+                placeholder="Add custom RSS URL (https://...)" />
               <button id="regionalCustomAddBtn" class="btn" type="button">Add</button>
             </div>
             <label class="sectionToggleRow sourceCardSkipRow">
@@ -358,10 +394,14 @@
                 <div class="settingHint">Sets what headlines the news ticker shows by default</div>
               </div>
               <div class="buttonGroup">
-                <button class="buttonGroupItem" type="button" data-value="local" data-field="newsTickerScope">Local</button>
-                <button class="buttonGroupItem" type="button" data-value="regional" data-field="newsTickerScope">Regional</button>
-                <button class="buttonGroupItem" type="button" data-value="national" data-field="newsTickerScope">National</button>
-                <button class="buttonGroupItem" type="button" data-value="international" data-field="newsTickerScope">International</button>
+                <button class="buttonGroupItem" type="button" data-value="local"
+                  data-field="newsTickerScope">Local</button>
+                <button class="buttonGroupItem" type="button" data-value="regional"
+                  data-field="newsTickerScope">Regional</button>
+                <button class="buttonGroupItem" type="button" data-value="national"
+                  data-field="newsTickerScope">National</button>
+                <button class="buttonGroupItem" type="button" data-value="international"
+                  data-field="newsTickerScope">International</button>
               </div>
             </div>
             <div class="hint hintMt10">Local and Regional require a ZIP code configured in General settings.</div>
@@ -377,20 +417,26 @@
         <div class="collapsibleSection sourceCard sourceCard--global">
           <button class="collapsibleHeader expanded" data-section="news-national">
             <span class="collapsibleHeaderMain">🇺🇸 National News Sources</span>
-            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
+            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false"
+              title="Show editor tips">
               <span class="usageGuideIcon">i</span>
               How to add/remove news sources
             </span>
           </button>
           <div class="collapsibleBody expanded sourceCardBody">
             <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Click <strong>+ Add Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
-              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This Source</strong> for a single feed. The modal closes automatically after adding.</p>
-              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and Site fields auto-fill when possible.</p>
-              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click <strong>Save Changes</strong>.</p>
+              <p>Click <strong>+ Add Source</strong> to open the source picker. Choose a category, then click a
+                publisher chip to see its available feeds, or type directly into the search bar.</p>
+              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This
+                  Source</strong> for a single feed. The modal closes automatically after adding.</p>
+              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and
+                Site fields auto-fill when possible.</p>
+              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click
+                <strong>Save Changes</strong>.</p>
             </div>
             <div class="newsEditorToolbar">
-              <button id="addNationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add National Source</button>
+              <button id="addNationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add National
+                Source</button>
             </div>
             <div id="newsEditorNational" class="stack newsEditorStack"></div>
           </div>
@@ -402,11 +448,13 @@
           </button>
           <div class="collapsibleBody expanded sourceCardBody">
             <div class="newsEditorToolbar">
-              <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add International Source</button>
+              <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add
+                International Source</button>
             </div>
             <div id="newsEditorInternational" class="stack newsEditorStack"></div>
             <div class="hint hintMt10">
-              National + International together cap at 15 sources. Best performance: keep counts lean and headlines per card between 5 and 8.
+              National + International together cap at 15 sources. Best performance: keep counts lean and headlines per
+              card between 5 and 8.
             </div>
           </div>
         </div>
@@ -417,15 +465,19 @@
         <div class="collapsibleSection">
           <button class="collapsibleHeader expanded" data-section="stocks-watchlist">
             <span class="collapsibleHeaderMain">Watchlist</span>
-            <span id="stocksHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
+            <span id="stocksHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false"
+              title="Show editor tips">
               <span class="usageGuideIcon">i</span>
               How to use this editor
             </span>
           </button>
           <div class="collapsibleBody expanded">
             <div id="stocksHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Click <strong>+ Add Stock / Fund</strong> to open the symbol search. Type a ticker or company name, pick the exact match, and use <strong>Assign To</strong> to place it in an existing row or add it as a new one.</p>
-              <p>You can also edit any symbol or label directly in the watchlist rows below without reopening the picker.</p>
+              <p>Click <strong>+ Add Stock / Fund</strong> to open the symbol search. Type a ticker or company name,
+                pick the exact match, and use <strong>Assign To</strong> to place it in an existing row or add it as a
+                new one.</p>
+              <p>You can also edit any symbol or label directly in the watchlist rows below without reopening the
+                picker.</p>
               <p>Drag the grip icon to reorder rows. The number badge reflects the display order on the Stocks page.</p>
               <p>When the list looks right, click <strong>Save Changes</strong> to apply it live.</p>
             </div>
@@ -460,8 +512,10 @@
                     <div class="settingHint">Control where index link clicks open</div>
                   </div>
                   <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="new-tab" data-field="marketNewsOpenMode">New Tab</button>
-                    <button class="buttonGroupItem" data-value="same-tab" data-field="marketNewsOpenMode">Same Tab</button>
+                    <button class="buttonGroupItem" data-value="new-tab" data-field="marketNewsOpenMode">New
+                      Tab</button>
+                    <button class="buttonGroupItem" data-value="same-tab" data-field="marketNewsOpenMode">Same
+                      Tab</button>
                   </div>
                 </div>
                 <div class="settingRow">
@@ -470,8 +524,10 @@
                     <div class="settingHint">Choose whether index chips open Google News or direct source pages</div>
                   </div>
                   <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="google" data-field="marketNewsSourceMode">Google News</button>
-                    <button class="buttonGroupItem" data-value="direct" data-field="marketNewsSourceMode">Direct Sources</button>
+                    <button class="buttonGroupItem" data-value="google" data-field="marketNewsSourceMode">Google
+                      News</button>
+                    <button class="buttonGroupItem" data-value="direct" data-field="marketNewsSourceMode">Direct
+                      Sources</button>
                   </div>
                 </div>
                 <div class="settingRow">
@@ -480,8 +536,10 @@
                     <div class="settingHint">Display major headlines or news from your watchlist</div>
                   </div>
                   <div class="buttonGroup">
-                    <button class="buttonGroupItem" data-value="major" data-field="stocksNewsMode">Major Headlines</button>
-                    <button class="buttonGroupItem" data-value="watchlist" data-field="stocksNewsMode">Watchlist News</button>
+                    <button class="buttonGroupItem" data-value="major" data-field="stocksNewsMode">Major
+                      Headlines</button>
+                    <button class="buttonGroupItem" data-value="watchlist" data-field="stocksNewsMode">Watchlist
+                      News</button>
                   </div>
                 </div>
               </div>
@@ -489,7 +547,8 @@
               <div class="settingRow marketStripSettingRow">
                 <div>
                   <div class="settingLabel">Market Strip</div>
-                  <div class="settingHint">Show or hide markets across large, mid, small-cap, global, commodities, rates, FX, and crypto</div>
+                  <div class="settingHint">Show or hide markets across large, mid, small-cap, global, commodities,
+                    rates, FX, and crypto</div>
                 </div>
                 <div id="marketIndicesCheckboxes" class="checkboxGrid marketIndicesSelector"></div>
               </div>
@@ -502,16 +561,27 @@
             <span class="collapsibleHeaderMain">Page Sections</span>
           </button>
           <div class="collapsibleBody expanded" data-page-sections="stocks">
-            <div class="hint hintMt10">Show or hide the cards on the Stocks page. Recommended sections are flagged.</div>
+            <div class="hint hintMt10">Show or hide the cards on the Stocks page. Recommended sections are flagged.
+            </div>
             <div class="sectionToggleList">
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="indices" /><span>Market Indices ticker <span class="sectionToggleHint">(recommended)</span></span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="watchlist" /><span>Watchlist <span class="sectionToggleHint">(recommended)</span></span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="news" /><span>Market News</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="gainers" /><span>Top Gainers</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="losers" /><span>Top Losers</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="trending" /><span>Trending Stocks</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="calendar" /><span>Economic Calendar</span></label>
-              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks" data-section-key="diagnostic" /><span>Diagnostic dock</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="indices" /><span>Market Indices ticker <span
+                    class="sectionToggleHint">(recommended)</span></span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="watchlist" /><span>Watchlist <span
+                    class="sectionToggleHint">(recommended)</span></span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="news" /><span>Market News</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="gainers" /><span>Top Gainers</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="losers" /><span>Top Losers</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="trending" /><span>Trending Stocks</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="calendar" /><span>Economic Calendar</span></label>
+              <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
+                  data-section-key="diagnostic" /><span>Diagnostic dock</span></label>
             </div>
           </div>
         </div>
@@ -539,7 +609,8 @@
               <div class="settingRow">
                 <div>
                   <div class="settingLabel">Rendering Mode 🛡️</div>
-                  <div class="settingHint">The top-bar shield icon uses this setting. Smooth keeps richer hover motion. Stable reduces GPU-heavy effects to prevent flicker.</div>
+                  <div class="settingHint">The top-bar shield icon uses this setting. Smooth keeps richer hover motion.
+                    Stable reduces GPU-heavy effects to prevent flicker.</div>
                 </div>
                 <select id="renderModeSel" class="input settingsInput170" aria-label="Rendering mode">
                   <option value="smooth">Smooth 🛡️ (recommended)</option>
@@ -566,50 +637,54 @@
       <div class="settingsTabContent" data-tab="system">
         <div class="systemPanelRow">
 
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="install-app">
-            Install App (Recommended)
-          </button>
-          <div class="collapsibleBody expanded">
-            <div id="installContainer" class="installContainer">
-              <button id="installAppBtn" class="btn installAppBtnProminent" type="button" style="display:none">
-                <span class="installAppBtnIcon">&#128242;</span> <span id="installBtnText">Install HAPPENING NOW!</span>
-              </button>
-              <div id="installStatus" class="installStatusPanel">
-                <span class="installStatusIcon">&#x2713;</span> <span id="installStatusText">App is already installed!</span>
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="install-app">
+              Install App (Recommended)
+            </button>
+            <div class="collapsibleBody expanded">
+              <div id="installContainer" class="installContainer">
+                <button id="installAppBtn" class="btn installAppBtnProminent" type="button" style="display:none">
+                  <span class="installAppBtnIcon">&#128242;</span> <span id="installBtnText">Install HAPPENING
+                    NOW!</span>
+                </button>
+                <div id="installStatus" class="installStatusPanel">
+                  <span class="installStatusIcon">&#x2713;</span> <span id="installStatusText">App is already
+                    installed!</span>
+                </div>
+              </div>
+              <div id="installBrowserGuide" class="installBrowserGuide"></div>
+            </div>
+          </div>
+
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="import-export">
+              Import / Export (Backup)
+            </button>
+            <div class="collapsibleBody expanded">
+              <div class="settingsActionRow">
+                <button id="exportBtn" class="btn btnSubtle" type="button">Export JSON</button>
+                <button id="importBtn" class="btn btnSubtle" type="button">Import JSON</button>
+              </div>
+              <textarea id="jsonBox" class="textarea" rows="6"
+                placeholder="Paste config JSON here to import..."></textarea>
+              <div class="hint hintMt8">
+                Export to create a backup file. Import to restore saved settings.
               </div>
             </div>
-            <div id="installBrowserGuide" class="installBrowserGuide"></div>
           </div>
-        </div>
 
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="import-export">
-            Import / Export (Backup)
-          </button>
-          <div class="collapsibleBody expanded">
-            <div class="settingsActionRow">
-              <button id="exportBtn" class="btn btnSubtle" type="button">Export JSON</button>
-              <button id="importBtn" class="btn btnSubtle" type="button">Import JSON</button>
-            </div>
-            <textarea id="jsonBox" class="textarea" rows="6" placeholder="Paste config JSON here to import..."></textarea>
-            <div class="hint hintMt8">
-              Export to create a backup file. Import to restore saved settings.
+          <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="reset">
+              Reset & Defaults
+            </button>
+            <div class="collapsibleBody expanded">
+              <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
+              <div class="hint hintMt12">
+                Resets all preferences to defaults — including news sources and stock watchlist. Use the Export JSON
+                option to back up your current configuration first if you may want to restore it later.
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="reset">
-            Reset & Defaults
-          </button>
-          <div class="collapsibleBody expanded">
-            <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
-            <div class="hint hintMt12">
-              Resets all preferences to defaults — including news sources and stock watchlist. Use the Export JSON option to back up your current configuration first if you may want to restore it later.
-            </div>
-          </div>
-        </div>
 
         </div><!-- /.systemPanelRow -->
       </div>
@@ -618,8 +693,11 @@
 
   <footer class="page-footer">
     <p>⚙️ All settings stored locally in your browser using localStorage • No server-side storage or tracking</p>
-    <p class="pageFooterFinePrint">💡 Install as a PWA for the best experience • Changes take effect immediately • JSON export/import available for backup</p>
-    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a href="sources.html">Data Sources</a> • <a href="mailto:hn-station@protonmail.com" target="_blank" rel="noopener noreferrer">Feedback</a></p>
+    <p class="pageFooterFinePrint">💡 Install as a PWA for the best experience • Changes take effect immediately • JSON
+      export/import available for backup</p>
+    <p class="footerLinks"><a href="privacy.html">Privacy</a> • <a href="terms.html">Terms</a> • <a
+        href="sources.html">Data Sources</a> • <a href="mailto:hn-station@protonmail.com" target="_blank"
+        rel="noopener noreferrer">Feedback</a></p>
   </footer>
 
   <!-- Install Instructions Modal -->
@@ -646,7 +724,8 @@
 
         <div class="installModalTip">
           <div class="installModalTipText">
-            <strong class="installModalTipStrong">💡 Tip:</strong> Once installed, you can launch the app from your home screen, app drawer, or applications folder just like any other app!
+            <strong class="installModalTipStrong">💡 Tip:</strong> Once installed, you can launch the app from your home
+            screen, app drawer, or applications folder just like any other app!
           </div>
         </div>
       </div>
@@ -654,23 +733,27 @@
   </div>
 
   <!-- News Discovery Modal -->
-  <div id="newsDiscoveryModal" class="newsDiscoveryModal" role="dialog" aria-modal="true" aria-labelledby="newsDiscoveryModalTitle" hidden>
+  <div id="newsDiscoveryModal" class="newsDiscoveryModal" role="dialog" aria-modal="true"
+    aria-labelledby="newsDiscoveryModalTitle" hidden>
     <div class="newsDiscoveryModalBackdrop" id="newsDiscoveryModalBackdrop"></div>
     <div class="newsDiscoveryModalSheet">
       <div class="newsDiscoveryModalHead">
         <div id="newsDiscoveryModalTitle" class="newsDiscoveryModalTitle">Add News Sources</div>
-        <button class="newsDiscoveryModalClose" id="newsDiscoveryModalClose" type="button" aria-label="Close">&#x2715;</button>
+        <button class="newsDiscoveryModalClose" id="newsDiscoveryModalClose" type="button"
+          aria-label="Close">&#x2715;</button>
       </div>
       <div class="newsDiscoveryModalBody">
         <form id="newsDiscoveryForm" class="newsDiscoveryForm" novalidate>
-          <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search" placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
+          <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search"
+            placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
           <button id="newsDiscoveryBtn" class="btn newsDiscoveryBtn" type="submit">Search Feeds</button>
         </form>
         <div id="newsDiscoveryBrowse" class="newsDiscoveryBrowse" aria-label="Browse by category"></div>
         <div id="newsDiscoveryStatus" class="newsDiscoveryStatus" aria-live="polite"></div>
         <div id="newsDiscoveryResults" class="newsDiscoveryResults" aria-live="polite"></div>
         <section class="newsManualWrap" aria-labelledby="newsManualToggle">
-          <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS URL</button>
+          <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS
+            URL</button>
           <div id="newsManualBody" class="newsManualBody" hidden>
             <button id="addNewsBtn" class="btn" type="button">+ Add News Source Manually</button>
             <div class="hint">Use manual mode when search and category browse don't list your source.</div>
@@ -681,23 +764,27 @@
   </div>
 
   <!-- Stock Lookup Modal -->
-  <div id="stockLookupModal" class="stockLookupModal" role="dialog" aria-modal="true" aria-labelledby="stockLookupModalTitle" hidden>
+  <div id="stockLookupModal" class="stockLookupModal" role="dialog" aria-modal="true"
+    aria-labelledby="stockLookupModalTitle" hidden>
     <div class="stockLookupModalBackdrop" id="stockLookupModalBackdrop"></div>
     <div class="stockLookupModalSheet">
       <div class="stockLookupModalHead">
         <div id="stockLookupModalTitle" class="stockLookupModalTitle">Add Stock / Fund</div>
-        <button class="stockLookupModalClose" id="stockLookupModalClose" type="button" aria-label="Close">&#x2715;</button>
+        <button class="stockLookupModalClose" id="stockLookupModalClose" type="button"
+          aria-label="Close">&#x2715;</button>
       </div>
       <div class="stockLookupModalBody">
         <section class="stockLookupPanel" aria-labelledby="stockLookupTitle">
           <div class="stockLookupIntro">
             <div>
               <div id="stockLookupTitle" class="settingLabel">Search by ticker or company name</div>
-              <div class="settingHint">Select a result and choose which watchlist row to assign it to, or add it as a new row.</div>
+              <div class="settingHint">Select a result and choose which watchlist row to assign it to, or add it as a
+                new row.</div>
             </div>
           </div>
           <form id="stockLookupForm" class="stockLookupForm" novalidate>
-            <input id="stockLookupInput" class="input stockLookupInput" type="search" placeholder="Try AAPL, TSLA, BRK.B, or Berkshire Hathaway" aria-label="Search for a stock symbol" />
+            <input id="stockLookupInput" class="input stockLookupInput" type="search"
+              placeholder="Try AAPL, TSLA, BRK.B, or Berkshire Hathaway" aria-label="Search for a stock symbol" />
             <button id="stockLookupBtn" class="btn stockLookupBtn" type="submit">Search Symbols</button>
           </form>
           <div class="stockLookupAssignRow">
@@ -717,4 +804,5 @@
   <script defer src="assets/infobar.js"></script>
   <script defer src="assets/settings.js?v=20260307b"></script>
 </body>
+
 </html>
