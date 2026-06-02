@@ -371,10 +371,12 @@
         <!-- National & International live at the bottom — they use a richer
              editor (drag-reorder, headlines count, multi-publisher picker)
              and aren't tied to the user's geo, so they don't fit the same
-             3-column tile layout. -->
+             3-column tile layout. Split into two sections so each scope is
+             managed independently. cfg.widgets is still a single array; the
+             two sections are filtered views over it (by scopes membership). -->
         <div class="collapsibleSection sourceCard sourceCard--global">
-          <button class="collapsibleHeader expanded" data-section="news-sources">
-            <span class="collapsibleHeaderMain">🌐 National & International News Sources (Max 15)</span>
+          <button class="collapsibleHeader expanded" data-section="news-national">
+            <span class="collapsibleHeaderMain">🇺🇸 National News Sources</span>
             <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false" title="Show editor tips">
               <span class="usageGuideIcon">i</span>
               How to add/remove news sources
@@ -382,17 +384,29 @@
           </button>
           <div class="collapsibleBody expanded sourceCardBody">
             <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Click <strong>+ Add News Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
+              <p>Click <strong>+ Add Source</strong> to open the source picker. Choose a category, then click a publisher chip to see its available feeds, or type directly into the search bar.</p>
               <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This Source</strong> for a single feed. The modal closes automatically after adding.</p>
               <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and Site fields auto-fill when possible.</p>
               <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click <strong>Save Changes</strong>.</p>
             </div>
             <div class="newsEditorToolbar">
-              <button id="addNewsSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add News Source</button>
+              <button id="addNationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add National Source</button>
             </div>
-            <div id="newsEditor" class="stack newsEditorStack"></div>
+            <div id="newsEditorNational" class="stack newsEditorStack"></div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection sourceCard sourceCard--global">
+          <button class="collapsibleHeader expanded" data-section="news-international">
+            <span class="collapsibleHeaderMain">🌍 International News Sources</span>
+          </button>
+          <div class="collapsibleBody expanded sourceCardBody">
+            <div class="newsEditorToolbar">
+              <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add International Source</button>
+            </div>
+            <div id="newsEditorInternational" class="stack newsEditorStack"></div>
             <div class="hint hintMt10">
-              Best performance: keep source count lean and headlines between 5 and 8.
+              National + International together cap at 15 sources. Best performance: keep counts lean and headlines per card between 5 and 8.
             </div>
           </div>
         </div>

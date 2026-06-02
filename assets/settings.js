@@ -84,7 +84,15 @@
   const stockAssignTarget = document.getElementById("stockAssignTarget");
   const stockLookupStatus = document.getElementById("stockLookupStatus");
   const stockLookupResults = document.getElementById("stockLookupResults");
-  const newsEditor = document.getElementById("newsEditor");
+  // News editors split by scope: each section is a filtered view of
+  // cfg.widgets — National shows widgets whose scopes[] includes 'national',
+  // International shows those tagged 'international'. A widget tagged for
+  // both appears in both sections; editing in either updates the same
+  // underlying cfg.widgets entry.
+  const newsEditorNational = document.getElementById("newsEditorNational");
+  const newsEditorInternational = document.getElementById("newsEditorInternational");
+  const addNationalSourceBtn = document.getElementById("addNationalSourceBtn");
+  const addInternationalSourceBtn = document.getElementById("addInternationalSourceBtn");
   const addNewsBtn = document.getElementById("addNewsBtn");
   const newsManualToggle = document.getElementById("newsManualToggle");
   const newsManualBody = document.getElementById("newsManualBody");
@@ -1612,7 +1620,8 @@
       name: String(result.name || "Source").trim() || "Source",
       rss: String(result.rss || "").trim(),
       site: String(result.site || "").trim(),
-      headlinesCount: 6
+      headlinesCount: 6,
+      scopes: [newsDiscoveryAddScope]
     });
     renderNews();
     renderNewsDiscoveryResults();
@@ -1650,7 +1659,8 @@
         name: String(candidate.name || `${label} - Top Stories`).trim(),
         rss: String(candidate.rss || "").trim(),
         site: String(candidate.site || "").trim(),
-        headlinesCount: 6
+        headlinesCount: 6,
+        scopes: [newsDiscoveryAddScope]
       });
       added += 1;
     }
@@ -2350,15 +2360,34 @@
 
   // Render news sources
   function renderNews(){
-    newsEditor.innerHTML = "";
-    const list = cfg.widgets || [];
+    renderNewsByScope("national", newsEditorNational, addNationalSourceBtn);
+    renderNewsByScope("international", newsEditorInternational, addInternationalSourceBtn);
+    // The shared "Add manually" button inside the discovery modal still
+    // gates on total capacity (combined national + international).
+    if(addNewsBtn){
+      const atMax = (cfg.widgets || []).length >= NEWS_SOURCE_LIMIT;
+      addNewsBtn.disabled = atMax;
+      addNewsBtn.title = atMax ? `Maximum ${NEWS_SOURCE_LIMIT} sources reached` : "Add a new news source";
+    }
+    // Discovery modal shows "already added" badges; refresh when widgets change.
+    try { renderNewsDiscoveryResults(); } catch {}
+  }
+
+  // Per-scope news editor render. Iterates the WHOLE cfg.widgets array but
+  // only emits rows for widgets whose scopes[] includes the requested scope.
+  // Indices passed to handlers refer to global cfg.widgets positions so
+  // edits/removes/reorders update the canonical list directly.
+  function renderNewsByScope(scope, editorEl, addBtn){
+    if(!editorEl) return;
+    editorEl.innerHTML = "";
+    const widgets = cfg.widgets || [];
     let dragFrom = -1;
 
     const clearNewsDropHints = () => {
-      newsEditor.querySelectorAll(".newsEditorRow").forEach((el) => {
+      editorEl.querySelectorAll(".newsEditorRow").forEach((el) => {
         el.classList.remove("drag-over", "drag-over-before", "drag-over-after");
       });
-      newsEditor.querySelectorAll(".stockDropHint").forEach((hint) => {
+      editorEl.querySelectorAll(".stockDropHint").forEach((hint) => {
         hint.classList.remove("active");
         hint.textContent = "";
       });
@@ -2374,20 +2403,43 @@
       return { after, hint };
     };
 
-    // Disable add button if at max capacity
-    if(addNewsBtn){
-      addNewsBtn.disabled = list.length >= NEWS_SOURCE_LIMIT;
-      addNewsBtn.title = list.length >= NEWS_SOURCE_LIMIT ? `Maximum ${NEWS_SOURCE_LIMIT} sources reached` : "Add a new news source";
+    // Disable Add button when total widgets hit the global cap.
+    if(addBtn){
+      const atMax = widgets.length >= NEWS_SOURCE_LIMIT;
+      addBtn.disabled = atMax;
+      addBtn.title = atMax
+        ? `Maximum ${NEWS_SOURCE_LIMIT} total sources reached`
+        : `Add a new ${scope} source`;
     }
 
-    list.forEach((w, idx) => {
+    // Filter to widgets tagged for this scope, preserving their global index
+    // so per-row handlers (edit, remove, drag) operate on cfg.widgets directly.
+    const filtered = widgets
+      .map((w, idx) => ({ w, idx }))
+      .filter(({ w }) => {
+        const ss = Array.isArray(w?.scopes) ? w.scopes : ["national"];
+        return ss.includes(scope);
+      });
+
+    if(filtered.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "hint stockEditorEmptyHint";
+      empty.textContent = `No ${scope} sources yet. Click "+ Add ${scope === "national" ? "National" : "International"} Source" above.`;
+      editorEl.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach(({ w, idx }, displayIdx) => {
       const row = document.createElement("div");
       row.className = "editorRow newsEditorRow";
       row.dataset.newsIndex = String(idx);
 
       const orderBadge = document.createElement("div");
       orderBadge.className = "stockOrderBadge";
-      orderBadge.textContent = String(idx + 1);
+      // Sequential display number within this scope (1..N). Global cfg.widgets
+      // indices may be sparse from the user's POV since the other scope's
+      // widgets are interleaved.
+      orderBadge.textContent = String(displayIdx + 1);
 
       const name = document.createElement("input");
       name.className = "input newsFieldName";
@@ -2500,7 +2552,10 @@
         const moved = cfg.widgets.splice(idx, 1)[0];
         cfg.widgets.splice(newIdx, 0, moved);
         renderNews();
-        const newDragBtn = newsEditor.querySelectorAll(".newsDragBtn")[newIdx];
+        // Focus the moved row's drag button in this scope's editor. After
+        // re-render, the row's displayIdx may shift; querying by global
+        // newsIndex on the dataset is the stable handle.
+        const newDragBtn = editorEl.querySelector(`.newsEditorRow[data-news-index="${newIdx}"] .newsDragBtn`);
         newDragBtn?.focus();
         setStatus("Reordered (not saved yet)", "unsaved");
       });
@@ -2581,20 +2636,8 @@
         setStatus("Reordered (not saved yet)", "unsaved");
       });
 
-      newsEditor.appendChild(row);
+      editorEl.appendChild(row);
     });
-
-    if(list.length === 0){
-      const empty = document.createElement("div");
-      empty.className = "hint stockEditorEmptyHint";
-      empty.textContent = "No sources yet. Add your first source.";
-      newsEditor.appendChild(empty);
-    }
-
-    addNewsBtn.classList.remove("addNewsCardBtn");
-    addNewsBtn.classList.add("btnSettings");
-    addNewsBtn.textContent = "+ Add News Source Manually";
-    renderNewsDiscoveryResults();
   }
 
   // Load config to UI
@@ -3199,19 +3242,32 @@
     if(e.key === "Escape") closeStockLookupModal();
   });
 
-  // News discovery modal
+  // News discovery modal — shared between the two scope sections. The Add
+  // button that opens it sets `newsDiscoveryAddScope` so any widget pushed
+  // during this session of the modal lands in the right cfg.widgets bucket.
   const newsDiscoveryModal = document.getElementById("newsDiscoveryModal");
   const newsDiscoveryModalBackdrop = document.getElementById("newsDiscoveryModalBackdrop");
   const newsDiscoveryModalClose = document.getElementById("newsDiscoveryModalClose");
-  const addNewsSourceBtn = document.getElementById("addNewsSourceBtn");
+  let newsDiscoveryAddScope = "national";
+  // Remember which Add button triggered the modal so closing can return focus there.
+  let newsDiscoveryReturnFocus = null;
 
-  function openNewsDiscoveryModal(){
+  function openNewsDiscoveryModal(scope = "national", returnFocusEl = null){
     if(!newsDiscoveryModal) return;
+    newsDiscoveryAddScope = scope === "international" ? "international" : "national";
+    newsDiscoveryReturnFocus = returnFocusEl || null;
     if(newsDiscoveryInput) newsDiscoveryInput.value = "";
     if(newsDiscoveryResults) newsDiscoveryResults.innerHTML = "";
     setNewsDiscoveryStatus("", "default");
     setManualNewsMode(false);
     renderNewsDiscoveryBrowse();
+    // Tweak the modal title to reflect which scope we're adding to.
+    const title = document.getElementById("newsDiscoveryModalTitle");
+    if(title){
+      title.textContent = "Add " +
+        (newsDiscoveryAddScope === "international" ? "International" : "National") +
+        " News Source";
+    }
     newsDiscoveryModal.hidden = false;
     document.body.classList.add("newsDiscoveryModalOpen");
     requestAnimationFrame(() => newsDiscoveryInput?.focus());
@@ -3221,10 +3277,11 @@
     if(!newsDiscoveryModal) return;
     newsDiscoveryModal.hidden = true;
     document.body.classList.remove("newsDiscoveryModalOpen");
-    addNewsSourceBtn?.focus();
+    (newsDiscoveryReturnFocus || addNationalSourceBtn)?.focus();
   }
 
-  addNewsSourceBtn?.addEventListener("click", openNewsDiscoveryModal);
+  addNationalSourceBtn?.addEventListener("click", () => openNewsDiscoveryModal("national", addNationalSourceBtn));
+  addInternationalSourceBtn?.addEventListener("click", () => openNewsDiscoveryModal("international", addInternationalSourceBtn));
   newsDiscoveryModalClose?.addEventListener("click", closeNewsDiscoveryModal);
   newsDiscoveryModalBackdrop?.addEventListener("click", closeNewsDiscoveryModal);
   newsDiscoveryModal?.addEventListener("keydown", (e) => {
@@ -3238,7 +3295,7 @@
       setStatus(`Maximum ${NEWS_SOURCE_LIMIT} sources reached`, "error");
       return;
     }
-    cfg.widgets.push({ name:"", rss:"", site:"", headlinesCount:6 });
+    cfg.widgets.push({ name:"", rss:"", site:"", headlinesCount:6, scopes:[newsDiscoveryAddScope] });
     renderNews();
     setStatus("Added (not saved yet)", "unsaved");
   });
