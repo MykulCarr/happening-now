@@ -31,7 +31,26 @@
 
   function persistWeather(zip, data){
     try {
-      localStorage.setItem(TOPBAR_WX_KEY, JSON.stringify({ zip, data, savedAt: Date.now() }));
+      // Merge new fields into the previous same-ZIP snapshot instead of
+      // replacing it wholesale. The current + daily fetches happen
+      // sequentially; if the second one fails (transient 5xx, network
+      // blip, or an outage like Open-Meteo's /v1/forecast going down),
+      // a flat replace would blow away the previously-good fields and
+      // leave the topbar showing partial data (e.g. temp present but
+      // high/low "--°/--°") for the lifetime of the cache.
+      let prev = null;
+      try {
+        const raw = localStorage.getItem(TOPBAR_WX_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if(parsed?.zip === zip && parsed?.data && typeof parsed.data === "object"){
+          prev = parsed.data;
+        }
+      } catch {}
+      const merged = { ...(prev || {}) };
+      for(const [k, v] of Object.entries(data || {})){
+        if(v !== undefined && v !== null) merged[k] = v;
+      }
+      localStorage.setItem(TOPBAR_WX_KEY, JSON.stringify({ zip, data: merged, savedAt: Date.now() }));
     } catch {}
   }
 

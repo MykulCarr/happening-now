@@ -109,6 +109,14 @@
   const jsonBox = document.getElementById("jsonBox");
   const resetBtn = document.getElementById("resetBtn");
 
+  // Status. Updates the small label next to the Save Changes button to
+  // reflect the current dirty/saved/error state. type is one of
+  // "default" | "unsaved" | "saved" | "error".
+  function setStatus(msg, type = "default"){
+    if(!saveStatus) return;
+    saveStatus.textContent = msg;
+    saveStatus.className = `statusIndicator ${type}`;
+  }
 
   // Tab switching
   function activateTab(tab, options = {}){
