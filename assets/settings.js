@@ -2777,8 +2777,6 @@
       cfg.newsTickerScope = activeTickerScopeBtn.dataset.value;
     }
 
-    pullAstrolabFromUI();
-    
     // Keep default page visibility config
 
   }
