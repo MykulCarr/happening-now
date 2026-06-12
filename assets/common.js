@@ -204,7 +204,7 @@
       { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
       { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
       { name: "ArsTechnica", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", headlinesCount: 5, scopes: ["national"] },
-      { name: "PBS NewsHour", rss: "https://www.pbs.org/newshour/feeds/rss/headlines", site: "https://www.pbs.org/newshour", headlinesCount: 5, scopes: ["national"] },
+      { name: "ProPublica", rss: "https://www.propublica.org/feeds/propublica/main", site: "https://www.propublica.org", headlinesCount: 5, scopes: ["national"] },
       { name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", headlinesCount: 5, scopes: ["international"] },
       { name: "Hacker News", rss: "https://news.ycombinator.com/rss", site: "https://news.ycombinator.com", headlinesCount: 5, scopes: ["national"] },
       { name: "Deutsche Welle", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", headlinesCount: 5, scopes: ["international"] },
@@ -278,8 +278,42 @@
         defaultScopesByRss[dw.rss] = clone(dw.scopes);
       }
     }
+    // Heal saved configs whose RSS URLs have gone stale. Two flavors:
+    //
+    // RSS_URL_FIXUPS — pure URL swap (publisher and editorial intent
+    //   unchanged, just the canonical URL moved). e.g. Bridge Michigan.
+    //
+    // WIDGET_ENTRY_MIGRATIONS — full publisher swap (URL points at a
+    //   different outlet, so the displayed name + site link also have to
+    //   change or the widget header lies about its content). e.g. PBS
+    //   NewsHour replaced with ProPublica after PBS started returning
+    //   202 + empty body to every Cloudflare Worker IP. Name/site only
+    //   overwrite if the user's saved values still match the prior
+    //   defaults (preserves any custom rename).
+    const RSS_URL_FIXUPS = {
+      "https://www.bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles",
+      "https://bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles",
+      "https://www.pbs.org/newshour/feeds/rss/headlines": "https://www.propublica.org/feeds/propublica/main"
+    };
+    const WIDGET_ENTRY_MIGRATIONS = {
+      "https://www.pbs.org/newshour/feeds/rss/headlines": {
+        name: "ProPublica",
+        site: "https://www.propublica.org",
+        oldName: "PBS NewsHour",
+        oldSite: "https://www.pbs.org/newshour"
+      }
+    };
+
     out.widgets = out.widgets.map(w => {
-      const rss = String(w?.rss || "").trim();
+      const rawRss = String(w?.rss || "").trim();
+      const rawName = String(w?.name || "").trim();
+      const rawSite = String(w?.site || "").trim();
+
+      const rss = RSS_URL_FIXUPS[rawRss] || rawRss;
+      const entryMig = WIDGET_ENTRY_MIGRATIONS[rawRss];
+      const name = (entryMig && rawName === entryMig.oldName) ? entryMig.name : (rawName || "Source");
+      const site = (entryMig && rawSite === entryMig.oldSite) ? entryMig.site : rawSite;
+
       // Preserve incoming scopes; otherwise fall back to the canonical
       // tag for known default RSS URLs; otherwise default to ["national"]
       // (single scope) so an unrecognized custom widget doesn't pollute
@@ -293,9 +327,9 @@
         scopes = ["national"];
       }
       return {
-        name: String(w?.name || "").trim() || "Source",
+        name,
         rss,
-        site: String(w?.site || "").trim(),
+        site,
         headlinesCount: Math.max(1, Math.min(20, Number(w?.headlinesCount || 6))),
         scopes
       };
@@ -312,22 +346,10 @@
     }
     out.widgets = out.widgets.slice(0, 15); // Max 15 sources
 
-    // Auto-rewrite known-broken RSS URLs to their working replacements when
-    // we load a saved config. Necessary because a user's picker-saved
-    // localSources/regionalSources are stored in localStorage and outlive
-    // any updates we push to local-stations.json — so when a feed URL goes
-    // stale, only this migration step heals existing users without
-    // requiring them to re-open the picker and re-pick.
-    const RSS_URL_FIXUPS = {
-      // Bridge Michigan: /rss.xml only 301s to the canonical feed when there
-      // are zero query params. Our cache-buster ?t=<ms> broke the redirect.
-      // Pin to the canonical feed URL Bridge itself redirects to.
-      "https://www.bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles",
-      "https://bridgemi.com/rss.xml": "https://bridgemi.com/feed/?partner-feed=latest-articles"
-    };
-
     // Normalize user-curated local/regional source lists. Each entry mirrors
     // a widget shape so the news.js render path can use them directly.
+    // RSS_URL_FIXUPS is the hoisted map declared above for widgets; both
+    // call sites share it so a stale URL only needs to be listed once.
     function normalizeSourceList(list) {
       if (!Array.isArray(list)) return [];
       return list.map(s => {
