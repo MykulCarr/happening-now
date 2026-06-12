@@ -1638,8 +1638,23 @@
       const wind   = cur.wind_speed_10m;
       const gust   = cur.wind_gusts_10m;
       const rh     = cur.relative_humidity_2m;
-      const precip = cur.precipitation;
       const code   = cur.weather_code;
+
+      // cur.precipitation is the prior-hour SUM in inches/mm, which reads
+      // 0 when rain just started or is light -- visually wrong when it's
+      // actively raining. Use the current hour's forecast probability
+      // from the hourly array instead; it tracks "is precip happening or
+      // imminent" reliably.
+      const hTimes = meteo.hourly?.time || [];
+      const hPop = meteo.hourly?.precipitation_probability || [];
+      const nowMs = Date.now();
+      let precipPct = null;
+      for(let i = 0; i < hTimes.length; i++){
+        const ts = Date.parse(hTimes[i]);
+        if(!Number.isFinite(ts)) continue;
+        if(ts <= nowMs && nowMs < ts + 3600000){ precipPct = hPop[i]; break; }
+        if(ts > nowMs){ precipPct = i > 0 ? hPop[i - 1] : hPop[i]; break; }
+      }
 
       // Build enhanced current widget with sunrise/sunset and moon phase when available
       const sunrise = (meteo.daily && meteo.daily.sunrise && meteo.daily.sunrise[0]) ? meteo.daily.sunrise[0] : null;
@@ -1719,8 +1734,8 @@
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:24px;">🌧️</span>
               <div>
-                <div style="color:var(--muted); font-size:10px; font-weight:600;">PRECIP</div>
-                <div style="font-weight:700; font-size:13px;">${precip != null ? `${precip} in` : "--"}</div>
+                <div style="color:var(--muted); font-size:10px; font-weight:600;">PRECIP CHANCE</div>
+                <div style="font-weight:700; font-size:13px;">${(precipPct != null && Number.isFinite(precipPct)) ? `${Math.round(precipPct)}%` : "--"}</div>
               </div>
             </div>
             

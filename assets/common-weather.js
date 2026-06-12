@@ -294,6 +294,24 @@
     }
   }
 
+  // Pick the precipitation_probability for the hourly bucket that contains
+  // "now". Open-Meteo returns hourly times at the start of each hour; the
+  // bucket whose start <= now < start+1h is the one to read. If the array
+  // starts in the future (timezone edge), fall back to the first bucket.
+  function currentHourPrecipProbability(hourly){
+    const times = hourly?.time;
+    const probs = hourly?.precipitation_probability;
+    if(!Array.isArray(times) || !Array.isArray(probs) || times.length === 0) return null;
+    const nowMs = Date.now();
+    for(let i = 0; i < times.length; i++){
+      const ts = Date.parse(times[i]);
+      if(!Number.isFinite(ts)) continue;
+      if(ts <= nowMs && nowMs < ts + 3600000) return probs[i];
+      if(ts > nowMs) return i > 0 ? probs[i - 1] : probs[i];
+    }
+    return probs[probs.length - 1];
+  }
+
   async function fetchCurrentWeather(lat, lon){
     const cacheKey = `weather:${lat}:${lon}`;
     const cached = getCached(cacheKey);
@@ -304,11 +322,20 @@
         `https://api.open-meteo.com/v1/forecast` +
         `?latitude=${lat}&longitude=${lon}` +
         `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,relative_humidity_2m` +
+        `&hourly=precipitation_probability` +
+        `&forecast_hours=2` +
         `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
 
       const res = await fetch(url, { cache:"no-store" });
       if(!res.ok) throw new Error("Weather API failed");
       const data = await res.json();
+
+      // Open-Meteo's `current.precipitation` is the prior-hour SUM and reads
+      // 0 the moment rain starts or when it's light. Use the current hour's
+      // forecast probability instead — it actually reflects "is precip
+      // happening or imminent" and matches the infobar's 0-1 contract.
+      const probPct = currentHourPrecipProbability(data.hourly);
+
       const result = {
         temp: data.current?.temperature_2m,
         feels: data.current?.apparent_temperature,
@@ -317,6 +344,7 @@
         windGust: data.current?.wind_gusts_10m,
         windDirection: data.current?.wind_direction_10m,
         humidity: data.current?.relative_humidity_2m,
+        precip: (probPct != null && Number.isFinite(probPct)) ? probPct / 100 : null,
         timezone: data.timezone
       };
       // Cache for 5 minutes
