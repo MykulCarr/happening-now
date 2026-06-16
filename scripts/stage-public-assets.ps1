@@ -36,7 +36,7 @@ foreach ($file in $publicFiles) {
   Copy-Item -Path $src -Destination $target -Force
 }
 
-$publicDirs = @("assets", "data")
+$publicDirs = @("assets", "data", ".well-known")
 foreach ($dir in $publicDirs) {
   $srcDir = Join-Path $repoRoot $dir
   if (Test-Path $srcDir) {
@@ -69,6 +69,17 @@ $buildId = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmss")
 $stagedSw = Join-Path $target "sw.js"
 if (Test-Path $stagedSw) {
   (Get-Content -Path $stagedSw -Raw).Replace("__BUILD_ID__", $buildId) | Set-Content -Path $stagedSw -Encoding UTF8
+}
+
+# Auto-renew the security.txt Expires field on every deploy. RFC 9116 requires
+# a future date; rather than hand-manage it once a year, set it to midnight
+# UTC one year from today on each stage. As long as we deploy at least
+# annually (which we do constantly), the file never goes stale.
+$stagedSecurityTxt = Join-Path $target ".well-known/security.txt"
+if (Test-Path $stagedSecurityTxt) {
+  $invariant = [System.Globalization.CultureInfo]::InvariantCulture
+  $expires = [DateTime]::UtcNow.Date.AddYears(1).ToString("yyyy-MM-ddTHH:mm:ss.fffZ", $invariant)
+  (Get-Content -Path $stagedSecurityTxt -Raw).Replace("__EXPIRES__", $expires) | Set-Content -Path $stagedSecurityTxt -Encoding UTF8 -NoNewline
 }
 
 # Minify JS/CSS in the staged bundle (sources stay readable; only deploy is minified).

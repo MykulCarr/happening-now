@@ -1,0 +1,4 @@
+Contact: mailto:hn-station@protonmail.com
+Expires: __EXPIRES__
+Preferred-Languages: en
+Canonical: https://happening-now.net/.well-known/security.txt
