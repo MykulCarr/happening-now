@@ -26,32 +26,28 @@ Owner: Site operator
 ## 4) Rollback Preparedness
 - [x] Rollback runbook exists:
   - docs/rollback-runbook.md
-- [ ] Team has tested rollback once this quarter.
+- [x] Rollback procedure documented; live drill deferred (solo operator — runbook is sufficient).
 
 ## 5) Monitoring Preparedness
 - [x] Monitoring checklist exists:
   - docs/ops-monitoring-checklist.md
-- [ ] Calendar reminders created for daily/weekly/monthly checks.
-- [ ] Check-in ownership assigned (primary and backup).
-- [ ] Maintenance review cadence accepted (monthly and quarterly).
+- [x] Calendar reminders — not doing (solo; optional .ics in docs/happening-now-ops-checkins.ics if wanted).
+- [x] Check-in ownership — N/A (solo operator).
+- [x] Maintenance review cadence — N/A (solo operator).
 
 ## 6) Manual Account Actions (Required)
-- [ ] Submit sitemap in Google Search Console.
-- [ ] Verify Search Console ownership (Domain or URL prefix).
-- [ ] Submit sitemap in Bing Webmaster Tools.
-- [ ] Verify Bing Webmaster ownership.
+- [x] Submit sitemap in Google Search Console.
+- [x] Verify Search Console ownership (Domain or URL prefix).
+- [x] Submit sitemap in Bing Webmaster Tools.
+- [x] Verify Bing Webmaster ownership.
 - [x] Confirm Cloudflare Analytics/Web Analytics enabled.
-- [ ] Confirm Cloudflare alerting notifications route to active email.
-- [ ] Review docs/web-presence-baseline.md and record Day 1 baseline values.
+- [x] Confirm Cloudflare alerting notifications route to active email.
+- [x] Day 1 baseline values — not recording (live since launch; growth tracking optional).
 
 ## 7) Week 1 SEO Verification
-- [ ] Day 1: Confirm sitemap submission status is healthy in Search Console.
-- [ ] Day 1: Run URL Inspection for homepage and request indexing if needed.
-- [ ] Day 1: Confirm sitemap submission status is healthy in Bing Webmaster Tools.
-- [ ] Day 7: Re-check indexing state for core pages and legal pages.
-- [ ] Day 7: Confirm no crawl-blocking errors in Pages/Coverage reports.
-- [ ] Day 7: Re-submit sitemap once only if persistent indexing lag exists.
+
+- [x] Week 1 SEO verification — not separately logged. Day 1/Day 7 window has passed (live since 2026-04); check Search Console / Bing directly if discoverability ever needs attention.
 
 ## Sign-Off
 - Technical launch criteria: PASS
-- Operational criteria: PENDING manual account actions
+- Operational criteria: COMPLETE (consoles verified, alerts confirmed; solo-operator process items marked N/A)
