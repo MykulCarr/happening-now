@@ -60,6 +60,33 @@ working fix look broken.
   scans the served HTML source and found nothing. Don't refactor it back out
   into a shared file.
 
+## Local news coverage list
+
+`data/local-stations.json` is the curated per-state/per-city feed list behind the
+Local News picker. It documents its own rules in `_meta.howToAdd` — read that
+before adding. The one that matters most: **verify every candidate feed through
+the Worker proxy**, not just in a browser —
+
+```bash
+curl -s 'https://happening-now.net/v1/rss/raw?url=<urlencoded>' | grep -c '<item'
+```
+
+Zero means skip it. Feed families that work: Nexstar (`/feed/`), Scripps
+(`/news.rss`), TownNews (`/search/?f=rss&t=article&c=news`), Arc
+(`/arc/outboundfeeds/rss/`), and the States Newsroom nonprofits (`/feed/`).
+Families that reliably fail through the proxy: Gannett (`/rss/`) and Gray
+(`/arcio/rss/`).
+
+After changing that file, regenerate the public list on `sources.html`:
+
+```bash
+npm run coverage
+```
+
+That rewrites the block between the `coverage:start`/`coverage:end` markers from
+the JSON, so the page can't drift from the data. It's written into the committed
+HTML rather than rendered client-side so crawlers can see the city names.
+
 ## Deploying
 
 ```powershell

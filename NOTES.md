@@ -73,6 +73,31 @@ source*, and there was nothing in the markup to find. Fixed by moving Google's
 standard snippet inline into `<head>` on each page, consent lines still ahead of
 `config`. Bonus: it now fires earlier than a deferred end-of-body script.
 
+**Local news coverage: now all 50 states + DC.** Went from 15 states / 53 cities
+/ 172 feeds to **51 blocks / 90 cities / 250 feeds**. Every added feed was
+verified through the Worker proxy first, per `_meta.howToAdd` — several
+plausible candidates failed and were dropped rather than shipped.
+
+Useful pattern knowledge from the sweep, now recorded in `CLAUDE.md`: Nexstar
+(`/feed/`), Scripps (`/news.rss`), TownNews (`/search/?f=rss…`), Arc
+(`/arc/outboundfeeds/rss/`) and the States Newsroom nonprofits (`/feed/`) all
+work through the proxy. **Gannett (`/rss/`) and Gray (`/arcio/rss/`) reliably
+do not** — every candidate from those two families returned zero items.
+Statewide coverage leans on the States Newsroom nonprofits, which are the same
+shape as the Bridge Michigan entry that was already there.
+
+Verified in a real browser that `getStationsForGeo` resolves the new cities
+(including `St. Louis, Missouri` → `MO`/`st. louis`), that Detroit still returns
+its original 6 feeds, and that the haversine nearest-city fallback now spans the
+new data (Omaha → Des Moines, Sioux Falls).
+
+**Coverage list on sources.html.** New "Local News Coverage" section, generated
+from the JSON by `scripts/update-coverage.mjs` (`npm run coverage`) into a
+marker-delimited block, so the public list can't drift from the data. It writes
+into the committed HTML rather than rendering client-side, so crawlers see the
+city names — this page is the natural organic hook for "&lt;city&gt; local news".
+Checked at 390px and desktop.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`

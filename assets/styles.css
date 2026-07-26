@@ -7629,3 +7629,37 @@ body.stockLookupModalOpen {
 }
 
 /* ── End first-run welcome modal ─────────────────────────────────────────── */
+/* ── Local news coverage list (sources.html) ──────────────────────────────
+   Markup between the coverage:start/end markers in sources.html is generated
+   by scripts/update-coverage.mjs from data/local-stations.json. Multi-column
+   rather than a grid so entries reflow naturally down to phone width. */
+.coverageSummary {
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+.coverageList {
+  columns: 3;
+  column-gap: 24px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coverageList li {
+  break-inside: avoid;
+  margin-bottom: 10px;
+}
+
+.coverageState {
+  display: block;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .coverageList { columns: 2; }
+}
+
+@media (max-width: 560px) {
+  .coverageList { columns: 1; }
+}
