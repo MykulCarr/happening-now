@@ -6,7 +6,8 @@
   "scripts": {
     "minify": "node scripts/minify-deploy.mjs",
     "coverage": "node scripts/update-coverage.mjs",
-    "check-feeds": "node scripts/check-feeds.mjs"
+    "check-feeds": "node scripts/check-feeds.mjs",
+    "curate": "node scripts/curate-report.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0"

@@ -1,3 +1,5 @@
+import { runCurationSweep } from "./curate.js";
+
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
 }
@@ -385,6 +387,17 @@ async function fetchStockTimeSeries(request, env, url) {
 }
 
 export default {
+  // Daily cron. Each firing checks the next slice of curated feeds and parks
+  // its position in KV; when the sweep wraps it emails the admin a digest.
+  // See curate.js for why it's chunked rather than done in one pass.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      runCurationSweep(env)
+        .then(r => console.log("[curate]", JSON.stringify(r)))
+        .catch(err => console.error("[curate] failed:", err?.message || err)),
+    );
+  },
+
   async fetch(request, env) {
     if (!isOriginAllowed(request, env)) {
       return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, request, env);

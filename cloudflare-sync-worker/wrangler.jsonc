@@ -11,6 +11,23 @@
     { "pattern": "happening-now.net/v1/*", "zone_name": "happening-now.net" }
   ],
 
+  // Daily sweep of the curated feed list. Each firing checks a slice and stores
+  // its position in KV; the digest email goes out when the sweep wraps, which
+  // works out to roughly weekly. See src/curate.js.
+  "triggers": {
+    "crons": ["0 13 * * *"]
+  },
+
+  // Sends the digest to the site admin. Requires Email Routing enabled on the
+  // zone AND the destination address verified in the Cloudflare dashboard —
+  // deploy fails with "destination address not verified" otherwise.
+  "send_email": [
+    {
+      "name": "ADMIN_EMAIL",
+      "destination_address": "hn-station@protonmail.com"
+    }
+  ],
+
   "kv_namespaces": [
     {
       "binding": "HN_STATE_DATA",

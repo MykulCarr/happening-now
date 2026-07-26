@@ -109,6 +109,22 @@ Verified against live results for detroit / chicago / phoenix / ann arbor.
 False positives are the cheap error here — anything wrongly dropped is still
 addable by pasting its RSS URL.
 
+### Other things live under this zone — don't break them
+
+`happening-now.net` is shared. **`flights.happening-now.net`** is FlightTrack,
+which runs its own `server.js` on a different machine and only borrows the
+subdomain — it never calls `/v1/*`. AstroLAB is fully separate (own Cloudflare
+project, own repo). Worker routes are `happening-now.net/*` and
+`happening-now.net/v1/*`, which match the apex hostname only, so subdomains are
+untouched by anything here.
+
+The one way to break them from this repo is the shared Worker: `/v1/rss`,
+`/v1/stocks` and `/v1/artemis` all live in `cloudflare-sync-worker`, and a
+module that throws at *import* time takes the whole Worker down, not just the
+feature that imported it. That's why `curate.js` imports `cloudflare:email`
+lazily inside the send path rather than at the top of the file. Keep optional
+extras behind lazy imports.
+
 ### Feeds rot — re-check them
 
 ```bash
