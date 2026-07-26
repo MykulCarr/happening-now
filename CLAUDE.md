@@ -88,8 +88,26 @@ returns an Atom feed of matching subreddits, and that's what
 proxy before assuming it still holds; if it breaks, the symptom is an empty
 "Reddit communities" group, not an error.
 
-Search results go straight to the user, so keep the NSFW/personals filter in
-`source-search.js` — a bare query like "detroit" surfaces junk subs otherwise.
+**The result filter in `source-search.js` is load-bearing — don't loosen it.**
+These results land in a public-facing dashboard, and Reddit gives us nothing to
+lean on: the Atom output has no `over_18` marker and `include_over_18=off` is
+silently ignored on the `.rss` endpoint. So filtering is entirely ours. Three
+things about it that are easy to break:
+
+- It matches **name + title + sidebar description**. The description is the most
+  telling of the three; an early version ignored it and leaked.
+- It **splits camelCase before matching** (`DetroitButts` → `detroit butts`) so
+  every pattern can anchor on `\b`. This is what lets it block `DetroitButts`
+  while keeping **Butte MT**, `Cumberland`, `Dickinson ND` and `Assateague`. An
+  unanchored `butts?` blocked Butte — if you add a term, add the boundaries and
+  re-run the false-positive suite of real place names.
+- A result must also **earn relevance**: it names what was searched for, or it
+  reads like a news/civic outlet. That's what keeps r/Pizza and r/nba out of a
+  "detroit" search.
+
+Verified against live results for detroit / chicago / phoenix / ann arbor.
+False positives are the cheap error here — anything wrongly dropped is still
+addable by pasting its RSS URL.
 
 After changing that file, regenerate the public list on `sources.html`:
 

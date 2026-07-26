@@ -136,6 +136,32 @@ distinction and its comment says so. Now Ann Arbor correctly offers Jackson
 (33 mi) and Detroit (36 mi), with statewide feeds listed separately and
 labelled honestly.
 
+**Hardened the Reddit result filter** (same day, after review). The first cut was
+a thin denylist over name + title only, and it leaked: `r/DetroitButts`,
+`r/PhoenixNsa` ("no strings attached") and `r/Repsneakers` all reached results.
+
+Checked whether Reddit could do the work for us — it can't. The Atom search
+output carries no `over_18` marker, and `include_over_18=off` is silently
+ignored on the `.rss` endpoint (identical result sets with and without it). So
+the filter is entirely client-side.
+
+The interesting bit is the camelCase problem. Sub names are glued together
+(`DetroitButts`), which forces substring matching — but naive substrings destroy
+real place names: an unanchored `butts?` was blocking **Butte, MT**, and
+`cum`/`anal`/`dick` would have taken out Cumberland, Analy and Dickinson ND.
+Fix is to split camelCase into words *first*, then anchor every pattern on `\b`.
+That gets both: `DetroitButts` blocked, `Butte` kept. Nice side effect —
+`PhoenixNsa` splits to "phoenix nsa" and is blocked, while `NSAoversight` doesn't
+split and survives, so a legitimate security-agency feed isn't collateral.
+
+Also added a positive relevance requirement (names the query, or reads like a
+news/civic outlet), which drops r/Pizza and r/nba from a "detroit" search on its
+own. Off-topic-but-harmless matches are ranked below news ones rather than
+dropped.
+
+Tested against live results for detroit / chicago / phoenix / ann arbor plus a
+false-positive suite of real place names: 19/19 junk blocked, no real place lost.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`
