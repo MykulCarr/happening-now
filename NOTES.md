@@ -162,6 +162,47 @@ dropped.
 Tested against live results for detroit / chicago / phoenix / ann arbor plus a
 false-positive suite of real place names: 19/19 junk blocked, no real place lost.
 
+## 2026-07-26 (evening) — Feed audit, backfill, and a health checker
+
+Asked whether the curated list had ever been held to the same criteria as the
+new Reddit filter. It hadn't — the filter only ever applied to search results.
+Audited it properly.
+
+**Editorial fit: fine.** All 69 curated subreddits are general city/state
+community subs; no food, hobby, sports-only or personals. Earlier curation
+holds up. Gap found: only the original 15 states have subreddits at all, so the
+36 states added today offer no Reddit communities. On the to-do list.
+
+**Feed health: not fine.** 33 of 249 (13%) were dead — verified when added, and
+rotted since. Failures were family-wide, not random:
+
+| Family | URL shape | Dead |
+| --- | --- | --- |
+| Tegna | `/feeds/syndication/rss/news/local` | 20/20 |
+| Hearst | `/topstories-rss` | 8/8 |
+
+Both now join Gannett (`/rss/`) and Gray (`/arcio/rss/`). **Four cities had no
+working feed at all** — Atlanta, Greensboro, Spokane, Victorville — and nothing
+surfaced that; the page just showed less.
+
+**Backfill: 230 → 267 feeds**, single-source cities 45 → 32. The deeper problem
+was that the list was almost entirely TV + daily papers, so a platform outage
+took out whole cities at once. Added source types with different owners:
+
+- **Patch** (31 cities) — hyperlocal, and the URL is derivable from the
+  `(state, city)` pair already stored, so it scales without hand-picking. New
+  `community` entry type.
+- Public radio (WPLN, Colorado Public Radio), nonprofit newsrooms (Denverite,
+  Austin Monitor), alt-weeklies (Chicago Reader, Cleveland Scene).
+
+Caution learned: public radio can't be assumed. NPR members on the Grove
+platform (KJZZ, WUWM, OPB, Boise State) return nothing through the proxy while
+the WordPress ones (WPLN, CPR) are fine — check station by station.
+
+**`scripts/check-feeds.mjs`** (`npm run check-feeds`) makes this repeatable.
+Exits non-zero on any dead feed and shouts if a place is left with none. Reports
+rather than edits, on purpose. Currently 267/267 alive.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`

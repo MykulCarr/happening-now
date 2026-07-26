@@ -109,6 +109,21 @@ Verified against live results for detroit / chicago / phoenix / ann arbor.
 False positives are the cheap error here — anything wrongly dropped is still
 addable by pasting its RSS URL.
 
+### Feeds rot — re-check them
+
+```bash
+npm run check-feeds        # or: node scripts/check-feeds.mjs --json
+```
+
+Exits non-zero if anything is dead and shouts if a place is left with **no**
+working feed. Worth running before any release that touches the list, and
+periodically regardless: an audit on 2026-07-26 found **33 of 249 feeds (13%)
+had died** since they were added, and four cities — Atlanta included — were
+serving nothing at all. Nothing surfaced it; the page just quietly showed less.
+
+It reports rather than edits, deliberately: dropping a source is an editorial
+call, and a feed can 500 for a day without being dead.
+
 After changing that file, regenerate the public list on `sources.html`:
 
 ```bash
