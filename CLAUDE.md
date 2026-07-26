@@ -88,6 +88,20 @@ returns an Atom feed of matching subreddits, and that's what
 proxy before assuming it still holds; if it breaks, the symptom is an empty
 "Reddit communities" group, not an error.
 
+**Verifying subreddits: count `<entry>`, and go slow.** Two traps, both of which
+produced false "dead" verdicts on 2026-07-26:
+
+- Reddit serves **Atom**, so a checker counting only `<item>` reports every
+  subreddit as dead. Count `<(item|entry)` — and count *occurrences*, not lines:
+  `grep -c` returns 1 for an entire feed, because feeds arrive on one line.
+- Reddit **rate-limits** bulk checking. Probing 172 subs six-at-a-time returned
+  six spurious zeroes including `r/Ohio` and `r/Seattle`; every one returned 25
+  entries when retried serially a few seconds apart. Re-check any failure one at
+  a time before concluding it's dead.
+
+`scripts/check-feeds.mjs` counts both element types correctly — ad-hoc shell
+loops are where this goes wrong.
+
 **The result filter in `source-search.js` is load-bearing — don't loosen it.**
 These results land in a public-facing dashboard, and Reddit gives us nothing to
 lean on: the Atom output has no `over_18` marker and `include_over_18=off` is

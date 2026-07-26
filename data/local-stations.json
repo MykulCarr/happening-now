@@ -99,6 +99,40 @@
         "subreddits": [
           "Birmingham_AL"
         ]
+      },
+      "huntsville": {
+        "coords": {
+          "lat": 34.7304,
+          "lon": -86.5861
+        },
+        "entries": [
+          {
+            "name": "WHNT News 19 (Huntsville, CBS)",
+            "rss": "https://whnt.com/feed/",
+            "site": "https://whnt.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "HuntsvilleAlabama"
+        ]
+      },
+      "mobile": {
+        "coords": {
+          "lat": 30.6954,
+          "lon": -88.0399
+        },
+        "entries": [
+          {
+            "name": "WKRG News 5 (Mobile, CBS)",
+            "rss": "https://www.wkrg.com/feed/",
+            "site": "https://www.wkrg.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "mobileAL"
+        ]
       }
     },
     "AR": {
@@ -117,6 +151,23 @@
         ],
         "subreddits": [
           "Arkansas"
+        ]
+      },
+      "fayetteville": {
+        "coords": {
+          "lat": 36.0822,
+          "lon": -94.1719
+        },
+        "entries": [
+          {
+            "name": "KNWA / NWA Homepage (Fayetteville, NBC)",
+            "rss": "https://www.nwahomepage.com/feed/",
+            "site": "https://www.nwahomepage.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "fayettevillear"
         ]
       },
       "little rock": {
@@ -176,6 +227,29 @@
         ],
         "subreddits": [
           "phoenix"
+        ]
+      },
+      "tucson": {
+        "coords": {
+          "lat": 32.2226,
+          "lon": -110.9747
+        },
+        "entries": [
+          {
+            "name": "KGUN 9 (Tucson, ABC)",
+            "rss": "https://www.kgun9.com/news.rss",
+            "site": "https://www.kgun9.com",
+            "type": "tv"
+          },
+          {
+            "name": "Patch Tucson",
+            "rss": "https://patch.com/feeds/arizona/tucson",
+            "site": "https://patch.com/arizona/tucson",
+            "type": "community"
+          }
+        ],
+        "subreddits": [
+          "Tucson"
         ]
       }
     },
@@ -508,6 +582,23 @@
           "Colorado"
         ]
       },
+      "colorado springs": {
+        "coords": {
+          "lat": 38.8339,
+          "lon": -104.8214
+        },
+        "entries": [
+          {
+            "name": "KRDO NewsChannel 13 (Colorado Springs, ABC)",
+            "rss": "https://krdo.com/feed/",
+            "site": "https://krdo.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "ColoradoSprings"
+        ]
+      },
       "denver": {
         "coords": {
           "lat": 39.7392,
@@ -577,6 +668,23 @@
         ],
         "subreddits": [
           "Hartford"
+        ]
+      },
+      "new haven": {
+        "coords": {
+          "lat": 41.3083,
+          "lon": -72.9279
+        },
+        "entries": [
+          {
+            "name": "WTNH News 8 (New Haven)",
+            "rss": "https://www.wtnh.com/news/connecticut/new-haven/feed/",
+            "site": "https://www.wtnh.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "newhaven"
         ]
       }
     },
@@ -933,6 +1041,23 @@
           "Iowa"
         ]
       },
+      "davenport": {
+        "coords": {
+          "lat": 41.5236,
+          "lon": -90.5776
+        },
+        "entries": [
+          {
+            "name": "WHBF / Our Quad Cities (Davenport, CBS)",
+            "rss": "https://www.ourquadcities.com/feed/",
+            "site": "https://www.ourquadcities.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "QuadCities"
+        ]
+      },
       "des moines": {
         "coords": {
           "lat": 41.5868,
@@ -990,6 +1115,23 @@
         ],
         "subreddits": [
           "Boise"
+        ]
+      },
+      "idaho falls": {
+        "coords": {
+          "lat": 43.4917,
+          "lon": -112.0339
+        },
+        "entries": [
+          {
+            "name": "Local News 8 (KIFI, Idaho Falls, ABC)",
+            "rss": "https://www.localnews8.com/feed/",
+            "site": "https://www.localnews8.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "IdahoFalls"
         ]
       }
     },
@@ -1089,6 +1231,40 @@
           "Indiana"
         ]
       },
+      "evansville": {
+        "coords": {
+          "lat": 37.9716,
+          "lon": -87.5711
+        },
+        "entries": [
+          {
+            "name": "WEHT / Tri-State Homepage (Evansville, ABC)",
+            "rss": "https://www.tristatehomepage.com/feed/",
+            "site": "https://www.tristatehomepage.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "evansville"
+        ]
+      },
+      "fort wayne": {
+        "coords": {
+          "lat": 41.0793,
+          "lon": -85.1394
+        },
+        "entries": [
+          {
+            "name": "WANE 15 (Fort Wayne, CBS)",
+            "rss": "https://www.wane.com/feed/",
+            "site": "https://www.wane.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "fortwayne"
+        ]
+      },
       "indianapolis": {
         "coords": {
           "lat": 39.7684,
@@ -1123,6 +1299,23 @@
         ],
         "subreddits": [
           "kansas"
+        ]
+      },
+      "topeka": {
+        "coords": {
+          "lat": 39.0473,
+          "lon": -95.6752
+        },
+        "entries": [
+          {
+            "name": "KSNT 27 (Topeka, NBC)",
+            "rss": "https://www.ksnt.com/feed/",
+            "site": "https://www.ksnt.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "topeka"
         ]
       },
       "wichita": {
@@ -1161,6 +1354,23 @@
           "Kentucky"
         ]
       },
+      "lexington": {
+        "coords": {
+          "lat": 38.0406,
+          "lon": -84.5037
+        },
+        "entries": [
+          {
+            "name": "LEX 18 (Lexington, NBC)",
+            "rss": "https://www.lex18.com/news.rss",
+            "site": "https://www.lex18.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "lexington"
+        ]
+      },
       "louisville": {
         "coords": {
           "lat": 38.2527,
@@ -1197,6 +1407,23 @@
           "Louisiana"
         ]
       },
+      "baton rouge": {
+        "coords": {
+          "lat": 30.4515,
+          "lon": -91.1871
+        },
+        "entries": [
+          {
+            "name": "BRProud / WGMB (Baton Rouge, FOX)",
+            "rss": "https://www.brproud.com/feed/",
+            "site": "https://www.brproud.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "BatonRouge"
+        ]
+      },
       "new orleans": {
         "coords": {
           "lat": 29.9511,
@@ -1218,6 +1445,23 @@
         ],
         "subreddits": [
           "NewOrleans"
+        ]
+      },
+      "shreveport": {
+        "coords": {
+          "lat": 32.5252,
+          "lon": -93.7502
+        },
+        "entries": [
+          {
+            "name": "KTAL 6 (Shreveport, NBC)",
+            "rss": "https://www.ktalnews.com/feed/",
+            "site": "https://www.ktalnews.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "Shreveport"
         ]
       }
     },
@@ -1368,6 +1612,23 @@
         ],
         "subreddits": [
           "Maine"
+        ]
+      },
+      "bangor": {
+        "coords": {
+          "lat": 44.8016,
+          "lon": -68.7712
+        },
+        "entries": [
+          {
+            "name": "Bangor Daily News",
+            "rss": "https://www.bangordailynews.com/feed/",
+            "site": "https://www.bangordailynews.com",
+            "type": "paper"
+          }
+        ],
+        "subreddits": [
+          "Bangor"
         ]
       },
       "portland": {
@@ -1553,6 +1814,23 @@
           "minnesota"
         ]
       },
+      "duluth": {
+        "coords": {
+          "lat": 46.7867,
+          "lon": -92.1005
+        },
+        "entries": [
+          {
+            "name": "WDIO 10 (Duluth, ABC)",
+            "rss": "https://www.wdio.com/feed/",
+            "site": "https://www.wdio.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "duluth"
+        ]
+      },
       "minneapolis": {
         "coords": {
           "lat": 44.9778,
@@ -1601,6 +1879,23 @@
           "missouri"
         ]
       },
+      "columbia": {
+        "coords": {
+          "lat": 38.9517,
+          "lon": -92.3341
+        },
+        "entries": [
+          {
+            "name": "ABC 17 News (Columbia)",
+            "rss": "https://abc17news.com/feed/",
+            "site": "https://abc17news.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "columbiamo"
+        ]
+      },
       "kansas city": {
         "coords": {
           "lat": 39.0997,
@@ -1616,6 +1911,23 @@
         ],
         "subreddits": [
           "kansascity"
+        ]
+      },
+      "springfield": {
+        "coords": {
+          "lat": 37.209,
+          "lon": -93.2923
+        },
+        "entries": [
+          {
+            "name": "KOLR / Ozarks First (Springfield, CBS)",
+            "rss": "https://www.ozarksfirst.com/feed/",
+            "site": "https://www.ozarksfirst.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "springfieldMO"
         ]
       },
       "st. louis": {
@@ -1717,6 +2029,40 @@
         ],
         "subreddits": [
           "billings"
+        ]
+      },
+      "great falls": {
+        "coords": {
+          "lat": 47.5052,
+          "lon": -111.3008
+        },
+        "entries": [
+          {
+            "name": "KRTV 3 (Great Falls, CBS)",
+            "rss": "https://www.krtv.com/news.rss",
+            "site": "https://www.krtv.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "GreatFallsMT"
+        ]
+      },
+      "missoula": {
+        "coords": {
+          "lat": 46.8721,
+          "lon": -113.994
+        },
+        "entries": [
+          {
+            "name": "KPAX 8 (Missoula, CBS)",
+            "rss": "https://www.kpax.com/news.rss",
+            "site": "https://www.kpax.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "missoula"
         ]
       }
     },
@@ -1832,6 +2178,23 @@
           "NorthDakota"
         ]
       },
+      "bismarck": {
+        "coords": {
+          "lat": 46.8083,
+          "lon": -100.7837
+        },
+        "entries": [
+          {
+            "name": "KX News (Bismarck, NBC)",
+            "rss": "https://www.kxnet.com/feed/",
+            "site": "https://www.kxnet.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "bismarck"
+        ]
+      },
       "fargo": {
         "coords": {
           "lat": 46.8772,
@@ -1866,6 +2229,23 @@
         ],
         "subreddits": [
           "Nebraska"
+        ]
+      },
+      "lincoln": {
+        "coords": {
+          "lat": 40.8136,
+          "lon": -96.7026
+        },
+        "entries": [
+          {
+            "name": "KLKN 8 (Lincoln, ABC)",
+            "rss": "https://www.klkntv.com/feed/",
+            "site": "https://www.klkntv.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "lincoln"
         ]
       },
       "omaha": {
@@ -1948,6 +2328,23 @@
         "subreddits": [
           "newjersey"
         ]
+      },
+      "jersey city": {
+        "coords": {
+          "lat": 40.7178,
+          "lon": -74.0431
+        },
+        "entries": [
+          {
+            "name": "Patch Jersey City",
+            "rss": "https://patch.com/feeds/new-jersey/jersey-city",
+            "site": "https://patch.com/new-jersey/jersey-city",
+            "type": "community"
+          }
+        ],
+        "subreddits": [
+          "jerseycity"
+        ]
       }
     },
     "NM": {
@@ -1983,6 +2380,23 @@
         ],
         "subreddits": [
           "Albuquerque"
+        ]
+      },
+      "las cruces": {
+        "coords": {
+          "lat": 32.3199,
+          "lon": -106.7637
+        },
+        "entries": [
+          {
+            "name": "KTSM 9 (El Paso / Las Cruces, NBC)",
+            "rss": "https://www.ktsm.com/feed/",
+            "site": "https://www.ktsm.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "LasCruces"
         ]
       }
     },
@@ -2025,6 +2439,23 @@
         ],
         "subreddits": [
           "vegas"
+        ]
+      },
+      "reno": {
+        "coords": {
+          "lat": 39.5296,
+          "lon": -119.8138
+        },
+        "entries": [
+          {
+            "name": "This Is Reno (nonprofit)",
+            "rss": "https://thisisreno.com/feed/",
+            "site": "https://thisisreno.com",
+            "type": "paper"
+          }
+        ],
+        "subreddits": [
+          "Reno"
         ]
       }
     },
@@ -2373,6 +2804,23 @@
         "subreddits": [
           "okc"
         ]
+      },
+      "tulsa": {
+        "coords": {
+          "lat": 36.154,
+          "lon": -95.9928
+        },
+        "entries": [
+          {
+            "name": "KJRH 2 (Tulsa, NBC)",
+            "rss": "https://www.kjrh.com/news.rss",
+            "site": "https://www.kjrh.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "tulsa"
+        ]
       }
     },
     "OR": {
@@ -2692,6 +3140,40 @@
         "subreddits": [
           "Charleston"
         ]
+      },
+      "greenville": {
+        "coords": {
+          "lat": 34.8526,
+          "lon": -82.394
+        },
+        "entries": [
+          {
+            "name": "WSPA 7 (Greenville/Spartanburg, CBS)",
+            "rss": "https://www.wspa.com/feed/",
+            "site": "https://www.wspa.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "greenville"
+        ]
+      },
+      "myrtle beach": {
+        "coords": {
+          "lat": 33.6891,
+          "lon": -78.8867
+        },
+        "entries": [
+          {
+            "name": "WBTW 13 (Myrtle Beach, CBS)",
+            "rss": "https://www.wbtw.com/feed/",
+            "site": "https://www.wbtw.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "myrtlebeach"
+        ]
       }
     },
     "SD": {
@@ -2746,6 +3228,23 @@
         ],
         "subreddits": [
           "Tennessee"
+        ]
+      },
+      "knoxville": {
+        "coords": {
+          "lat": 35.9606,
+          "lon": -83.9207
+        },
+        "entries": [
+          {
+            "name": "WATE 6 (Knoxville, ABC)",
+            "rss": "https://www.wate.com/feed/",
+            "site": "https://www.wate.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "Knoxville"
         ]
       },
       "memphis": {
@@ -3179,6 +3678,46 @@
           "wisconsin"
         ]
       },
+      "green bay": {
+        "coords": {
+          "lat": 44.5133,
+          "lon": -88.0133
+        },
+        "entries": [
+          {
+            "name": "WFRV / We Are Green Bay (CBS)",
+            "rss": "https://www.wearegreenbay.com/feed/",
+            "site": "https://www.wearegreenbay.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "greenbay"
+        ]
+      },
+      "madison": {
+        "coords": {
+          "lat": 43.0731,
+          "lon": -89.4012
+        },
+        "entries": [
+          {
+            "name": "Wisconsin State Journal",
+            "rss": "https://madison.com/search/?f=rss&t=article&c=news",
+            "site": "https://madison.com",
+            "type": "paper"
+          },
+          {
+            "name": "WKOW 27 (Madison, ABC)",
+            "rss": "https://www.wkow.com/search/?f=rss&t=article&c=news",
+            "site": "https://www.wkow.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "madisonwi"
+        ]
+      },
       "milwaukee": {
         "coords": {
           "lat": 43.0389,
@@ -3237,6 +3776,23 @@
         "subreddits": [
           "Charleston_WV"
         ]
+      },
+      "morgantown": {
+        "coords": {
+          "lat": 39.6295,
+          "lon": -79.9559
+        },
+        "entries": [
+          {
+            "name": "WBOY 12 (Morgantown, NBC)",
+            "rss": "https://www.wboy.com/feed/",
+            "site": "https://www.wboy.com",
+            "type": "tv"
+          }
+        ],
+        "subreddits": [
+          "morgantown"
+        ]
       }
     },
     "WY": {
@@ -3255,6 +3811,23 @@
         ],
         "subreddits": [
           "wyoming"
+        ]
+      },
+      "casper": {
+        "coords": {
+          "lat": 42.8501,
+          "lon": -106.3252
+        },
+        "entries": [
+          {
+            "name": "Oil City News (Casper)",
+            "rss": "https://oilcity.news/feed/",
+            "site": "https://oilcity.news",
+            "type": "paper"
+          }
+        ],
+        "subreddits": [
+          "Casper"
         ]
       },
       "cheyenne": {
