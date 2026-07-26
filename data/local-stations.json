@@ -271,21 +271,9 @@
         },
         "entries": [
           {
-            "name": "KCRA 3 Sacramento (NBC)",
-            "rss": "https://www.kcra.com/topstories-rss",
-            "site": "https://www.kcra.com",
-            "type": "tv"
-          },
-          {
             "name": "KTXL Fox 40 Sacramento",
             "rss": "https://www.fox40.com/news/feed/",
             "site": "https://www.fox40.com",
-            "type": "tv"
-          },
-          {
-            "name": "KXTV ABC 10 Sacramento",
-            "rss": "https://www.abc10.com/feeds/syndication/rss/news/local",
-            "site": "https://www.abc10.com",
             "type": "tv"
           }
         ],
@@ -300,16 +288,16 @@
         },
         "entries": [
           {
-            "name": "Coyote Chronicle (CSUSB)",
-            "rss": "https://coyotechronicle.net/feed/",
-            "site": "https://coyotechronicle.net",
-            "type": "paper"
-          },
-          {
             "name": "Inland Empire Community News",
             "rss": "https://iecn.com/feed/",
             "site": "https://iecn.com",
             "type": "paper"
+          },
+          {
+            "name": "KTLA 5 (LA/Inland Empire)",
+            "rss": "https://ktla.com/feed/",
+            "site": "https://ktla.com",
+            "type": "tv"
           }
         ],
         "subreddits": [
@@ -322,12 +310,6 @@
           "lon": -117.1611
         },
         "entries": [
-          {
-            "name": "KFMB CBS 8 San Diego",
-            "rss": "https://www.cbs8.com/feeds/syndication/rss/news/local",
-            "site": "https://www.cbs8.com",
-            "type": "tv"
-          },
           {
             "name": "KGTV ABC 10 News San Diego",
             "rss": "https://www.10news.com/news.rss",
@@ -437,10 +419,10 @@
         },
         "entries": [
           {
-            "name": "Victor Valley News (VVNG)",
-            "rss": "https://www.vvng.com/feed/",
-            "site": "https://www.vvng.com",
-            "type": "paper"
+            "name": "KTLA 5 (LA/High Desert)",
+            "rss": "https://ktla.com/feed/",
+            "site": "https://ktla.com",
+            "type": "tv"
           }
         ],
         "subreddits": [
@@ -614,6 +596,12 @@
         },
         "entries": [
           {
+            "name": "FOX 13 Tampa Bay",
+            "rss": "https://www.fox13news.com/rss/category/local-news",
+            "site": "https://www.fox13news.com",
+            "type": "tv"
+          },
+          {
             "name": "WFLA News Channel 8 Tampa (NBC)",
             "rss": "https://www.wfla.com/news/feed/",
             "site": "https://www.wfla.com",
@@ -623,12 +611,6 @@
             "name": "WFTS ABC Action News Tampa",
             "rss": "https://www.abcactionnews.com/news.rss",
             "site": "https://www.abcactionnews.com",
-            "type": "tv"
-          },
-          {
-            "name": "WTSP 10 Tampa Bay (CBS)",
-            "rss": "https://www.wtsp.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wtsp.com",
             "type": "tv"
           }
         ],
@@ -643,9 +625,9 @@
         },
         "entries": [
           {
-            "name": "WESH 2 Orlando (NBC)",
-            "rss": "https://www.wesh.com/topstories-rss",
-            "site": "https://www.wesh.com",
+            "name": "FOX 35 Orlando",
+            "rss": "https://www.fox35orlando.com/rss/category/local-news",
+            "site": "https://www.fox35orlando.com",
             "type": "tv"
           },
           {
@@ -672,10 +654,10 @@
             "type": "tv"
           },
           {
-            "name": "WTLV First Coast News Jacksonville",
-            "rss": "https://www.firstcoastnews.com/feeds/syndication/rss/news/local",
-            "site": "https://www.firstcoastnews.com",
-            "type": "tv"
+            "name": "Jacksonville Today (nonprofit)",
+            "rss": "https://jaxtoday.org/feed/",
+            "site": "https://jaxtoday.org",
+            "type": "paper"
           }
         ],
         "subreddits": [
@@ -737,15 +719,15 @@
         },
         "entries": [
           {
-            "name": "Atlanta Magazine",
-            "rss": "https://www.atlantamagazine.com/feed/",
-            "site": "https://www.atlantamagazine.com",
+            "name": "Atlanta Civic Circle (nonprofit)",
+            "rss": "https://atlantaciviccircle.org/feed/",
+            "site": "https://atlantaciviccircle.org",
             "type": "paper"
           },
           {
-            "name": "WXIA 11Alive Atlanta (NBC)",
-            "rss": "https://www.11alive.com/feeds/syndication/rss/news/local",
-            "site": "https://www.11alive.com",
+            "name": "FOX 5 Atlanta",
+            "rss": "https://www.fox5atlanta.com/rss/category/local-news",
+            "site": "https://www.fox5atlanta.com",
             "type": "tv"
           }
         ],
@@ -759,12 +741,6 @@
           "lon": -81.0912
         },
         "entries": [
-          {
-            "name": "WJCL ABC 22 Savannah",
-            "rss": "https://www.wjcl.com/topstories-rss",
-            "site": "https://www.wjcl.com",
-            "type": "tv"
-          },
           {
             "name": "WSAV Savannah (NBC)",
             "rss": "https://www.wsav.com/news/feed/",
@@ -907,12 +883,6 @@
             "name": "Block Club Chicago (neighborhood)",
             "rss": "https://blockclubchicago.org/feed/",
             "site": "https://blockclubchicago.org",
-            "type": "paper"
-          },
-          {
-            "name": "Chicago Sun-Times",
-            "rss": "https://chicago.suntimes.com/rss/index.xml",
-            "site": "https://chicago.suntimes.com",
             "type": "paper"
           },
           {
@@ -1114,12 +1084,6 @@
             "type": "tv"
           },
           {
-            "name": "WCVB Boston (ABC 5)",
-            "rss": "https://www.wcvb.com/topstories-rss",
-            "site": "https://www.wcvb.com",
-            "type": "tv"
-          },
-          {
             "name": "WHDH 7News Boston",
             "rss": "https://whdh.com/news/feed/",
             "site": "https://whdh.com",
@@ -1283,12 +1247,6 @@
             "name": "WOOD-TV Grand Rapids (NBC)",
             "rss": "https://www.woodtv.com/feed/",
             "site": "https://www.woodtv.com",
-            "type": "tv"
-          },
-          {
-            "name": "WZZM 13 Grand Rapids (ABC)",
-            "rss": "https://www.wzzm13.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wzzm13.com",
             "type": "tv"
           }
         ],
@@ -1538,12 +1496,6 @@
         },
         "entries": [
           {
-            "name": "WCNC Charlotte (NBC 36)",
-            "rss": "https://www.wcnc.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wcnc.com",
-            "type": "tv"
-          },
-          {
             "name": "WJZY Queen City News Charlotte (Fox 46)",
             "rss": "https://www.fox46.com/feed/",
             "site": "https://www.fox46.com",
@@ -1584,15 +1536,9 @@
         },
         "entries": [
           {
-            "name": "WFMY Greensboro (CBS 2)",
-            "rss": "https://www.wfmynews2.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wfmynews2.com",
-            "type": "tv"
-          },
-          {
-            "name": "WXII Winston-Salem (NBC 12)",
-            "rss": "https://www.wxii12.com/topstories-rss",
-            "site": "https://www.wxii12.com",
+            "name": "FOX8 (WGHP, Piedmont Triad)",
+            "rss": "https://myfox8.com/feed/",
+            "site": "https://myfox8.com",
             "type": "tv"
           }
         ],
@@ -1861,12 +1807,6 @@
         },
         "entries": [
           {
-            "name": "WGRZ Buffalo (NBC 2)",
-            "rss": "https://www.wgrz.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wgrz.com",
-            "type": "tv"
-          },
-          {
             "name": "WIVB Buffalo (CBS 4)",
             "rss": "https://www.wivb.com/news/feed/",
             "site": "https://www.wivb.com",
@@ -2000,12 +1940,6 @@
             "rss": "https://fox8.com/news/feed/",
             "site": "https://fox8.com",
             "type": "tv"
-          },
-          {
-            "name": "WKYC Cleveland (NBC 3)",
-            "rss": "https://www.wkyc.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wkyc.com",
-            "type": "tv"
           }
         ],
         "subreddits": [
@@ -2018,12 +1952,6 @@
           "lon": -82.9988
         },
         "entries": [
-          {
-            "name": "WBNS 10TV Columbus (CBS)",
-            "rss": "https://www.10tv.com/feeds/syndication/rss/news/local",
-            "site": "https://www.10tv.com",
-            "type": "tv"
-          },
           {
             "name": "WCMH NBC 4 Columbus",
             "rss": "https://www.nbc4i.com/news/feed/",
@@ -2046,12 +1974,6 @@
             "rss": "https://www.wcpo.com/news.rss",
             "site": "https://www.wcpo.com",
             "type": "tv"
-          },
-          {
-            "name": "WLWT Cincinnati (NBC 5)",
-            "rss": "https://www.wlwt.com/topstories-rss",
-            "site": "https://www.wlwt.com",
-            "type": "tv"
           }
         ],
         "subreddits": [
@@ -2065,16 +1987,16 @@
         },
         "entries": [
           {
+            "name": "BG Independent News (nonprofit)",
+            "rss": "https://bgindependentmedia.org/feed/",
+            "site": "https://bgindependentmedia.org",
+            "type": "paper"
+          },
+          {
             "name": "Toledo Blade",
             "rss": "https://www.toledoblade.com/rss/",
             "site": "https://www.toledoblade.com",
             "type": "paper"
-          },
-          {
-            "name": "WTOL Toledo (CBS 11)",
-            "rss": "https://www.wtol.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wtol.com",
-            "type": "tv"
           }
         ],
         "subreddits": [
@@ -2165,12 +2087,6 @@
           "lon": -122.6784
         },
         "entries": [
-          {
-            "name": "KGW Portland (NBC 8)",
-            "rss": "https://www.kgw.com/feeds/syndication/rss/news/local",
-            "site": "https://www.kgw.com",
-            "type": "tv"
-          },
           {
             "name": "KOIN Portland (CBS 6)",
             "rss": "https://www.koin.com/news/feed/",
@@ -2284,16 +2200,16 @@
         },
         "entries": [
           {
+            "name": "PublicSource (nonprofit)",
+            "rss": "https://www.publicsource.org/feed/",
+            "site": "https://www.publicsource.org",
+            "type": "paper"
+          },
+          {
             "name": "TribLive (Pittsburgh Tribune-Review)",
             "rss": "https://triblive.com/rss/",
             "site": "https://triblive.com",
             "type": "paper"
-          },
-          {
-            "name": "WTAE Pittsburgh (ABC 4)",
-            "rss": "https://www.wtae.com/topstories-rss",
-            "site": "https://www.wtae.com",
-            "type": "tv"
           }
         ],
         "subreddits": [
@@ -2328,12 +2244,6 @@
             "rss": "https://www.pennlive.com/arc/outboundfeeds/rss/",
             "site": "https://www.pennlive.com",
             "type": "paper"
-          },
-          {
-            "name": "WGAL Lancaster (NBC 8)",
-            "rss": "https://www.wgal.com/topstories-rss",
-            "site": "https://www.wgal.com",
-            "type": "tv"
           },
           {
             "name": "WHTM ABC 27 Harrisburg",
@@ -2524,12 +2434,6 @@
             "type": "paper"
           },
           {
-            "name": "Texas Monthly",
-            "rss": "https://www.texasmonthly.com/feed/",
-            "site": "https://www.texasmonthly.com",
-            "type": "paper"
-          },
-          {
             "name": "Texas Standard (statewide radio)",
             "rss": "https://www.texasstandard.org/feed/",
             "site": "https://www.texasstandard.org",
@@ -2553,9 +2457,9 @@
         },
         "entries": [
           {
-            "name": "KHOU 11 Houston (CBS)",
-            "rss": "https://www.khou.com/feeds/syndication/rss/news/local",
-            "site": "https://www.khou.com",
+            "name": "FOX 26 Houston",
+            "rss": "https://www.fox26houston.com/rss/category/local-news",
+            "site": "https://www.fox26houston.com",
             "type": "tv"
           },
           {
@@ -2576,12 +2480,6 @@
         },
         "entries": [
           {
-            "name": "KENS 5 San Antonio (CBS)",
-            "rss": "https://www.kens5.com/feeds/syndication/rss/news/local",
-            "site": "https://www.kens5.com",
-            "type": "tv"
-          },
-          {
             "name": "San Antonio Report",
             "rss": "https://sanantonioreport.org/feed/",
             "site": "https://sanantonioreport.org",
@@ -2599,15 +2497,15 @@
         },
         "entries": [
           {
-            "name": "KXAS NBC 5 DFW",
-            "rss": "https://www.nbcdfw.com/?rss=y",
-            "site": "https://www.nbcdfw.com",
+            "name": "FOX 4 (KDFW, Dallas-Fort Worth)",
+            "rss": "https://www.fox4news.com/rss/category/local-news",
+            "site": "https://www.fox4news.com",
             "type": "tv"
           },
           {
-            "name": "WFAA Dallas (ABC 8)",
-            "rss": "https://www.wfaa.com/feeds/syndication/rss/news/local",
-            "site": "https://www.wfaa.com",
+            "name": "KXAS NBC 5 DFW",
+            "rss": "https://www.nbcdfw.com/?rss=y",
+            "site": "https://www.nbcdfw.com",
             "type": "tv"
           }
         ],
@@ -2621,12 +2519,6 @@
           "lon": -97.7431
         },
         "entries": [
-          {
-            "name": "KVUE Austin (ABC 24)",
-            "rss": "https://www.kvue.com/feeds/syndication/rss/news/local",
-            "site": "https://www.kvue.com",
-            "type": "tv"
-          },
           {
             "name": "KXAN Austin (NBC 36)",
             "rss": "https://www.kxan.com/news/feed/",
@@ -2756,12 +2648,6 @@
             "rss": "https://www.wtkr.com/news.rss",
             "site": "https://www.wtkr.com",
             "type": "tv"
-          },
-          {
-            "name": "WVEC 13News Hampton Roads (ABC)",
-            "rss": "https://www.13newsnow.com/feeds/syndication/rss/news/local",
-            "site": "https://www.13newsnow.com",
-            "type": "tv"
           }
         ],
         "subreddits": [
@@ -2830,10 +2716,10 @@
         },
         "entries": [
           {
-            "name": "KING 5 Seattle (NBC)",
-            "rss": "https://www.king5.com/feeds/syndication/rss/news/local",
-            "site": "https://www.king5.com",
-            "type": "tv"
+            "name": "PubliCola (Seattle)",
+            "rss": "https://publicola.com/feed/",
+            "site": "https://publicola.com",
+            "type": "paper"
           },
           {
             "name": "The Stranger (Seattle alt-weekly)",
@@ -2853,10 +2739,10 @@
         },
         "entries": [
           {
-            "name": "KREM 2 Spokane (CBS)",
-            "rss": "https://www.krem.com/feeds/syndication/rss/news/local",
-            "site": "https://www.krem.com",
-            "type": "tv"
+            "name": "The Spokesman-Review",
+            "rss": "https://www.spokesman.com/feeds/stories/",
+            "site": "https://www.spokesman.com",
+            "type": "paper"
           }
         ],
         "subreddits": [
