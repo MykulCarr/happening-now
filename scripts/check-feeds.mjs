@@ -48,7 +48,9 @@ async function pool(items, worker, limit) {
   return out;
 }
 
-const { states } = JSON.parse(await fs.readFile(path.join(repoRoot, "data", "local-stations.json"), "utf8"));
+const read = async name => JSON.parse(await fs.readFile(path.join(repoRoot, "data", name), "utf8"));
+const { states } = await read("local-stations.json");
+const { topics } = await read("topic-sources.json");
 
 const feeds = [];
 for (const [state, block] of Object.entries(states)) {
@@ -56,6 +58,13 @@ for (const [state, block] of Object.entries(states)) {
     for (const e of node.entries || []) {
       feeds.push({ state, place: key === "_state" ? "(statewide)" : key, name: e.name, rss: e.rss });
     }
+  }
+}
+// Topic feeds rot exactly like the geographic ones, so they belong in the same
+// sweep — otherwise the Science tab can go quiet with nothing reporting it.
+for (const [id, topic] of Object.entries(topics)) {
+  for (const e of topic.entries || []) {
+    feeds.push({ state: "topic", place: id, name: e.name, rss: e.rss });
   }
 }
 
