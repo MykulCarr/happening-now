@@ -145,6 +145,12 @@
             "rss": "https://www.abc15.com/news.rss",
             "site": "https://www.abc15.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Phoenix",
+            "rss": "https://patch.com/feeds/arizona/phoenix",
+            "site": "https://patch.com/arizona/phoenix",
+            "type": "community"
           }
         ]
       }
@@ -190,6 +196,12 @@
             "rss": "https://www.yourcentralvalley.com/news/feed/",
             "site": "https://www.yourcentralvalley.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Fresno",
+            "rss": "https://patch.com/feeds/california/fresno",
+            "site": "https://patch.com/california/fresno",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -237,6 +249,12 @@
             "rss": "https://www.latimes.com/california/rss2.0.xml",
             "site": "https://www.latimes.com",
             "type": "paper"
+          },
+          {
+            "name": "Patch Los Angeles",
+            "rss": "https://patch.com/feeds/california/los-angeles",
+            "site": "https://patch.com/california/los-angeles",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -275,6 +293,12 @@
             "rss": "https://www.fox40.com/news/feed/",
             "site": "https://www.fox40.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Sacramento",
+            "rss": "https://patch.com/feeds/california/sacramento",
+            "site": "https://patch.com/california/sacramento",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -327,6 +351,12 @@
             "rss": "https://fox5sandiego.com/news/feed/",
             "site": "https://fox5sandiego.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch San Diego",
+            "rss": "https://patch.com/feeds/california/san-diego",
+            "site": "https://patch.com/california/san-diego",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -350,6 +380,12 @@
             "rss": "https://www.nbcbayarea.com/?rss=y",
             "site": "https://www.nbcbayarea.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch San Francisco",
+            "rss": "https://patch.com/feeds/california/san-francisco",
+            "site": "https://patch.com/california/san-francisco",
+            "type": "community"
           },
           {
             "name": "The San Francisco Standard",
@@ -452,10 +488,22 @@
         },
         "entries": [
           {
+            "name": "Colorado Public Radio",
+            "rss": "https://www.cpr.org/feed/",
+            "site": "https://www.cpr.org",
+            "type": "paper"
+          },
+          {
             "name": "Denver7 (KMGH, ABC)",
             "rss": "https://www.denver7.com/news.rss",
             "site": "https://www.denver7.com",
             "type": "tv"
+          },
+          {
+            "name": "Denverite (nonprofit)",
+            "rss": "https://denverite.com/feed/",
+            "site": "https://denverite.com",
+            "type": "paper"
           }
         ]
       }
@@ -481,6 +529,12 @@
           "lon": -72.6734
         },
         "entries": [
+          {
+            "name": "Patch Hartford",
+            "rss": "https://patch.com/feeds/connecticut/hartford",
+            "site": "https://patch.com/connecticut/hartford",
+            "type": "community"
+          },
           {
             "name": "WTNH News 8 (Hartford/New Haven, ABC)",
             "rss": "https://www.wtnh.com/feed/",
@@ -567,6 +621,12 @@
         },
         "entries": [
           {
+            "name": "Patch Miami",
+            "rss": "https://patch.com/feeds/florida/miami",
+            "site": "https://patch.com/florida/miami",
+            "type": "community"
+          },
+          {
             "name": "WPLG Local 10 Miami (ABC)",
             "rss": "https://www.local10.com/arc/outboundfeeds/rss/",
             "site": "https://www.local10.com",
@@ -631,6 +691,12 @@
             "type": "tv"
           },
           {
+            "name": "Patch Orlando",
+            "rss": "https://patch.com/feeds/florida/orlando",
+            "site": "https://patch.com/florida/orlando",
+            "type": "community"
+          },
+          {
             "name": "WFTV ABC 9 Orlando",
             "rss": "https://www.wftv.com/arc/outboundfeeds/rss/?outputType=xml",
             "site": "https://www.wftv.com",
@@ -658,6 +724,12 @@
             "rss": "https://jaxtoday.org/feed/",
             "site": "https://jaxtoday.org",
             "type": "paper"
+          },
+          {
+            "name": "Patch Jacksonville",
+            "rss": "https://patch.com/feeds/florida/jacksonville",
+            "site": "https://patch.com/florida/jacksonville",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -729,6 +801,12 @@
             "rss": "https://www.fox5atlanta.com/rss/category/local-news",
             "site": "https://www.fox5atlanta.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Atlanta",
+            "rss": "https://patch.com/feeds/georgia/atlanta",
+            "site": "https://patch.com/georgia/atlanta",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -741,6 +819,12 @@
           "lon": -81.0912
         },
         "entries": [
+          {
+            "name": "Patch Savannah",
+            "rss": "https://patch.com/feeds/georgia/savannah",
+            "site": "https://patch.com/georgia/savannah",
+            "type": "community"
+          },
           {
             "name": "WSAV Savannah (NBC)",
             "rss": "https://www.wsav.com/news/feed/",
@@ -839,6 +923,12 @@
             "rss": "https://www.kivitv.com/news.rss",
             "site": "https://www.kivitv.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Boise",
+            "rss": "https://patch.com/feeds/idaho/boise",
+            "site": "https://patch.com/idaho/boise",
+            "type": "community"
           }
         ]
       }
@@ -886,10 +976,22 @@
             "type": "paper"
           },
           {
+            "name": "Chicago Reader",
+            "rss": "https://chicagoreader.com/feed/",
+            "site": "https://chicagoreader.com",
+            "type": "paper"
+          },
+          {
             "name": "NBC 5 Chicago (WMAQ)",
             "rss": "https://www.nbcchicago.com/?rss=y",
             "site": "https://www.nbcchicago.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Chicago",
+            "rss": "https://patch.com/feeds/illinois/chicago",
+            "site": "https://patch.com/illinois/chicago",
+            "type": "community"
           },
           {
             "name": "WGN-TV Chicago",
@@ -1084,6 +1186,12 @@
             "type": "tv"
           },
           {
+            "name": "Patch Boston",
+            "rss": "https://patch.com/feeds/massachusetts/boston",
+            "site": "https://patch.com/massachusetts/boston",
+            "type": "community"
+          },
+          {
             "name": "WHDH 7News Boston",
             "rss": "https://whdh.com/news/feed/",
             "site": "https://whdh.com",
@@ -1133,6 +1241,12 @@
           "lon": -76.6122
         },
         "entries": [
+          {
+            "name": "Patch Baltimore",
+            "rss": "https://patch.com/feeds/maryland/baltimore",
+            "site": "https://patch.com/maryland/baltimore",
+            "type": "community"
+          },
           {
             "name": "WMAR 2 News (Baltimore, ABC)",
             "rss": "https://www.wmar2news.com/news.rss",
@@ -1221,6 +1335,12 @@
             "type": "paper"
           },
           {
+            "name": "Patch Detroit",
+            "rss": "https://patch.com/feeds/michigan/detroit",
+            "site": "https://patch.com/michigan/detroit",
+            "type": "community"
+          },
+          {
             "name": "WXYZ Detroit (ABC)",
             "rss": "https://www.wxyz.com/news.rss",
             "site": "https://www.wxyz.com",
@@ -1242,6 +1362,12 @@
             "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/grand-rapids/",
             "site": "https://www.mlive.com/grand-rapids",
             "type": "paper"
+          },
+          {
+            "name": "Patch Grand Rapids",
+            "rss": "https://patch.com/feeds/michigan/grand-rapids",
+            "site": "https://patch.com/michigan/grand-rapids",
+            "type": "community"
           },
           {
             "name": "WOOD-TV Grand Rapids (NBC)",
@@ -1335,6 +1461,12 @@
             "type": "tv"
           },
           {
+            "name": "Patch Minneapolis",
+            "rss": "https://patch.com/feeds/minnesota/minneapolis",
+            "site": "https://patch.com/minnesota/minneapolis",
+            "type": "community"
+          },
+          {
             "name": "Star Tribune (Minneapolis)",
             "rss": "https://www.startribune.com/rss/",
             "site": "https://www.startribune.com",
@@ -1414,6 +1546,12 @@
           "lon": -90.1848
         },
         "entries": [
+          {
+            "name": "Patch Jackson",
+            "rss": "https://patch.com/feeds/mississippi/jackson",
+            "site": "https://patch.com/mississippi/jackson",
+            "type": "community"
+          },
           {
             "name": "WJTV 12 (Jackson, CBS)",
             "rss": "https://www.wjtv.com/feed/",
@@ -1807,6 +1945,12 @@
         },
         "entries": [
           {
+            "name": "Patch Buffalo",
+            "rss": "https://patch.com/feeds/new-york/buffalo",
+            "site": "https://patch.com/new-york/buffalo",
+            "type": "community"
+          },
+          {
             "name": "WIVB Buffalo (CBS 4)",
             "rss": "https://www.wivb.com/news/feed/",
             "site": "https://www.wivb.com",
@@ -1876,6 +2020,12 @@
         },
         "entries": [
           {
+            "name": "Patch Syracuse",
+            "rss": "https://patch.com/feeds/new-york/syracuse",
+            "site": "https://patch.com/new-york/syracuse",
+            "type": "community"
+          },
+          {
             "name": "Syracuse.com",
             "rss": "https://www.syracuse.com/arc/outboundfeeds/rss/category/news/",
             "site": "https://www.syracuse.com",
@@ -1923,6 +2073,12 @@
           "lon": -81.6944
         },
         "entries": [
+          {
+            "name": "Cleveland Scene",
+            "rss": "https://www.clevescene.com/cleveland/Rss.xml",
+            "site": "https://www.clevescene.com",
+            "type": "paper"
+          },
           {
             "name": "Cleveland.com",
             "rss": "https://www.cleveland.com/arc/outboundfeeds/rss/category/news/",
@@ -2171,6 +2327,12 @@
             "type": "paper"
           },
           {
+            "name": "Patch Philadelphia",
+            "rss": "https://patch.com/feeds/pennsylvania/philadelphia",
+            "site": "https://patch.com/pennsylvania/philadelphia",
+            "type": "community"
+          },
+          {
             "name": "PHL17 (WPHL)",
             "rss": "https://phl17.com/feed/",
             "site": "https://phl17.com",
@@ -2199,6 +2361,12 @@
           "lon": -79.9959
         },
         "entries": [
+          {
+            "name": "Patch Pittsburgh",
+            "rss": "https://patch.com/feeds/pennsylvania/pittsburgh",
+            "site": "https://patch.com/pennsylvania/pittsburgh",
+            "type": "community"
+          },
           {
             "name": "PublicSource (nonprofit)",
             "rss": "https://www.publicsource.org/feed/",
@@ -2239,6 +2407,12 @@
           "lon": -76.8867
         },
         "entries": [
+          {
+            "name": "Patch Harrisburg",
+            "rss": "https://patch.com/feeds/pennsylvania/harrisburg",
+            "site": "https://patch.com/pennsylvania/harrisburg",
+            "type": "community"
+          },
           {
             "name": "PennLive (Harrisburg Patriot-News)",
             "rss": "https://www.pennlive.com/arc/outboundfeeds/rss/",
@@ -2295,6 +2469,12 @@
           "lon": -71.4128
         },
         "entries": [
+          {
+            "name": "Patch Providence",
+            "rss": "https://patch.com/feeds/rhode-island/providence",
+            "site": "https://patch.com/rhode-island/providence",
+            "type": "community"
+          },
           {
             "name": "WPRI 12 (Providence, CBS)",
             "rss": "https://www.wpri.com/feed/",
@@ -2410,6 +2590,12 @@
             "rss": "https://www.newschannel5.com/news.rss",
             "site": "https://www.newschannel5.com",
             "type": "tv"
+          },
+          {
+            "name": "WPLN News (Nashville Public Radio)",
+            "rss": "https://wpln.org/feed/",
+            "site": "https://wpln.org",
+            "type": "paper"
           }
         ]
       }
@@ -2520,6 +2706,12 @@
         },
         "entries": [
           {
+            "name": "Austin Monitor (nonprofit)",
+            "rss": "https://www.austinmonitor.com/feed/",
+            "site": "https://www.austinmonitor.com",
+            "type": "paper"
+          },
+          {
             "name": "KXAN Austin (NBC 36)",
             "rss": "https://www.kxan.com/news/feed/",
             "site": "https://www.kxan.com",
@@ -2547,6 +2739,12 @@
             "rss": "https://kvia.com/feed/",
             "site": "https://kvia.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch El Paso",
+            "rss": "https://patch.com/feeds/texas/el-paso",
+            "site": "https://patch.com/texas/el-paso",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -2615,6 +2813,12 @@
         },
         "entries": [
           {
+            "name": "Patch Richmond",
+            "rss": "https://patch.com/feeds/virginia/richmond",
+            "site": "https://patch.com/virginia/richmond",
+            "type": "community"
+          },
+          {
             "name": "WRIC ABC 8 Richmond",
             "rss": "https://www.wric.com/news/feed/",
             "site": "https://www.wric.com",
@@ -2637,6 +2841,12 @@
           "lon": -76.2859
         },
         "entries": [
+          {
+            "name": "Patch Norfolk",
+            "rss": "https://patch.com/feeds/virginia/norfolk",
+            "site": "https://patch.com/virginia/norfolk",
+            "type": "community"
+          },
           {
             "name": "WAVY 10 Hampton Roads (NBC)",
             "rss": "https://www.wavy.com/news/feed/",
@@ -2772,6 +2982,12 @@
         },
         "entries": [
           {
+            "name": "Patch Milwaukee",
+            "rss": "https://patch.com/feeds/wisconsin/milwaukee",
+            "site": "https://patch.com/wisconsin/milwaukee",
+            "type": "community"
+          },
+          {
             "name": "TMJ4 News (Milwaukee, NBC)",
             "rss": "https://www.tmj4.com/news.rss",
             "site": "https://www.tmj4.com",
@@ -2831,6 +3047,12 @@
           "lon": -104.8202
         },
         "entries": [
+          {
+            "name": "Patch Cheyenne",
+            "rss": "https://patch.com/feeds/wyoming/cheyenne",
+            "site": "https://patch.com/wyoming/cheyenne",
+            "type": "community"
+          },
           {
             "name": "Wyoming Tribune Eagle (Cheyenne)",
             "rss": "https://www.wyomingnews.com/search/?f=rss&t=article&c=news",
