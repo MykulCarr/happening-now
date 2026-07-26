@@ -1,6 +1,6 @@
 # Web Presence Baseline
 
-Last updated: 2026-04-14
+Last updated: 2026-07-26
 
 This guide turns SEO and analytics setup into a repeatable measurement process for HAPPENING NOW.
 
@@ -11,7 +11,10 @@ This guide turns SEO and analytics setup into a repeatable measurement process f
 - Core public pages now include canonical tags, robots directives, Open Graph tags, Twitter summary tags, and JSON-LD structured data.
 - settings.html is marked `noindex,follow` and is not listed in the sitemap.
 - Cloudflare Web Analytics / RUM is enabled in Cloudflare via automatic injection with EU exclusion.
-- Google Search Console verification, Bing Webmaster verification, and GA4 still require account-side setup.
+- Google Search Console and Bing Webmaster verification are **done** (both closed
+  out in `launch-signoff.md`, 2026-06-17), and **GA4 is live** as of 2026-07-26 —
+  see section 4, which describes what was actually built rather than the original
+  hypothetical.
 
 ## 1. Google Search Console
 
@@ -21,9 +24,10 @@ Recommended path:
 2. If Domain property is not practical, add a URL-prefix property for `https://happening-now.net/`.
 3. Submit `https://happening-now.net/sitemap.xml`.
 4. Run URL Inspection for:
-   - `https://happening-now.net/index.html`
-   - `https://happening-now.net/weather.html`
-   - `https://happening-now.net/stocks.html`
+   - `https://happening-now.net/`
+   - `https://happening-now.net/weather`
+   - `https://happening-now.net/stocks`
+   (the `.html` forms 301 to these; inspect the canonical extensionless URLs)
 5. Request indexing only if Search Console reports the URL is not yet indexed.
 
 Baseline metrics to capture:
@@ -87,22 +91,39 @@ Note:
 - The current CSP already allows the standard Cloudflare analytics endpoints.
 - Because Cloudflare is injecting the script automatically, there is no repo-side analytics token to add at this time.
 
-## 4. Optional GA4
+## 4. GA4 (live since 2026-07-26)
 
-Use GA4 only if you want behavior analytics beyond search visibility and edge traffic.
+Measurement ID `G-XL3C28KRQX`, installed inline in the `<head>` of all seven
+pages, with `https://www.googletagmanager.com` added to `script-src` in
+`_headers` and the collection disclosed in `privacy.html`.
 
-Good reasons to add GA4:
+Two things about this install differ from the stock Google snippet, and both
+matter if you touch it:
 
-- Landing page engagement analysis
-- Navigation flow analysis
-- Returning user trends
-- Device and browser breakdowns beyond Cloudflare summaries
+- **Consent Mode is set to denied by default and never granted.** GA4 therefore
+  sends cookieless pings: no cookies, no device identifier, no consent banner
+  required in any region. That keeps the same privacy posture as the
+  EU-excluded Cloudflare Web Analytics.
+- **The tag must stay inline in the HTML.** It was first built as a tidy
+  external `assets/analytics.js` that injected the tag at runtime. Hits fired
+  correctly, but GA4 reported *"tag not installed"* — Google's detection scans
+  the served HTML source and found nothing.
 
-If GA4 is added:
+What this install can and can't tell you:
 
-1. Add the `gtag.js` snippet with your Measurement ID.
-2. Update `privacy.html` to disclose analytics collection.
-3. Validate the CSP if new Google endpoints are required.
+- Sound: page views, referrers, approximate geography, device/browser mix.
+- **Not meaningful:** users, sessions, retention, funnels. Without a persisted
+  client ID every visit looks new. GA4's behavioural modelling that would
+  normally fill that gap needs roughly 1,000 events/day, which this site
+  won't reach.
+
+To get real session data you would flip `analytics_storage` to `granted`, which
+starts setting cookies — and that is what a consent banner exists to cover, so
+it would mean adding one or geo-gating EU visitors.
+
+Still outstanding on the Google side: data retention (defaults to 2 months —
+raise to 14), property time zone, the internal-traffic filter (created inert,
+must be switched to Active), and linking Search Console.
 
 ## 5. Day 1 / Day 7 / Day 30 Review
 
@@ -131,9 +152,9 @@ Day 30:
 
 These values cannot be completed from the repo alone:
 
-- Google Search Console verification token, if using URL-prefix verification
-- Bing Webmaster verification token, if using meta tag verification
-- GA4 Measurement ID, if GA4 is enabled
+Nothing outstanding in the repo — Search Console and Bing are verified, and the
+GA4 Measurement ID is in place. What remains is account-side only, listed at the
+end of section 4.
 
 ## 7. Quick Validation Tools
 

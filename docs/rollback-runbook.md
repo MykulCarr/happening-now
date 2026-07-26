@@ -28,9 +28,9 @@ If P1 or high P2, roll back immediately.
 4. Use Roll back / Promote deployment action.
 5. Wait for deployment status to show active.
 6. Verify:
-   - https://happening-now.net/index.html
-   - https://happening-now.net/weather.html
-   - https://happening-now.net/stocks.html
+   - https://happening-now.net/
+   - https://happening-now.net/weather
+   - https://happening-now.net/stocks
 
 ## Procedure B: Roll Back Cloudflare Worker
 1. In local repo, identify prior known-good commit for worker files:
