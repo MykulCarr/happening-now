@@ -78,29 +78,91 @@
     "circle ?jerk|shit ?post|copypasta|cringe|\\bfuck|sucks?\\b|roommates?\\b",
   ].join("|"), "i");
 
-  // A place query pulls in plenty of unrelated national subs (r/Pizza, r/nba
-  // came back for "detroit"), so a result also has to earn its place: either
-  // it names the thing searched for, or it reads like a news/civic outlet.
-  const NEWS_SIGNAL = new RegExp([
-    "\\bnews|newspaper|times|post|herald|gazette|journal|tribune|chronicle",
-    "dispatch|observer|sentinel|bulletin|press\\b|daily|weekly|report",
-    "politic|government|civic|council|mayor|election|legislat|court",
-    "\\blocal\\b|\\bcity\\b|county|metro|region|statewide|neighborhood",
-    "weather|traffic|transit|crime|schools?\\b|community|events",
+  // Rejected outright even when it's genuinely local. This picker feeds a news
+  // dashboard, so restaurant listings, deal-hunting and fandom subs are noise
+  // however close to home they are — "detroit" pulls r/Pizza in on a
+  // description match, and r/AnnArborFreebees is just classifieds.
+  // Careful with anything that doubles as a place name: \bcook\b would take
+  // out Cook County, which is why this says "cooking|recipes" instead.
+  const OFF_TOPIC = new RegExp([
+    "\\bfood\\b|foodie|restaurant|dining|\\beats\\b|menu|pizza|\\bbbq\\b|brunch|recipes?|cooking",
+    "deals?\\b|coupons?|discount|freeb(ie|ee)s?|for ?sale|marketplace|classified|buy ?sell|swap ?shop",
+    "flea ?market|garage ?sale|advertis|promo ?code|referral",
+    "gaming|gamers?\\b|minecraft|pokemon|\\banime\\b|manga|cosplay|fandom|comics?\\b",
+    "\\bdnd\\b|dungeons|board ?games?|\\btcg\\b|warhammer|speedrun",
+    "tattoos?\\b|sneakers?\\b|streetwear|crypto|\\bnft\\b|dropship",
+    // Music-scene and nightlife fandom. Deliberately NOT "concerts" or
+    // "events" — a local events sub is exactly the "happenings" side of what
+    // this picker is for.
+    "\\bedm\\b|\\bdj\\b|\\brave\\b|nightclub|nightlife|clubbing",
   ].join("|"), "i");
 
+  // All-lowercase glued names ("chicagofood", "detroitdeals") never hit a
+  // camelCase boundary, so splitWords leaves them as a single token and the
+  // \b-anchored OFF_TOPIC above cannot see inside them. This second pass
+  // matches those terms as bare substrings of the raw name. Deliberately kept
+  // to unambiguous nouns — "eats" or "deals" unanchored would start chewing
+  // through ordinary words.
+  const OFF_TOPIC_GLUED = new RegExp([
+    "food|restaurant|dining|pizza|recipe|brunch",
+    "coupon|freeb|forsale|marketplace|classified|discount",
+    "gaming|minecraft|pokemon|anime|manga|cosplay|fandom",
+    "tattoo|sneaker|streetwear|crypto|nightlife",
+  ].join("|"), "i");
+
+  // What we actually want: news, civic life, community, science and human
+  // interest. Ranked to the top of the list.
+  const NEWS_SIGNAL = new RegExp([
+    "\\bnews|newspaper|times|post|herald|gazette|journal|tribune|chronicle",
+    "dispatch|observer|sentinel|bulletin|press\\b|daily|weekly|report|media",
+    "politic|government|civic|council|mayor|election|legislat|court|policy",
+    "\\blocal\\b|\\bcity\\b|county|metro|region|statewide|neighborhood|residents?\\b",
+    "weather|traffic|transit|crime|schools?\\b|educat|health|hospital|housing",
+    "community|events?\\b|happening|discussion|\\bask\\b|history|culture|arts?\\b",
+    "science|scientific|research|environment|climate|space|nature|technology",
+    "human ?interest|profile|feature|investigat|documentar",
+  ].join("|"), "i");
+
+  // Sport is wanted, but a place query returns a wall of it — "detroit" alone
+  // brings four team subs plus r/nba, r/nfl, r/hockey and r/baseball. Kept,
+  // ranked last, and capped (MAX_SPORTS) so it can't crowd out the news.
+  const SPORTS = new RegExp([
+    "\\bsports?\\b|football|basketball|baseball|hockey|soccer|athletics?\\b",
+    "\\bnfl\\b|\\bnba\\b|\\bmlb\\b|\\bnhl\\b|\\bmls\\b|\\bncaa\\b|college ?(foot|basket)ball",
+    "playoffs?|\\bdraft\\b|fantasy ?(foot|basket)ball|tailgate|\\bfans?\\b of",
+  ].join("|"), "i");
+
+  const hayFor = (name, title, description) =>
+    `${splitWords(name)} ${splitWords(title)} ${splitWords(description)}`;
+
   const isAllowed = (name, title, description, queryTokens) => {
-    const haystack = `${splitWords(name)} ${splitWords(title)} ${splitWords(description)}`;
+    const haystack = hayFor(name, title, description);
+    // Safety is judged across all three fields — a sub can look innocuous in
+    // the name and give itself away in the sidebar, or the reverse.
     if (BLOCKED.test(haystack)) return false;
+    // Topic, though, is judged on the NAME alone. A sub *named* chicagofood is
+    // a food sub; r/Detroit — whose sidebar reads "News, Events, Food,
+    // Discussion, and More about Detroit" — plainly is not. Matching OFF_TOPIC
+    // against the description would throw away the single best result for
+    // almost every city in the list.
+    if (OFF_TOPIC.test(splitWords(name)) || OFF_TOPIC_GLUED.test(String(name || ""))) return false;
     const named = queryTokens.some(tok => haystack.includes(tok));
     return named || NEWS_SIGNAL.test(haystack);
   };
+
+  // 0 = news/community/science, 1 = other on-topic, 2 = sport.
+  // Sport is tested first on purpose: team subs almost all describe themselves
+  // as a "community", which would otherwise promote them to 0 and defeat the
+  // cap that keeps them from crowding out the news.
+  const rankOf = haystack =>
+    SPORTS.test(haystack) ? 2 : NEWS_SIGNAL.test(haystack) ? 0 : 1;
 
   // Tokens short enough to collide with everything ("mi", "us") are useless as
   // a relevance signal, so only words of 4+ characters count.
   const queryTokensOf = q => splitWords(q).split(/\s+/).filter(t => t.length >= 4);
 
   const MAX_PER_PROVIDER = 12;
+  const MAX_SPORTS = 3;
 
   const proxied = url => `${PROXY}${encodeURIComponent(url)}`;
 
@@ -142,17 +204,15 @@
         detail: (title.replace(/^r\/\S+:\s*/, "") || description).slice(0, 90),
         rss: `https://www.reddit.com/r/${name}/.rss`,
         site: `https://www.reddit.com/r/${name}/`,
-        // Place queries legitimately match hobby and fandom subs — "phoenix"
-        // pulls r/AceAttorney, "detroit" pulls r/Pizza. They're harmless, so
-        // rank rather than drop: a genuinely local r/food sub is worth
-        // offering, just below the actual news ones.
-        _news: NEWS_SIGNAL.test(`${splitWords(name)} ${splitWords(title)} ${splitWords(description)}`) ? 0 : 1,
+        _rank: rankOf(hayFor(name, title, description)),
       });
     }
+    let sportsShown = 0;
     return out
-      .sort((a, b) => a._news - b._news)
+      .sort((a, b) => a._rank - b._rank)
+      .filter(item => item._rank !== 2 || ++sportsShown <= MAX_SPORTS)
       .slice(0, MAX_PER_PROVIDER)
-      .map(({ _news, ...item }) => item);
+      .map(({ _rank, ...item }) => item);
   }
 
   // ── Provider: local outlets for a place ─────────────────────────────────
