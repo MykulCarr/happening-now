@@ -98,6 +98,44 @@ into the committed HTML rather than rendering client-side, so crawlers see the
 city names — this page is the natural organic hook for "&lt;city&gt; local news".
 Checked at 390px and desktop.
 
+## 2026-07-26 (later still) — Source search: address lookup + Reddit keyword
+
+Removed the duplicate `Crosscut` entry from WA statewide (same outlet as Cascade
+PBS since the rename; both URLs served identical content, and the URL-based
+dedupe couldn't catch it). 249 feeds now.
+
+**The find of the day:** Reddit's JSON API is still 403 for anonymous and
+Worker-origin requests — the thing that killed live discovery in `fdbf508`. But
+the **`.rss` variants of the same searches are not blocked**.
+`subreddits/search.rss?q=detroit` returns a clean Atom feed of 25 matching
+subreddits through our proxy. So keyword discovery is back, without an API key.
+
+Built `assets/source-search.js` (new module rather than growing common.js, which
+is already ~3,700 lines). The custom row on both the Local and Across Your State
+cards now takes three kinds of input behind one box:
+
+- a **pasted RSS URL** — added directly, as before
+- a **place**: city, ZIP, or full street address. Open-Meteo's geocoder handles
+  city-level; it returns nothing for street addresses, so there's a Nominatim
+  fallback (already a dependency for reverse geocoding, so nothing new).
+- a **keyword** — searches Reddit and lists matching communities
+
+The button relabels itself Add/Search based on what's typed. Providers are
+declared in a `PROVIDERS` array and run in parallel, each catching its own
+errors — verified that with Reddit down (404 locally) the place results still
+come back. Adding a third backend later is one array entry, which is the
+"more robust search later" hook.
+
+**Bug caught while testing:** the first cut used
+`getStationsForGeo(...).length > 0` to decide whether a place was covered. That
+always returns true inside a covered state, because statewide entries are folded
+into every city's list — so "Ann Arbor, MI" came back with four *Michigan
+statewide* feeds labelled as though they were Ann Arbor's, and the nearest-city
+fallback was unreachable dead code. `hasCitySources()` exists for exactly this
+distinction and its comment says so. Now Ann Arbor correctly offers Jackson
+(33 mi) and Detroit (36 mi), with statewide feeds listed separately and
+labelled honestly.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`

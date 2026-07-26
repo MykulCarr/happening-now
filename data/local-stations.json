@@ -2813,12 +2813,6 @@
             "type": "paper"
           },
           {
-            "name": "Crosscut",
-            "rss": "https://crosscut.com/feed",
-            "site": "https://crosscut.com",
-            "type": "paper"
-          },
-          {
             "name": "Washington State Standard",
             "rss": "https://washingtonstatestandard.com/feed/",
             "site": "https://washingtonstatestandard.com",

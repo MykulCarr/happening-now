@@ -77,6 +77,20 @@ Zero means skip it. Feed families that work: Nexstar (`/feed/`), Scripps
 Families that reliably fail through the proxy: Gannett (`/rss/`) and Gray
 (`/arcio/rss/`).
 
+### Reddit: use the `.rss` endpoints, never the JSON API
+
+Reddit's JSON API (`/subreddits/search.json`, `/api/subreddit_autocomplete_v2`)
+returns **403** to anonymous *and* Cloudflare-Worker-origin requests — that's why
+live discovery was ripped out in `fdbf508`. But the **`.rss` variants of the same
+searches are not blocked**: `https://www.reddit.com/subreddits/search.rss?q=<kw>`
+returns an Atom feed of matching subreddits, and that's what
+`assets/source-search.js` uses to do keyword discovery. Re-verify through the
+proxy before assuming it still holds; if it breaks, the symptom is an empty
+"Reddit communities" group, not an error.
+
+Search results go straight to the user, so keep the NSFW/personals filter in
+`source-search.js` — a bare query like "detroit" surfaces junk subs otherwise.
+
 After changing that file, regenerate the public list on `sources.html`:
 
 ```bash

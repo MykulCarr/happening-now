@@ -355,7 +355,7 @@
           </button>
           <div class="collapsibleBody expanded sourceCardBody" id="localSourcesBody">
             <div class="sourceCardHint" id="localSourcesHint">Open the picker to discover Reddit communities for your
-              city, or paste any RSS URL below to add it directly.</div>
+              city, or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
             <div class="sourceTileGrid" id="localSourcesList"></div>
             <div class="sourceCardActions">
               <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
@@ -363,9 +363,11 @@
               <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
             <div class="sourceCardCustomRow">
-              <input id="localCustomRssInput" type="url" class="input" placeholder="Add custom RSS URL (https://...)" />
-              <button id="localCustomAddBtn" class="btn" type="button">Add</button>
+              <input id="localCustomRssInput" type="text" class="input"
+                placeholder="RSS URL, an address or city, or a keyword to search" />
+              <button id="localCustomAddBtn" class="btn" type="button">Search</button>
             </div>
+            <div class="sourceSearchResults" id="localSearchResults" hidden></div>
             <label class="sectionToggleRow sourceCardSkipRow">
               <input type="checkbox" id="localSkipToggle" />
               <span>Skip picker — use Google News auto-search instead</span>
@@ -380,7 +382,7 @@
           </button>
           <div class="collapsibleBody expanded sourceCardBody" id="regionalSourcesBody">
             <div class="sourceCardHint" id="regionalSourcesHint">Open the picker to find state-wide Reddit communities,
-              or paste any RSS URL below.</div>
+              or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
             <div class="sourceTileGrid" id="regionalSourcesList"></div>
             <div class="sourceCardActions">
               <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
@@ -388,10 +390,11 @@
               <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
             </div>
             <div class="sourceCardCustomRow">
-              <input id="regionalCustomRssInput" type="url" class="input"
-                placeholder="Add custom RSS URL (https://...)" />
-              <button id="regionalCustomAddBtn" class="btn" type="button">Add</button>
+              <input id="regionalCustomRssInput" type="text" class="input"
+                placeholder="RSS URL, an address or city, or a keyword to search" />
+              <button id="regionalCustomAddBtn" class="btn" type="button">Search</button>
             </div>
+            <div class="sourceSearchResults" id="regionalSearchResults" hidden></div>
             <label class="sectionToggleRow sourceCardSkipRow">
               <input type="checkbox" id="regionalSkipToggle" />
               <span>Skip picker — use Google News auto-search instead</span>
@@ -819,6 +822,7 @@
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/topbar.js"></script>
   <script defer src="assets/infobar.js"></script>
+  <script defer src="assets/source-search.js"></script>
   <script defer src="assets/settings.js?v=20260604b"></script>
 </body>
 

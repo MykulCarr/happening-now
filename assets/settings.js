@@ -2884,24 +2884,96 @@
       setStatus(`${Cap} sources cleared`, "saved");
     });
 
-    addBtn?.addEventListener("click", () => {
-      const url = (inputEl?.value || "").trim();
-      if(!url) return;
-      try { new URL(url); } catch {
-        setStatus("That doesn't look like a valid URL", "error");
-        return;
-      }
-      const name = url.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
+    // The custom row takes three kinds of input: a pasted RSS URL (added
+    // straight away), or a place / keyword, which runs a search and offers
+    // the matches. looksLikeUrl decides which, and relabels the button so
+    // it's obvious which one is about to happen.
+    const resultsEl = document.getElementById(`${cap}SearchResults`);
+    const looksLikeUrl = v => /^https?:\/\//i.test(v.trim());
+
+    function addSource(entry){
       const next = { ...liveCfg() };
       const list = Array.isArray(next[cfgKey]) ? [...next[cfgKey]] : [];
-      list.push({ name, rss: url, site: "", headlinesCount: 8 });
+      if(list.some(s => s.rss === entry.rss)){
+        setStatus(`${entry.name} is already saved`, "error");
+        return false;
+      }
+      list.push({ name: entry.name, rss: entry.rss, site: entry.site || "", headlinesCount: 8 });
       next[cfgKey] = list;
       next[skipKey] = false;
       window.App.saveConfig(next);
       cfg = next;
-      if(inputEl) inputEl.value = "";
       render();
-      setStatus(`Added ${name}`, "saved");
+      setStatus(`Added ${entry.name}`, "saved");
+      return true;
+    }
+
+    function renderResults(groups){
+      if(!resultsEl) return;
+      resultsEl.innerHTML = "";
+      const total = groups.reduce((n, g) => n + g.items.length, 0);
+      if(total === 0){
+        resultsEl.hidden = false;
+        const failed = groups.filter(g => g.error);
+        resultsEl.innerHTML = `<div class="sourceSearchEmpty">No matches. ${
+          failed.length ? `(${escapeHtmlSafe(failed.map(f => f.label).join(", "))} unavailable)` : "Try a city, ZIP, full address, or a topic."
+        }</div>`;
+        return;
+      }
+      groups.filter(g => g.items.length).forEach(group => {
+        const head = document.createElement("div");
+        head.className = "sourceSearchGroup";
+        head.textContent = group.label;
+        resultsEl.appendChild(head);
+        group.items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "sourceSearchRow";
+          row.innerHTML = `
+            <div class="sourceSearchInfo">
+              <div class="sourceSearchName">${escapeHtmlSafe(item.name)}</div>
+              ${item.detail ? `<div class="sourceSearchDetail">${escapeHtmlSafe(item.detail)}</div>` : ""}
+            </div>
+            <button type="button" class="btn sourceSearchAdd">Add</button>
+          `;
+          row.querySelector(".sourceSearchAdd").addEventListener("click", (ev) => {
+            if(addSource(item)) ev.target.replaceWith(Object.assign(
+              document.createElement("span"), { className: "sourceSearchAdded", textContent: "Added" }));
+          });
+          resultsEl.appendChild(row);
+        });
+      });
+      resultsEl.hidden = false;
+    }
+
+    async function runSearch(query){
+      if(!resultsEl) return;
+      resultsEl.hidden = false;
+      resultsEl.innerHTML = `<div class="sourceSearchEmpty">Searching…</div>`;
+      try {
+        renderResults(await window.App.searchSources(query));
+      } catch (err) {
+        resultsEl.innerHTML = `<div class="sourceSearchEmpty">Search failed: ${escapeHtmlSafe(err?.message || "unknown error")}</div>`;
+      }
+    }
+
+    addBtn?.addEventListener("click", () => {
+      const value = (inputEl?.value || "").trim();
+      if(!value) return;
+      if(looksLikeUrl(value)){
+        try { new URL(value); } catch {
+          setStatus("That doesn't look like a valid URL", "error");
+          return;
+        }
+        const name = value.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
+        if(addSource({ name, rss: value, site: "" }) && inputEl) inputEl.value = "";
+        if(resultsEl) resultsEl.hidden = true;
+        return;
+      }
+      runSearch(value);
+    });
+
+    inputEl?.addEventListener("input", () => {
+      if(addBtn) addBtn.textContent = looksLikeUrl(inputEl.value || "") ? "Add" : "Search";
     });
 
     inputEl?.addEventListener("keydown", (e) => {
