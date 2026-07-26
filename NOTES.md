@@ -203,6 +203,36 @@ the WordPress ones (WPLN, CPR) are fine — check station by station.
 Exits non-zero on any dead feed and shouts if a place is left with none. Reports
 rather than edits, on purpose. Currently 267/267 alive.
 
+**Curation automator.** Two pieces, both report-only:
+
+- `npm run curate` (`scripts/curate-report.mjs`) — local, no subrequest limits.
+  Health-checks everything, then for each *dead* feed re-reads that outlet's
+  homepage `<link rel=alternate>` tags looking for one that still works. That's
+  the direct answer to the Tegna/Hearst rot: when a publisher moves its feed,
+  the old URL dies but the new one is advertised in the `<head>`. Also probes
+  Patch coverage for the 59 cities that don't have it.
+- Worker cron — same sweep in the cloud, emailing the digest to
+  `hn-station@protonmail.com`. Workers cap subrequests per invocation (50 free)
+  against ~270 feeds, so it checks 40 per daily firing and parks the cursor in
+  the existing KV namespace. The sweep wraps about weekly, which paces the
+  email for free.
+
+Neither edits the JSON. Adding a source to a public news site is an editorial
+act; an automated check can't judge whether an outlet is reputable.
+
+**Zone-safety note.** `happening-now.net` is shared: `flights.happening-now.net`
+is FlightTrack (its own `server.js` on another machine, never calls `/v1/*`),
+and AstroLAB is entirely separate. Worker routes match the apex only, so
+subdomains are unaffected. The one real hazard was mine: `cloudflare:email` was
+initially a top-level import, and a module that throws at *import* time takes
+the whole Worker down — including `/v1/rss`, `/v1/stocks` and `/v1/artemis`.
+Moved it to a lazy import inside the send path. A weekly nice-to-have must not
+be able to break the endpoints the site runs on.
+
+Not deployed yet — needs Email Routing enabled on the zone and the destination
+address verified. `wrangler deploy --dry-run` builds clean and resolves the
+binding.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`
