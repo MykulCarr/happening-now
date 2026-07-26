@@ -4,6 +4,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
+       so GA4 runs cookieless: no cookies, no device id, no banner needed. See
+       privacy.html. Keep this INLINE and in <head> — Google's tag detection
+       scans the HTML source, so loading it from an external .js file makes the
+       property report "tag not installed" even though hits are being sent. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});
+    gtag('js', new Date());
+    gtag('config','G-XL3C28KRQX');
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XL3C28KRQX"></script>
   <meta name="description"
     content="Customize Happening Now with theme, density, ZIP code, news sources, stock symbols, notifications, and dashboard preferences for a faster, more personal experience." />
   <meta name="robots" content="noindex,follow" />
@@ -801,7 +815,6 @@
     </div>
   </div>
 
-  <script defer src="assets/analytics.js"></script>
   <script defer src="assets/common.js"></script>
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/topbar.js"></script>
