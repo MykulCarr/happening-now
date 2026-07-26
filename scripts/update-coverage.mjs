@@ -47,9 +47,10 @@ for (const abbr of Object.keys(states).sort((a, b) => (STATE_NAMES[a] || a).loca
   cityCount += cities.length;
 
   const label = escapeHtml(STATE_NAMES[abbr] || abbr);
+  // DC has no city block — it's a single district, so "statewide" reads wrong.
   const detail = cities.length
     ? escapeHtml(cities.map(titleCase).join(", "))
-    : "Statewide sources";
+    : abbr === "DC" ? "Districtwide sources" : "Statewide sources";
   items.push(`        <li><span class="coverageState">${label}</span>${detail}</li>`);
 }
 
