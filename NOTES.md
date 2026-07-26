@@ -233,6 +233,40 @@ Not deployed yet — needs Email Routing enabled on the zone and the destination
 address verified. `wrangler deploy --dry-run` builds clean and resolves the
 binding.
 
+## 2026-07-26 (late) — Subreddits everywhere, docs refreshed, and a tooling bug
+
+**Reddit communities for all 51 states.** They'd only ever existed for the
+original 15, so the 36 states added earlier today offered none. Added 70
+verified subs — statewide for every state plus DC, and a city sub for 34 of the
+new cities. 139 total, all resolving, none tripping the source-search filter.
+
+The ambiguous names needed real checking rather than guessing: `r/Charleston`
+turns out to be **Charleston, SC** (so WV gets `Charleston_WV`), `r/burlington`
+is **Burlington, Vermont**, and `PortlandME`/`JacksonMS` keep Oregon's
+`r/Portland` and Michigan's `r/JacksonMI` distinct. Each confirmed by reading
+the feed's own title.
+
+**Tooling bug worth remembering.** The scratch probe used for the big sweeps
+counted only RSS `<item>` and ignored Atom `<entry>` — and used `grep -c`,
+which counts *lines*, against feeds that arrive on a single line. It surfaced
+when all 36 statewide subreddits came back "dead" at once; Reddit serves Atom,
+so every one was a false negative.
+
+Re-checked all 33 feeds the earlier audit removed with a corrected counter:
+**32 were genuinely dead, but Chicago Sun-Times was a false negative** (returns
+55 items — likely a timeout during the sweep). Restored. `check-feeds.mjs`, the
+tool that actually ships, counted both element types correctly the whole time
+and still reports 268/268 alive.
+
+Lesson: when a whole category fails at once, suspect the instrument.
+
+**Docs.** `ops-monitoring-checklist.md`, `rollback-runbook.md` and
+`web-presence-baseline.md` all listed `.html` URLs that have 301'd to
+extensionless since `22613e4` — a 301 reads as a fault in a health check.
+Baseline §4 now documents the GA4 install as built (Consent Mode denied, why
+the tag must stay inline, what the data can and can't tell you) rather than as
+a hypothetical. The weekly curation digest is now part of the ops routine.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`
