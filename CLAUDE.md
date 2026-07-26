@@ -54,6 +54,11 @@ working fix look broken.
   unreliable and were removed in `40e537f`.
 - **CSP lives in `_headers`.** Any new third-party endpoint needs adding there or
   it'll be blocked in production but fine locally.
+- **The GA4 tag must stay inline in `<head>` on every page.** It was first built
+  as a tidy `assets/analytics.js` that injected the tag at runtime; hits fired
+  correctly, but GA4 reported "tag not installed" because Google's detection
+  scans the served HTML source and found nothing. Don't refactor it back out
+  into a shared file.
 
 ## Deploying
 
@@ -67,6 +72,7 @@ without deploying, run `scripts/stage-public-assets.ps1` alone. Rollback procedu
 `docs/rollback-runbook.md`.
 
 ## Dashboard sync
+
 Tracked in the Projects Dashboard as `news-pages`.
 
 `TODO.md` here is **generated** by the dashboard's sync and is gitignored.

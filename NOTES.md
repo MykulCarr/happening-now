@@ -54,19 +54,24 @@ Still outstanding: `C:\TEMP\Sites\FlightTrack` is also a stale duplicate (the
 registered to the *MEOOEM* laptop, so neither Windows copy is dashboard-tracked.
 Left alone deliberately.
 
-**GA4.** Added `assets/analytics.js` — a small loader rather than Google's
-copy-paste snippet, because it sets **Consent Mode to denied by default and
-never grants it**. GA4 therefore sends cookieless pings only: no cookies, no
-device identifier, no banner needed in any region, which keeps the same posture
-as the EU-excluded Cloudflare Web Analytics. Trade-off: returning visitors count
-as new each session, so "users"/retention numbers are not meaningful — page
-views, referrers and geography are.
+**GA4.** Installed with **Consent Mode denied by default and never granted**, so
+GA4 sends cookieless pings only: no cookies, no device identifier, no banner
+needed in any region, keeping the same posture as the EU-excluded Cloudflare Web
+Analytics. Trade-off: returning visitors count as new each session, so
+"users"/retention numbers are not meaningful — page views, referrers and
+geography are.
 
 Wired into all 7 pages, `https://www.googletagmanager.com` added to `script-src`
 in `_headers` (the only restrictive CSP directive; `connect-src`/`img-src`
 already allow `https:`), and `privacy.html` updated to disclose it honestly.
-Verified in headless Chrome that the tag injects and that `dataLayer` order is
-consent → js → config.
+
+**Got this wrong the first time.** It was initially built as a tidy
+`assets/analytics.js` that injected the tag at runtime. Hits fired correctly
+(confirmed via Chrome net-log: `/g/collect` requests were going out), but GA4
+reported **"tag not installed"** — Google's detection scans the *served HTML
+source*, and there was nothing in the markup to find. Fixed by moving Google's
+standard snippet inline into `<head>` on each page, consent lines still ahead of
+`config`. Bonus: it now fires earlier than a deferred end-of-body script.
 
 ### Next up
 
