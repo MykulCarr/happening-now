@@ -3465,8 +3465,12 @@ details.chip>.alertChipBody a {
   border-color: rgba(198, 111, 28, .48);
 }
 
+/* Wraps because the topic tabs make this row open-ended — four static scopes
+   plus one per enabled topic. Without wrapping the overflow runs off the LEFT
+   edge (the row is right-aligned), where it can't even be scrolled to. */
 .tickerScopeBar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 5px;
   margin-bottom: 10px;
@@ -3495,6 +3499,14 @@ details.chip>.alertChipBody a {
   background: rgba(6, 98, 132, .2);
   color: var(--accent);
   border-color: rgba(6, 98, 132, .5);
+}
+
+/* On phones the bar is always several rows, so right-aligning leaves a ragged
+   left edge against the page's left-aligned content. Align left and give the
+   tabs a finger-sized hit area. */
+@media (max-width:720px) {
+  .tickerScopeBar { justify-content: flex-start; }
+  .tickerScopeBtn { padding: 7px 8px; }
 }
 
 .skeleton {
