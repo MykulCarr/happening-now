@@ -6588,12 +6588,12 @@ body.stockLookupModalOpen {
   color: var(--text);
 }
 
-/* Two columns, not three: Sync to a File is a tall card, and the two short
-   cards stacked beside it come out about the same height. A third column left
-   Reset stranded in a leftover cell under a tall neighbour. */
+/* Three cards across: Install and Import/Export stack in column one so they
+   balance the tall Sync card, and Reset gets column three to itself. Two
+   columns before it gets cramped, one on a phone. */
 .systemPanelRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   align-items: start;
 }
@@ -6609,10 +6609,16 @@ body.stockLookupModalOpen {
   gap: 10px;
 }
 
-/* Reset sits below the grid at full width — its own danger zone, and it can't
-   be orphaned by whatever the cards above it happen to weigh. */
-.systemResetSection {
-  margin-top: 10px;
+@media (max-width: 1100px) {
+  .systemPanelRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Two columns leaves an odd card out, and that card is Reset. Let it run
+     the full width rather than sit orphaned in a leftover cell. */
+  .systemResetCard {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 800px) {
