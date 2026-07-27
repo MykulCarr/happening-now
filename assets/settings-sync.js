@@ -129,19 +129,52 @@
     return parsed;
   }
 
+  // Does this file already hold settings? Answered before any write, because
+  // picking an existing backup in a Save-as dialog and writing to it straight
+  // away is how you destroy the thing you were trying to reconnect to.
+  async function peekConfig(h) {
+    try {
+      const text = await (await h.getFile()).text();
+      if (!text.trim()) return null;
+      const parsed = JSON.parse(text);
+      return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : null;
+    } catch { return null; }
+  }
+
+  // Remember a handle without touching the file's contents.
+  async function connect(h, { paused = false } = {}) {
+    try { await idbSet(HANDLE_KEY, h); } catch { /* still usable this session */ }
+    handle = h;
+    handleLoaded = true;
+    writePrefs({ fileName: h.name, paused });
+  }
+
   // ── Actions (each is driven by a button, so a permission prompt is fine) ──
+  // Save-as: name a new file, or point at an existing one. Connects but does
+  // NOT write — the caller decides, because an existing file may be a backup
+  // the user wants to read rather than replace. Paused until that's settled,
+  // so a stray config change can't write to it in the meantime.
+  const FILE_TYPES = [{ description: "Settings JSON", accept: { "application/json": [".json"] } }];
+
   async function choose() {
     if (!supported) throw new Error("This browser can't write to a file. Use Export JSON instead.");
     const picked = await window.showSaveFilePicker({
       suggestedName: SUGGESTED_NAME,
-      types: [{ description: "Settings JSON", accept: { "application/json": [".json"] } }],
+      types: FILE_TYPES,
     });
-    try { await idbSet(HANDLE_KEY, picked); } catch { /* handle still usable this session */ }
-    handle = picked;
-    handleLoaded = true;
-    writePrefs({ fileName: picked.name, paused: false });
-    await writeConfigTo(picked);
-    return picked.name;
+    const existing = await peekConfig(picked);
+    await connect(picked, { paused: !!existing });
+    return { fileName: picked.name, hasSettings: !!existing };
+  }
+
+  // Open: reconnect to a file that already holds settings. Never writes.
+  async function openExisting() {
+    if (!supported) throw new Error("This browser can't open a file this way. Use Import JSON instead.");
+    const [picked] = await window.showOpenFilePicker({ types: FILE_TYPES, multiple: false });
+    if (!picked) throw new Error("No file chosen.");
+    const existing = await peekConfig(picked);
+    await connect(picked, { paused: true });
+    return { fileName: picked.name, hasSettings: !!existing };
   }
 
   async function syncNow() {
@@ -221,12 +254,15 @@
     }
   }
 
-  window.SettingsSync = { state, choose, syncNow, restore, stop, setPref: writePrefs, supported };
+  window.SettingsSync = {
+    state, choose, openExisting, syncNow, restore, stop, setPref: writePrefs, supported,
+  };
 
   // ── Settings UI (absent on the other pages) ─────────────────────────────
   const ui = {
     status: document.getElementById("syncStatus"),
     choose: document.getElementById("syncChooseBtn"),
+    open: document.getElementById("syncOpenBtn"),
     now: document.getElementById("syncNowBtn"),
     restore: document.getElementById("syncRestoreBtn"),
     stop: document.getElementById("syncStopBtn"),
@@ -248,21 +284,21 @@
 
     if (!s.supported) {
       setNote("This browser can't write directly to a file. Use Export / Import JSON above to back up by hand.", "muted");
-      [ui.choose, ui.now, ui.restore, ui.stop].forEach(b => { if (b) b.disabled = true; });
+      [ui.choose, ui.open, ui.now, ui.restore, ui.stop].forEach(b => { if (b) b.disabled = true; });
       return;
     }
 
-    ui.choose.textContent = s.connected ? "Change file…" : "Choose sync file…";
+    ui.choose.textContent = s.connected ? "Change file…" : "New sync file…";
     [ui.now, ui.restore, ui.stop].forEach(b => { if (b) b.disabled = !s.connected; });
     if (ui.autoWrite) ui.autoWrite.checked = s.autoWrite;
     if (ui.autoRestore) ui.autoRestore.checked = s.autoRestore;
 
     if (!s.connected) {
-      setNote("Not set up. Choose a file and your settings are written to it, then kept up to date as they change.");
+      setNote("Not syncing. \"New sync file…\" writes your settings to a file you name and keeps it up to date. \"Use existing file…\" reconnects to one you already have — it reads that file, never overwrites it.");
       return;
     }
     if (s.paused) {
-      setNote(`Paused after a reset — ${s.fileName} still holds your previous settings. Restore from file to bring them back, or Sync now to overwrite them.`, "warn");
+      setNote(`Paused — ${s.fileName} holds settings that aren't the ones loaded here. Restore from file to load them, or Sync now to overwrite them with what's on screen.`, "warn");
       return;
     }
     if (s.permission !== "granted") {
@@ -285,14 +321,44 @@
     }
   }
 
+  // Loading a file's settings replaces what's on screen, so it always asks
+  // first and reloads after, which is the only way the whole page picks the
+  // new config up.
+  async function confirmRestore(fileName) {
+    if (!confirm(`Load the settings in ${fileName}?\n\nThis replaces the settings currently in this browser.`)) return false;
+    await restore();
+    location.reload();
+    return true;
+  }
+
   if (hasUi) {
-    ui.choose.addEventListener("click", () => run(choose, "Waiting for you to pick a file…"));
+    ui.choose.addEventListener("click", () => run(async () => {
+      const { fileName, hasSettings } = await choose();
+      if (!hasSettings) { await syncNow(); return; }
+      // Picked a file that already has settings in it. Never silently
+      // overwrite — that turns "reconnect to my backup" into "destroy it".
+      if (confirm(`${fileName} already contains settings.\n\nOK — overwrite it with the settings in this browser.\nCancel — leave the file alone (then use "Restore from file" to load it).`)) {
+        await syncNow();
+      }
+    }, "Waiting for you to pick a file…"));
+
+    ui.open?.addEventListener("click", () => run(async () => {
+      const { fileName, hasSettings } = await openExisting();
+      if (!hasSettings) {
+        throw new Error(`${fileName} doesn't contain settings JSON. It's connected but nothing was read.`);
+      }
+      await confirmRestore(fileName);
+    }, "Waiting for you to pick a file…"));
+
     ui.now?.addEventListener("click", () => run(syncNow, "Writing…"));
-    ui.stop?.addEventListener("click", () => run(stop, "Stopping…"));
+    ui.stop?.addEventListener("click", () => run(async () => {
+      const s = await state();
+      if (!confirm(`Stop syncing and forget ${s.fileName || "this file"}?\n\nThe file itself is not deleted — "Use existing file…" reconnects to it.`)) return;
+      await stop();
+    }, "Stopping…"));
     ui.restore?.addEventListener("click", () => run(async () => {
-      if (!confirm("Replace your current settings with the contents of the sync file?")) return;
-      await restore();
-      location.reload();
+      const s = await state();
+      await confirmRestore(s.fileName || "the sync file");
     }, "Reading…"));
     ui.autoWrite?.addEventListener("change", () => {
       writePrefs({ autoWrite: ui.autoWrite.checked });

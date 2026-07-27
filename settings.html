@@ -722,7 +722,8 @@
             <div class="collapsibleBody expanded">
               <div id="syncStatus" class="syncStatusPanel">Checking…</div>
               <div class="settingsActionRow">
-                <button id="syncChooseBtn" class="btn btnSubtle" type="button">Choose sync file…</button>
+                <button id="syncChooseBtn" class="btn btnSubtle" type="button">New sync file…</button>
+                <button id="syncOpenBtn" class="btn btnSubtle" type="button">Use existing file…</button>
                 <button id="syncNowBtn" class="btn btnSubtle" type="button">Sync now</button>
                 <button id="syncRestoreBtn" class="btn btnSubtle" type="button">Restore from file</button>
                 <button id="syncStopBtn" class="btn btnSubtle" type="button">Stop syncing</button>
@@ -752,6 +753,10 @@
                 </div>
               </div>
               <div class="hint hintMt8">
+                <strong>New sync file…</strong> names a file and writes your settings to it.
+                <strong>Use existing file…</strong> reconnects to one you already have and offers to load it — it
+                never overwrites. <strong>Stop syncing</strong> forgets the file; the file itself is kept.
+                <br />
                 Needs Chrome or Edge — Firefox and every browser on iOS can't write to a file, so use Export / Import
                 JSON there. Clearing all site data also forgets which file was chosen (the file itself is fine, just
                 pick it again). A reset pauses syncing so it can't overwrite your backup.
