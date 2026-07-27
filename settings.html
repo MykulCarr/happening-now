@@ -670,7 +670,13 @@
 
       <!-- TAB: System -->
       <div class="settingsTabContent" data-tab="system">
+        <!-- Two columns rather than three: Sync is a tall card, and beside it
+             the two short ones stack to roughly the same height. Reset sits
+             below the grid, full width, so it reads as its own danger zone
+             instead of being stranded in a leftover cell. -->
         <div class="systemPanelRow">
+
+          <div class="systemPanelCol">
 
           <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="install-app">
@@ -707,6 +713,8 @@
               </div>
             </div>
           </div>
+
+          </div><!-- /.systemPanelCol -->
 
           <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="sync-file">
@@ -752,20 +760,20 @@
             </div>
           </div>
 
-          <div class="collapsibleSection">
-            <button class="collapsibleHeader expanded" data-section="reset">
-              Reset & Defaults
-            </button>
-            <div class="collapsibleBody expanded">
-              <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
-              <div class="hint hintMt12">
-                Resets all preferences to defaults — including news sources and stock watchlist. Use the Export JSON
-                option to back up your current configuration first if you may want to restore it later.
-              </div>
+        </div><!-- /.systemPanelRow -->
+
+        <div class="collapsibleSection systemResetSection">
+          <button class="collapsibleHeader expanded" data-section="reset">
+            Reset &amp; Defaults
+          </button>
+          <div class="collapsibleBody expanded">
+            <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
+            <div class="hint hintMt12">
+              Resets all preferences to defaults — including news sources and stock watchlist. Use the Export JSON
+              option to back up your current configuration first if you may want to restore it later.
             </div>
           </div>
-
-        </div><!-- /.systemPanelRow -->
+        </div>
       </div>
     </div><!-- /.settingsTabsWrap -->
   </main>

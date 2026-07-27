@@ -6588,15 +6588,31 @@ body.stockLookupModalOpen {
   color: var(--text);
 }
 
+/* Two columns, not three: Sync to a File is a tall card, and the two short
+   cards stacked beside it come out about the same height. A third column left
+   Reset stranded in a leftover cell under a tall neighbour. */
 .systemPanelRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   align-items: start;
 }
 
-.systemPanelRow>.collapsibleSection {
+.systemPanelRow>.collapsibleSection,
+.systemPanelCol>.collapsibleSection {
   margin-bottom: 0;
+}
+
+.systemPanelCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Reset sits below the grid at full width — its own danger zone, and it can't
+   be orphaned by whatever the cards above it happen to weigh. */
+.systemResetSection {
+  margin-top: 10px;
 }
 
 @media (max-width: 800px) {
