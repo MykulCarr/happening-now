@@ -332,6 +332,39 @@ the production Worker. Without it a local page renders every feed empty, because
 the RSS proxy is a Worker route that a static server knows nothing about — which
 is why the first Comics screenshot showed "No articles available" everywhere.
 
+### The sync file bug that real use found (and it cost a backup)
+
+Shipped, then tested by hand, and the first session with it destroyed a backup.
+Worth writing down because the mistake looks reasonable in code review.
+
+`choose()` used **`showSaveFilePicker`** and wrote the current config the moment
+a file was picked. That's fine for "name me a new file". It is catastrophic for
+"reconnect me to my existing backup", which is the same gesture through the same
+dialog. Chain of events: Stop syncing (which forgets the handle by design, but
+the panel then read "Not set up", which looks broken) -> Reset to defaults ->
+re-pick the backup file to reconnect -> defaults written straight over it. The
+only route back from Stop was the destructive one.
+
+Recovered from an unrelated Export JSON sitting in Downloads from the night
+before. That was luck, not design.
+
+Three fixes:
+
+- **Choosing a file no longer writes by itself.** It connects, peeks at the
+  file, and asks before overwriting anything that already parses as settings.
+  Decline and it stays connected but **paused**, so a background auto-write
+  can't quietly finish the job a second later.
+- **"Use existing file…"** is a separate button on `showOpenFilePicker`, which
+  reads and cannot write. It connects paused and offers to load the file. That
+  is what reconnecting to a backup actually means, and it's now also the
+  recovery tool.
+- **Stop syncing** confirms, and says the file is kept. The disconnected status
+  explains both buttons instead of claiming nothing is set up.
+
+The general lesson: a Save-as picker is a *write* gesture. If the same button
+is also the only way back to an existing file, the destructive path is the
+default path.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`

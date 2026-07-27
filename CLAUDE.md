@@ -94,6 +94,16 @@ Two traps that both produce confident, wrong answers:
   already `granted` — never call `requestPermission` from a background save. Its
   prefs live in their own `hn_sync_prefs_v1` localStorage key, deliberately
   outside the config: they're per-browser and must not travel in an export.
+- **Picking a sync file must never write on its own.** `showSaveFilePicker` is
+  a *write* gesture, but it's also how a user reaches a file that already
+  exists — so the first version destroyed a real backup: Stop syncing (which
+  forgets the handle) left re-picking the file as the only way back, and that
+  wrote the current config, which after a reset meant defaults over the backup.
+  `choose()` now connects, peeks at the file, and asks before overwriting
+  anything that parses as settings; declining leaves it **paused** so the
+  background auto-write can't finish the job. Reconnecting is a separate
+  button on `showOpenFilePicker`, which cannot write. Keep those two paths
+  distinct.
 - **The GA4 tag must stay inline in `<head>` on every page.** It was first built
   as a tidy `assets/analytics.js` that injected the tag at runtime; hits fired
   correctly, but GA4 reported "tag not installed" because Google's detection
