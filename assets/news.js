@@ -661,7 +661,11 @@
     updateStatus(`${baseMessage} • ${detail}`, isError || !proxyOk);
   }
 
-  function createRssItem(item) {
+  // `source` is the widget this item came from. Only sources explicitly
+  // flagged embed:true in data/topic-sources.json render their image — see
+  // that file's _meta.copyright. Showing a comic is republishing it, and only
+  // xkcd's licence (CC BY-NC 2.5) permits that.
+  function createRssItem(item, source) {
     const container = document.createElement("a");
     container.className = "rssItem";
     container.href = item.url;
@@ -697,7 +701,44 @@
 
     container.appendChild(dateDiv);
     container.appendChild(titleDiv);
-    container.appendChild(descDiv);
+
+    if (source?.embed === true && item.image) {
+      const fig = document.createElement("figure");
+      fig.className = "rssItemComic";
+
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.imageTitle || item.title || "Comic";
+      img.loading = "lazy";
+      img.decoding = "async";
+      // referrerpolicy keeps us from leaking the reader's page to the host
+      // while still loading from the publisher, which is where the licence
+      // expects the image to come from.
+      img.referrerPolicy = "no-referrer";
+      fig.appendChild(img);
+
+      // The <img title> is the punchline on most webcomics; showing it means
+      // it works on touch, where there's no hover.
+      if (item.imageTitle) {
+        const cap = document.createElement("figcaption");
+        cap.className = "rssItemComicAlt";
+        cap.textContent = item.imageTitle;
+        fig.appendChild(cap);
+      }
+
+      // Attribution is a condition of the licence, so it renders with the
+      // image rather than being left to the surrounding card.
+      const credit = document.createElement("div");
+      credit.className = "rssItemComicCredit";
+      credit.textContent = source.license
+        ? `${source.name} — ${source.license}`
+        : source.name || "";
+      fig.appendChild(credit);
+
+      container.appendChild(fig);
+    } else {
+      container.appendChild(descDiv);
+    }
 
     return container;
   }
@@ -766,7 +807,7 @@
 
         list.innerHTML = "";
         items.forEach(item => {
-          list.appendChild(createRssItem(item));
+          list.appendChild(createRssItem(item, w));
         });
         successCount++;
       } catch (error) {

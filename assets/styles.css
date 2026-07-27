@@ -7768,3 +7768,36 @@ body.stockLookupModalOpen {
   font-size: calc(11px * var(--font-multiplier, 1));
   font-weight: 600;
 }
+
+/* ── Inline comic strips ──────────────────────────────────────────────────
+   Only rendered for sources flagged embed:true in data/topic-sources.json,
+   which today means xkcd alone (CC BY-NC 2.5). Attribution is part of the
+   figure, not optional chrome — the licence requires it. */
+.rssItemComic {
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.rssItemComic img {
+  display: block;
+  max-width: 100%;      /* strips are wider than a phone; never overflow */
+  height: auto;
+  border-radius: 6px;
+  background: #fff;     /* most strips are line art on transparent */
+}
+
+.rssItemComicAlt {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: calc(11px * var(--font-multiplier, 1));
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.rssItemComicCredit {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: calc(10px * var(--font-multiplier, 1));
+  font-weight: 700;
+  letter-spacing: .02em;
+}

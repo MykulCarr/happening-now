@@ -1363,7 +1363,25 @@
                 image = `https:${image}`;
               }
 
-              return { title, url: normalizeOutboundLink(link), pubDate, desc, image };
+              // Webcomics put the punchline in the <img title="...">, so a
+              // caption-less image loses half the joke. Only used by sources
+              // flagged embed:true in data/topic-sources.json.
+              let imageTitle = "";
+              if (descRaw) {
+                const decoded = descRaw
+                  .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+                  .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+                  .replace(/&amp;/g, "&");
+                // Capture the quote character and match to the matching one.
+                // A [^"'] class would stop at the first apostrophe inside a
+                // double-quoted attribute — xkcd's "...incident wasn't enough"
+                // truncated to "...incident wasn".
+                const m = decoded.match(/<img[^>]+\btitle=(["'])([\s\S]*?)\1/i)
+                  || decoded.match(/<img[^>]+\balt=(["'])([\s\S]*?)\1/i);
+                if (m && m[2]) imageTitle = m[2].trim();
+              }
+
+              return { title, url: normalizeOutboundLink(link), pubDate, desc, image, imageTitle };
             }), proxyBase === RSS_PROXY_BASE ? "" : "Fallback news source in use", proxyBase !== RSS_PROXY_BASE);
 
             if (useCache && result.length > 0) {
