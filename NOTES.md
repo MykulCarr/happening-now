@@ -413,6 +413,15 @@ Design notes worth keeping:
 
 Loaded on all four pages so a change made in the news-page picker syncs too.
 
+### Categories moved to the top, laid out horizontally
+
+News Categories now leads the News tab — it's the cheapest way to change what
+the news page shows (one click per tab, no picker step), so it goes first. The
+chips changed from a 1/2-column grid of full-width rows to a wrapping flex row
+that sizes each chip to its label: 7 categories now take 2 rows on a desktop
+instead of 4. On a phone the long titles ("Human Interest & Culture") still mean
+mostly one per row — the width is the title, not the padding.
+
 ### Testing note
 
 Headless Chrome on Windows **can't be made narrower than ~500 CSS px** with

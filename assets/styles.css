@@ -7831,15 +7831,14 @@ body.stockLookupModalOpen {
 /* ── News category picker (settings) ──────────────────────────────────────
    One row per topic in data/topic-sources.json. Single column on phones,
    two up once there's room. */
+/* Chips that sit side by side and wrap, rather than one full-width row each:
+   there are a dozen categories, and a column of them pushed everything else
+   on the News tab off the screen. */
 .topicGrid {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
-}
-
-@media (min-width: 620px) {
-  .topicGrid { grid-template-columns: 1fr 1fr; }
 }
 
 .topicRow {
@@ -7851,6 +7850,8 @@ body.stockLookupModalOpen {
   border-radius: 10px;
   cursor: pointer;
   min-height: 48px;           /* finger-sized tap target */
+  flex: 0 1 auto;             /* size to the label, shrink before overflowing */
+  max-width: 100%;
 }
 
 .topicRow.isOn {

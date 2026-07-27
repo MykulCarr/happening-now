@@ -346,6 +346,21 @@
       <!-- TAB: News -->
       <div class="settingsTabContent active" data-tab="news">
 
+        <!-- Categories first: it's the cheapest way to change what the news
+             page shows (one click per tab, no picker step), so it leads. -->
+        <div class="collapsibleSection sourceCard" id="news-topic-sources">
+          <button class="collapsibleHeader" data-section="news-topic-sources-body" aria-expanded="false">
+            <span class="collapsibleHeaderMain">🗂️ News Categories</span>
+            <span class="collapsibleHeaderMeta sourceCardMeta">Extra tabs by subject</span>
+          </button>
+          <div class="collapsibleBody sourceCardBody" id="news-topic-sources-body">
+            <div class="sourceCardHint">Pick the subjects you want as extra tabs on the news page,
+              alongside Local, Regional, National and International. Each one uses a curated,
+              verified feed list — no picker step.</div>
+            <div class="topicGrid" id="topicGrid"></div>
+          </div>
+        </div>
+
         <!-- Source-card preview style: each scope shows its saved feeds as
              tile cards in a 3-column grid that mirrors the news page layout. -->
         <div class="collapsibleSection sourceCard sourceCard--local" id="news-local-sources">
@@ -399,19 +414,6 @@
               <input type="checkbox" id="regionalSkipToggle" />
               <span>Skip picker — use Google News auto-search instead</span>
             </label>
-          </div>
-        </div>
-
-        <div class="collapsibleSection sourceCard" id="news-topic-sources">
-          <button class="collapsibleHeader" data-section="news-topic-sources-body" aria-expanded="false">
-            <span class="collapsibleHeaderMain">🗂️ News Categories</span>
-            <span class="collapsibleHeaderMeta sourceCardMeta">Extra tabs by subject</span>
-          </button>
-          <div class="collapsibleBody sourceCardBody" id="news-topic-sources-body">
-            <div class="sourceCardHint">Pick the subjects you want as extra tabs on the news page,
-              alongside Local, Regional, National and International. Each one uses a curated,
-              verified feed list — no picker step.</div>
-            <div class="topicGrid" id="topicGrid"></div>
           </div>
         </div>
 
