@@ -341,3 +341,93 @@ is why the first Comics screenshot showed "No articles available" everywhere.
   setup) and §4 still describes GA4 as hypothetical; worth a refresh.
 - `docs/ops-monitoring-checklist.md` checks `/weather.html`-style URLs that now
   301 to extensionless ones.
+
+## 2026-07-26 (very late) — Collapsible news settings, picker dedupe, sync-to-file
+
+Three things, all in Settings.
+
+### News tab sections collapse, and start collapsed
+
+The `.collapsibleSection` markup was already there on every settings section,
+but the feature was inert: the JS only toggled when the click landed on
+`.collapsibleArrowHit`, and CSS set that to `display:none` — plus nothing ever
+hid a body that lost the `expanded` class. So the classes were decorative.
+
+Now the **News tab only** really collapses: the whole header is the hit target,
+the arrow shows and rotates, and `:not(.expanded)` bodies are hidden. The other
+tabs are untouched — their headers stay plain labels, which is why the CSS is
+scoped with `.settingsTabContent[data-tab="news"]`. Default state is collapsed,
+expressed by *removing* `expanded` from the markup rather than in JS, so there
+is one source of truth. Nothing is remembered between visits: every open starts
+collapsed, which is what was asked for.
+
+The "i" tips toggle inside the National header lives *inside* the section body,
+so opening it now also opens the section — otherwise it reads as a dead button.
+
+### Pickers no longer offer sources you already have
+
+- **Local / State search results** show a greyed "Added" tag instead of an Add
+  button that would only report "already saved".
+- **The local/regional picker overlay** tags matching rows `ADDED` and starts
+  them checked. Feeds are compared on a trailing-slash- and case-insensitive
+  key, because the same feed arrives as `.../detroit` and `.../detroit/` from
+  different catalogues.
+- The National/International discovery modal already did this ("Already Added").
+
+**The bug found while doing it:** that picker's Save *replaces* the whole scope
+list, and it never showed what was already saved. Re-opening it and saving
+silently dropped any custom RSS URL you'd pasted, and any outlet from a city you
+no longer resolve to. Saved sources the picker can't re-offer are now carried
+into the custom list, so they survive Save by default and can still be removed
+with the × there.
+
+### Sync to a file (Settings → System)
+
+New `assets/settings-sync.js`. Pick a file once; it's written immediately, then
+rewritten (debounced ~1.2s) on every config change. Two toggles: **auto-sync on
+change** and **auto-restore after a clear**. Manual **Sync now** / **Restore from
+file** / **Stop syncing** alongside.
+
+Design notes worth keeping:
+
+- Uses the **File System Access API**. Chromium only — Firefox and every browser
+  on iOS have no `showSaveFilePicker`, so the panel says so and points at the
+  existing Export/Import JSON box rather than pretending.
+- The handle lives in **IndexedDB** (localStorage holds strings only). Clearing
+  all site data takes the handle with it; the file survives but must be re-picked
+  by hand. That's the permission model, not a bug.
+- **Permission needs a click.** A background save can only write if permission is
+  already granted, so `autoWrite` never calls `requestPermission` — it renders a
+  "Reconnect needed" state instead.
+- Prefs live in their **own** localStorage key (`hn_sync_prefs_v1`), not in the
+  config. They're specific to this browser, and keeping them out of the config
+  means Settings' own Save can't clobber them and they never travel in an export.
+- `saveConfig` now fires **`hn:config-saved`** on every write, including from
+  inside common.js (the pickers call the module-local function, so wrapping
+  `window.App.saveConfig` would have missed them). Reset fires
+  **`hn:config-reset`**.
+- **A reset pauses syncing** rather than writing defaults over your backup. The
+  reset event only *stages* the change (settings.js writes nothing until Save),
+  so the flag is consumed by the next save — reset-then-navigate-away doesn't
+  pause anything falsely.
+
+Loaded on all four pages so a change made in the news-page picker syncs too.
+
+### Testing note
+
+Headless Chrome on Windows **can't be made narrower than ~500 CSS px** with
+`--window-size` — it clamps, and the screenshot is then a 390px crop of a 504px
+layout, which reads as "the page overflows on a phone" when it doesn't. Drive
+`Emulation.setDeviceMetricsOverride` over CDP instead for a true 390px viewport.
+And a plain `Page.navigate` reuses memory-cached scripts, so edits to
+`assets/*.js` silently aren't under test — `Page.reload {ignoreCache:true}` plus
+`Network.setBypassServiceWorker` is what actually loads what you just wrote.
+
+### Next up
+
+- **Not deployed.** All of the above is local only.
+- The file-picker/write path is the one thing not verified end-to-end — an OS
+  dialog can't be driven headlessly. Worth one manual click-through in Chrome:
+  choose a file, change a setting, confirm the file's mtime moves.
+- Firefox/iOS get no sync. If that matters, the fallback would be a periodic
+  download of the JSON, which is a different (and worse) thing.

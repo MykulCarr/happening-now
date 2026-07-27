@@ -14,6 +14,7 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `settings.html` — source picker / preferences; marked `noindex`, not in sitemap
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
 - `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page
+- `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `cloudflare-sync-worker/src/index.js` — the feed proxy behind `/v1/artemis/updates`
 - `_headers` — security headers incl. CSP. `_redirects` — 301s for `/x.html` → `/x`
 - `scripts/` — deploy tooling (PowerShell + one esbuild script)
@@ -39,6 +40,23 @@ If you change the service worker or cached assets, hard-reload (or unregister th
 SW) when testing; a stale SW will happily serve you the old build and make a
 working fix look broken.
 
+### Checking a phone viewport from a headless browser
+
+Two traps that both produce confident, wrong answers:
+
+- **`--window-size` can't go below ~500 CSS px on Windows.** Chrome clamps the
+  window but still crops the screenshot to what you asked for, so a "390px"
+  capture is really a 390px crop of a 504px layout — every page looks like it
+  overflows on a phone. Use CDP `Emulation.setDeviceMetricsOverride`
+  (`{width:390,height:844,deviceScaleFactor:2,mobile:true}`) for a real 390px
+  viewport.
+- **A plain `Page.navigate` re-runs the memory-cached scripts**, so edits to
+  `assets/*.js` silently aren't under test — the symptom is a change that
+  "doesn't work" while `curl` shows the new code being served. Follow the
+  navigate with `Page.reload {ignoreCache:true}`, and set
+  `Network.setBypassServiceWorker` — the dev cache key is a literal
+  `__BUILD_ID__`, so it never rotates locally.
+
 ## Gotchas that have actually bitten
 
 - **New public files don't ship unless you list them.** `scripts/stage-public-assets.ps1`
@@ -54,6 +72,28 @@ working fix look broken.
   unreliable and were removed in `40e537f`.
 - **CSP lives in `_headers`.** Any new third-party endpoint needs adding there or
   it'll be blocked in production but fine locally.
+- **Collapsible settings sections only actually collapse on the News tab.** Every
+  settings section uses the same `.collapsibleSection / .collapsibleHeader /
+  .collapsibleBody` markup, but the behaviour is scoped by
+  `.settingsTabContent[data-tab="news"]` in both `styles.css` and `settings.js`.
+  On the other tabs the arrow is hidden and the header is a plain label — that's
+  deliberate, not an oversight. The News sections' **default state is collapsed,
+  and it lives in the markup**: they ship without the `expanded` class. Don't
+  move that default into JS, and don't add `expanded` back "for consistency".
+- **`saveConfig` fires `hn:config-saved`; Reset fires `hn:config-reset`.** These
+  are how `settings-sync.js` hears about changes. Wrapping `window.App.saveConfig`
+  would miss the saves made *inside* `common.js` (the source pickers call the
+  module-local function), which is why the event is dispatched from `saveConfig`
+  itself. Keep it there.
+- **Sync-to-file is Chromium-only by nature.** `assets/settings-sync.js` uses the
+  File System Access API; Firefox and every browser on iOS have no
+  `showSaveFilePicker`, and the UI is expected to say so and fall back to
+  Export/Import JSON. The file handle lives in IndexedDB, so clearing site data
+  loses it (the file survives, it just has to be re-picked). Writing needs a user
+  gesture for permission, so background auto-sync only writes when permission is
+  already `granted` — never call `requestPermission` from a background save. Its
+  prefs live in their own `hn_sync_prefs_v1` localStorage key, deliberately
+  outside the config: they're per-browser and must not travel in an export.
 - **The GA4 tag must stay inline in `<head>` on every page.** It was first built
   as a tidy `assets/analytics.js` that injected the tag at runtime; hits fired
   correctly, but GA4 reported "tag not installed" because Google's detection

@@ -31,7 +31,7 @@ without running anything else.
 | `index.html` | Main dashboard — news, info bar |
 | `weather.html` | Forecast + weather news |
 | `stocks.html` | Tickers + market news |
-| `settings.html` | Source picker and preferences (`noindex`) |
+| `settings.html` | Source picker and preferences (`noindex`) — including "Sync to a File" under System |
 | `sources.html` | Public list of feeds used |
 | `privacy.html` / `terms.html` | Legal |
 
