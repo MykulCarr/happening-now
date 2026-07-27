@@ -349,11 +349,11 @@
         <!-- Source-card preview style: each scope shows its saved feeds as
              tile cards in a 3-column grid that mirrors the news page layout. -->
         <div class="collapsibleSection sourceCard sourceCard--local" id="news-local-sources">
-          <button class="collapsibleHeader expanded" data-section="news-local-sources-body">
+          <button class="collapsibleHeader" data-section="news-local-sources-body" aria-expanded="false">
             <span class="collapsibleHeaderMain">📍 Local News</span>
             <span class="collapsibleHeaderMeta sourceCardMeta">Communities, papers and TV in your city</span>
           </button>
-          <div class="collapsibleBody expanded sourceCardBody" id="localSourcesBody">
+          <div class="collapsibleBody sourceCardBody" id="localSourcesBody">
             <div class="sourceCardHint" id="localSourcesHint">Open the picker to discover Reddit communities for your
               city, or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
             <div class="sourceTileGrid" id="localSourcesList"></div>
@@ -376,11 +376,11 @@
         </div>
 
         <div class="collapsibleSection sourceCard sourceCard--regional" id="news-regional-sources">
-          <button class="collapsibleHeader expanded" data-section="news-regional-sources-body">
+          <button class="collapsibleHeader" data-section="news-regional-sources-body" aria-expanded="false">
             <span class="collapsibleHeaderMain">🗺️ News Across Your State</span>
             <span class="collapsibleHeaderMeta sourceCardMeta">State-level communities and outlets</span>
           </button>
-          <div class="collapsibleBody expanded sourceCardBody" id="regionalSourcesBody">
+          <div class="collapsibleBody sourceCardBody" id="regionalSourcesBody">
             <div class="sourceCardHint" id="regionalSourcesHint">Open the picker to find state-wide Reddit communities,
               or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
             <div class="sourceTileGrid" id="regionalSourcesList"></div>
@@ -403,11 +403,11 @@
         </div>
 
         <div class="collapsibleSection sourceCard" id="news-topic-sources">
-          <button class="collapsibleHeader expanded" data-section="news-topic-sources-body">
+          <button class="collapsibleHeader" data-section="news-topic-sources-body" aria-expanded="false">
             <span class="collapsibleHeaderMain">🗂️ News Categories</span>
             <span class="collapsibleHeaderMeta sourceCardMeta">Extra tabs by subject</span>
           </button>
-          <div class="collapsibleBody expanded sourceCardBody" id="news-topic-sources-body">
+          <div class="collapsibleBody sourceCardBody" id="news-topic-sources-body">
             <div class="sourceCardHint">Pick the subjects you want as extra tabs on the news page,
               alongside Local, Regional, National and International. Each one uses a curated,
               verified feed list — no picker step.</div>
@@ -416,10 +416,10 @@
         </div>
 
         <div class="collapsibleSection">
-          <button class="collapsibleHeader expanded" data-section="ticker-scope">
+          <button class="collapsibleHeader" data-section="ticker-scope" aria-expanded="false">
             <span class="collapsibleHeaderMain">News Ticker Scope</span>
           </button>
-          <div class="collapsibleBody expanded">
+          <div class="collapsibleBody">
             <div class="settingRow">
               <div>
                 <div class="settingLabel">Default Ticker Content</div>
@@ -447,7 +447,7 @@
              managed independently. cfg.widgets is still a single array; the
              two sections are filtered views over it (by scopes membership). -->
         <div class="collapsibleSection sourceCard sourceCard--global">
-          <button class="collapsibleHeader expanded" data-section="news-national">
+          <button class="collapsibleHeader" data-section="news-national" aria-expanded="false">
             <span class="collapsibleHeaderMain">🇺🇸 National News Sources</span>
             <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false"
               title="Show editor tips">
@@ -455,7 +455,7 @@
               How to add/remove news sources
             </span>
           </button>
-          <div class="collapsibleBody expanded sourceCardBody">
+          <div class="collapsibleBody sourceCardBody">
             <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
               <p>Click <strong>+ Add Source</strong> to open the source picker. Choose a category, then click a
                 publisher chip to see its available feeds, or type directly into the search bar.</p>
@@ -476,10 +476,10 @@
         </div>
 
         <div class="collapsibleSection sourceCard sourceCard--global">
-          <button class="collapsibleHeader expanded" data-section="news-international">
+          <button class="collapsibleHeader" data-section="news-international" aria-expanded="false">
             <span class="collapsibleHeaderMain">🌍 International News Sources</span>
           </button>
-          <div class="collapsibleBody expanded sourceCardBody">
+          <div class="collapsibleBody sourceCardBody">
             <div class="newsEditorToolbar">
               <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add
                 International Source</button>
@@ -707,6 +707,50 @@
           </div>
 
           <div class="collapsibleSection">
+            <button class="collapsibleHeader expanded" data-section="sync-file">
+              Sync to a File
+            </button>
+            <div class="collapsibleBody expanded">
+              <div id="syncStatus" class="syncStatusPanel">Checking…</div>
+              <div class="settingsActionRow">
+                <button id="syncChooseBtn" class="btn btnSubtle" type="button">Choose sync file…</button>
+                <button id="syncNowBtn" class="btn btnSubtle" type="button">Sync now</button>
+                <button id="syncRestoreBtn" class="btn btnSubtle" type="button">Restore from file</button>
+                <button id="syncStopBtn" class="btn btnSubtle" type="button">Stop syncing</button>
+              </div>
+              <div class="settingRowGroup">
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Auto-sync on change</div>
+                    <div class="settingHint">Write to the file whenever a setting changes</div>
+                  </div>
+                  <label class="toggleSwitch">
+                    <input type="checkbox" class="toggleInput" id="syncAutoWriteToggle"
+                      aria-label="Auto-sync on change" />
+                    <span class="toggleTrack"><span class="toggleThumb"></span></span>
+                  </label>
+                </div>
+                <div class="settingRow">
+                  <div>
+                    <div class="settingLabel">Auto-restore after a clear</div>
+                    <div class="settingHint">If this browser opens with no settings, load them back from the file</div>
+                  </div>
+                  <label class="toggleSwitch">
+                    <input type="checkbox" class="toggleInput" id="syncAutoRestoreToggle"
+                      aria-label="Auto-restore after a clear" />
+                    <span class="toggleTrack"><span class="toggleThumb"></span></span>
+                  </label>
+                </div>
+              </div>
+              <div class="hint hintMt8">
+                Needs Chrome or Edge — Firefox and every browser on iOS can't write to a file, so use Export / Import
+                JSON there. Clearing all site data also forgets which file was chosen (the file itself is fine, just
+                pick it again). A reset pauses syncing so it can't overwrite your backup.
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="reset">
               Reset & Defaults
             </button>
@@ -837,6 +881,7 @@
   <script defer src="assets/infobar.js"></script>
   <script defer src="assets/source-search.js"></script>
   <script defer src="assets/settings.js?v=20260604b"></script>
+  <script defer src="assets/settings-sync.js"></script>
 </body>
 
 </html>

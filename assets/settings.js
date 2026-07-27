@@ -184,7 +184,10 @@
 
   window.addEventListener("hashchange", activateTabFromHash);
 
-  // Collapsible sections
+  // Collapsible sections. Only the News tab actually collapses — its sections
+  // ship closed (no "expanded" class in the markup) and the whole header
+  // toggles. On the other tabs the arrow is hidden by CSS and the header is
+  // just a label, so we don't wire a click at all.
   collapsibleHeaders.forEach(header => {
     if(!header.querySelector(".collapsibleArrowHit")){
       const arrow = document.createElement("span");
@@ -194,13 +197,24 @@
       header.appendChild(arrow);
     }
 
+    if(!header.closest('.settingsTabContent[data-tab="news"]')) return;
+
+    header.setAttribute("aria-expanded", String(header.classList.contains("expanded")));
+
     header.addEventListener("click", (event) => {
-      if(!event.target.closest(".collapsibleArrowHit")) return;
-      const body = header.nextElementSibling;
-      header.classList.toggle("expanded");
-      body.classList.toggle("expanded");
+      // The "i" tips toggle lives inside the header and owns its own clicks.
+      if(event.target.closest(".collapsibleHeaderInfo")) return;
+      setSectionExpanded(header, !header.classList.contains("expanded"));
     });
   });
+
+  function setSectionExpanded(header, open){
+    if(!header || !header.classList.contains("collapsibleHeader")) return;
+    const body = header.nextElementSibling;
+    header.classList.toggle("expanded", open);
+    if(body) body.classList.toggle("expanded", open);
+    header.setAttribute("aria-expanded", String(open));
+  }
 
   function attachHeaderGuideToggle(toggleEl, panelEl){
     if(!(toggleEl && panelEl)) return;
@@ -208,6 +222,12 @@
     let closeTimer = 0;
 
     const openGuide = () => {
+      // The tips panel sits inside the section body. On the News tab that body
+      // starts collapsed, so open it too or the "i" looks like a dead button.
+      const section = panelEl.closest(".collapsibleBody");
+      if(section && !section.classList.contains("expanded")){
+        setSectionExpanded(section.previousElementSibling, true);
+      }
       if(closeTimer) window.clearTimeout(closeTimer);
       panelEl.removeAttribute("hidden");
       window.requestAnimationFrame(() => {
@@ -2890,6 +2910,10 @@
     // it's obvious which one is about to happen.
     const resultsEl = document.getElementById(`${cap}SearchResults`);
     const looksLikeUrl = v => /^https?:\/\//i.test(v.trim());
+    // Same feed arrives as .../feed and .../feed/ from different catalogues,
+    // so compare on a trailing-slash- and case-insensitive key.
+    const feedKey = u => String(u || "").trim().replace(/\/+$/, "").toLowerCase();
+    const alreadySaved = rss => (liveCfg()[cfgKey] || []).some(s => feedKey(s.rss) === feedKey(rss));
 
     function addSource(entry){
       const next = { ...liveCfg() };
@@ -2928,14 +2952,19 @@
         group.items.forEach(item => {
           const row = document.createElement("div");
           row.className = "sourceSearchRow";
+          // Anything already in this scope's list shows as "Added" instead of
+          // an Add button that would only report "already saved".
+          const already = alreadySaved(item.rss);
           row.innerHTML = `
             <div class="sourceSearchInfo">
               <div class="sourceSearchName">${escapeHtmlSafe(item.name)}</div>
               ${item.detail ? `<div class="sourceSearchDetail">${escapeHtmlSafe(item.detail)}</div>` : ""}
             </div>
-            <button type="button" class="btn sourceSearchAdd">Add</button>
+            ${already
+              ? `<span class="sourceSearchAdded">Added</span>`
+              : `<button type="button" class="btn sourceSearchAdd">Add</button>`}
           `;
-          row.querySelector(".sourceSearchAdd").addEventListener("click", (ev) => {
+          row.querySelector(".sourceSearchAdd")?.addEventListener("click", (ev) => {
             if(addSource(item)) ev.target.replaceWith(Object.assign(
               document.createElement("span"), { className: "sourceSearchAdded", textContent: "Added" }));
           });
@@ -3528,6 +3557,9 @@
       return;
     }
     cfg = window.App.normalizeConfig(window.App.DEFAULTS);
+    // Tell settings-sync.js a reset is staged so that, when it is saved, it
+    // pauses instead of overwriting the sync file with empty defaults.
+    try { window.dispatchEvent(new CustomEvent("hn:config-reset")); } catch { }
     setStatus("Reset to defaults (click Save to commit)", "unsaved");
     loadToUI();
   });

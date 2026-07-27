@@ -489,6 +489,10 @@
     const clean = normalizeConfig(cfg);
     localStorage.setItem(LS_KEY, JSON.stringify(clean));
     if (window.App) window.App.cfg = clean;  // keep global in sync
+    // Announce every write, including the ones made from inside this file, so
+    // optional extras (settings-sync.js) can react without each save site
+    // having to know about them.
+    try { window.dispatchEvent(new CustomEvent("hn:config-saved", { detail: clean })); } catch { }
     return clean;
   }
 
@@ -3348,6 +3352,21 @@
     let webFeeds = [];
     let preChecked = new Set();
 
+    // What this scope already has saved. Rows for those feeds start checked
+    // and show an "Added" tag, and anything saved that the picker can't
+    // re-offer gets carried into the custom list — Save replaces the whole
+    // list, so an entry that isn't on screen would be silently dropped.
+    // Compared on a trailing-slash- and case-insensitive key: the same feed
+    // reaches us as .../feed and .../feed/ from different catalogues.
+    const feedKey = u => String(u || "").trim().replace(/\/+$/, "").toLowerCase();
+    const savedSources = (scope === "local"
+      ? window.App.cfg?.localSources
+      : window.App.cfg?.regionalSources) || [];
+    const savedKeys = new Set(savedSources.map(s => feedKey(s.rss)));
+    const addedTag = rss => savedKeys.has(feedKey(rss))
+      ? ' <span class="hnPickerRowAdded">Added</span>'
+      : "";
+
     function close() { overlay.remove(); }
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
@@ -3534,7 +3553,7 @@
           row.innerHTML = `
             <input type="checkbox" data-idx="${idx}" checked />
             <div class="hnPickerRowMain">
-              <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
+              <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}${addedTag(s.rss)}</div>
               ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
             </div>
           `;
@@ -3551,7 +3570,7 @@
         const row = document.createElement("label");
         row.className = "hnPickerRow";
         row.setAttribute("role", "listitem");
-        const checked = preChecked.has(r.displayName) ? "checked" : "";
+        const checked = (preChecked.has(r.displayName) || savedKeys.has(feedKey(r.rss))) ? "checked" : "";
         // Subscriber counts only show when known (Reddit's discovery API used
         // to populate this; the curated-list path can't, so we hide the chip
         // rather than print "0 subs" which looks broken).
@@ -3561,12 +3580,36 @@
         row.innerHTML = `
           <input type="checkbox" data-idx="${idx}" ${checked} />
           <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)}${subsLabel ? ` <span class="hnPickerRowSubs">${subsLabel}</span>` : ""}</div>
+            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)}${subsLabel ? ` <span class="hnPickerRowSubs">${subsLabel}</span>` : ""}${addedTag(r.rss)}</div>
             ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
           </div>
         `;
         listEl.appendChild(row);
       });
+
+      carryOverSavedSources(subs);
+    }
+
+    // Saved sources this picker has no row for — a pasted RSS URL, or an
+    // outlet from a city the user has since moved away from — would vanish on
+    // Save, which replaces the whole list. Show them in the custom list so
+    // they survive by default and can still be removed with the × there.
+    // Idempotent: re-renders call this again with the same entries.
+    function carryOverSavedSources(subs) {
+      const offered = new Set([
+        ...stations.map(s => feedKey(s.rss)),
+        ...webFeeds.map(w => feedKey(w.rss)),
+        ...(subs || []).map(s => feedKey(s.rss)),
+      ]);
+      let addedAny = false;
+      savedSources.forEach(s => {
+        const key = feedKey(s.rss);
+        if (!key || offered.has(key)) return;
+        if (customSources.some(c => feedKey(c.rss) === key)) return;
+        customSources.push({ name: s.name || key, rss: s.rss });
+        addedAny = true;
+      });
+      if (addedAny) renderCustomList();
     }
 
     // Renders the web-search section. Reads from the `webFeeds` closure
@@ -3586,11 +3629,11 @@
         row.className = "hnPickerRow";
         row.setAttribute("role", "listitem");
         const providerBadge = w.provider === "bing" ? "🅱️" : "🔎";
-        const checked = w.defaultChecked ? "checked" : "";
+        const checked = (w.defaultChecked || savedKeys.has(feedKey(w.rss))) ? "checked" : "";
         row.innerHTML = `
           <input type="checkbox" data-idx="${idx}" ${checked} />
           <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">${providerBadge} ${escapeHtml(w.name)}</div>
+            <div class="hnPickerRowName">${providerBadge} ${escapeHtml(w.name)}${addedTag(w.rss)}</div>
           </div>
         `;
         webListEl.appendChild(row);
@@ -3664,13 +3707,14 @@
             stRow.innerHTML = `
               <input type="checkbox" data-idx="${idx}" checked />
               <div class="hnPickerRowMain">
-                <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}</div>
+                <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}${addedTag(s.rss)}</div>
                 ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
               </div>
             `;
             stationsListEl.appendChild(stRow);
           });
           renderWebFeedRows();
+          carryOverSavedSources(suggestions);
         });
         fallbackListEl.appendChild(row);
       });
