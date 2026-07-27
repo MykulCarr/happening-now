@@ -267,6 +267,50 @@ Baseline §4 now documents the GA4 install as built (Consent Mode denied, why
 the tag must stay inline, what the data can and can't tell you) rather than as
 a hypothetical. The weekly curation digest is now part of the ops routine.
 
+## 2026-07-26 (night) — News categories: user-selectable topic tabs
+
+Turn on subjects in Settings; each becomes a tab on the news page beside the
+four geographic ones, backed by curated verified feeds in
+`data/topic-sources.json`. Seven topics, 49 feeds: Science & Space (11), Music
+(8), Building & Vibe Coding (7), Human Interest (6), Technology (6), Comics (6),
+Health (5).
+
+Additive by design — `cfg.topics` defaults to empty, so nothing changes for
+anyone who doesn't opt in, and the geographic tabs keep their positions. Topics
+append in *file* order rather than toggle order, so the tab bar doesn't
+reshuffle underneath you. Unknown ids in saved config are dropped on read, so a
+config outliving a renamed topic still works.
+
+Scope clicks are now **delegated** from the bar rather than bound per button —
+the topic tabs are injected asynchronously (they depend on saved config), and
+delegation means they need no re-wiring. Settings fires `hn:topicschange` so an
+open news page rebuilds its tabs live.
+
+**Comics: the syndicated strips aren't possible.** GoComics (Peanuts, Garfield,
+Calvin & Hobbes) and Comics Kingdom (Blondie, Beetle Bailey) have both withdrawn
+public RSS — two URL patterns each, both dead. Local newspaper comics come from
+those same syndicates, so "local comics" is out too. Independent webcomics do
+publish feeds.
+
+**Copyright is encoded as data, not a code special-case.** Headline + link is
+ordinary RSS use everywhere. Rendering a comic's *image* is republishing, so an
+entry displays as an image only with `"embed": true`, which requires a licence
+recorded in `"license"`. Only **xkcd** qualifies — CC BY-NC 2.5, verified on
+xkcd.com/license.html rather than from memory; this site is non-commercial and
+attributes its sources, which is what that licence asks. Everything else is
+flagged all-rights-reserved. Its feed carries the image *and* the alt-text.
+
+`check-feeds` now sweeps this file alongside `local-stations.json` — a quiet
+Science tab should report itself like a quiet city does. 352/352 alive.
+
+**Third tooling bug of the day**, same family as the other two: the ad-hoc probe
+used `xargs`, and "Simon Willison's Weblog" contains an apostrophe —
+`xargs: unmatched single quote` silently dropped 18 entries, which looked like
+18 dead feeds. They'd never been tested. Re-ran serially with a plain
+`while read` loop: 0 dead. Nature was the one genuine casualty (answered once,
+then failed three consecutive serial retries) — replaced with Science News and
+Scientific American.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`
