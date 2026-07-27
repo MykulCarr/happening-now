@@ -311,6 +311,27 @@ used `xargs`, and "Simon Willison's Weblog" contains an apostrophe —
 then failed three consecutive serial retries) — replaced with Science News and
 Scientific American.
 
+**xkcd renders inline.** Sources flagged `embed:true` show their image; the
+`<img title>` becomes a visible caption rather than a hover attribute, because
+on most webcomics that text is the punchline and hover doesn't exist on a phone.
+Attribution renders inside the figure since the licence requires it. Also
+`referrerPolicy=no-referrer` so a reader's page isn't leaked to the image host,
+and `max-width:100%` because strips are wider than a phone.
+
+Verified against the real feed: 34 items across the Comics tab, **4 with images
+— all xkcd**. The other 30, from the five all-rights-reserved comics, stay
+text-only. That count is the licence gate working.
+
+Caught a truncation bug while testing: pulling the title attribute with
+`[^"']` stops at the first apostrophe inside a double-quoted value, so
+"...smoke detector incident wasn't enough" arrived as "...incident wasn". Now
+captures the opening quote and matches to its pair.
+
+Worth keeping: `scratchpad/devserve.py` serves the repo but forwards `/v1/*` to
+the production Worker. Without it a local page renders every feed empty, because
+the RSS proxy is a Worker route that a static server knows nothing about — which
+is why the first Comics screenshot showed "No articles available" everywhere.
+
 ### Next up
 
 - **Not deployed yet.** GA4 collects nothing until `scripts/deploy-prod.ps1`
