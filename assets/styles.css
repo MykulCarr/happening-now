@@ -7726,3 +7726,45 @@ body.stockLookupModalOpen {
   font-size: calc(12px * var(--font-multiplier, 1));
   font-weight: 600;
 }
+
+/* ── News category picker (settings) ──────────────────────────────────────
+   One row per topic in data/topic-sources.json. Single column on phones,
+   two up once there's room. */
+.topicGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (min-width: 620px) {
+  .topicGrid { grid-template-columns: 1fr 1fr; }
+}
+
+.topicRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, rgba(255, 255, 255, .14));
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 48px;           /* finger-sized tap target */
+}
+
+.topicRow.isOn {
+  border-color: var(--accent, #e08a3c);
+  background: rgba(224, 138, 60, .10);
+}
+
+.topicEmoji { font-size: 18px; line-height: 1; }
+
+.topicText { display: flex; flex-direction: column; min-width: 0; }
+
+.topicTitle { font-weight: 700; }
+
+.topicMeta {
+  color: var(--muted);
+  font-size: calc(11px * var(--font-multiplier, 1));
+  font-weight: 600;
+}

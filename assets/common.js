@@ -164,6 +164,10 @@
     // remember a user's choice to fall back to auto-search instead.
     localSources: [],
     regionalSources: [],
+    // Topic tabs the user has turned on (ids from data/topic-sources.json).
+    // Empty by default: the four geographic tabs are the shipped experience,
+    // and topics only appear once someone opts in from Settings.
+    topics: [],
     localSourcesSkipped: false,
     regionalSourcesSkipped: false,
 
@@ -365,6 +369,11 @@
     }
     out.localSources = normalizeSourceList(out.localSources);
     out.regionalSources = normalizeSourceList(out.regionalSources);
+    // Ids only — anything else in saved config is discarded rather than
+    // trusted, since these become tab names and scope keys.
+    out.topics = Array.isArray(out.topics)
+      ? out.topics.filter(id => typeof id === "string" && /^[a-z0-9-]+$/.test(id))
+      : [];
     out.localSourcesSkipped = out.localSourcesSkipped === true;
     out.regionalSourcesSkipped = out.regionalSourcesSkipped === true;
 
@@ -2968,6 +2977,70 @@
     return localStationsPromise;
   }
 
+  // ── Topic sources ───────────────────────────────────────────────────────
+  // data/topic-sources.json is the topical counterpart to local-stations.json:
+  // where that one answers "what's near me", this answers "what's about
+  // science". Users choose which topics appear as tabs, so nothing here shows
+  // up until they opt in.
+  let topicSourcesCache = null;
+  let topicSourcesPromise = null;
+
+  async function loadTopicSources() {
+    if (topicSourcesCache) return topicSourcesCache;
+    if (topicSourcesPromise) return topicSourcesPromise;
+    topicSourcesPromise = (async () => {
+      try {
+        const res = await fetch("/data/topic-sources.json", { cache: "default" });
+        if (!res.ok) throw new Error(`topics fetch failed: ${res.status}`);
+        const data = await res.json();
+        topicSourcesCache = (data && typeof data === "object") ? data : { topics: {} };
+      } catch (err) {
+        console.warn("[topics] failed to load:", err?.message || err);
+        topicSourcesCache = { topics: {} };
+      } finally {
+        topicSourcesPromise = null;
+      }
+      return topicSourcesCache;
+    })();
+    return topicSourcesPromise;
+  }
+
+  // Every topic the repo ships, in file order, as { id, label, title, emoji }.
+  // Settings renders the chooser from this, so adding a topic to the JSON is
+  // all it takes for it to become selectable.
+  async function getAllTopics() {
+    const data = await loadTopicSources();
+    return Object.entries(data?.topics || {}).map(([id, t]) => ({
+      id,
+      label: t.label || id.toUpperCase(),
+      title: t.title || t.label || id,
+      emoji: t.emoji || "",
+      count: (t.entries || []).length,
+    }));
+  }
+
+  // The topics this user turned on, in the repo's order so the tab bar doesn't
+  // reshuffle when they toggle one. Unknown ids in saved config are dropped,
+  // which keeps an old config working after a topic is renamed or removed.
+  async function getEnabledTopics() {
+    const chosen = window.App?.cfg?.topics;
+    if (!Array.isArray(chosen) || !chosen.length) return [];
+    const wanted = new Set(chosen);
+    return (await getAllTopics()).filter(t => wanted.has(t.id));
+  }
+
+  async function getTopicEntries(id) {
+    const data = await loadTopicSources();
+    return data?.topics?.[id]?.entries || [];
+  }
+
+  // True when `scope` names a topic rather than one of the four geographic
+  // scopes. Callers use this to branch instead of hardcoding topic ids.
+  async function isTopicScope(scope) {
+    const data = await loadTopicSources();
+    return Boolean(scope && data?.topics?.[scope]);
+  }
+
   // True when the JSON has a city-level block for this geo with at least one
   // entry. Different from `getStationsForGeo(...).length > 0` because that
   // mixes in statewide entries; we want to know specifically whether we have
@@ -3635,6 +3708,11 @@
     isSectionHidden,
     openSourcePicker,
     loadLocalStations,
+    loadTopicSources,
+    getAllTopics,
+    getEnabledTopics,
+    getTopicEntries,
+    isTopicScope,
     getStationsForGeo,
     getNearestCities,
     getNearestStates,

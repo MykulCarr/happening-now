@@ -340,6 +340,15 @@
     if (scope === "national") return CRITICAL_NATIONAL_FEEDS;
     if (scope === "international") return CRITICAL_INTERNATIONAL_FEEDS;
 
+    // Topic scopes (science, music, comics...) come straight from
+    // data/topic-sources.json — curated and verified, so there's no picker
+    // step and no geo to resolve.
+    if (await window.App?.isTopicScope?.(scope)) {
+      const entries = await window.App.getTopicEntries(scope);
+      const label = (await window.App.getAllTopics()).find(x => x.id === scope)?.label || scope.toUpperCase();
+      return entries.slice(0, 4).map(e => ({ rss: e.rss, scope, label }));
+    }
+
     // local + regional: prefer the user's curated picker selection. The
     // ticker only takes the top few so it doesn't fill up with one outlet.
     // No saved picks → fall back to the national curated set so the bar is
@@ -380,6 +389,10 @@
   // - local / regional: synthesize a Google News search widget from the user's
   //   geocoded city/state. If no ZIP, returns []; the caller renders a hint.
   async function getWidgetsForScope(scope, sourceCfg) {
+    if (await window.App?.isTopicScope?.(scope)) {
+      const entries = await window.App.getTopicEntries(scope);
+      return { widgets: entries.slice(0, 8), reason: entries.length ? "" : "no-sources" };
+    }
     if (scope === "local" || scope === "regional") {
       // If the user has curated sources for this scope, use them directly —
       // no Google News guesswork. This is the fast path on every visit
@@ -821,6 +834,8 @@
     if (!h1) return;
     if (scope === "national") { h1.textContent = "US News"; return; }
     if (scope === "international") { h1.textContent = "International News"; return; }
+    const topic = (await window.App?.getAllTopics?.() || []).find(x => x.id === scope);
+    if (topic) { h1.textContent = topic.title; return; }
     // Local/regional: show generic placeholder while we wait for geo.
     h1.textContent = scope === "local" ? "Local News" : "Regional News";
     const requestedScope = scope;
@@ -869,25 +884,53 @@
 
   // Wire scope buttons — drive both the critical ticker AND the news grid
   // off the same scope state so the whole page reflects the chosen perspective.
-  tickerScopeBar?.querySelectorAll(".tickerScopeBtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const scope = btn.dataset.scope;
-      if (scope === currentScope) return;
-      currentScope = scope;
-      syncScopeButtons(scope);
-      // Persist as newsScope; keep newsTickerScope in sync for any older code
-      // that still reads it (back-compat across deploys).
-      saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
-      geoCache = null;
-      renderCriticalTicker(true);
-      render(true);
-      // Local/Regional need a saved location to be useful. Prompt the
-      // first-run welcome if no cfg.zipCode or device coords are set.
-      if (scope === "local" || scope === "regional") {
-        window.App?.openWelcomeIfNeeded?.();
-      }
-    });
+  // Delegated rather than bound per button: the topic tabs are injected
+  // asynchronously below (they depend on saved config), and delegation means
+  // they work without re-wiring anything.
+  tickerScopeBar?.addEventListener("click", (ev) => {
+    const btn = ev.target.closest(".tickerScopeBtn");
+    if (!btn || !tickerScopeBar.contains(btn)) return;
+    const scope = btn.dataset.scope;
+    if (!scope || scope === currentScope) return;
+    currentScope = scope;
+    syncScopeButtons(scope);
+    // Persist as newsScope; keep newsTickerScope in sync for any older code
+    // that still reads it (back-compat across deploys).
+    saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
+    geoCache = null;
+    renderCriticalTicker(true);
+    render(true);
+    // Local/Regional need a saved location to be useful. Prompt the
+    // first-run welcome if no cfg.zipCode or device coords are set.
+    if (scope === "local" || scope === "regional") {
+      window.App?.openWelcomeIfNeeded?.();
+    }
   });
+
+  // Append a tab for each topic the user has enabled. Runs after the static
+  // four so the geographic tabs keep their familiar position, and re-syncs the
+  // active state in case the saved scope IS a topic (the button it needs to
+  // highlight didn't exist when syncScopeButtons first ran).
+  async function renderTopicTabs() {
+    if (!tickerScopeBar) return;
+    tickerScopeBar.querySelectorAll(".tickerScopeBtn[data-topic]").forEach(b => b.remove());
+    let topics = [];
+    try { topics = await window.App?.getEnabledTopics?.() || []; } catch { return; }
+    for (const t of topics) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tickerScopeBtn";
+      btn.dataset.scope = t.id;
+      btn.dataset.topic = "1";
+      btn.textContent = t.label;
+      tickerScopeBar.appendChild(btn);
+    }
+    syncScopeButtons(currentScope);
+  }
+  renderTopicTabs();
+
+  // Settings saves cfg.topics without a reload, so pick the change up live.
+  window.addEventListener("hn:topicschange", renderTopicTabs);
 
   // Keyboard accessibility for refresh button
   refreshBtn?.addEventListener("click", () => render(true));

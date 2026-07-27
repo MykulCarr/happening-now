@@ -2992,6 +2992,58 @@
     render();
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // News categories (topic tabs)
+  // ──────────────────────────────────────────────────────────────────
+  // Renders one toggle per topic in data/topic-sources.json. Saving fires
+  // hn:topicschange so an open news page rebuilds its tab bar without a reload.
+  async function setupTopicPicker(){
+    const grid = document.getElementById("topicGrid");
+    if(!grid) return;
+    let topics = [];
+    try { topics = await window.App?.getAllTopics?.() || []; }
+    catch { grid.textContent = "Couldn't load the category list."; return; }
+    if(!topics.length){ grid.textContent = "No categories available."; return; }
+
+    function chosen(){
+      const v = (window.App?.cfg || cfg)?.topics;
+      return Array.isArray(v) ? v : [];
+    }
+
+    function paint(){
+      const on = new Set(chosen());
+      grid.innerHTML = "";
+      topics.forEach(t => {
+        const row = document.createElement("label");
+        row.className = "topicRow" + (on.has(t.id) ? " isOn" : "");
+        row.innerHTML = `
+          <input type="checkbox" ${on.has(t.id) ? "checked" : ""} data-topic-id="${escapeHtmlSafe(t.id)}" />
+          <span class="topicEmoji">${escapeHtmlSafe(t.emoji)}</span>
+          <span class="topicText">
+            <span class="topicTitle">${escapeHtmlSafe(t.title)}</span>
+            <span class="topicMeta">${t.count} source${t.count === 1 ? "" : "s"}</span>
+          </span>`;
+        grid.appendChild(row);
+      });
+      grid.querySelectorAll("input[data-topic-id]").forEach(box => {
+        box.addEventListener("change", () => {
+          const id = box.dataset.topicId;
+          const next = { ...(window.App?.cfg || cfg) };
+          const list = new Set(Array.isArray(next.topics) ? next.topics : []);
+          box.checked ? list.add(id) : list.delete(id);
+          next.topics = [...list];
+          window.App.saveConfig(next);
+          cfg = next;
+          paint();
+          window.dispatchEvent(new CustomEvent("hn:topicschange"));
+          setStatus(box.checked ? `Added ${id} tab` : `Removed ${id} tab`, "saved");
+        });
+      });
+    }
+    paint();
+  }
+  setupTopicPicker();
+
   function escapeHtmlSafe(s){
     return String(s ?? "").replace(/[&<>"']/g, m => (
       { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]
