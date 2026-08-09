@@ -165,9 +165,13 @@
     localSources: [],
     regionalSources: [],
     // Topic tabs the user has turned on (ids from data/topic-sources.json).
-    // Empty by default: the four geographic tabs are the shipped experience,
-    // and topics only appear once someone opts in from Settings.
-    topics: [],
+    // Defaults to a light sample spanning every group in the Settings
+    // picker's grouping (one from Science & Environment, Tech & Making and
+    // Money & Sports, two from Arts & Culture, one each from Lifestyle and
+    // Offbeat) so a first-time visitor sees the feature without every tab
+    // being on. Deliberately excludes "conspiracies" from the default set —
+    // opt-in only, never shown unasked.
+    topics: ["science", "tech", "humaninterest", "music", "sports", "food", "oddnews"],
     localSourcesSkipped: false,
     regionalSourcesSkipped: false,
 
@@ -3027,7 +3031,7 @@
     return topicSourcesPromise;
   }
 
-  // Every topic the repo ships, in file order, as { id, label, title, emoji }.
+  // Every topic the repo ships, in file order, as { id, label, title, emoji, group }.
   // Settings renders the chooser from this, so adding a topic to the JSON is
   // all it takes for it to become selectable.
   async function getAllTopics() {
@@ -3037,6 +3041,7 @@
       label: t.label || id.toUpperCase(),
       title: t.title || t.label || id,
       emoji: t.emoji || "",
+      group: t.group || "",
       count: (t.entries || []).length,
     }));
   }

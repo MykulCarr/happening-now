@@ -3042,17 +3042,40 @@
     function paint(){
       const on = new Set(chosen());
       grid.innerHTML = "";
+      // Topics arrive pre-clustered by data/topic-sources.json's file order
+      // (see its "group" field), so grouping here just has to preserve
+      // first-seen order rather than re-sort anything.
+      const groups = new Map();
       topics.forEach(t => {
-        const row = document.createElement("label");
-        row.className = "topicRow" + (on.has(t.id) ? " isOn" : "");
-        row.innerHTML = `
-          <input type="checkbox" ${on.has(t.id) ? "checked" : ""} data-topic-id="${escapeHtmlSafe(t.id)}" />
-          <span class="topicEmoji">${escapeHtmlSafe(t.emoji)}</span>
-          <span class="topicText">
-            <span class="topicTitle">${escapeHtmlSafe(t.title)}</span>
-            <span class="topicMeta">${t.count} source${t.count === 1 ? "" : "s"}</span>
-          </span>`;
-        grid.appendChild(row);
+        const key = t.group || "";
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(t);
+      });
+      groups.forEach((members, groupName) => {
+        const section = document.createElement("div");
+        section.className = "topicGroup";
+        if(groupName){
+          const label = document.createElement("div");
+          label.className = "topicGroupLabel";
+          label.textContent = groupName;
+          section.appendChild(label);
+        }
+        const row = document.createElement("div");
+        row.className = "topicGroupRow";
+        members.forEach(t => {
+          const chip = document.createElement("label");
+          chip.className = "topicRow" + (on.has(t.id) ? " isOn" : "");
+          chip.innerHTML = `
+            <input type="checkbox" ${on.has(t.id) ? "checked" : ""} data-topic-id="${escapeHtmlSafe(t.id)}" />
+            <span class="topicEmoji">${escapeHtmlSafe(t.emoji)}</span>
+            <span class="topicText">
+              <span class="topicTitle">${escapeHtmlSafe(t.title)}</span>
+              <span class="topicMeta">${t.count} source${t.count === 1 ? "" : "s"}</span>
+            </span>`;
+          row.appendChild(chip);
+        });
+        section.appendChild(row);
+        grid.appendChild(section);
       });
       grid.querySelectorAll("input[data-topic-id]").forEach(box => {
         box.addEventListener("change", () => {

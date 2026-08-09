@@ -1,14 +1,15 @@
 {
   "_meta": {
     "version": 1,
-    "purpose": "Curated feeds for the topic tabs (Science, Health, Human Interest, Tech, Comics, Vibe Coding, Music). Parallel to local-stations.json, which covers the geographic scopes — this covers the topical ones. Users choose which topics appear as tabs in Settings.",
+    "purpose": "Curated feeds for the topic tabs (Science, Health, Human Interest, Tech, Comics, Vibe Coding, Music, Sports, Entertainment, Gaming, Business, Food, Travel, Environment, Books, Conspiracies, Odd News). Parallel to local-stations.json, which covers the geographic scopes — this covers the topical ones. Users choose which topics appear as tabs in Settings.",
     "schema": {
       "topics": {
         "<topic-id>": {
           "label": "Tab text, kept short — the tab bar is horizontal on phones",
           "title": "<h1> shown on the news page for this topic",
           "emoji": "Shown beside the label in Settings",
-          "entries": "[ { name, rss, site, type } ] — same entry shape as local-stations.json"
+          "entries": "[ { name, rss, site, type } ] — same entry shape as local-stations.json",
+          "group": "Section heading used to cluster related topics in the Settings picker (e.g. \"Arts & Culture\"). Topics sharing a group render together; group order follows file order of first appearance, topic order within a group is alphabetical by title."
         }
       }
     },
@@ -23,12 +24,96 @@
       "syndicated comics": "GoComics (Peanuts, Garfield, Calvin & Hobbes) and Comics Kingdom (Blondie, Beetle Bailey) both removed public RSS — verified dead on two URL patterns each, 2026-07-26. They're subscription businesses now. Local newspaper comics come from the same syndicates, so those aren't available either. Only independent webcomics publish feeds.",
       "nature.com": "nature.com/nature.rss returns nothing through the proxy — it answered once on 2026-07-26 then failed three consecutive serial retries. Science News and Scientific American cover the same ground reliably."
     },
-    "copyright": "Headline + link is normal RSS use and applies to every entry here. Rendering a comic's IMAGE is republishing it, which needs a licence — so an entry may only be displayed as an image if it carries \"embed\": true, and that flag requires a licence that actually permits it, recorded in \"license\". Today only xkcd qualifies (CC BY-NC 2.5, verified at xkcd.com/license.html 2026-07-26); the site is non-commercial and attributes the source, which is what that licence asks. Every other comic is all-rights-reserved: headline and link only. Do not set embed:true without checking the outlet's actual licence page."
+    "copyright": "Headline + link is normal RSS use and applies to every entry here. Rendering a comic's IMAGE is republishing it, which needs a licence — so an entry may only be displayed as an image if it carries \"embed\": true, and that flag requires a licence that actually permits it, recorded in \"license\". Today only xkcd qualifies (CC BY-NC 2.5, verified at xkcd.com/license.html 2026-07-26); the site is non-commercial and attributes the source, which is what that licence asks. Every other comic is all-rights-reserved: headline and link only. Do not set embed:true without checking the outlet's actual licence page.",
+    "conspiraciesTopic": "'conspiracies' is deliberately sourced as journalism ABOUT conspiracies, cover-ups and unexplained phenomena (UAP disclosure reporting, FOIA-based investigation, fact-checking/debunking, a long-running 'strange phenomena' magazine) — not outlets that promote fringe claims as fact. Candidates like disinformation-peddling sites were never added. Keep new entries to that same bar: real reporting or real debunking, not the thing being debunked."
   },
   "topics": {
+    "environment": {
+      "label": "CLIMATE",
+      "title": "Environment & Climate",
+      "group": "Science & Environment",
+      "emoji": "🌎",
+      "entries": [
+        {
+          "name": "Canary Media",
+          "rss": "https://www.canarymedia.com/rss.xml",
+          "site": "https://www.canarymedia.com",
+          "type": "paper"
+        },
+        {
+          "name": "Grist",
+          "rss": "https://grist.org/feed/",
+          "site": "https://grist.org",
+          "type": "paper"
+        },
+        {
+          "name": "Hakai Magazine",
+          "rss": "https://hakaimagazine.com/feed/",
+          "site": "https://hakaimagazine.com",
+          "type": "paper"
+        },
+        {
+          "name": "Inside Climate News",
+          "rss": "https://insideclimatenews.org/feed/",
+          "site": "https://insideclimatenews.org",
+          "type": "paper"
+        },
+        {
+          "name": "The Guardian Environment",
+          "rss": "https://www.theguardian.com/environment/rss",
+          "site": "https://www.theguardian.com/environment",
+          "type": "paper"
+        },
+        {
+          "name": "Yale Environment 360",
+          "rss": "https://e360.yale.edu/feed.xml",
+          "site": "https://e360.yale.edu",
+          "type": "paper"
+        }
+      ]
+    },
+    "health": {
+      "label": "HEALTH",
+      "title": "Health & Medicine",
+      "group": "Science & Environment",
+      "emoji": "🩺",
+      "entries": [
+        {
+          "name": "CIDRAP (U. Minnesota)",
+          "rss": "https://www.cidrap.umn.edu/rss.xml",
+          "site": "https://www.cidrap.umn.edu",
+          "type": "paper"
+        },
+        {
+          "name": "KFF Health News (nonprofit)",
+          "rss": "https://kffhealthnews.org/feed/",
+          "site": "https://kffhealthnews.org",
+          "type": "paper"
+        },
+        {
+          "name": "MedPage Today",
+          "rss": "https://www.medpagetoday.com/rss/headlines.xml",
+          "site": "https://www.medpagetoday.com",
+          "type": "paper"
+        },
+        {
+          "name": "NPR Health",
+          "rss": "https://feeds.npr.org/1128/rss.xml",
+          "site": "https://www.npr.org/sections/health-shots",
+          "type": "paper"
+        },
+        {
+          "name": "STAT News",
+          "rss": "https://www.statnews.com/feed/",
+          "site": "https://www.statnews.com",
+          "type": "paper"
+        }
+      ]
+    },
     "science": {
       "label": "SCIENCE",
       "title": "Science & Space",
+      "group": "Science & Environment",
       "emoji": "🔬",
       "entries": [
         {
@@ -99,132 +184,10 @@
         }
       ]
     },
-    "health": {
-      "label": "HEALTH",
-      "title": "Health & Medicine",
-      "emoji": "🩺",
-      "entries": [
-        {
-          "name": "CIDRAP (U. Minnesota)",
-          "rss": "https://www.cidrap.umn.edu/rss.xml",
-          "site": "https://www.cidrap.umn.edu",
-          "type": "paper"
-        },
-        {
-          "name": "KFF Health News (nonprofit)",
-          "rss": "https://kffhealthnews.org/feed/",
-          "site": "https://kffhealthnews.org",
-          "type": "paper"
-        },
-        {
-          "name": "MedPage Today",
-          "rss": "https://www.medpagetoday.com/rss/headlines.xml",
-          "site": "https://www.medpagetoday.com",
-          "type": "paper"
-        },
-        {
-          "name": "NPR Health",
-          "rss": "https://feeds.npr.org/1128/rss.xml",
-          "site": "https://www.npr.org/sections/health-shots",
-          "type": "paper"
-        },
-        {
-          "name": "STAT News",
-          "rss": "https://www.statnews.com/feed/",
-          "site": "https://www.statnews.com",
-          "type": "paper"
-        }
-      ]
-    },
-    "humaninterest": {
-      "label": "HUMAN",
-      "title": "Human Interest & Culture",
-      "emoji": "📖",
-      "entries": [
-        {
-          "name": "Aeon",
-          "rss": "https://aeon.co/feed.rss",
-          "site": "https://aeon.co",
-          "type": "paper"
-        },
-        {
-          "name": "Atlas Obscura",
-          "rss": "https://www.atlasobscura.com/feeds/latest",
-          "site": "https://www.atlasobscura.com",
-          "type": "paper"
-        },
-        {
-          "name": "Longreads",
-          "rss": "https://longreads.com/feed/",
-          "site": "https://longreads.com",
-          "type": "paper"
-        },
-        {
-          "name": "Narratively",
-          "rss": "https://narratively.com/feed/",
-          "site": "https://narratively.com",
-          "type": "paper"
-        },
-        {
-          "name": "NPR Culture",
-          "rss": "https://feeds.npr.org/1008/rss.xml",
-          "site": "https://www.npr.org/sections/culture",
-          "type": "paper"
-        },
-        {
-          "name": "Smithsonian Magazine",
-          "rss": "https://www.smithsonianmag.com/rss/latest_articles/",
-          "site": "https://www.smithsonianmag.com",
-          "type": "paper"
-        }
-      ]
-    },
-    "tech": {
-      "label": "TECH",
-      "title": "Technology",
-      "emoji": "💻",
-      "entries": [
-        {
-          "name": "404 Media (journalist-owned)",
-          "rss": "https://www.404media.co/rss/",
-          "site": "https://www.404media.co",
-          "type": "paper"
-        },
-        {
-          "name": "Ars Technica",
-          "rss": "https://feeds.arstechnica.com/arstechnica/index",
-          "site": "https://arstechnica.com",
-          "type": "paper"
-        },
-        {
-          "name": "Hacker News",
-          "rss": "https://hnrss.org/frontpage",
-          "site": "https://news.ycombinator.com",
-          "type": "community"
-        },
-        {
-          "name": "Rest of World",
-          "rss": "https://restofworld.org/feed/latest/",
-          "site": "https://restofworld.org",
-          "type": "paper"
-        },
-        {
-          "name": "The Verge",
-          "rss": "https://www.theverge.com/rss/index.xml",
-          "site": "https://www.theverge.com",
-          "type": "paper"
-        },
-        {
-          "name": "WIRED",
-          "rss": "https://www.wired.com/feed/rss",
-          "site": "https://www.wired.com",
-          "type": "paper"
-        }
-      ]
-    },
     "vibecoding": {
       "label": "BUILDING",
       "title": "Building & Vibe Coding",
+      "group": "Tech & Making",
       "emoji": "🛠️",
       "entries": [
         {
@@ -271,9 +234,275 @@
         }
       ]
     },
+    "gaming": {
+      "label": "GAMING",
+      "title": "Gaming",
+      "group": "Tech & Making",
+      "emoji": "🎮",
+      "entries": [
+        {
+          "name": "Aftermath",
+          "rss": "https://aftermath.site/feed",
+          "site": "https://aftermath.site",
+          "type": "paper"
+        },
+        {
+          "name": "Eurogamer",
+          "rss": "https://www.eurogamer.net/feed",
+          "site": "https://www.eurogamer.net",
+          "type": "paper"
+        },
+        {
+          "name": "Kotaku",
+          "rss": "https://kotaku.com/rss",
+          "site": "https://kotaku.com",
+          "type": "paper"
+        },
+        {
+          "name": "PC Gamer",
+          "rss": "https://www.pcgamer.com/rss/",
+          "site": "https://www.pcgamer.com",
+          "type": "paper"
+        },
+        {
+          "name": "Polygon",
+          "rss": "https://www.polygon.com/rss/index.xml",
+          "site": "https://www.polygon.com",
+          "type": "paper"
+        },
+        {
+          "name": "Rock Paper Shotgun",
+          "rss": "https://www.rockpapershotgun.com/feed",
+          "site": "https://www.rockpapershotgun.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "tech": {
+      "label": "TECH",
+      "title": "Technology",
+      "group": "Tech & Making",
+      "emoji": "💻",
+      "entries": [
+        {
+          "name": "404 Media (journalist-owned)",
+          "rss": "https://www.404media.co/rss/",
+          "site": "https://www.404media.co",
+          "type": "paper"
+        },
+        {
+          "name": "Ars Technica",
+          "rss": "https://feeds.arstechnica.com/arstechnica/index",
+          "site": "https://arstechnica.com",
+          "type": "paper"
+        },
+        {
+          "name": "Hacker News",
+          "rss": "https://hnrss.org/frontpage",
+          "site": "https://news.ycombinator.com",
+          "type": "community"
+        },
+        {
+          "name": "Rest of World",
+          "rss": "https://restofworld.org/feed/latest/",
+          "site": "https://restofworld.org",
+          "type": "paper"
+        },
+        {
+          "name": "The Verge",
+          "rss": "https://www.theverge.com/rss/index.xml",
+          "site": "https://www.theverge.com",
+          "type": "paper"
+        },
+        {
+          "name": "WIRED",
+          "rss": "https://www.wired.com/feed/rss",
+          "site": "https://www.wired.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "books": {
+      "label": "BOOKS",
+      "title": "Books & Literature",
+      "group": "Arts & Culture",
+      "emoji": "📚",
+      "entries": [
+        {
+          "name": "Book Riot",
+          "rss": "https://bookriot.com/feed/",
+          "site": "https://bookriot.com",
+          "type": "paper"
+        },
+        {
+          "name": "Chicago Review of Books",
+          "rss": "https://chireviewofbooks.com/feed/",
+          "site": "https://chireviewofbooks.com",
+          "type": "paper"
+        },
+        {
+          "name": "Electric Literature",
+          "rss": "https://electricliterature.com/feed/",
+          "site": "https://electricliterature.com",
+          "type": "paper"
+        },
+        {
+          "name": "Literary Hub",
+          "rss": "https://lithub.com/feed/",
+          "site": "https://lithub.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Paris Review",
+          "rss": "https://www.theparisreview.org/blog/feed/",
+          "site": "https://www.theparisreview.org",
+          "type": "paper"
+        }
+      ]
+    },
+    "comics": {
+      "label": "COMICS",
+      "title": "Comics",
+      "group": "Arts & Culture",
+      "emoji": "🎨",
+      "entries": [
+        {
+          "name": "Penny Arcade",
+          "rss": "https://www.penny-arcade.com/feed",
+          "site": "https://www.penny-arcade.com",
+          "type": "community",
+          "license": "All rights reserved",
+          "embed": false
+        },
+        {
+          "name": "Questionable Content",
+          "rss": "https://www.questionablecontent.net/QCRSS.xml",
+          "site": "https://www.questionablecontent.net",
+          "type": "community",
+          "license": "All rights reserved",
+          "embed": false
+        },
+        {
+          "name": "SMBC",
+          "rss": "https://www.smbc-comics.com/comic/rss",
+          "site": "https://www.smbc-comics.com",
+          "type": "community",
+          "license": "All rights reserved",
+          "embed": false
+        },
+        {
+          "name": "The Nib (political cartoons)",
+          "rss": "https://thenib.com/feed/",
+          "site": "https://thenib.com",
+          "type": "community",
+          "license": "All rights reserved",
+          "embed": false
+        },
+        {
+          "name": "War and Peas",
+          "rss": "https://warandpeas.com/feed/",
+          "site": "https://warandpeas.com",
+          "type": "community",
+          "license": "All rights reserved",
+          "embed": false
+        },
+        {
+          "name": "xkcd",
+          "rss": "https://xkcd.com/rss.xml",
+          "site": "https://xkcd.com",
+          "type": "community",
+          "license": "CC BY-NC 2.5",
+          "licenseUrl": "https://xkcd.com/license.html",
+          "embed": true
+        }
+      ]
+    },
+    "entertainment": {
+      "label": "SCREEN",
+      "title": "Entertainment",
+      "group": "Arts & Culture",
+      "emoji": "🎬",
+      "entries": [
+        {
+          "name": "Deadline",
+          "rss": "https://deadline.com/feed/",
+          "site": "https://deadline.com",
+          "type": "paper"
+        },
+        {
+          "name": "IndieWire",
+          "rss": "https://www.indiewire.com/feed/",
+          "site": "https://www.indiewire.com",
+          "type": "paper"
+        },
+        {
+          "name": "Little White Lies",
+          "rss": "https://lwlies.com/feed/",
+          "site": "https://lwlies.com",
+          "type": "paper"
+        },
+        {
+          "name": "The A.V. Club",
+          "rss": "https://www.avclub.com/rss",
+          "site": "https://www.avclub.com",
+          "type": "paper"
+        },
+        {
+          "name": "Variety",
+          "rss": "https://variety.com/feed/",
+          "site": "https://variety.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "humaninterest": {
+      "label": "HUMAN",
+      "title": "Human Interest & Culture",
+      "group": "Arts & Culture",
+      "emoji": "📖",
+      "entries": [
+        {
+          "name": "Aeon",
+          "rss": "https://aeon.co/feed.rss",
+          "site": "https://aeon.co",
+          "type": "paper"
+        },
+        {
+          "name": "Atlas Obscura",
+          "rss": "https://www.atlasobscura.com/feeds/latest",
+          "site": "https://www.atlasobscura.com",
+          "type": "paper"
+        },
+        {
+          "name": "Longreads",
+          "rss": "https://longreads.com/feed/",
+          "site": "https://longreads.com",
+          "type": "paper"
+        },
+        {
+          "name": "Narratively",
+          "rss": "https://narratively.com/feed/",
+          "site": "https://narratively.com",
+          "type": "paper"
+        },
+        {
+          "name": "NPR Culture",
+          "rss": "https://feeds.npr.org/1008/rss.xml",
+          "site": "https://www.npr.org/sections/culture",
+          "type": "paper"
+        },
+        {
+          "name": "Smithsonian Magazine",
+          "rss": "https://www.smithsonianmag.com/rss/latest_articles/",
+          "site": "https://www.smithsonianmag.com",
+          "type": "paper"
+        }
+      ]
+    },
     "music": {
       "label": "MUSIC",
       "title": "Music",
+      "group": "Arts & Culture",
       "emoji": "🎧",
       "entries": [
         {
@@ -326,59 +555,225 @@
         }
       ]
     },
-    "comics": {
-      "label": "COMICS",
-      "title": "Comics",
-      "emoji": "🎨",
+    "business": {
+      "label": "BUSINESS",
+      "title": "Business & Finance",
+      "group": "Money & Sports",
+      "emoji": "💼",
       "entries": [
         {
-          "name": "Penny Arcade",
-          "rss": "https://www.penny-arcade.com/feed",
-          "site": "https://www.penny-arcade.com",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
+          "name": "Business Insider",
+          "rss": "https://www.businessinsider.com/rss",
+          "site": "https://www.businessinsider.com",
+          "type": "paper"
         },
         {
-          "name": "Questionable Content",
-          "rss": "https://www.questionablecontent.net/QCRSS.xml",
-          "site": "https://www.questionablecontent.net",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
+          "name": "Fast Company",
+          "rss": "https://www.fastcompany.com/rss",
+          "site": "https://www.fastcompany.com",
+          "type": "paper"
         },
         {
-          "name": "SMBC",
-          "rss": "https://www.smbc-comics.com/comic/rss",
-          "site": "https://www.smbc-comics.com",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
+          "name": "Fortune",
+          "rss": "https://fortune.com/feed/",
+          "site": "https://fortune.com",
+          "type": "paper"
         },
         {
-          "name": "The Nib (political cartoons)",
-          "rss": "https://thenib.com/feed/",
-          "site": "https://thenib.com",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
+          "name": "Inc.",
+          "rss": "https://www.inc.com/rss/",
+          "site": "https://www.inc.com",
+          "type": "paper"
         },
         {
-          "name": "War and Peas",
-          "rss": "https://warandpeas.com/feed/",
-          "site": "https://warandpeas.com",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
+          "name": "MarketWatch",
+          "rss": "https://www.marketwatch.com/rss/topstories",
+          "site": "https://www.marketwatch.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "sports": {
+      "label": "SPORTS",
+      "title": "Sports",
+      "group": "Money & Sports",
+      "emoji": "🏆",
+      "entries": [
+        {
+          "name": "Awful Announcing",
+          "rss": "https://awfulannouncing.com/feed",
+          "site": "https://awfulannouncing.com",
+          "type": "paper"
         },
         {
-          "name": "xkcd",
-          "rss": "https://xkcd.com/rss.xml",
-          "site": "https://xkcd.com",
-          "type": "community",
-          "license": "CC BY-NC 2.5",
-          "licenseUrl": "https://xkcd.com/license.html",
-          "embed": true
+          "name": "CBS Sports",
+          "rss": "https://www.cbssports.com/rss/headlines/",
+          "site": "https://www.cbssports.com",
+          "type": "paper"
+        },
+        {
+          "name": "Defector",
+          "rss": "https://defector.com/feed",
+          "site": "https://defector.com",
+          "type": "paper"
+        },
+        {
+          "name": "Front Office Sports",
+          "rss": "https://frontofficesports.com/feed/",
+          "site": "https://frontofficesports.com",
+          "type": "paper"
+        },
+        {
+          "name": "Sporting News",
+          "rss": "https://www.sportingnews.com/us/rss",
+          "site": "https://www.sportingnews.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "food": {
+      "label": "FOOD",
+      "title": "Food & Cooking",
+      "group": "Lifestyle",
+      "emoji": "🍳",
+      "entries": [
+        {
+          "name": "Bon Appétit",
+          "rss": "https://www.bonappetit.com/feed/rss",
+          "site": "https://www.bonappetit.com",
+          "type": "paper"
+        },
+        {
+          "name": "Eater",
+          "rss": "https://www.eater.com/rss/index.xml",
+          "site": "https://www.eater.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Kitchn",
+          "rss": "https://www.thekitchn.com/main.rss",
+          "site": "https://www.thekitchn.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Takeout",
+          "rss": "https://thetakeout.com/rss",
+          "site": "https://thetakeout.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "travel": {
+      "label": "TRAVEL",
+      "title": "Travel",
+      "group": "Lifestyle",
+      "emoji": "✈️",
+      "entries": [
+        {
+          "name": "Condé Nast Traveler",
+          "rss": "https://www.cntraveler.com/feed/rss",
+          "site": "https://www.cntraveler.com",
+          "type": "paper"
+        },
+        {
+          "name": "Fodor's Travel",
+          "rss": "https://www.fodors.com/feed",
+          "site": "https://www.fodors.com",
+          "type": "paper"
+        },
+        {
+          "name": "Matador Network",
+          "rss": "https://matadornetwork.com/feed/",
+          "site": "https://matadornetwork.com",
+          "type": "paper"
+        },
+        {
+          "name": "Roads & Kingdoms",
+          "rss": "https://roadsandkingdoms.com/feed/",
+          "site": "https://roadsandkingdoms.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Points Guy",
+          "rss": "https://thepointsguy.com/feed/",
+          "site": "https://thepointsguy.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "conspiracies": {
+      "label": "CONSPIRACY",
+      "title": "Conspiracies & Cover-Ups",
+      "group": "Offbeat",
+      "emoji": "🛸",
+      "entries": [
+        {
+          "name": "Bellingcat",
+          "rss": "https://www.bellingcat.com/feed/",
+          "site": "https://www.bellingcat.com",
+          "type": "paper"
+        },
+        {
+          "name": "Fortean Times",
+          "rss": "https://www.forteantimes.com/feed",
+          "site": "https://www.forteantimes.com",
+          "type": "paper"
+        },
+        {
+          "name": "Full Fact",
+          "rss": "https://fullfact.org/feed/",
+          "site": "https://fullfact.org",
+          "type": "paper"
+        },
+        {
+          "name": "Snopes",
+          "rss": "https://www.snopes.com/feed/",
+          "site": "https://www.snopes.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Debrief",
+          "rss": "https://thedebrief.org/feed/",
+          "site": "https://thedebrief.org",
+          "type": "paper"
+        }
+      ]
+    },
+    "oddnews": {
+      "label": "ODDITIES",
+      "title": "Odd News",
+      "group": "Offbeat",
+      "emoji": "🎪",
+      "entries": [
+        {
+          "name": "Boing Boing",
+          "rss": "https://boingboing.net/feed",
+          "site": "https://boingboing.net",
+          "type": "paper"
+        },
+        {
+          "name": "Mental Floss",
+          "rss": "https://www.mentalfloss.com/rss.xml",
+          "site": "https://www.mentalfloss.com",
+          "type": "paper"
+        },
+        {
+          "name": "Neatorama",
+          "rss": "https://www.neatorama.com/feed/",
+          "site": "https://www.neatorama.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Onion",
+          "rss": "https://www.theonion.com/rss",
+          "site": "https://www.theonion.com",
+          "type": "paper"
+        },
+        {
+          "name": "UPI Odd News",
+          "rss": "https://rss.upi.com/news/odd_news.rss",
+          "site": "https://www.upi.com",
+          "type": "paper"
         }
       ]
     }
