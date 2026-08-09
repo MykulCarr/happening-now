@@ -752,12 +752,6 @@
             "rss": "https://floridaphoenix.com/feed/",
             "site": "https://floridaphoenix.com",
             "type": "paper"
-          },
-          {
-            "name": "Florida Politics",
-            "rss": "https://floridapolitics.com/feed/",
-            "site": "https://floridapolitics.com",
-            "type": "paper"
           }
         ],
         "subreddits": [
@@ -1418,6 +1412,12 @@
             "rss": "https://www.brproud.com/feed/",
             "site": "https://www.brproud.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Baton Rouge",
+            "rss": "https://patch.com/feeds/louisiana/baton-rouge",
+            "site": "https://patch.com/louisiana/baton-rouge",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -2059,6 +2059,12 @@
             "rss": "https://www.kpax.com/news.rss",
             "site": "https://www.kpax.com",
             "type": "tv"
+          },
+          {
+            "name": "Patch Missoula",
+            "rss": "https://patch.com/feeds/montana/missoula",
+            "site": "https://patch.com/montana/missoula",
+            "type": "community"
           }
         ],
         "subreddits": [
@@ -3685,6 +3691,12 @@
         },
         "entries": [
           {
+            "name": "Patch Green Bay",
+            "rss": "https://patch.com/feeds/wisconsin/green-bay",
+            "site": "https://patch.com/wisconsin/green-bay",
+            "type": "community"
+          },
+          {
             "name": "WFRV / We Are Green Bay (CBS)",
             "rss": "https://www.wearegreenbay.com/feed/",
             "site": "https://www.wearegreenbay.com",
@@ -3824,6 +3836,12 @@
             "rss": "https://oilcity.news/feed/",
             "site": "https://oilcity.news",
             "type": "paper"
+          },
+          {
+            "name": "Patch Casper",
+            "rss": "https://patch.com/feeds/wyoming/casper",
+            "site": "https://patch.com/wyoming/casper",
+            "type": "community"
           }
         ],
         "subreddits": [
