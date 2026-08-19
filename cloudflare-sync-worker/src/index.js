@@ -1,4 +1,5 @@
 import { runCurationSweep } from "./curate.js";
+import { getMarketSnapshot } from "./markets.js";
 
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -477,7 +478,7 @@ export default {
     );
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (!isOriginAllowed(request, env)) {
       return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, request, env);
     }
@@ -513,6 +514,10 @@ export default {
 
     if (url.pathname === "/v1/rss/raw") {
       return fetchRssThroughProxy(request, env, url);
+    }
+
+    if (url.pathname === "/v1/markets/snapshot") {
+      return jsonResponse(await getMarketSnapshot(env, ctx), 200, request, env);
     }
 
     if (url.pathname === "/v1/stocks/quote") {
