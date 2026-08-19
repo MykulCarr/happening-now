@@ -111,30 +111,32 @@
     "dow", "sp500", "nasdaq", "russell2000", "gold", "bitcoin",
   ]);
 
+  // `group` drives how the markets board arranges its tiles, and matches the
+  // group each item carries in /v1/markets/snapshot.
   const MARKET_INDEX_DEFS = [
-    { key: "dow", name: "DOW" },
-    { key: "sp500", name: "S&P 500" },
-    { key: "nasdaq", name: "NASDAQ" },
-    { key: "russell2000", name: "RUSSELL 2000" },
-    { key: "sp400", name: "S&P MIDCAP 400" },
-    { key: "sp600", name: "S&P SMALLCAP 600" },
-    { key: "microcap", name: "MICROCAP" },
-    { key: "vix", name: "VIX" },
-    { key: "ftse100", name: "FTSE 100" },
-    { key: "dax", name: "DAX" },
-    { key: "nikkei225", name: "NIKKEI 225" },
-    { key: "hangseng", name: "HANG SENG" },
-    { key: "gold", name: "GOLD" },
-    { key: "silver", name: "SILVER" },
-    { key: "copper", name: "COPPER" },
-    { key: "crudeoil", name: "CRUDE OIL" },
-    { key: "brent", name: "BRENT" },
-    { key: "natgas", name: "NAT GAS" },
-    { key: "us10y", name: "US 10Y" },
-    { key: "dxy", name: "DXY" },
-    { key: "eurusd", name: "EUR/USD" },
-    { key: "bitcoin", name: "BITCOIN" },
-    { key: "ethereum", name: "ETHEREUM" }
+    { key: "dow", name: "DOW", group: "us-indices" },
+    { key: "sp500", name: "S&P 500", group: "us-indices" },
+    { key: "nasdaq", name: "NASDAQ", group: "us-indices" },
+    { key: "russell2000", name: "RUSSELL 2000", group: "us-indices" },
+    { key: "sp400", name: "S&P MIDCAP 400", group: "us-indices" },
+    { key: "sp600", name: "S&P SMALLCAP 600", group: "us-indices" },
+    { key: "microcap", name: "MICROCAP", group: "us-indices" },
+    { key: "vix", name: "VIX", group: "us-indices" },
+    { key: "ftse100", name: "FTSE 100", group: "global-indices" },
+    { key: "dax", name: "DAX", group: "global-indices" },
+    { key: "nikkei225", name: "NIKKEI 225", group: "global-indices" },
+    { key: "hangseng", name: "HANG SENG", group: "global-indices" },
+    { key: "gold", name: "GOLD", group: "commodities" },
+    { key: "silver", name: "SILVER", group: "commodities" },
+    { key: "copper", name: "COPPER", group: "commodities" },
+    { key: "crudeoil", name: "CRUDE OIL", group: "commodities" },
+    { key: "brent", name: "BRENT", group: "commodities" },
+    { key: "natgas", name: "NAT GAS", group: "commodities" },
+    { key: "us10y", name: "US 10Y", group: "rates" },
+    { key: "dxy", name: "DXY", group: "rates" },
+    { key: "eurusd", name: "EUR/USD", group: "rates" },
+    { key: "bitcoin", name: "BITCOIN", group: "crypto" },
+    { key: "ethereum", name: "ETHEREUM", group: "crypto" }
   ];
 
   const LEGACY_MARKET_INDEX_NAME_TO_KEY = {
@@ -180,6 +182,10 @@
       key: item.key,
       visible: DEFAULT_VISIBLE_INDICES.has(item.key),
     })),
+
+    // World currencies shown on the markets board, by ISO code. The snapshot
+    // carries two dozen; this is the starting set so the board stays scannable.
+    currencies: ["EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "MXN"],
 
     // News preferences
     newsLayout: "text-only",

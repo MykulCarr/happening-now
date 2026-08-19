@@ -244,232 +244,25 @@
   let sortMode = cfg.stockSortMode || "pinned";
   let newsMode = cfg.stocksNewsMode || localStorage.getItem(NEWS_MODE_KEY) || "watchlist";
   let lastUpdateTime = null;
-  let marketTickerState = null;
+  // The board used to be a drag-scrollable ticker, which carried its own
+  // pointer/RAF machinery and owned the click-to-open-news behaviour. The grid
+  // needs neither, but the tiles are still links — this is that behaviour, kept.
+  document.addEventListener("click", (event) => {
+    const tile = event.target?.closest?.(".indexItem[data-news-url]");
+    if(!tile) return;
+    const url = tile.dataset.newsUrl;
+    if(!url) return;
+    const target = cfg.marketNewsOpenMode === "same-tab" ? "_self" : "_blank";
+    window.open(url, target, target === "_blank" ? "noopener,noreferrer" : "");
+  });
 
-  function destroyMarketTicker(){
-    if(!marketTickerState) return;
-    if(marketTickerState.resumeTimer){
-      window.clearTimeout(marketTickerState.resumeTimer);
-    }
-    if(marketTickerState.rafId){
-      window.cancelAnimationFrame(marketTickerState.rafId);
-    }
-    if(marketTickerState.abortController){
-      marketTickerState.abortController.abort();
-    }
-    marketTickerState = null;
-  }
-
-  function setupMarketTicker(container){
-    destroyMarketTicker();
-
-    const viewport = container.querySelector(".marketTickerViewport");
-    const track = container.querySelector(".marketTickerTrack");
-    const firstGroup = container.querySelector(".marketTickerGroup");
-    if(!viewport || !track || !firstGroup) return;
-
-    const abortController = new AbortController();
-    const gap = Number.parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap || "0") || 0;
-    const speedPxPerSecond = 20;
-
-    let cycleWidth = 0;
-    let paused = false;
-    let dragging = false;
-    let activePointerId = null;
-    let lastPointerX = 0;
-    let dragDistancePx = 0;
-    let pointerDownLinkUrl = "";
-    let offsetPx = 0;
-    const hoverPauseGraceMs = 1200;
-    let hoverPauseReadyAt = 0;
-    let lastFrameTs = 0;
-    let lastMeasureTs = 0;
-    let rafId = 0;
-    let resumeTimer = 0;
-
-    function measure(resetPosition = false){
-      // Use offsetWidth (layout integer) instead of getBoundingClientRect (sub-pixel)
-      // because the loop wrap subtracts cycleWidth from offsetPx — any sub-pixel
-      // drift between measured-width and actual-stride shows as a visible jump.
-      cycleWidth = firstGroup.offsetWidth + gap;
-      container.style.setProperty("--ticker-distance", `${cycleWidth}px`);
-      container.style.setProperty("--ticker-duration", `${Math.max(120, cycleWidth / speedPxPerSecond)}s`);
-      if(resetPosition && cycleWidth > 0){
-        offsetPx = 0;
-        applyTrackTransform();
-      }
-    }
-
-    function applyTrackTransform(){
-      // Round the translate to avoid sub-pixel rendering differences across
-      // animation frames that can make the wrap look jittery.
-      track.style.transform = `translate3d(${-Math.round(offsetPx)}px, 0, 0)`;
-    }
-
-    function normalizeScroll(){
-      if(cycleWidth <= 0) return;
-      while(offsetPx >= cycleWidth){
-        offsetPx -= cycleWidth;
-      }
-      while(offsetPx < 0){
-        offsetPx += cycleWidth;
-      }
-    }
-
-    function clearResumeTimer(){
-      if(resumeTimer){
-        window.clearTimeout(resumeTimer);
-        resumeTimer = 0;
-      }
-    }
-
-    function queueAutoResume(delay = 1100){
-      clearResumeTimer();
-      resumeTimer = window.setTimeout(() => {
-        paused = false;
-      }, delay);
-    }
-
-    function tick(timestamp){
-      if(!lastFrameTs) lastFrameTs = timestamp;
-      const deltaSeconds = (timestamp - lastFrameTs) / 1000;
-      lastFrameTs = timestamp;
-      const hoverPaused = timestamp >= hoverPauseReadyAt && viewport.matches(":hover") && !dragging;
-
-      if(paused && !dragging && !hoverPaused && !resumeTimer){
-        paused = false;
-      }
-
-      if(cycleWidth <= 0){
-        if(!lastMeasureTs || (timestamp - lastMeasureTs) >= 250){
-          lastMeasureTs = timestamp;
-          measure(false);
-          if(cycleWidth > 0){
-            normalizeScroll();
-            applyTrackTransform();
-          }
-        }
-      } else if(!paused && !dragging && !hoverPaused){
-        offsetPx += speedPxPerSecond * deltaSeconds;
-        normalizeScroll();
-        applyTrackTransform();
-      }
-
-      rafId = window.requestAnimationFrame(tick);
-      if(marketTickerState){
-        marketTickerState.rafId = rafId;
-        marketTickerState.resumeTimer = resumeTimer;
-      }
-    }
-
-    measure(true);
-    hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
-    window.requestAnimationFrame(() => {
-      measure(false);
-      if(cycleWidth > 0){
-        normalizeScroll();
-        applyTrackTransform();
-      }
-    });
-    if(document.fonts && document.fonts.ready){
-      document.fonts.ready.then(() => {
-        measure(false);
-        if(cycleWidth > 0){
-          normalizeScroll();
-          applyTrackTransform();
-        }
-      }).catch(() => {});
-    }
-    viewport.classList.add("isInteractive");
-
-    viewport.addEventListener("pointerdown", (event) => {
-      if(event.pointerType === "mouse" && event.button !== 0) return;
-      if(activePointerId !== null) return;
-      event.preventDefault();
-      if(cycleWidth <= 0) measure(false);
-      clearResumeTimer();
-      dragging = true;
-      paused = true;
-      activePointerId = event.pointerId;
-      lastPointerX = event.clientX;
-      dragDistancePx = 0;
-      pointerDownLinkUrl = event.target?.closest(".indexItem[data-news-url]")?.dataset?.newsUrl || "";
-      viewport.classList.add("isDragging");
-      viewport.setPointerCapture(event.pointerId);
-    }, { signal: abortController.signal });
-
-    viewport.addEventListener("pointermove", (event) => {
-      if(!dragging || event.pointerId !== activePointerId) return;
-      event.preventDefault();
-      const deltaX = event.clientX - lastPointerX;
-      lastPointerX = event.clientX;
-      dragDistancePx += Math.abs(deltaX);
-      offsetPx -= deltaX;
-      normalizeScroll();
-      applyTrackTransform();
-    }, { signal: abortController.signal });
-
-    function endDrag(event){
-      if(!dragging || event.pointerId !== activePointerId) return;
-      const shouldOpenLink = event.type === "pointerup" && dragDistancePx < 8 && pointerDownLinkUrl;
-      dragging = false;
-      activePointerId = null;
-      viewport.classList.remove("isDragging");
-      if(viewport.hasPointerCapture(event.pointerId)){
-        viewport.releasePointerCapture(event.pointerId);
-      }
-      dragDistancePx = 0;
-      if(shouldOpenLink){
-        openMarketNewsUrl(pointerDownLinkUrl);
-      }
-      pointerDownLinkUrl = "";
-      queueAutoResume();
-      hoverPauseReadyAt = (window.performance?.now?.() || 0) + hoverPauseGraceMs;
-    }
-
-    viewport.addEventListener("pointerup", endDrag, { signal: abortController.signal });
-    viewport.addEventListener("pointercancel", endDrag, { signal: abortController.signal });
-    viewport.addEventListener("lostpointercapture", endDrag, { signal: abortController.signal });
-    viewport.addEventListener("dragstart", (event) => {
-      event.preventDefault();
-    }, { signal: abortController.signal });
-
-    viewport.addEventListener("keydown", (event) => {
-      if(event.key !== "Enter" && event.key !== " ") return;
-      const item = event.target?.closest(".indexItem[data-news-url]");
-      const url = item?.dataset?.newsUrl;
-      if(!url) return;
-      event.preventDefault();
-      openMarketNewsUrl(url);
-    }, { signal: abortController.signal });
-
-    viewport.addEventListener("wheel", (event) => {
-      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      if(!delta) return;
-      event.preventDefault();
-      clearResumeTimer();
-      paused = true;
-      offsetPx += delta;
-      normalizeScroll();
-      applyTrackTransform();
-      queueAutoResume(1400);
-    }, { passive: false, signal: abortController.signal });
-
-    window.addEventListener("resize", () => {
-      measure(false);
-      if(cycleWidth > 0){
-        normalizeScroll();
-        applyTrackTransform();
-      }
-    }, { signal: abortController.signal });
-
-    rafId = window.requestAnimationFrame(tick);
-    marketTickerState = {
-      abortController,
-      rafId,
-      resumeTimer
-    };
-  }
+  document.addEventListener("keydown", (event) => {
+    if(event.key !== "Enter" && event.key !== " ") return;
+    const tile = event.target?.closest?.(".indexItem[data-news-url]");
+    if(!tile) return;
+    event.preventDefault();
+    tile.click();
+  });
 
   // ===== MOCK PRICE DATA (Replace with real API in production) =====
   // For demo: generates mock prices with random changes
@@ -693,6 +486,75 @@
     });
   }
 
+  // Board layout. Order here is the order the groups appear on the page.
+  const MARKET_GROUPS = [
+    ["us-indices", "US Indices"],
+    ["global-indices", "Global Indices"],
+    ["commodities", "Commodities"],
+    ["rates", "Rates & FX"],
+    ["crypto", "Crypto"],
+    ["currencies", "World Currencies"],
+  ];
+
+  function indexTileHtml(idx, now){
+    const hasData = Number.isFinite(idx.value) && idx.value > 0;
+    const isPositive = hasData ? idx.change >= 0 : true;
+    const cls = isPositive ? "positive" : "negative";
+    const sign = isPositive ? "+" : "";
+    // getMarketSessionStatus falls through to CLOSED for keys it doesn't know,
+    // which would stamp every currency tile "CLOSED" — wrong for a daily
+    // reference rate that has no trading session at all.
+    const session = idx.group === "currencies" ? null : getMarketSessionStatus(idx.key, now);
+    const newsUrl = getIndexNewsUrl(idx);
+
+    const valueHtml = hasData ? formatIndexValue(idx) : `<span class="indexUnavailable">—</span>`;
+
+    // Currencies come from a feed that publishes once a day, so they carry no
+    // change figure. Showing a flat 0.00% would read as "the market didn't
+    // move" rather than "this isn't measured here" — the label goes instead.
+    let changeHtml;
+    if(!hasData){
+      changeHtml = `<span class="indexUnavailable">Unavailable</span>`;
+    } else if(idx.changePercent == null || idx.change == null){
+      changeHtml = `<span class="indexChangeMuted">${escapeHtml(idx.label || "daily rate")}</span>`;
+    } else {
+      const arrow = isPositive ? "▲" : "▼";
+      changeHtml = `${arrow} ${sign}${idx.change.toFixed(2)} (${sign}${idx.changePercent.toFixed(2)}%)`;
+    }
+
+    const changeCls = hasData && idx.changePercent != null ? cls : "";
+    return `
+      <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(idx.name)} news">
+        <div class="indexTopRow">
+          <div class="indexName">${escapeHtml(idx.name)}</div>
+          ${session ? `<span class="indexSession ${session.tone}">${session.label}</span>` : ""}
+        </div>
+        <div class="indexValue">${valueHtml}</div>
+        <div class="indexChange ${changeCls}">${changeHtml}</div>
+      </div>
+    `;
+  }
+
+  // World currencies ride along in the same snapshot, so showing them costs no
+  // extra request. cfg.currencies picks which of the two dozen appear.
+  function getCurrencyTiles(snapshot){
+    const wanted = Array.isArray(cfg.currencies) ? cfg.currencies : [];
+    if(!wanted.length) return [];
+    const byKey = new Map((snapshot?.items || []).map(item => [item.key, item]));
+    return wanted
+      .map(code => byKey.get(`fx-${String(code).toLowerCase()}`))
+      .filter(Boolean)
+      .map(item => ({
+        key: item.key,
+        name: item.name,
+        label: item.label,
+        group: "currencies",
+        value: Number(item.price),
+        change: null,
+        changePercent: null,
+      }));
+  }
+
   async function renderIndices() {
     const container = document.getElementById("marketIndices");
     if (!container) {
@@ -700,67 +562,35 @@
       return;
     }
 
-    destroyMarketTicker();
-
     try {
       const configured = getConfiguredIndices().filter(Boolean);
-      const indices = await hydrateIndicesWithLiveQuotes(configured);
+      const [indices, snapshot] = await Promise.all([
+        hydrateIndicesWithLiveQuotes(configured),
+        fetchMarketSnapshot(),
+      ]);
+      const tiles = [...indices, ...getCurrencyTiles(snapshot)];
 
-      if(indices.length === 0){
-        container.innerHTML = `<h2 class="marketIndicesLabel">Market Indices</h2><div class="hint">No markets selected. Enable items in <a href="settings.html">Settings</a>.</div>`;
+      if(tiles.length === 0){
+        container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">No markets selected. Enable items in <a href="settings.html">Settings</a>.</div>`;
         return;
       }
 
       const now = new Date();
-      const tickerItems = indices.map(idx => {
-        const hasData = Number.isFinite(idx.value) && idx.value > 0;
-        const isPositive = hasData ? idx.change >= 0 : true;
-        const arrow = isPositive ? "▲" : "▼";
-        const cls = isPositive ? "positive" : "negative";
-        const sign = isPositive ? "+" : "";
-        const session = getMarketSessionStatus(idx.key, now);
-        const newsUrl = getIndexNewsUrl(idx);
-        const sourceLabel = getIndexSourceLabel(idx);
-        const sourceClass = getIndexSourceClass(idx);
-
-        const valueHtml = hasData
-          ? formatIndexValue(idx)
-          : `<span class="indexUnavailable">—</span>`;
-        const changeHtml = hasData
-          ? `${arrow} ${sign}${idx.change.toFixed(2)} (${sign}${idx.changePercent.toFixed(2)}%)`
-          : `<span class="indexUnavailable">Unavailable</span>`;
-
+      const sections = MARKET_GROUPS.map(([group, label]) => {
+        const inGroup = tiles.filter(t => (t.group || "us-indices") === group);
+        if(!inGroup.length) return "";
         return `
-          <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(idx.name)} news">
-            <div class="indexTopRow">
-              <div class="indexName">${escapeHtml(idx.name)}</div>
-              <span class="indexSession ${session.tone}">${session.label}</span>
-            </div>
-            <div class="indexValue">${valueHtml}</div>
-            <div class="indexChange ${hasData ? cls : ""}">
-              ${changeHtml}
-            </div>
-            <div class="indexSourceTag ${sourceClass}">${escapeHtml(sourceLabel)}</div>
-          </div>
+          <section class="marketGroup">
+            <h3 class="marketGroupLabel">${escapeHtml(label)}</h3>
+            <div class="marketGrid">${inGroup.map(t => indexTileHtml(t, now)).join("")}</div>
+          </section>
         `;
-      }).join('');
+      }).join("");
 
-      container.innerHTML = `
-        <h2 class="marketIndicesLabel">Market Indices</h2>
-        <div class="marketTickerViewport" aria-live="polite">
-          <div class="marketTickerTrack">
-            <div class="marketTickerGroup">${tickerItems}</div>
-            <div class="marketTickerGroup" aria-hidden="true">${tickerItems}</div>
-            <div class="marketTickerGroup" aria-hidden="true">${tickerItems}</div>
-          </div>
-        </div>
-      `;
-
-      setupMarketTicker(container);
+      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2>${sections}`;
     } catch (error) {
       console.error("Error rendering indices:", error);
-      container.innerHTML = `<h2 class="marketIndicesLabel">Market Indices</h2><div class="hint">Error loading market indices</div>`;
-      destroyMarketTicker();
+      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">Error loading markets</div>`;
     }
   }
 
@@ -1914,6 +1744,14 @@
   // `indices` and `watchlist` are vital and always rendered (nothing to skip).
   async function refresh() {
     const hidden = (key) => window.App?.isSectionHidden?.("stocks", key) === true;
+
+    // Skipping a section's render is not the same as hiding it: the markup
+    // ships with placeholder text ("Loading…", "Backend: checking…") that
+    // simply never gets replaced, so a skipped section sat on the page looking
+    // stuck. This never showed while every stocks section defaulted visible.
+    document.querySelectorAll("[data-section]").forEach((el) => {
+      el.style.display = hidden(el.dataset.section) ? "none" : "";
+    });
 
     if(!hidden("indices")){
       await renderIndices();

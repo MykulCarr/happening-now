@@ -1509,6 +1509,15 @@
     const runId = ++refreshRunId;
     inFlight = true;
 
+    // Same reason as the stocks page: a section whose render is skipped still
+    // shows the placeholder text its markup shipped with, so it has to be
+    // hidden as well as skipped. Every weather section defaults to visible, so
+    // this only bites someone who turns one off in Settings.
+    document.querySelectorAll("[data-section]").forEach((el) => {
+      el.style.display =
+        window.App?.isSectionHidden?.("weather", el.dataset.section) === true ? "none" : "";
+    });
+
     // Check for location before doing anything else — show a helpful prompt if none set
     try{
       const freshCfg = loadConfig();

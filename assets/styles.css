@@ -5316,46 +5316,63 @@ body.stockLookupModalOpen {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   margin-bottom: 24px;
-  overflow: hidden;
   width: 100%;
 }
 
-.marketTickerViewport {
-  overflow: hidden;
-  width: 100%;
-  cursor: grab;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: pan-y;
+/* The board is a grid of small tiles grouped by market type. Two columns on a
+   phone is the point — wide enough for a value like 53,448.62 plus its change,
+   narrow enough to see several groups without scrolling. It widens from there. */
+.marketGroup {
+  margin-bottom: 18px;
 }
 
-.marketTickerTrack {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
-  width: max-content;
-  will-change: transform;
+.marketGroup:last-child {
+  margin-bottom: 0;
 }
 
-.marketTickerViewport.isDragging {
-  cursor: grabbing;
-  touch-action: none;
+.marketGroupLabel {
+  margin: 0 0 8px;
+  font-size: calc(12px * var(--font-multiplier, 1));
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted, var(--text));
+  opacity: 0.75;
 }
 
-.marketTickerGroup {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
+.marketGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .marketGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  .marketGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+  .marketGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+/* Currencies publish once a day and carry no change figure; this is the label
+   that stands in for it, so the row keeps its height and the tile its shape. */
+.indexChangeMuted {
+  font-weight: 600;
+  opacity: 0.6;
+  font-size: calc(11px * var(--font-multiplier, 1));
 }
 
 .indexItem {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  min-width: 200px;
-  max-width: 240px;
-  padding: 10px 12px;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: rgba(255, 255, 255, .03);
@@ -5443,15 +5460,8 @@ body.stockLookupModalOpen {
   }
 
   .indexItem {
-    min-width: 170px;
-    max-width: 210px;
-    padding: 9px 10px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .marketTickerViewport {
-    scroll-behavior: auto;
+    min-width: 0;
+    padding: 8px 9px;
   }
 }
 
