@@ -175,13 +175,17 @@
     localSources: [],
     regionalSources: [],
     // Topic tabs the user has turned on (ids from data/topic-sources.json).
-    // Defaults to a light sample spanning every group in the Settings
-    // picker's grouping (one from Science & Environment, Tech & Making and
-    // Money & Sports, two from Arts & Culture, one each from Lifestyle and
-    // Offbeat) so a first-time visitor sees the feature without every tab
-    // being on. Deliberately excludes "conspiracies" from the default set —
-    // opt-in only, never shown unasked.
-    topics: ["science", "tech", "humaninterest", "music", "sports", "food", "oddnews"],
+    // These render as buttons in the scope bar and only fetch when one is
+    // clicked, so the list costs nothing on first paint — it is chosen for a
+    // useful spread, not to keep the page light. Tab order comes from
+    // topic-sources.json, not from this array, so keep it grouped for reading.
+    // Deliberately excludes "conspiracies" — opt-in only, never shown unasked.
+    topics: [
+      // everyday
+      "health", "tech", "business", "entertainment", "science",
+      // lighter reading
+      "humaninterest", "music", "sports", "food", "oddnews"
+    ],
     localSourcesSkipped: false,
     regionalSourcesSkipped: false,
 
@@ -230,12 +234,17 @@
       { name: "The Conversation (Global)", rss: "https://theconversation.com/global/articles.atom", site: "https://theconversation.com/global", headlinesCount: 5, scopes: ["international"] }
     ],
 
+    // Four household names a first-time visitor will recognise. The previous
+    // default was a personal portfolio — a small-cap plus four retirement
+    // funds — which read as someone else's account rather than a starting
+    // point. It also fetched badly: symbols ending in X are mutual funds,
+    // which shouldSkipFinnhubSymbol skips, so four of the five could never
+    // use the primary quote provider at all.
     stocks: [
-      { symbol: "NASDAQ:CLOV", label: "Clover Health Investments Corp" },
-      { symbol: "NASDAQ:FNIPX", label: "Fidelity Freedom Index 2035 Fund Premier Class" },
-      { symbol: "NASDAQ:TLYIX", label: "Nuveen Lifecycle Index 2035 Fund R6" },
-      { symbol: "NASDAQ:VIIIX", label: "Vanguard Institutional Index Fund Institutional Plus" },
-      { symbol: "NASDAQ:VSMPX", label: "Vanguard Total Stock Market Index Fund Institutional Plus" },
+      { symbol: "NASDAQ:NVDA", label: "NVIDIA" },
+      { symbol: "NASDAQ:AAPL", label: "Apple" },
+      { symbol: "NASDAQ:MSFT", label: "Microsoft" },
+      { symbol: "NASDAQ:TSLA", label: "Tesla" }
     ]
   };
 
