@@ -6745,6 +6745,26 @@ body.stockLookupModalOpen {
   margin-left: auto;
 }
 
+/* Sits beside the title rather than at the right edge, where the National
+   header's info toggle already lives — at 390px the two would crowd. Its job is
+   to make a collapsed section advertise that there is something editable
+   inside: these sections ship closed, so without it the source editor reads as
+   missing rather than merely folded away. */
+.sourceCountBadge {
+  font-size: calc(11px * var(--font-multiplier, 1));
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.sourceCountBadge:empty {
+  display: none;
+}
+
 /* News tab only: the sections genuinely collapse, and the markup ships them
    closed so the (long) list of source groups is scannable on open. The whole
    header is the hit target; the arrow is just the affordance. */

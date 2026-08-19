@@ -90,6 +90,10 @@
   // International shows those tagged 'international'. A widget tagged for
   // both appears in both sections; editing in either updates the same
   // underlying cfg.widgets entry.
+  const newsSourceCounts = {
+    national: document.getElementById("newsNationalCount"),
+    international: document.getElementById("newsInternationalCount"),
+  };
   const newsEditorNational = document.getElementById("newsEditorNational");
   const newsEditorInternational = document.getElementById("newsEditorInternational");
   const addNationalSourceBtn = document.getElementById("addNationalSourceBtn");
@@ -2449,6 +2453,11 @@
         const ss = Array.isArray(w?.scopes) ? w.scopes : ["national"];
         return ss.includes(scope);
       });
+
+    const countEl = newsSourceCounts[scope];
+    if(countEl){
+      countEl.textContent = filtered.length === 1 ? "1 source" : `${filtered.length} sources`;
+    }
 
     if(filtered.length === 0){
       const empty = document.createElement("div");
