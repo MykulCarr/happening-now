@@ -97,6 +97,15 @@
   // Shared market-strip catalog used by Stocks and Settings.
   // value/change/changePercent are populated at runtime from live quotes; no defaults here
   // so that failed fetches render "—" rather than convincing-looking stale numbers.
+  // Shown on a first visit. The other indices stay one tick away in Settings —
+  // this is about what a new visitor meets, not what is available. All 23 were
+  // visible by default, and each tile costs a quote lookup: a cold stocks page
+  // fired 39 of them, well past Finnhub's 60/min free tier, so the page was
+  // rate-limiting itself before anyone touched it.
+  const DEFAULT_VISIBLE_INDICES = new Set([
+    "dow", "sp500", "nasdaq", "russell2000", "gold", "bitcoin",
+  ]);
+
   const MARKET_INDEX_DEFS = [
     { key: "dow", name: "DOW" },
     { key: "sp500", name: "S&P 500" },
@@ -162,7 +171,10 @@
     stocksNewsMode: "watchlist",
     marketNewsSourceMode: "google",
     marketNewsOpenMode: "new-tab",
-    marketIndices: MARKET_INDEX_DEFS.map((item) => ({ key: item.key, visible: true })),
+    marketIndices: MARKET_INDEX_DEFS.map((item) => ({
+      key: item.key,
+      visible: DEFAULT_VISIBLE_INDICES.has(item.key),
+    })),
 
     // News preferences
     newsLayout: "text-only",
@@ -209,8 +221,10 @@
         gainers: true,
         losers: true,
         trending: true,
-        calendar: true,
-        diagnostic: true
+        // Off for a new visitor: the calendar is a heavy extra fetch, and the
+        // diagnostic dock is a debugging aid. Both switch on in Settings.
+        calendar: false,
+        diagnostic: false
       }
     },
 
