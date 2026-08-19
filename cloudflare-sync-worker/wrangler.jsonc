@@ -11,6 +11,15 @@
     { "pattern": "happening-now.net/v1/*", "zone_name": "happening-now.net" }
   ],
 
+  // Which origins get a usable CORS header back. Without this the Worker answers
+  // every origin with "*", which let any other website use /v1/rss/raw as a free
+  // CORS proxy on this account's quota. The localhost entries are deliberate:
+  // pages served by `python -m http.server 8080` call this production Worker for
+  // feed data, so dropping them breaks local development.
+  "vars": {
+    "ALLOWED_ORIGINS": "https://happening-now.net,http://localhost:8080,http://127.0.0.1:8080"
+  },
+
   // Daily sweep of the curated feed list. Each firing checks a slice and stores
   // its position in KV; the digest email goes out when the sweep wraps, which
   // works out to roughly weekly. See src/curate.js.

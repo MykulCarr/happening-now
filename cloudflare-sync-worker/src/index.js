@@ -92,6 +92,33 @@ const RSS_PROXY_BLOCKED_HOSTS = new Set([
   "::1",
 ]);
 
+// The proxy has to accept arbitrary hosts — pasting a feed URL the curated list
+// has never seen is a supported way to add a source — so it cannot use an
+// allow-list. What it can refuse is anything that isn't the public internet:
+// loopback, RFC1918, carrier-grade NAT and the 169.254.169.254 metadata address.
+// Workers can't route to a private network anyway; this keeps it that way if the
+// runtime ever changes, and makes the intent explicit.
+function isPrivateAddress(host) {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    const [a, b] = host.split(".").map(Number);
+    if ([a, b].some(n => !Number.isFinite(n) || n > 255)) return true;
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true;          // link-local + cloud metadata
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // carrier-grade NAT
+    return false;
+  }
+  // IPv6 literals arrive from URL.hostname wrapped in brackets.
+  const v6 = host.replace(/^\[|\]$/g, "");
+  if (v6.includes(":")) {
+    return v6 === "::1" || v6 === "::" ||
+      /^f[cd]/i.test(v6) ||        // unique local fc00::/7
+      /^fe[89ab]/i.test(v6);       // link-local fe80::/10
+  }
+  return false;
+}
+
 async function fetchJson(url) {
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -240,7 +267,9 @@ function parseRssProxyTarget(url) {
   }
 
   const host = String(target.hostname || "").toLowerCase();
-  if (!host || RSS_PROXY_BLOCKED_HOSTS.has(host) || host.endsWith(".local")) {
+  const isBlockedName = RSS_PROXY_BLOCKED_HOSTS.has(host) ||
+    host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost");
+  if (!host || isBlockedName || isPrivateAddress(host)) {
     return { ok: false, error: "Blocked target host" };
   }
 
@@ -300,6 +329,51 @@ async function fetchRssThroughProxy(request, env, url) {
   });
 }
 
+// Finnhub drops a meaningful share of connections from Cloudflare Worker IPs and
+// sometimes answers with a non-JSON error body. Both used to surface as a bare
+// 502 from the catch below, so a measured ~40% of /v1/stocks/quote calls failed
+// while the same key worked fine from a browser. One retry plus a tolerant parse
+// recovers most of those; whatever still fails returns a status the page's
+// fallback chain (TwelveData, Yahoo, Stooq) can act on straight away.
+async function proxyUpstreamJson(upstreamUrl, { cacheTtl, maxAge }, request, env, errorLabel) {
+  let lastError = "unknown error";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let upstream;
+    try {
+      upstream = await fetch(upstreamUrl, { cf: { cacheEverything: true, cacheTtl } });
+    } catch (err) {
+      lastError = err?.message || "fetch failed";
+      continue;
+    }
+
+    let body;
+    try {
+      body = await upstream.text();
+    } catch (err) {
+      lastError = err?.message || "response read failed";
+      continue;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(body);
+    } catch {
+      lastError = `non-JSON response (${upstream.status})`;
+      continue;
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: upstream.ok ? 200 : upstream.status,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `public, max-age=${maxAge}`,
+        ...getCorsHeaders(request, env),
+      },
+    });
+  }
+  return jsonResponse({ ok: false, error: `${errorLabel}: ${lastError}` }, 502, request, env);
+}
+
 async function fetchStockQuote(request, env, url) {
   if (request.method !== "GET") {
     return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
@@ -312,19 +386,11 @@ async function fetchStockQuote(request, env, url) {
   if (!key) {
     return jsonResponse({ ok: false, error: "Stock quotes not configured" }, 503, request, env);
   }
-  try {
-    const upstream = await fetch(
-      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`,
-      { cf: { cacheEverything: true, cacheTtl: 60 } }
-    );
-    const data = await upstream.json();
-    return new Response(JSON.stringify(data), {
-      status: upstream.ok ? 200 : upstream.status,
-      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=60", ...getCorsHeaders(request, env) },
-    });
-  } catch {
-    return jsonResponse({ ok: false, error: "Failed to fetch stock quote" }, 502, request, env);
-  }
+  return proxyUpstreamJson(
+    `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`,
+    { cacheTtl: 60, maxAge: 60 },
+    request, env, "Failed to fetch stock quote"
+  );
 }
 
 async function fetchStockCandle(request, env, url) {
@@ -342,19 +408,11 @@ async function fetchStockCandle(request, env, url) {
   if (!key) {
     return jsonResponse({ ok: false, error: "Stock candles not configured" }, 503, request, env);
   }
-  try {
-    const upstream = await fetch(
-      `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${key}`,
-      { cf: { cacheEverything: true, cacheTtl: 300 } }
-    );
-    const data = await upstream.json();
-    return new Response(JSON.stringify(data), {
-      status: upstream.ok ? 200 : upstream.status,
-      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300", ...getCorsHeaders(request, env) },
-    });
-  } catch {
-    return jsonResponse({ ok: false, error: "Failed to fetch stock candles" }, 502, request, env);
-  }
+  return proxyUpstreamJson(
+    `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${encodeURIComponent(resolution)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${key}`,
+    { cacheTtl: 300, maxAge: 300 },
+    request, env, "Failed to fetch stock candles"
+  );
 }
 
 async function fetchStockTimeSeries(request, env, url) {
@@ -371,19 +429,32 @@ async function fetchStockTimeSeries(request, env, url) {
   if (!key) {
     return jsonResponse({ ok: false, error: "Time series not configured" }, 503, request, env);
   }
-  try {
-    const upstream = await fetch(
-      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputsize)}&apikey=${key}`,
-      { cf: { cacheEverything: true, cacheTtl: 300 } }
-    );
-    const data = await upstream.json();
-    return new Response(JSON.stringify(data), {
-      status: upstream.ok ? 200 : upstream.status,
-      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300", ...getCorsHeaders(request, env) },
-    });
-  } catch {
-    return jsonResponse({ ok: false, error: "Failed to fetch time series" }, 502, request, env);
+  return proxyUpstreamJson(
+    `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&outputsize=${encodeURIComponent(outputsize)}&apikey=${key}`,
+    { cacheTtl: 300, maxAge: 300 },
+    request, env, "Failed to fetch time series"
+  );
+}
+
+// TwelveData's own quote endpoint, the first fallback when Finnhub has nothing.
+// It needs a route of its own because /v1/stocks/quote is Finnhub-backed.
+async function fetchStockQuoteTwelveData(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
   }
+  const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+  if (!symbol) {
+    return jsonResponse({ ok: false, error: "Missing symbol parameter" }, 400, request, env);
+  }
+  const key = String(env.TWELVEDATA_KEY || "").trim();
+  if (!key) {
+    return jsonResponse({ ok: false, error: "Stock quotes not configured" }, 503, request, env);
+  }
+  return proxyUpstreamJson(
+    `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${key}`,
+    { cacheTtl: 60, maxAge: 60 },
+    request, env, "Failed to fetch stock quote"
+  );
 }
 
 export default {
@@ -442,6 +513,10 @@ export default {
 
     if (url.pathname === "/v1/stocks/candle") {
       return fetchStockCandle(request, env, url);
+    }
+
+    if (url.pathname === "/v1/stocks/td-quote") {
+      return fetchStockQuoteTwelveData(request, env, url);
     }
 
     if (url.pathname === "/v1/stocks/ts") {

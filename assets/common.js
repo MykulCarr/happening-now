@@ -18,15 +18,25 @@
     feedbin: "https://feedbin.com",         // Feedly alternative (requires account)
   };
 
-  // Stock API keys — Finnhub and TwelveData are proxied through /v1/stocks/* on the
-  // Cloudflare Worker. Set FINNHUB_KEY and TWELVEDATA_KEY as Worker secrets in the
-  // Cloudflare dashboard (Workers → your worker → Settings → Variables & Secrets).
-  // Alpha Vantage and IEX can be added here directly if desired (optional fallbacks).
+  // First-party stock routes served by cloudflare-sync-worker. Finnhub and
+  // TwelveData are reached only through these; their keys live as Worker secrets
+  // (FINNHUB_KEY, TWELVEDATA_KEY) and must never be written into this file.
+  // Everything here ships to the browser as readable text, so a key added below
+  // is a published key — that is exactly how two live keys leaked before.
+  // Relative in production; absolute when the page is served from a local dev
+  // server, which has no /v1 routes of its own. This mirrors how feed data is
+  // read from the production Worker during local development, and is why
+  // localhost is listed in the Worker's ALLOWED_ORIGINS.
+  const STOCKS_PROXY_BASE =
+    (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      ? "https://happening-now.net/v1/stocks"
+      : "/v1/stocks";
+
+  // Optional direct-call fallbacks. Left empty on purpose; filling either one in
+  // publishes it, so prefer adding a Worker route instead.
   const STOCK_API_KEYS = {
-    finnhub: "d6fn95hr01qqnmbpagjgd6fn95hr01qqnmbpagk0",
     alphaVantage: "",
-    iex: "",
-    twelvedata: "0e445cbc4f8447bca852199162995caf"
+    iex: ""
   };
 
   // NewsAPI and GNews keys — cleared; the site relies on RSS feeds which work without keys.
@@ -1824,13 +1834,11 @@
       // Normalize symbol: remove exchange prefix like NASDAQ:, BITSTAMP:, etc.
       const baseSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
 
-      // Try Finnhub first (if API key is configured)
-      if (STOCK_API_KEYS.finnhub) {
-        const result = await fetchStockPriceFromFinnhub(baseSymbol);
-        if (result) {
-          setCached(cacheKey, result);
-          return result;
-        }
+      // Try Finnhub first, through the Worker proxy.
+      const finnhubResult = await fetchStockPriceFromFinnhub(baseSymbol);
+      if (finnhubResult) {
+        setCached(cacheKey, finnhubResult);
+        return finnhubResult;
       }
 
       // Try Alpha Vantage (if API key is configured)
@@ -1893,16 +1901,12 @@
     if (cached) return { data: cached, error: null, source: "cache" };
 
     let finnhubError = "";
-    if (STOCK_API_KEYS.finnhub) {
-      const res = await fetchStockCandlesFromFinnhub(baseSymbol, resolution, from, to);
-      if (res.data) {
-        setCached(cacheKey, res.data);
-        return { data: res.data, error: null, source: "finnhub" };
-      }
-      finnhubError = res.error || "Finnhub: no data";
-    } else {
-      finnhubError = "Finnhub key not configured";
+    const res = await fetchStockCandlesFromFinnhub(baseSymbol, resolution, from, to);
+    if (res.data) {
+      setCached(cacheKey, res.data);
+      return { data: res.data, error: null, source: "finnhub" };
     }
+    finnhubError = res.error || "Finnhub: no data";
 
     const tdRes = await fetchStockCandlesFromTwelveData(baseSymbol, resolution, days);
     if (tdRes.data) {
@@ -2089,7 +2093,7 @@
       return { data: null, error: "Finnhub skipped for unsupported fund symbol" };
     }
     try {
-      const url = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${resolution}&from=${from}&to=${to}&token=${STOCK_API_KEYS.finnhub}`;
+      const url = `${STOCKS_PROXY_BASE}/candle?symbol=${encodeURIComponent(symbol)}&resolution=${resolution}&from=${from}&to=${to}`;
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         if (res.status === 401) return { data: null, error: "Finnhub unauthorized (401)" };
@@ -2114,12 +2118,9 @@
 
   async function fetchStockCandlesFromTwelveData(symbol, resolution, days) {
     try {
-      const apiKey = STOCK_API_KEYS.twelvedata || "";
-      if (!apiKey) return { data: null, error: "Twelve Data key not configured" };
-
       const interval = Number(resolution) >= 60 ? `${Math.round(Number(resolution) / 60)}h` : `${resolution}min`;
       const outputSize = Math.max(24, Math.min(240, Math.round(days * 24 * 60 / Math.max(1, Number(resolution)))));
-      const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputSize}&apikey=${apiKey}`;
+      const url = `${STOCKS_PROXY_BASE}/ts?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputSize}`;
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         return { data: null, error: `Twelve Data error (${res.status})` };
@@ -2156,7 +2157,7 @@
       return null;
     }
     try {
-      const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${STOCK_API_KEYS.finnhub}`;
+      const url = `${STOCKS_PROXY_BASE}/quote?symbol=${encodeURIComponent(symbol)}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -2270,9 +2271,8 @@
   // Try Twelve Data free endpoint
   async function fetchStockPriceFromTwelveData(symbol) {
     try {
-      const apiKey = STOCK_API_KEYS.twelvedata || "demo";
       const res = await fetch(
-        `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`,
+        `${STOCKS_PROXY_BASE}/td-quote?symbol=${encodeURIComponent(symbol)}`,
         { cache: "no-store" }
       );
       if (!res.ok) {
@@ -3732,6 +3732,7 @@
     RSS_AGGREGATORS,
     NEWS_API_KEY,
     STOCK_API_KEYS,
+    STOCKS_PROXY_BASE,
     MARKET_INDEX_DEFS: clone(MARKET_INDEX_DEFS),
     DEFAULTS: clone(DEFAULTS),
     cfg,
