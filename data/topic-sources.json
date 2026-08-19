@@ -367,17 +367,17 @@
       "emoji": "🎨",
       "entries": [
         {
-          "name": "Penny Arcade",
-          "rss": "https://www.penny-arcade.com/feed",
-          "site": "https://www.penny-arcade.com",
+          "name": "Dinosaur Comics",
+          "rss": "https://www.qwantz.com/rssfeed.php",
+          "site": "https://www.qwantz.com",
           "type": "community",
           "license": "All rights reserved",
           "embed": false
         },
         {
-          "name": "Questionable Content",
-          "rss": "https://www.questionablecontent.net/QCRSS.xml",
-          "site": "https://www.questionablecontent.net",
+          "name": "Penny Arcade",
+          "rss": "https://www.penny-arcade.com/feed",
+          "site": "https://www.penny-arcade.com",
           "type": "community",
           "license": "All rights reserved",
           "embed": false
@@ -746,9 +746,9 @@
       "emoji": "🎪",
       "entries": [
         {
-          "name": "Boing Boing",
-          "rss": "https://boingboing.net/feed",
-          "site": "https://boingboing.net",
+          "name": "Atlas Obscura",
+          "rss": "https://www.atlasobscura.com/feeds/latest",
+          "site": "https://www.atlasobscura.com",
           "type": "paper"
         },
         {

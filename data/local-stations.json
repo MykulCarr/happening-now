@@ -2289,6 +2289,12 @@
             "rss": "https://www.unionleader.com/search/?f=rss&t=article&c=news",
             "site": "https://www.unionleader.com",
             "type": "paper"
+          },
+          {
+            "name": "NHPR (New Hampshire Public Radio)",
+            "rss": "https://www.nhpr.org/rss.xml",
+            "site": "https://www.nhpr.org",
+            "type": "radio"
           }
         ]
       }
@@ -2600,12 +2606,6 @@
           "lon": -76.1474
         },
         "entries": [
-          {
-            "name": "Patch Syracuse",
-            "rss": "https://patch.com/feeds/new-york/syracuse",
-            "site": "https://patch.com/new-york/syracuse",
-            "type": "community"
-          },
           {
             "name": "Syracuse.com",
             "rss": "https://www.syracuse.com/arc/outboundfeeds/rss/category/news/",
@@ -3537,7 +3537,7 @@
           },
           {
             "name": "WAVY 10 Hampton Roads (NBC)",
-            "rss": "https://www.wavy.com/news/feed/",
+            "rss": "https://www.wavy.com/feed/",
             "site": "https://www.wavy.com",
             "type": "tv"
           },
