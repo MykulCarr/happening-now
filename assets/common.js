@@ -23,14 +23,19 @@
   // (FINNHUB_KEY, TWELVEDATA_KEY) and must never be written into this file.
   // Everything here ships to the browser as readable text, so a key added below
   // is a published key — that is exactly how two live keys leaked before.
-  // Relative in production; absolute when the page is served from a local dev
-  // server, which has no /v1 routes of its own. This mirrors how feed data is
-  // read from the production Worker during local development, and is why
-  // localhost is listed in the Worker's ALLOWED_ORIGINS.
-  const STOCKS_PROXY_BASE =
+  // Empty in production so /v1 stays same-origin; absolute when the page is
+  // served from a local dev server, which has no /v1 routes of its own. This
+  // mirrors how feed data is read from the production Worker during local
+  // development, and is why localhost is listed in the Worker's ALLOWED_ORIGINS.
+  const API_ORIGIN =
     (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-      ? "https://happening-now.net/v1/stocks"
-      : "/v1/stocks";
+      ? "https://happening-now.net"
+      : "";
+  const STOCKS_PROXY_BASE = `${API_ORIGIN}/v1/stocks`;
+
+  // The whole index/commodity/currency board in one cached bundle. Replaces a
+  // quote call per tile — see cloudflare-sync-worker/src/markets.js.
+  const MARKETS_SNAPSHOT_URL = `${API_ORIGIN}/v1/markets/snapshot`;
 
   // Optional direct-call fallbacks. Left empty on purpose; filling either one in
   // publishes it, so prefer adding a Worker route instead.
@@ -3756,6 +3761,7 @@
     NEWS_API_KEY,
     STOCK_API_KEYS,
     STOCKS_PROXY_BASE,
+    MARKETS_SNAPSHOT_URL,
     MARKET_INDEX_DEFS: clone(MARKET_INDEX_DEFS),
     DEFAULTS: clone(DEFAULTS),
     cfg,

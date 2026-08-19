@@ -24,7 +24,8 @@
     fetchStockMovers,
     fetchYahooBatchQuotes,
     applyThemeDensity,
-    MARKET_INDEX_DEFS
+    MARKET_INDEX_DEFS,
+    MARKETS_SNAPSHOT_URL
   } = window.App;
   
   // Apply theme, density, and font size on page load
@@ -232,31 +233,6 @@
       { key: "nasdaq", name: "NASDAQ", value: 14912.67, change: 67.89, changePercent: 0.46 }
     ];
 
-  const INDEX_QUOTE_SYMBOLS = {
-    dow: "^DJI",
-    sp500: "^GSPC",
-    nasdaq: "^IXIC",
-    russell2000: "^RUT",
-    sp400: "MID",
-    sp600: "SML",
-    microcap: "IWC",
-    vix: "^VIX",
-    ftse100: "^FTSE",
-    dax: "^GDAXI",
-    nikkei225: "^N225",
-    hangseng: "^HSI",
-    gold: "GC=F",
-    silver: "SI=F",
-    copper: "HG=F",
-    crudeoil: "CL=F",
-    brent: "BZ=F",
-    natgas: "NG=F",
-    us10y: "^TNX",
-    dxy: "DX-Y.NYB",
-    eurusd: "EURUSD=X",
-    bitcoin: "BTC-USD",
-    ethereum: "ETH-USD"
-  };
 
   const INDEX_VALUE_DECIMALS = {
     us10y: 3,
@@ -677,42 +653,36 @@
     return [...orderedVisible, ...fallbackVisible];
   }
 
+  // One cached bundle from the Worker rather than a quote call per tile. The
+  // free provider tiers cannot survive per-visitor fan-out (TwelveData allows
+  // 8 credits a minute and charges one per symbol even in a batch), so the
+  // board is fetched once server-side and shared — see
+  // cloudflare-sync-worker/src/markets.js.
+  let marketSnapshotPromise = null;
+  function fetchMarketSnapshot(){
+    if(!marketSnapshotPromise){
+      marketSnapshotPromise = fetch(MARKETS_SNAPSHOT_URL, { cache: "no-store" })
+        .then(res => res.ok ? res.json() : null)
+        .catch(() => null);
+    }
+    return marketSnapshotPromise;
+  }
+
   async function hydrateIndicesWithLiveQuotes(indices){
-    // Batch fetch all index symbols in one Yahoo Finance v7 request (avoids rate limits)
-    const yahooSymbols = indices.map(idx => INDEX_QUOTE_SYMBOLS[idx.key]).filter(Boolean);
-    const batchQuotes = await fetchYahooBatchQuotes(yahooSymbols).catch(() => null);
+    const snapshot = await fetchMarketSnapshot();
+    const byKey = new Map((snapshot?.items || []).map(item => [item.key, item]));
 
-    const quotePromises = indices.map(async (idx) => {
-      const symbol = INDEX_QUOTE_SYMBOLS[idx.key];
-      if(!symbol) return idx;
-
-      // Use batch result when available
-      const bq = batchQuotes?.[symbol];
-      if(bq && Number.isFinite(bq.price) && bq.price > 0){
-        return {
-          ...idx,
-          value: bq.price,
-          change: bq.change,
-          changePercent: bq.changePercent
-        };
-      }
-
-      // Individual fallback for any symbol the batch missed
-      try{
-        const quote = await fetchStockPrice(symbol);
-        if(!quote || !Number.isFinite(Number(quote.price))) return idx;
-        return {
-          ...idx,
-          value: Number(quote.price),
-          change: Number.isFinite(Number(quote.change)) ? Number(quote.change) : 0,
-          changePercent: Number.isFinite(Number(quote.changePercent)) ? Number(quote.changePercent) : 0
-        };
-      }catch{
-        return idx;
-      }
+    return indices.map((idx) => {
+      const hit = byKey.get(idx.key);
+      const price = Number(hit?.price);
+      if(!Number.isFinite(price)) return idx;
+      return {
+        ...idx,
+        value: price,
+        change: Number.isFinite(Number(hit.change)) ? Number(hit.change) : 0,
+        changePercent: Number.isFinite(Number(hit.changePercent)) ? Number(hit.changePercent) : 0
+      };
     });
-
-    return Promise.all(quotePromises);
   }
 
   function formatIndexValue(index){
