@@ -358,8 +358,16 @@ async function proxyUpstreamJson(upstreamUrl, { cacheTtl, maxAge }, request, env
     try {
       data = JSON.parse(body);
     } catch {
-      lastError = `non-JSON response (${upstream.status})`;
-      continue;
+      // The server answered, it just didn't answer with JSON — overwhelmingly a
+      // 429 from Finnhub's 60/min free tier, since one page load asks for ~20
+      // symbols at once. Retrying that immediately only spends another call
+      // against the same limit, so pass the status back and let the caller drop
+      // to TwelveData straight away.
+      return jsonResponse(
+        { ok: false, error: `${errorLabel}: upstream ${upstream.status}` },
+        upstream.status === 429 ? 429 : 502,
+        request, env
+      );
     }
 
     return new Response(JSON.stringify(data), {
