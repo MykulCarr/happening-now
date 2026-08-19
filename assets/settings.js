@@ -75,6 +75,7 @@
   const marketNewsOpenButtons = document.querySelectorAll("[data-field='marketNewsOpenMode']");
   const newsTickerScopeButtons = document.querySelectorAll("[data-field='newsTickerScope']");
   const marketIndicesContainer = document.getElementById("marketIndicesCheckboxes");
+  const currencyContainer = document.getElementById("currencyCheckboxes");
 
   // News
   const stocksEditor = document.getElementById("stocksEditor");
@@ -2706,10 +2707,61 @@
     updateButtonGroupState(marketNewsOpenButtons, cfg.marketNewsOpenMode || "new-tab");
     updateButtonGroupState(newsTickerScopeButtons, cfg.newsTickerScope || "national");
     renderMarketIndices();
+    renderCurrencies();
 
     renderStocks();
     renderNews();
   }
+
+  // The list of available currencies lives in the Worker, not here — the page
+  // reads whatever /v1/markets/snapshot actually carries so the two can't drift.
+  // A failed fetch leaves the saved selection alone rather than rendering an
+  // empty picker that would look like "no currencies available".
+  let currencyCatalog = null;
+  async function loadCurrencyCatalog(){
+    if(currencyCatalog) return currencyCatalog;
+    try{
+      const res = await fetch(window.App.MARKETS_SNAPSHOT_URL, { cache: "no-store" });
+      if(!res.ok) return null;
+      const data = await res.json();
+      currencyCatalog = (data?.items || [])
+        .filter(item => item.group === "currencies")
+        .map(item => ({ code: String(item.currency || "").toUpperCase(), label: item.label || item.name }))
+        .filter(item => item.code);
+      return currencyCatalog;
+    }catch{
+      return null;
+    }
+  }
+
+  async function renderCurrencies(){
+    if(!currencyContainer) return;
+    const catalog = await loadCurrencyCatalog();
+    if(!catalog || !catalog.length){
+      currencyContainer.innerHTML = `<div class="hint">Currency list unavailable right now — your saved selection is unchanged.</div>`;
+      return;
+    }
+
+    const chosen = new Set(Array.isArray(cfg.currencies) ? cfg.currencies : []);
+    currencyContainer.innerHTML = catalog.map(({ code, label }) => {
+      const id = `cur_${code}`;
+      return `<label class="checkboxLabel" for="${id}">
+          <input type="checkbox" class="checkbox" id="${id}" data-currency-code="${code}" ${chosen.has(code) ? "checked" : ""}>
+          <span>USD/${code} <span class="sectionToggleHint">${label}</span></span>
+        </label>`;
+    }).join("");
+  }
+
+  currencyContainer?.addEventListener("change", (event) => {
+    const box = event.target?.closest?.("input[data-currency-code]");
+    if(!box) return;
+    const code = box.dataset.currencyCode;
+    const chosen = new Set(Array.isArray(cfg.currencies) ? cfg.currencies : []);
+    if(box.checked) chosen.add(code); else chosen.delete(code);
+    // Kept in catalog order so the board doesn't reshuffle as boxes are ticked.
+    cfg.currencies = (currencyCatalog || []).map(c => c.code).filter(c => chosen.has(c));
+    cfg = window.App.saveConfig(cfg);
+  });
 
   // Update button group visual state
   function updateButtonGroupState(buttons, value){

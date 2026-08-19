@@ -419,6 +419,12 @@
     out.regionalSources = normalizeSourceList(out.regionalSources);
     // Ids only — anything else in saved config is discarded rather than
     // trusted, since these become tab names and scope keys.
+    // ISO 4217 codes only; a malformed saved value falls back to the default
+    // set rather than reaching the board or the Settings picker.
+    out.currencies = Array.isArray(out.currencies)
+      ? out.currencies.filter(code => typeof code === "string" && /^[A-Z]{3}$/.test(code))
+      : clone(DEFAULTS.currencies);
+
     out.topics = Array.isArray(out.topics)
       ? out.topics.filter(id => typeof id === "string" && /^[a-z0-9-]+$/.test(id))
       : [];
@@ -1907,13 +1913,6 @@
         return yahooResult;
       }
 
-      // Final fallback (no API key): Stooq end-of-day quote via CORS-friendly relay
-      const stooqResult = await fetchStockPriceFromStooq(baseSymbol);
-      if (stooqResult) {
-        setCached(cacheKey, stooqResult);
-        return stooqResult;
-      }
-
       return null;
     } catch (error) {
       handleError(error, "Stock Price Fetch");
@@ -1954,16 +1953,9 @@
       return { data: yahooRes.data, error: null, source: "yahoo" };
     }
 
-    const stooqRes = await fetchStockCandlesFromStooq(baseSymbol, days);
-    if (stooqRes.data) {
-      setCached(cacheKey, stooqRes.data);
-      return { data: stooqRes.data, error: null, source: "stooq" };
-    }
-
     const twelveError = tdRes.error || "Twelve Data: no data";
     const yahooError = yahooRes.error || "Yahoo: no data";
-    const stooqError = stooqRes.error || "Stooq: no data";
-    return { data: null, error: `${finnhubError}; ${twelveError}; ${yahooError}; ${stooqError}`, source: null };
+    return { data: null, error: `${finnhubError}; ${twelveError}; ${yahooError}`, source: null };
   }
 
   async function fetchStockPriceFromYahooChart(symbol) {
@@ -2030,13 +2022,6 @@
     }
   }
 
-  function normalizeSymbolForStooq(symbol) {
-    const base = String(symbol || "").trim().toUpperCase();
-    if (!base) return "";
-    const cleaned = base.replace(/\./g, "-");
-    return `${cleaned}.US`;
-  }
-
   function shouldSkipFinnhubSymbol(symbol) {
     const normalized = String(symbol || "").trim().toUpperCase();
     if (!normalized) return true;
@@ -2050,76 +2035,6 @@
 
     // Mutual funds and similar instruments commonly end in X and usually 403 on Finnhub.
     return base.length >= 5 && base.endsWith("X");
-  }
-
-  async function fetchStockPriceFromStooq(symbol) {
-    try {
-      const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if (!stooqSymbol) return null;
-
-      const targetUrl = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSymbol)}&f=sd2t2ohlcv&h&e=csv`;
-      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl, { cache: "no-store" });
-      if (!res.ok) return null;
-
-      const csv = (await res.text()).trim();
-      const rows = csv.split(/\r?\n/);
-      if (rows.length < 2) return null;
-
-      const [sym, , , open, high, low, close] = rows[1].split(",").map(v => String(v || "").replace(/^"|"$/g, "").trim());
-      const price = Number(close);
-      if (!Number.isFinite(price) || price <= 0) return null;
-
-      const openNum = Number(open);
-      const highNum = Number(high);
-      const lowNum = Number(low);
-      const change = Number.isFinite(openNum) ? (price - openNum) : 0;
-      const changePercent = (Number.isFinite(openNum) && openNum !== 0) ? (change / openNum) * 100 : 0;
-
-      return {
-        symbol: sym || symbol,
-        price,
-        change,
-        changePercent,
-        previousClose: Number.isFinite(openNum) ? openNum : null,
-        open: Number.isFinite(openNum) ? openNum : null,
-        high: Number.isFinite(highNum) ? highNum : null,
-        low: Number.isFinite(lowNum) ? lowNum : null,
-        timestamp: new Date().toISOString()
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  async function fetchStockCandlesFromStooq(symbol, days) {
-    try {
-      const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if (!stooqSymbol) return { data: null, error: "Stooq symbol invalid" };
-
-      const targetUrl = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqSymbol)}&i=d`;
-      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl, { cache: "no-store" });
-      if (!res.ok) return { data: null, error: `Stooq error (${res.status})` };
-
-      const csv = (await res.text()).trim();
-      const rows = csv.split(/\r?\n/);
-      if (rows.length < 3) return { data: null, error: "Stooq: no data" };
-
-      const closes = rows
-        .slice(1)
-        .map(line => line.split(",")[4])
-        .map(v => Number(String(v || "").replace(/^"|"$/g, "").trim()))
-        .filter(v => Number.isFinite(v));
-
-      if (closes.length < 2) return { data: null, error: "Stooq: invalid data" };
-
-      const desired = Math.max(5, Math.min(60, Math.round((Number(days) || 5) * 2)));
-      const sliced = closes.slice(-desired);
-      return { data: sliced, error: null };
-    } catch (err) {
-      return { data: null, error: `Stooq fetch error (${err?.message || "unknown"})` };
-    }
   }
 
   async function fetchStockCandlesFromFinnhub(symbol, resolution, from, to) {

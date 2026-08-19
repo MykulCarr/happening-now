@@ -587,6 +587,16 @@
                 </div>
                 <div id="marketIndicesCheckboxes" class="checkboxGrid marketIndicesSelector"></div>
               </div>
+
+              <div class="settingRow">
+                <div>
+                  <div class="settingLabel">World Currencies</div>
+                  <div class="settingHint">Exchange rates against the US dollar, shown as their own group on the
+                    markets board. These ride along with the market data already being fetched, so adding them
+                    costs no extra requests.</div>
+                </div>
+                <div id="currencyCheckboxes" class="checkboxGrid"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -600,7 +610,7 @@
             </div>
             <div class="sectionToggleList">
               <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
-                  data-section-key="indices" /><span>Market Indices ticker <span
+                  data-section-key="indices" /><span>Markets board <span
                     class="sectionToggleHint">(recommended)</span></span></label>
               <label class="sectionToggleRow"><input type="checkbox" data-section-page="stocks"
                   data-section-key="watchlist" /><span>Watchlist <span

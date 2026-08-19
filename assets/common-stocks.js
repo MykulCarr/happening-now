@@ -46,11 +46,6 @@
         setCached(cacheKey, yahooResult);
         return yahooResult;
       }
-      const stooqResult = await fetchStockPriceFromStooq(baseSymbol);
-      if(stooqResult){
-        setCached(cacheKey, stooqResult);
-        return stooqResult;
-      }
       return null;
     }catch(error){
       handleError(error, "Stock Price Fetch");
@@ -92,16 +87,10 @@
       return { data: yahooRes.data, error: null, source: "yahoo" };
     }
 
-    const stooqRes = await fetchStockCandlesFromStooq(baseSymbol, days);
-    if(stooqRes.data){
-      setCached(cacheKey, stooqRes.data);
-      return { data: stooqRes.data, error: null, source: "stooq" };
-    }
 
     const twelveError = tdRes.error || "Twelve Data: no data";
     const yahooError = yahooRes.error || "Yahoo: no data";
-    const stooqError = stooqRes.error || "Stooq: no data";
-    return { data: null, error: `${finnhubError}; ${twelveError}; ${yahooError}; ${stooqError}`, source: null };
+    return { data: null, error: `${finnhubError}; ${twelveError}; ${yahooError}`, source: null };
   }
 
   async function fetchStockPriceFromYahooChart(symbol){
@@ -167,14 +156,6 @@
       return { data: null, error: `Yahoo fetch error (${err?.message || "unknown"})` };
     }
   }
-
-  function normalizeSymbolForStooq(symbol){
-    const base = String(symbol || "").trim().toUpperCase();
-    if(!base) return "";
-    const cleaned = base.replace(/\./g, "-");
-    return `${cleaned}.US`;
-  }
-
   function shouldSkipFinnhubSymbol(symbol){
     const normalized = String(symbol || "").trim().toUpperCase();
     if(!normalized) return true;
@@ -185,80 +166,11 @@
     return base.length >= 5 && base.endsWith("X");
   }
 
-  async function fetchStockPriceFromStooq(symbol){
-    try{
-      const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if(!stooqSymbol) return null;
-
-      const targetUrl = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSymbol)}&f=sd2t2ohlcv&h&e=csv`;
-      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return null;
-
-      const csv = (await res.text()).trim();
-      const rows = csv.split(/\r?\n/);
-      if(rows.length < 2) return null;
-
-      const [sym, , , open, high, low, close] = rows[1].split(",").map(v => String(v || "").replace(/^"|"$/g, "").trim());
-      const price = Number(close);
-      if(!Number.isFinite(price) || price <= 0) return null;
-
-      const openNum = Number(open);
-      const highNum = Number(high);
-      const lowNum = Number(low);
-      const change = Number.isFinite(openNum) ? (price - openNum) : 0;
-      const changePercent = (Number.isFinite(openNum) && openNum !== 0) ? (change / openNum) * 100 : 0;
-
-      return {
-        symbol: sym || symbol,
-        price,
-        change,
-        changePercent,
-        previousClose: Number.isFinite(openNum) ? openNum : null,
-        open: Number.isFinite(openNum) ? openNum : null,
-        high: Number.isFinite(highNum) ? highNum : null,
-        low: Number.isFinite(lowNum) ? lowNum : null,
-        timestamp: new Date().toISOString()
-      };
-    }catch{
-      return null;
-    }
-  }
-
-  async function fetchStockCandlesFromStooq(symbol, days){
-    try{
-      const stooqSymbol = normalizeSymbolForStooq(symbol);
-      if(!stooqSymbol) return { data: null, error: "Stooq symbol invalid" };
-
-      const targetUrl = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqSymbol)}&i=d`;
-      const proxyUrl = `${RSS_PROXY_BASE}${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl, { cache: "no-store" });
-      if(!res.ok) return { data: null, error: `Stooq error (${res.status})` };
-
-      const csv = (await res.text()).trim();
-      const rows = csv.split(/\r?\n/);
-      if(rows.length < 3) return { data: null, error: "Stooq: no data" };
-
-      const closes = rows
-        .slice(1)
-        .map(line => line.split(",")[4])
-        .map(v => Number(String(v || "").replace(/^"|"$/g, "").trim()))
-        .filter(v => Number.isFinite(v));
-
-      if(closes.length < 2) return { data: null, error: "Stooq: invalid data" };
-      const desired = Math.max(5, Math.min(60, Math.round((Number(days) || 5) * 2)));
-      const sliced = closes.slice(-desired);
-      return { data: sliced, error: null };
-    }catch(err){
-      return { data: null, error: `Stooq fetch error (${err?.message || "unknown"})` };
-    }
-  }
-
   // Finnhub deprecated /stock/candle for free plans in 2024 — every request now
   // returns 403 (Forbidden), which the browser logs as a red error before our code
   // can even read the status. Returning early keeps the function/exports intact while
-  // routing all candle traffic to the working fallbacks (TwelveData, Yahoo v8 chart,
-  // Stooq) inside fetchStockCandles.
+  // routing all candle traffic to the working fallbacks (TwelveData and the
+  // Yahoo v8 chart endpoint) inside fetchStockCandles.
   async function fetchStockCandlesFromFinnhub(_symbol, _resolution, _from, _to){
     return { data: null, error: "Finnhub candles disabled (free plan limitation)" };
   }
