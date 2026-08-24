@@ -30,8 +30,11 @@ Serve the repo root over HTTP — `file://` breaks fetch and the service worker:
 python -m http.server 8080
 ```
 
-The pages call the **production** Worker for feed data even when served locally,
-so news widgets work without running anything else.
+The pages call the **production** Worker for feed, stock and market data even
+when served locally, so the widgets work without running anything else. That
+depends on **port 8080** — the Worker's `ALLOWED_ORIGINS` lists only
+`localhost:8080` and `127.0.0.1:8080`, so serving on any other port gets a CORS
+refusal on every `/v1` call.
 
 **Always check a phone-width viewport (~390px) before calling UI work done** —
 this is used on a phone as an installed PWA at least as much as on desktop.
@@ -72,6 +75,15 @@ Two traps that both produce confident, wrong answers:
   unreliable and were removed in `40e537f`.
 - **CSP lives in `_headers`.** Any new third-party endpoint needs adding there or
   it'll be blocked in production but fine locally.
+- **Never write a bare `/v1/...` path.** Every first-party route must be built
+  from `API_ORIGIN` (`assets/common.js`), which is empty in production and
+  absolute on localhost. A literal path works in production and silently 404s in
+  local dev, where the failure is invisible: RSS just falls through to the
+  third-party codetabs proxy, and the news page's own health probe reports the
+  proxy "unreachable" while it is fine. Five copies of this bug had accumulated
+  — `RSS_PROXY_BASE` plus a hand-written probe URL in `news.js`, `stocks.js` and
+  `weather.js` and the `PROXY` const in `source-search.js`. They now all read
+  `App.RSS_PROXY_BASE`; keep it that way rather than re-typing the path.
 - **Collapsible settings sections only actually collapse on the News tab.** Every
   settings section uses the same `.collapsibleSection / .collapsibleHeader /
   .collapsibleBody` markup, but the behaviour is scoped by

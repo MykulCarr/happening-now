@@ -15,8 +15,10 @@
 (() => {
   "use strict";
 
-  // Same first-party worker route fetchRssItems uses.
-  const PROXY = "/v1/rss/raw?url=";
+  // Same first-party worker route fetchRssItems uses. Taken from App rather
+  // than written out again so it carries the API_ORIGIN prefix — a literal
+  // "/v1/..." here 404s on a local dev server, which has no /v1 routes.
+  const PROXY = window.App.RSS_PROXY_BASE;
 
   // Reddit's JSON search (/subreddits/search.json) returns 403 to anonymous
   // AND Cloudflare-Worker-origin requests, which is why live discovery was

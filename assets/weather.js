@@ -55,7 +55,11 @@
     "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",   // BBC Science & Environment
     "https://www.nhc.noaa.gov/index-at.xml"                            // NOAA NHC Atlantic tropical
   ];
-  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
+  // Built from App.RSS_PROXY_BASE rather than a literal path so it carries the
+  // API_ORIGIN prefix. Hardcoding "/v1/..." made this probe 404 against a local
+  // dev server and report the proxy "unreachable" while it was working fine.
+  const RSS_PROXY_PROBE_URL =
+    window.App.RSS_PROXY_BASE + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
 
   async function probeEndpoint(url, timeoutMs = 4500){
     try{

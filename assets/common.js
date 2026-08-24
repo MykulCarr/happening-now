@@ -4,8 +4,21 @@
   const LS_KEY = "jas_cfg_v3";
   const GEO_PREF_KEY = "jas_geo_pref_v1";
 
-  // First-party RSS proxy route served by cloudflare-sync-worker.
-  const RSS_PROXY_BASE = "/v1/rss/raw?url=";
+  // Empty in production so /v1 stays same-origin; absolute when the page is
+  // served from a local dev server, which has no /v1 routes of its own. This is
+  // what makes feed, stock and market data all come from the production Worker
+  // during local development, and is why localhost is listed in the Worker's
+  // ALLOWED_ORIGINS — on port 8080, the `python -m http.server 8080` in
+  // CLAUDE.md. Serve on another port and the Worker will refuse the origin.
+  const API_ORIGIN =
+    (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      ? "https://happening-now.net"
+      : "";
+
+  // First-party RSS proxy route served by cloudflare-sync-worker. Without the
+  // API_ORIGIN prefix this 404s on a local dev server and every feed silently
+  // falls through to the third-party codetabs proxy below.
+  const RSS_PROXY_BASE = `${API_ORIGIN}/v1/rss/raw?url=`;
   const RSS_PROXY_FALLBACKS = [
     RSS_PROXY_BASE,
     "https://api.codetabs.com/v1/proxy?quest="
@@ -23,14 +36,6 @@
   // (FINNHUB_KEY, TWELVEDATA_KEY) and must never be written into this file.
   // Everything here ships to the browser as readable text, so a key added below
   // is a published key — that is exactly how two live keys leaked before.
-  // Empty in production so /v1 stays same-origin; absolute when the page is
-  // served from a local dev server, which has no /v1 routes of its own. This
-  // mirrors how feed data is read from the production Worker during local
-  // development, and is why localhost is listed in the Worker's ALLOWED_ORIGINS.
-  const API_ORIGIN =
-    (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-      ? "https://happening-now.net"
-      : "";
   const STOCKS_PROXY_BASE = `${API_ORIGIN}/v1/stocks`;
 
   // The whole index/commodity/currency board in one cached bundle. Replaces a

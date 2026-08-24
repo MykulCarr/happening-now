@@ -2,7 +2,11 @@
   "use strict";
 
   const { cfg, fetchNewsItems, escapeHtml, createCardHeader, handleError, showError, applyThemeDensity, saveConfig, geocodeZip } = window.App;
-  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
+  // Built from App.RSS_PROXY_BASE rather than a literal path so it carries the
+  // API_ORIGIN prefix. Hardcoding "/v1/..." made this probe 404 against a local
+  // dev server and report the proxy "unreachable" while it was working fine.
+  const RSS_PROXY_PROBE_URL =
+    window.App.RSS_PROXY_BASE + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
 
   // Apply theme, density, and font size on page load
   applyThemeDensity(cfg);

@@ -68,7 +68,11 @@
     "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839069",         // CNBC Markets
     "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"         // CNBC Top News
   ];
-  const RSS_PROXY_PROBE_URL = "/v1/rss/raw?url=" + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
+  // Built from App.RSS_PROXY_BASE rather than a literal path so it carries the
+  // API_ORIGIN prefix. Hardcoding "/v1/..." made this probe 404 against a local
+  // dev server and report the proxy "unreachable" while it was working fine.
+  const RSS_PROXY_PROBE_URL =
+    window.App.RSS_PROXY_BASE + encodeURIComponent("https://feeds.npr.org/1001/rss.xml");
   const stocksDiag = document.getElementById("stocksDiag");
 
   async function probeEndpoint(url, timeoutMs = 4500){
