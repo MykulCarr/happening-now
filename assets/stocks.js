@@ -51,6 +51,7 @@
 
   const PINS_KEY = "jas_stock_pins_v1";
   const NEWS_MODE_KEY = "jas_stock_news_mode_v1";
+  const MARKET_GROUP_KEY = "jas_market_group_v1";
   const STOCKS_NEWS_CACHE_KEY = "jas_stocks_news_cache_v1";
   const WATCHLIST_CANDLE_RESOLUTION = "30";
   const WATCHLIST_CANDLE_DAYS = 5;
@@ -243,6 +244,9 @@
   let pins = loadPins();
   let sortMode = cfg.stockSortMode || "pinned";
   let newsMode = cfg.stocksNewsMode || localStorage.getItem(NEWS_MODE_KEY) || "watchlist";
+  // Which market group the board is filtered to, or "all". Per-browser view
+  // state rather than a synced preference, same as the news scope above.
+  let activeMarketGroup = localStorage.getItem(MARKET_GROUP_KEY) || "all";
   let lastUpdateTime = null;
   // The board used to be a drag-scrollable ticker, which carried its own
   // pointer/RAF machinery and owned the click-to-open-news behaviour. The grid
@@ -263,6 +267,30 @@
     event.preventDefault();
     tile.click();
   });
+
+  document.addEventListener("click", (event) => {
+    const btn = event.target?.closest?.("[data-market-group]");
+    if(!btn) return;
+    activeMarketGroup = btn.dataset.marketGroup;
+    localStorage.setItem(MARKET_GROUP_KEY, activeMarketGroup);
+    applyMarketGroupFilter();
+  });
+
+  // Every group is rendered up front, so switching tabs is pure DOM — no
+  // refetch, and the snapshot promise stays memoised either way.
+  function applyMarketGroupFilter(){
+    const container = document.getElementById("marketIndices");
+    if(!container) return;
+    container.dataset.activeGroup = activeMarketGroup;
+    container.querySelectorAll(".marketGroup").forEach((sec) => {
+      sec.hidden = activeMarketGroup !== "all" && sec.dataset.group !== activeMarketGroup;
+    });
+    container.querySelectorAll("[data-market-group]").forEach((btn) => {
+      const on = btn.dataset.marketGroup === activeMarketGroup;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    });
+  }
 
   // ===== MOCK PRICE DATA (Replace with real API in production) =====
   // For demo: generates mock prices with random changes
@@ -487,13 +515,15 @@
   }
 
   // Board layout. Order here is the order the groups appear on the page.
+  // [key, heading, tab label]. The short label keeps the tab row from
+  // overflowing a phone; the heading still reads in full above the grid.
   const MARKET_GROUPS = [
-    ["us-indices", "US Indices"],
-    ["global-indices", "Global Indices"],
-    ["commodities", "Commodities"],
-    ["rates", "Rates & FX"],
-    ["crypto", "Crypto"],
-    ["currencies", "World Currencies"],
+    ["us-indices", "US Indices", "US"],
+    ["global-indices", "Global Indices", "Global"],
+    ["commodities", "Commodities", "Commodities"],
+    ["rates", "Rates & FX", "Rates & FX"],
+    ["crypto", "Crypto", "Crypto"],
+    ["currencies", "World Currencies", "Currencies"],
   ];
 
   function indexTileHtml(idx, now){
@@ -519,18 +549,26 @@
       changeHtml = `<span class="indexChangeMuted">${escapeHtml(idx.label || "daily rate")}</span>`;
     } else {
       const arrow = isPositive ? "▲" : "▼";
-      changeHtml = `${arrow} ${sign}${idx.change.toFixed(2)} (${sign}${idx.changePercent.toFixed(2)}%)`;
+      changeHtml = `${arrow} ${sign}${idx.changePercent.toFixed(2)}%`;
     }
 
     const changeCls = hasData && idx.changePercent != null ? cls : "";
+    // The session badge became a dot to buy back a line; its text moves to
+    // the label/tooltip so the state is still announced and hoverable.
+    const dotHtml = session
+      ? `<span class="indexDot ${session.tone}" role="img" aria-label="${escapeHtml(session.label)}" title="${escapeHtml(session.label)}"></span>`
+      : "";
+
     return `
       <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(idx.name)} news">
         <div class="indexTopRow">
           <div class="indexName">${escapeHtml(idx.name)}</div>
-          ${session ? `<span class="indexSession ${session.tone}">${session.label}</span>` : ""}
+          ${dotHtml}
         </div>
-        <div class="indexValue">${valueHtml}</div>
-        <div class="indexChange ${changeCls}">${changeHtml}</div>
+        <div class="indexBottomRow">
+          <div class="indexValue">${valueHtml}</div>
+          <div class="indexChange ${changeCls}">${changeHtml}</div>
+        </div>
       </div>
     `;
   }
@@ -576,18 +614,42 @@
       }
 
       const now = new Date();
-      const sections = MARKET_GROUPS.map(([group, label]) => {
-        const inGroup = tiles.filter(t => (t.group || "us-indices") === group);
-        if(!inGroup.length) return "";
-        return `
-          <section class="marketGroup">
-            <h3 class="marketGroupLabel">${escapeHtml(label)}</h3>
-            <div class="marketGrid">${inGroup.map(t => indexTileHtml(t, now)).join("")}</div>
-          </section>
-        `;
-      }).join("");
+      const present = MARKET_GROUPS
+        .map(([group, label, tabLabel]) => ({
+          group,
+          label,
+          tabLabel,
+          items: tiles.filter(t => (t.group || "us-indices") === group),
+        }))
+        .filter(g => g.items.length);
 
-      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2>${sections}`;
+      // A remembered group disappears if its last item is switched off in
+      // Settings. Fall back to All rather than rendering an empty board.
+      if(activeMarketGroup !== "all" && !present.some(g => g.group === activeMarketGroup)){
+        activeMarketGroup = "all";
+      }
+
+      // One group needs no filter control.
+      const tabsHtml = present.length > 1
+        ? `<div class="tabsRow marketTabs">${
+            [["all", "All"], ...present.map(g => [g.group, g.tabLabel])]
+              .map(([key, tabLabel]) => {
+                const on = key === activeMarketGroup;
+                return `<button class="tabPill${on ? " active" : ""}" type="button" data-market-group="${escapeHtml(key)}" aria-pressed="${on}">${escapeHtml(tabLabel)}</button>`;
+              })
+              .join("")
+          }</div>`
+        : "";
+
+      const sections = present.map(g => `
+          <section class="marketGroup" data-group="${escapeHtml(g.group)}"${activeMarketGroup === "all" || activeMarketGroup === g.group ? "" : " hidden"}>
+            <h3 class="marketGroupLabel">${escapeHtml(g.label)}</h3>
+            <div class="marketGrid">${g.items.map(t => indexTileHtml(t, now)).join("")}</div>
+          </section>
+        `).join("");
+
+      container.dataset.activeGroup = activeMarketGroup;
+      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2>${tabsHtml}${sections}`;
     } catch (error) {
       console.error("Error rendering indices:", error);
       container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">Error loading markets</div>`;
