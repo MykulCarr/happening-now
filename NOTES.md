@@ -473,3 +473,57 @@ And a plain `Page.navigate` reuses memory-cached scripts, so edits to
   choose a file, change a setting, confirm the file's mtime moves.
 - Firefox/iOS get no sync. If that matters, the fallback would be a periodic
   download of the JSON, which is a different (and worse) thing.
+
+## 2026-08-24 — "Missing" history explained, and a stray file pulled off the site
+
+Session started with the project refusing to open from the recents list, and a
+worry that a lot of past conversation had been lost. Nothing was lost.
+
+### The history was always fine
+
+All six transcripts sit under `~/.claude/projects/c--TEMP-Projects-happening-now/`
+(~33 MB): five past conversations plus this one, every line valid JSON, clean
+terminating records, normal file attributes. Two things looked like smoking guns
+and weren't — no session has a `summary` record, and the trust flag is `false`
+everywhere, but that's true of *every* project on this machine. Worth checking a
+second project before calling either one a fault.
+
+### The real cause: two VS Code workspace identities
+
+The same folder was open under two different identities, each with its own
+storage:
+
+- `2553b4c7…` → `folder: c:/TEMP/Projects/happening-now`
+- `bfe69d71…` → `workspace: …/assets/news-pages.code-workspace`
+
+All the earlier work ran under the `.code-workspace` one; opening the plain
+folder gets the other, so the editor-side recents look empty. Claude Code keys
+its own history by *folder path*, so `/resume` lists everything either way —
+that's the reliable way back in.
+
+### The stray file
+
+Chasing that turned up `assets/news-pages.code-workspace`, and `assets/` is
+copied wholesale into the deploy bundle — so an editor config file was being
+served at `happening-now.net/assets/news-pages.code-workspace` (HTTP 200).
+Harmless content, but public, and it leaked the old project name.
+
+Moved it to the repo root as `happening-now.code-workspace`. Root-level files
+ship only if named in the stage script's allow-list and this one isn't, so the
+move *is* the fix — confirmed by running a real stage and finding zero
+`.code-workspace` files in the bundle.
+
+Two commits, because the first was wrong: `git mv` staged the rename with the
+file's original contents, and the later content edit was never re-added. So
+`4d5da86` shipped the file at the root still saying `"path": ".."` — which from
+`assets/` meant the project root, but from the root means `C:\TEMP\Projects`.
+Opening it would have loaded the whole projects folder. Fixed in `232b139`.
+
+### Next up
+
+- **Not deployed.** The deploy was blocked by the permission classifier, so
+  production still serves the old path. `pwsh -File scripts/deploy-prod.ps1`
+  finishes it; `.deploy-public/` is wiped each stage, so the file just drops
+  out of the new manifest.
+- The old recents entry now points at a file that doesn't exist — remove it and
+  open the root `happening-now.code-workspace` once to make a fresh one.
