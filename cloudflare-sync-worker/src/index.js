@@ -1,5 +1,6 @@
 import { runCurationSweep } from "./curate.js";
 import { getMarketSnapshot } from "./markets.js";
+import { getQuotes, parseSymbols } from "./quotes.js";
 
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -466,6 +467,27 @@ async function fetchStockQuoteTwelveData(request, env, url) {
   );
 }
 
+// The whole watchlist in one request, answered from a per-symbol KV cache — see
+// quotes.js. Separate from /v1/stocks/quote, which stays Finnhub-backed as the
+// per-symbol fallback for anything this misses.
+async function fetchStockQuotes(request, env, url) {
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
+  }
+  const symbols = parseSymbols(url.searchParams.get("symbols"));
+  if (!symbols.length) {
+    return jsonResponse({ ok: false, error: "Missing or invalid symbols parameter" }, 400, request, env);
+  }
+  try {
+    return jsonResponse({ ok: true, ...(await getQuotes(env, symbols)) }, 200, request, env);
+  } catch (error) {
+    return jsonResponse(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to fetch quotes" },
+      502, request, env
+    );
+  }
+}
+
 export default {
   // Daily cron. Each firing checks the next slice of curated feeds and parks
   // its position in KV; when the sweep wraps it emails the admin a digest.
@@ -518,6 +540,10 @@ export default {
 
     if (url.pathname === "/v1/markets/snapshot") {
       return jsonResponse(await getMarketSnapshot(env, ctx), 200, request, env);
+    }
+
+    if (url.pathname === "/v1/stocks/quotes") {
+      return fetchStockQuotes(request, env, url);
     }
 
     if (url.pathname === "/v1/stocks/quote") {

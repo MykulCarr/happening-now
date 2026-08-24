@@ -76,8 +76,11 @@ function num(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-async function fetchYahooQuote(instrument) {
-  const url = `${YAHOO_CHART}${encodeURIComponent(instrument.yahoo)}?range=1d&interval=1d`;
+// The single place that knows how to read a quote out of Yahoo's v8 chart
+// endpoint. Exported because quotes.js serves the watchlist from the same
+// provider — one copy so the board and the watchlist can't drift apart.
+export async function fetchYahooChartQuote(symbol) {
+  const url = `${YAHOO_CHART}${encodeURIComponent(symbol)}?range=1d&interval=1d`;
   try {
     const res = await fetch(url, {
       headers: {
@@ -105,17 +108,32 @@ async function fetchYahooQuote(instrument) {
     const prev = num(meta?.previousClose) ?? num(meta?.chartPreviousClose);
     const change = prev === null ? null : price - prev;
     return {
-      key: instrument.key,
-      name: instrument.name,
-      group: instrument.group,
       price,
+      previousClose: prev,
       change,
       changePercent: change === null || !prev ? null : (change / prev) * 100,
+      // Only the watchlist cards use these; the board tiles ignore them.
+      high: num(meta?.regularMarketDayHigh),
+      low: num(meta?.regularMarketDayLow),
       currency: meta?.currency || "USD",
     };
   } catch {
     return null;
   }
+}
+
+async function fetchYahooQuote(instrument) {
+  const quote = await fetchYahooChartQuote(instrument.yahoo);
+  if (!quote) return null;
+  return {
+    key: instrument.key,
+    name: instrument.name,
+    group: instrument.group,
+    price: quote.price,
+    change: quote.change,
+    changePercent: quote.changePercent,
+    currency: quote.currency,
+  };
 }
 
 async function fetchCurrencies() {
@@ -150,7 +168,7 @@ async function fetchCurrencies() {
 }
 
 // Small pool rather than Promise.all over the whole list — see FETCH_CONCURRENCY.
-async function mapWithConcurrency(items, limit, fn) {
+export async function mapWithConcurrency(items, limit, fn) {
   const out = [];
   for (let i = 0; i < items.length; i += limit) {
     out.push(...await Promise.all(items.slice(i, i + limit).map(fn)));

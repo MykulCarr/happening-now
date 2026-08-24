@@ -15,7 +15,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
 - `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
-- `cloudflare-sync-worker/src/index.js` — the feed proxy behind `/v1/artemis/updates`
+- `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
+- `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
+  one Yahoo v8 chart reader both it and the watchlist use
+- `cloudflare-sync-worker/src/quotes.js` — `/v1/stocks/quotes`, the per-symbol
+  cached watchlist quotes (see "Stock quotes" below)
 - `_headers` — security headers incl. CSP. `_redirects` — 301s for `/x.html` → `/x`
 - `scripts/` — deploy tooling (PowerShell + one esbuild script)
 
@@ -121,6 +125,33 @@ Two traps that both produce confident, wrong answers:
   correctly, but GA4 reported "tag not installed" because Google's detection
   scans the served HTML source and found nothing. Don't refactor it back out
   into a shared file.
+
+## Stock quotes
+
+Two different shapes, for two different problems:
+
+- **The board** (`/v1/markets/snapshot`) is a fixed list, so it's one cached
+  bundle in KV, built by `markets.js` and shared by every visitor.
+- **The watchlist** (`/v1/stocks/quotes?symbols=A,B,C`) can't be — its symbols
+  are whatever each visitor added — so `quotes.js` caches **per symbol** with a
+  5-minute freshness window instead. Two people holding NVDA cost one upstream
+  call between them, and the browser makes one request rather than one per row.
+
+Both read Yahoo's v8 chart endpoint through the same `fetchYahooChartQuote`, and
+both need the browser User-Agent — Yahoo answers a bare API client from a Worker
+IP with an error page rather than JSON.
+
+**Don't put Finnhub back at the front of the watchlist.** `fetchYahooBatchQuotes`
+was a stub returning `null` (Yahoo's *v7* batch endpoint needs an authenticated
+crumb, so it was disabled), which sent every symbol down the browser fallback
+chain starting at Finnhub — 60 calls a minute shared by all visitors. The four
+default symbols alone drew 429s on a single page load. `/v1/stocks/quote`
+(singular, Finnhub-backed) is still there as the per-symbol fallback for whatever
+the batch misses; that's the only job it should have.
+
+The gainers / losers / trending widgets still fan out over `POPULAR_STOCKS`
+through Finnhub, but only after both Yahoo movers and FMP have failed, so it's a
+rare path rather than a per-load one.
 
 ## Local news coverage list
 

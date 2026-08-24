@@ -659,13 +659,51 @@
     }
   }
 
-  // Yahoo's v7 /finance/quote batch endpoint requires authenticated crumb+cookie since
-  // late 2024; anonymous (and proxied) requests return 401/502. Callers already wrap
-  // this in `.catch(() => null)` and fall through to per-symbol fetches via
-  // fetchStockPriceFromYahooChart (v8 chart endpoint, still public). Returning null
-  // immediately avoids the failed network round-trip and the resulting console noise.
-  async function fetchYahooBatchQuotes(_symbols){
-    return null;
+  // The whole watchlist in one request, answered from the Worker's per-symbol
+  // cache (cloudflare-sync-worker/src/quotes.js). This used to be Yahoo's v7
+  // /finance/quote batch endpoint, which has needed an authenticated crumb since
+  // late 2024 and answers 401 to anonymous callers, so it was stubbed out to
+  // return null — which quietly sent every symbol down the fallback chain
+  // starting at Finnhub, whose 60/min free tier is shared by all visitors. A
+  // four-symbol watchlist was drawing 429s on a single page load.
+  //
+  // Callers still wrap this in `.catch(() => null)` and fall through to
+  // per-symbol fetchStockPrice for anything missing, so a failure here is a
+  // slower page rather than a broken one.
+  async function fetchYahooBatchQuotes(symbols){
+    const list = Array.from(new Set((symbols || [])
+      .map(s => String(s || "").trim().toUpperCase())
+      .filter(Boolean)));
+    if(!list.length) return null;
+
+    const url = `${STOCKS_PROXY_BASE}/quotes?symbols=${encodeURIComponent(list.join(","))}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) return null;
+
+    const quotes = (await res.json())?.quotes;
+    if(!quotes) return null;
+
+    const out = {};
+    Object.entries(quotes).forEach(([symbol, q]) => {
+      const price = Number(q?.price);
+      if(!Number.isFinite(price) || price <= 0) return;
+      const change = Number(q?.change);
+      const changePercent = Number(q?.changePercent);
+      const prevClose = Number(q?.previousClose);
+      out[symbol] = {
+        symbol,
+        price,
+        change: Number.isFinite(change) ? change : 0,
+        changePercent: Number.isFinite(changePercent) ? changePercent : 0,
+        previousClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : null,
+        // Yahoo's chart meta carries no open; the cards don't show one.
+        open: null,
+        high: Number(q?.high),
+        low: Number(q?.low),
+        timestamp: q?.fetchedAt || new Date().toISOString()
+      };
+    });
+    return Object.keys(out).length ? out : null;
   }
 
   Object.assign(App, {
