@@ -111,6 +111,13 @@
     "dow", "sp500", "nasdaq", "russell2000", "gold", "bitcoin",
   ]);
 
+  // Which group the markets board opens on; "all" shows every group at once.
+  // Display order and labels live in assets/stocks.js (MARKET_GROUPS) — this
+  // list is only what a saved or imported config is allowed to hold.
+  const MARKET_GROUP_VALUES = [
+    "all", "us-indices", "global-indices", "commodities", "rates", "crypto", "currencies",
+  ];
+
   // `group` drives how the markets board arranges its tiles, and matches the
   // group each item carries in /v1/markets/snapshot.
   const MARKET_INDEX_DEFS = [
@@ -178,6 +185,9 @@
     stocksNewsMode: "watchlist",
     marketNewsSourceMode: "google",
     marketNewsOpenMode: "new-tab",
+    // First visit opens on US Indices; "all" and the other groups are a tap
+    // away on the board's tab row, and this is settable in Settings > Stocks.
+    marketGroup: "us-indices",
     marketIndices: MARKET_INDEX_DEFS.map((item) => ({
       key: item.key,
       visible: DEFAULT_VISIBLE_INDICES.has(item.key),
@@ -291,6 +301,7 @@
       : DEFAULTS.renderMode;
     out.startupPage = ["news", "weather", "stocks"].includes(out.startupPage) ? out.startupPage : DEFAULTS.startupPage;
     out.stocksNewsMode = ["watchlist", "major"].includes(out.stocksNewsMode) ? out.stocksNewsMode : DEFAULTS.stocksNewsMode;
+    out.marketGroup = MARKET_GROUP_VALUES.includes(out.marketGroup) ? out.marketGroup : DEFAULTS.marketGroup;
 
     out.zipCode = String(out.zipCode || "").trim();
     if (!/^\d{5}$/.test(out.zipCode)) out.zipCode = DEFAULTS.zipCode;

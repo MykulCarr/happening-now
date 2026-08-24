@@ -51,7 +51,6 @@
 
   const PINS_KEY = "jas_stock_pins_v1";
   const NEWS_MODE_KEY = "jas_stock_news_mode_v1";
-  const MARKET_GROUP_KEY = "jas_market_group_v1";
   const STOCKS_NEWS_CACHE_KEY = "jas_stocks_news_cache_v1";
   const WATCHLIST_CANDLE_RESOLUTION = "30";
   const WATCHLIST_CANDLE_DAYS = 5;
@@ -244,9 +243,10 @@
   let pins = loadPins();
   let sortMode = cfg.stockSortMode || "pinned";
   let newsMode = cfg.stocksNewsMode || localStorage.getItem(NEWS_MODE_KEY) || "watchlist";
-  // Which market group the board is filtered to, or "all". Per-browser view
-  // state rather than a synced preference, same as the news scope above.
-  let activeMarketGroup = localStorage.getItem(MARKET_GROUP_KEY) || "all";
+  // Which market group the board is filtered to, or "all". Read from the
+  // config so Settings > Stocks and the board's own tab row are one setting
+  // rather than a default racing a separate per-browser key.
+  let activeMarketGroup = cfg.marketGroup || "us-indices";
   let lastUpdateTime = null;
   // The board used to be a drag-scrollable ticker, which carried its own
   // pointer/RAF machinery and owned the click-to-open-news behaviour. The grid
@@ -271,8 +271,14 @@
   document.addEventListener("click", (event) => {
     const btn = event.target?.closest?.("[data-market-group]");
     if(!btn) return;
-    activeMarketGroup = btn.dataset.marketGroup;
-    localStorage.setItem(MARKET_GROUP_KEY, activeMarketGroup);
+    const next = btn.dataset.marketGroup;
+    // Guarded on change: clicking the already-active tab shouldn't churn the
+    // config, since every save fires hn:config-saved and settings-sync writes
+    // the file on it.
+    if(next === activeMarketGroup) return;
+    activeMarketGroup = next;
+    cfg.marketGroup = activeMarketGroup;
+    window.App.saveConfig(cfg);
     applyMarketGroupFilter();
   });
 

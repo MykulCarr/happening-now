@@ -54,6 +54,7 @@
   const themeSel = document.getElementById("themeSel");
   const renderModeSel = document.getElementById("renderModeSel");
   const startupPageSel = document.getElementById("startupPageSel");
+  const marketGroupSel = document.getElementById("marketGroupSel");
   const zipInput = document.getElementById("zipInput");
   const wxRefreshInput = document.getElementById("wxRefreshInput");
   const weatherStaleWarnInput = document.getElementById("weatherStaleWarnInput");
@@ -2712,6 +2713,7 @@
     if(weatherShowMapToggle) weatherShowMapToggle.checked = cfg.weatherShowMap !== false;
     updateButtonGroupState(stockSortButtons, cfg.stockSortMode || "pinned");
     updateButtonGroupState(stocksNewsButtons, cfg.stocksNewsMode || "watchlist");
+    if(marketGroupSel) marketGroupSel.value = cfg.marketGroup || "us-indices";
     updateButtonGroupState(marketNewsSourceButtons, cfg.marketNewsSourceMode || "google");
     updateButtonGroupState(marketNewsOpenButtons, cfg.marketNewsOpenMode || "new-tab");
     updateButtonGroupState(newsTickerScopeButtons, cfg.newsTickerScope || "national");
@@ -2788,6 +2790,7 @@
     cfg.theme = themeSel.value;
     if(renderModeSel) cfg.renderMode = renderModeSel.value;
     cfg.startupPage = startupPageSel.value;
+    if(marketGroupSel) cfg.marketGroup = marketGroupSel.value;
     cfg.zipCode = String(zipInput.value || "").trim();
     cfg.weatherRefreshMinutes = Number(wxRefreshInput.value || 10);
     if(weatherStaleWarnInput){
@@ -3260,6 +3263,13 @@
     cfg.startupPage = startupPageSel.value;
     setStatus("Modified (not saved yet)", "unsaved");
   });
+
+  if(marketGroupSel){
+    marketGroupSel.addEventListener("change", () => {
+      cfg.marketGroup = marketGroupSel.value;
+      setStatus("Modified (not saved yet)", "unsaved");
+    });
+  }
 
   // ── Location section (Weather tab) ────────────────────────────────────────
   const settLocTabs = document.querySelectorAll("[data-sett-loc-mode]");
