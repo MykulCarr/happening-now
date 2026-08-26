@@ -318,12 +318,20 @@ async function fetchRssThroughProxy(request, env, url) {
   }
 
   const xmlText = await upstream.text();
-  const contentType = upstream.headers.get("Content-Type") || "application/xml; charset=utf-8";
 
+  // Always answer as XML, never echo the upstream Content-Type. Some publishers
+  // serve a perfectly valid feed as text/html (canarymedia.com/rss.xml does),
+  // and this Worker sits behind our own Cloudflare zone — which post-processes
+  // anything labelled HTML and appended its tracking beacon *after* `</rss>`.
+  // That trailing junk is not well-formed XML, so browser DOMParser rejected
+  // the whole document and the feed rendered zero items while every curl-and-
+  // grep check called it healthy. Upstream charset is handled too: .text()
+  // has already decoded to a JS string, so what we emit is always UTF-8 and
+  // passing through e.g. `charset=ISO-8859-1` would actively mislabel it.
   return new Response(xmlText, {
     status: 200,
     headers: {
-      "Content-Type": contentType,
+      "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=120",
       "X-RSS-Proxy": "happening-now-sync",
       ...getCorsHeaders(request, env),

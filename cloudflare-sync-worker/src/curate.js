@@ -1,9 +1,13 @@
 // Weekly curation digest, emailed to the site admin.
 //
 // Workers cap subrequests per invocation (50 on the free plan) and we curate
-// ~270 feeds, so a full sweep can't happen in one go. Instead the cron fires
-// once a day and works through two phases, parking its position in KV between
-// firings:
+// ~400 feeds across both catalogs — data/local-stations.json (places) and
+// data/topic-sources.json (the topic tabs) — so a full sweep can't happen in
+// one go. Instead the cron fires once a day and works through two phases,
+// parking its position in KV between firings. At BATCH=40 a full sweep is
+// ~10 firings, so the digest lands every week and a half rather than weekly;
+// raise BATCH toward the subrequest cap or fire the cron twice a day to
+// tighten that up.
 //
 //   scan   — checks the next BATCH feeds. When the cursor wraps, every feed
 //            has been probed exactly once and some fraction will have failed.
@@ -29,12 +33,23 @@
 // taking /v1/rss, /v1/stocks and /v1/artemis down with it. This is a weekly
 // nice-to-have; it must not be able to break the endpoints the site depends on.
 
+import { feedProblem } from "./feed-health.mjs";
+
 const STATE_KEY = "curate:state";
 const STATIONS_URL = "https://happening-now.net/data/local-stations.json";
-const BATCH = 40;              // + 1 subrequest for the stations file
+const TOPICS_URL = "https://happening-now.net/data/topic-sources.json";
+const BATCH = 40;              // + 2 subrequests for the two catalog files
 const FROM = "digest@happening-now.net";
 const TIMEOUT_MS = 15000;
 
+// Returns "" when the feed is healthy, or a short reason why it isn't.
+//
+// This used to return an item count, which asked the wrong question. A feed can
+// serve a hundred valid <item> elements and still render nothing, because the
+// browser parses with DOMParser and one XML error voids the whole document.
+// canarymedia.com and lwlies.com were both broken on the live site for weeks
+// while this sweep reported them healthy every single night. feed-health.js
+// applies the same repairs the browser does and then judges what's left.
 async function probe(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -44,23 +59,31 @@ async function probe(url) {
       cf: { cacheTtl: 0 },
       headers: { "User-Agent": "happening-now-curator/1.0 (+https://happening-now.net)" },
     });
-    if (!res.ok) return 0;
-    const text = await res.text();
-    return (text.match(/<(item|entry)[\s>]/g) || []).length;
-  } catch {
-    return 0;
+    if (!res.ok) return `HTTP ${res.status}`;
+    return feedProblem(await res.text());
+  } catch (err) {
+    return err?.name === "AbortError" ? "timeout" : "unreachable";
   } finally {
     clearTimeout(timer);
   }
 }
 
-function flatten(states) {
+// Both catalogs flattened into one list. Topic feeds rot exactly like the
+// geographic ones and were previously swept by nothing at all — the Climate,
+// Tech, Screen, Business and Food tabs each lost a source with no alert.
+// `state: "topic"` matches how scripts/check-feeds.mjs labels them.
+function flatten(states, topics) {
   const out = [];
-  for (const [state, block] of Object.entries(states)) {
+  for (const [state, block] of Object.entries(states || {})) {
     for (const [place, node] of Object.entries(block)) {
       for (const e of node.entries || []) {
-        out.push({ state, place, name: e.name, rss: e.rss });
+        out.push({ state, place: place === "_state" ? "(statewide)" : place, name: e.name, rss: e.rss });
       }
+    }
+  }
+  for (const [id, topic] of Object.entries(topics || {})) {
+    for (const e of topic.entries || []) {
+      out.push({ state: "topic", place: id, name: e.name, rss: e.rss });
     }
   }
   // Sorted so the cursor stays meaningful across runs even as the list grows.
@@ -69,20 +92,28 @@ function flatten(states) {
 
 function buildReport(findings, total) {
   const rows = findings.map(f =>
-    `<tr><td style="padding:6px 10px;border-top:1px solid #ddd">${f.state}/${f.place}</td>
+    `<tr><td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.state === "topic" ? `topic · ${f.place}` : `${f.state}/${f.place}`)}</td>
          <td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.name)}</td>
+         <td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.problem || "no items")}</td>
          <td style="padding:6px 10px;border-top:1px solid #ddd"><a href="${escapeHtml(f.rss)}">${escapeHtml(f.rss)}</a></td></tr>`).join("");
-  const html = `<div style="max-width:760px;font:14px system-ui;color:#111">
-    <h1 style="font-size:18px">Happening Now — weekly feed digest</h1>
-    <p style="color:#555">${total} feeds checked · <b>${findings.length} not returning items</b></p>
+  const html = `<div style="max-width:900px;font:14px system-ui;color:#111">
+    <h1 style="font-size:18px">Happening Now — feed digest</h1>
+    <p style="color:#555">${total} feeds checked · <b>${findings.length} not usable on the site</b></p>
     ${findings.length ? `<table style="border-collapse:collapse;width:100%;font:13px system-ui">
-      <tr><th align="left" style="padding:6px 10px;background:#f3f4f6">Place</th>
+      <tr><th align="left" style="padding:6px 10px;background:#f3f4f6">Where</th>
           <th align="left" style="padding:6px 10px;background:#f3f4f6">Source</th>
+          <th align="left" style="padding:6px 10px;background:#f3f4f6">Problem</th>
           <th align="left" style="padding:6px 10px;background:#f3f4f6">Feed</th></tr>${rows}</table>
       <p>Each of these failed on two separate days, at least a day apart — most one-day platform
       hiccups are already filtered out. Still worth a quick eyeball before acting, since a
-      multi-day outage can happen too. To fix: run <code>npm run curate</code> locally, which
-      also hunts the outlet's own site for a replacement feed and proposes new Patch coverage.</p>`
+      multi-day outage can happen too.</p>
+      <p>"Problem" is what a browser would hit, not just an item count: a feed whose XML won't
+      parse renders nothing even when it looks full of items.</p>
+      <p>To fix a <b>place</b> row, run <code>npm run curate</code> locally — it hunts the
+      outlet's own site for a replacement feed and proposes new Patch coverage. It only covers
+      places; a <b>topic</b> row needs a replacement picked by hand into
+      <code>data/topic-sources.json</code>. Either way finish with
+      <code>npm run check-feeds</code>.</p>`
     : `<p>Everything is returning items. Nothing to do.</p>`}
     <p style="color:#777;font-size:12px">Nothing has been changed automatically.</p></div>`;
   return { subject: `Happening Now: ${findings.length ? `${findings.length} feed(s) need attention` : "all feeds healthy"}`, html };
@@ -122,7 +153,8 @@ async function runVerifyPhase(env, state) {
 
   const stillDead = [];
   for (const f of slice) {
-    if (await probe(f.rss) === 0) stillDead.push(f);
+    const problem = await probe(f.rss);
+    if (problem) stillDead.push({ ...f, problem });
   }
 
   const confirmed = [...(state.confirmed || []), ...stillDead];
@@ -146,9 +178,13 @@ export async function runCurationSweep(env) {
 
   if (state.phase === "verify") return runVerifyPhase(env, state);
 
-  const res = await fetch(STATIONS_URL, { cf: { cacheTtl: 0 } });
-  if (!res.ok) return { error: `stations fetch ${res.status}` };
-  const feeds = flatten((await res.json()).states);
+  const [stationsRes, topicsRes] = await Promise.all([
+    fetch(STATIONS_URL, { cf: { cacheTtl: 0 } }),
+    fetch(TOPICS_URL, { cf: { cacheTtl: 0 } }),
+  ]);
+  if (!stationsRes.ok) return { error: `stations fetch ${stationsRes.status}` };
+  if (!topicsRes.ok) return { error: `topics fetch ${topicsRes.status}` };
+  const feeds = flatten((await stationsRes.json()).states, (await topicsRes.json()).topics);
 
   // The list changes between runs; if it shrank past the cursor, start over.
   const start = state.cursor >= feeds.length ? 0 : state.cursor;
@@ -156,7 +192,8 @@ export async function runCurationSweep(env) {
 
   const dead = [];
   for (const f of slice) {
-    if (await probe(f.rss) === 0) dead.push(f);
+    const problem = await probe(f.rss);
+    if (problem) dead.push({ ...f, problem });
   }
 
   const findings = [...state.findings, ...dead];

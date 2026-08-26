@@ -23,6 +23,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkFeedText } from "../cloudflare-sync-worker/src/feed-health.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROXY = "https://happening-now.net/v1/rss/raw?url=";
@@ -57,7 +58,9 @@ async function viaProxy(url) {
   }
 }
 
-const itemCount = xml => (xml.match(/<(item|entry)[\s>]/g) || []).length;
+// Same verdict as the digest and check-feeds: a candidate that won't parse is
+// no use as a replacement, however many <item> elements it appears to hold.
+const itemCount = xml => { const r = checkFeedText(xml); return r.ok ? r.items : 0; };
 
 async function pool(items, worker, limit = CONCURRENCY) {
   const out = [];

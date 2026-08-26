@@ -12,9 +12,16 @@
 //
 // It deliberately reports rather than edits. Removing a source is an editorial
 // call, and a feed can 500 for a day without being dead.
+//
+// "Dead" here means "renders nothing on the site", not "has no <item> tags".
+// A feed whose XML won't parse shows zero headlines while an item count calls
+// it healthy; that gap hid two broken sources for weeks. See feed-health.js.
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+// Same verdict the nightly digest email uses, so the two can't disagree about
+// what "dead" means. Counting <item> is not the question — see feed-health.js.
+import { checkFeedText } from "../cloudflare-sync-worker/src/feed-health.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROXY = "https://happening-now.net/v1/rss/raw?url=";
@@ -28,10 +35,9 @@ async function check(entry) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(PROXY + encodeURIComponent(entry.rss), { signal: controller.signal });
-    const text = await res.text();
-    // Atom uses <entry>, RSS uses <item>; either counts as alive.
-    const items = (text.match(/<(item|entry)[\s>]/g) || []).length;
-    return { ...entry, items, ok: items > 0 };
+    if (!res.ok) return { ...entry, items: 0, ok: false, error: `HTTP ${res.status}` };
+    const { ok, problem, items } = checkFeedText(await res.text());
+    return { ...entry, items, ok, error: problem || undefined };
   } catch (err) {
     return { ...entry, items: 0, ok: false, error: err.name === "AbortError" ? "timeout" : err.message };
   } finally {

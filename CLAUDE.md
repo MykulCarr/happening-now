@@ -77,6 +77,24 @@ Two traps that both produce confident, wrong answers:
   but 403s from the Worker, that's the cause — replace the source rather than retry.
 - **Prefer publisher-direct RSS over Google News query URLs** — those proved
   unreliable and were removed in `40e537f`.
+- **The RSS cache-buster is named `_hn`, and it must never collide with a real
+  feed parameter.** It used to be `t`. TownNews search feeds — the whole
+  `/search/?f=rss&t=article&c=news` family, nine papers and stations in
+  `data/local-stations.json` — use `t` for *type*, so `&t=<timestamp>` overrode
+  `t=article` and the endpoint answered with a valid, completely empty feed.
+  Nothing errored; Madison, St. Louis, Manchester, Wilmington and Pittsburgh
+  just quietly showed no local news. Separately, some hosts reject *any*
+  unrecognised param (Vox Media — The Verge and Eater — plus Business Insider
+  and hnrss.org, which 404/502), so `fetchRssItems` retries the untouched URL
+  when the busted one fails and known offenders are listed in
+  `NO_CACHE_BUST_HOSTS` to skip the wasted round trip.
+- **`/v1/rss/raw` must answer `application/xml`, never the upstream
+  Content-Type.** canarymedia.com serves a perfectly valid feed as `text/html`;
+  echoing that label made our *own* Cloudflare zone treat the proxied response
+  as a web page and append its tracking beacon after `</rss>`. That trailing
+  junk is not well-formed XML, so browser DOMParser rejected the whole document
+  and the Climate tab rendered nothing — while every curl-and-grep check
+  reported 100 healthy items.
 - **CSP lives in `_headers`.** Any new third-party endpoint needs adding there or
   it'll be blocked in production but fine locally.
 - **Never write a bare `/v1/...` path.** Every first-party route must be built
@@ -246,6 +264,26 @@ serving nothing at all. Nothing surfaced it; the page just quietly showed less.
 
 It reports rather than edits, deliberately: dropping a source is an editorial
 call, and a feed can 500 for a day without being dead.
+
+**Counting `<item>` is not the same question as "does it render".** The browser
+parses with `DOMParser`, and one XML error voids the *whole* document — so a
+feed can serve a hundred valid items and still show zero headlines. That gap
+hid three live breakages at once (canarymedia.com, lwlies.com, and ktla.com,
+whose channel title contains a bare `&` — that one blanked all of Los Angeles).
+`cloudflare-sync-worker/src/feed-health.mjs` is the single definition of a
+usable feed, shared by `check-feeds`, `curate-report` and the digest email so
+they can't disagree. It mirrors the repairs `assets/common.js` applies before
+parsing — leading blank lines, junk after the closing root tag, bare
+ampersands, undeclared namespace prefixes — so anything the browser fixes is
+not reported, and anything it chokes on is. **Keep the two in step**;
+`common.js` is a browser IIFE with no exports, so the copy is deliberate.
+
+The digest email (`cloudflare-sync-worker/src/curate.js`) sweeps **both**
+catalogs. It used to check only `local-stations.json`, which is why five topic
+feeds rotted with nothing reporting it. At ~400 feeds and `BATCH = 40` a full
+sweep is ~10 daily firings, so the digest arrives every week and a half rather
+than weekly — raise `BATCH` toward the 50-subrequest cap or fire the cron twice
+a day to tighten that.
 
 After changing that file, regenerate the public list on `sources.html`:
 

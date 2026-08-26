@@ -1215,6 +1215,37 @@
     }));
   }
 
+  // Trim anything outside the XML document itself. Two real cases, both of
+  // which made DOMParser reject an otherwise perfect feed and return zero items
+  // with no error anywhere a curl-and-count check could see it:
+  //   - leading blank lines before `<?xml` (lwlies.com — a WordPress plugin
+  //     echoing newlines), which is "text declaration not at start of entity";
+  //   - anything after the closing `</rss>` / `</feed>`, which is "junk after
+  //     document element". Our own proxy no longer causes this (it labels every
+  //     response application/xml so the Cloudflare zone stops injecting its
+  //     beacon), but the third-party fallback proxy still can.
+  function trimFeedEnvelope(xmlText) {
+    const text = xmlText.replace(/^[\s\uFEFF]+/, "");
+    const close = text.lastIndexOf("</rss>") >= 0 ? "</rss>" : (text.lastIndexOf("</feed>") >= 0 ? "</feed>" : "");
+    if (!close) return text;
+    const end = text.lastIndexOf(close) + close.length;
+    return end < text.length ? text.slice(0, end) : text;
+  }
+
+  // Escape ampersands that aren't already an entity reference. A bare `&` is the
+  // single most common way a publisher breaks their own feed, and it is fatal:
+  // KTLA 5's channel title ("Latest News Headlines & Top Stories") made the
+  // whole Los Angeles feed unparseable, so that city rendered nothing at all
+  // while every item-counting check called the feed healthy. CDATA sections are
+  // left alone — `&` is legal inside them, and escaping there would put a
+  // visible "&amp;" into the headline text.
+  function escapeBareAmpersands(xmlText) {
+    return xmlText
+      .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
+      .map((part, i) => (i % 2 ? part : part.replace(/&(?![a-zA-Z][a-zA-Z0-9]*;|#\d+;|#x[0-9a-fA-F]+;)/g, "&amp;")))
+      .join("");
+  }
+
   // Inject missing xmlns declarations for namespace prefixes that show up in
   // element names but are never declared on the <rss>/<feed> root. Defensive
   // patch for malformed publisher RSS — e.g. Bridge Michigan's WordPress
@@ -1319,7 +1350,15 @@
       // which broke both the stocks "market news" and weather news widgets).
       const NO_CACHE_BUST_HOSTS = new Set([
         "www.nature.com", "nature.com",
-        "news.google.com"
+        "news.google.com",
+        // Vox Media (The Verge, Eater), Business Insider and hnrss.org answer
+        // 404/502 to *any* query param they don't recognise, so the buster made
+        // healthy feeds read as permanently dead. The retry below would recover
+        // them anyway; listing them here just skips the wasted round trip.
+        "www.theverge.com", "theverge.com",
+        "www.eater.com", "eater.com",
+        "www.businessinsider.com", "businessinsider.com",
+        "hnrss.org"
       ]);
       const skipCacheBust = (url) => {
         try { return NO_CACHE_BUST_HOSTS.has(new URL(url).host); }
@@ -1327,9 +1366,15 @@
       };
 
       for (let feedUrl of feedsToTry) {
+        // The buster is named `_hn`, not `t`. TownNews search feeds — the whole
+        // `/search/?f=rss&t=article&c=news` family, nine papers and stations in
+        // data/local-stations.json — use `t` for *type*, so appending `&t=<ts>`
+        // overrode `t=article` and the search returned a valid, completely empty
+        // feed. Nothing errored; those cities just quietly showed no news.
+        // Any new name must not collide with a real feed parameter.
         const bustUrl = skipCacheBust(feedUrl)
           ? feedUrl
-          : (feedUrl.includes("?") ? feedUrl + "&t=" + Date.now() : feedUrl + "?t=" + Date.now());
+          : (feedUrl.includes("?") ? feedUrl + "&_hn=" + Date.now() : feedUrl + "?_hn=" + Date.now());
         const proxiesToTry = getRssProxyFallbacksForFeed(feedUrl);
         const requestTimeoutMs = getRssRequestTimeoutMs(feedUrl);
 
@@ -1341,8 +1386,17 @@
           }
 
           try {
-            const proxied = proxyBase + encodeURIComponent(bustUrl);
-            const res = await fetch(proxied, { cache: "no-store", signal: timeoutSignal(requestTimeoutMs) });
+            // Cache-busted URL first, then the untouched one. A publisher that
+            // rejects unknown query params otherwise looks dead forever, and
+            // the failure is invisible — it needs someone to notice a tab has
+            // gone quiet. Falling back costs at most 120s of staleness (the
+            // proxy's own cache TTL) on a page that refreshes every 10 minutes.
+            const urlAttempts = bustUrl === feedUrl ? [feedUrl] : [bustUrl, feedUrl];
+            let res;
+            for (const attemptUrl of urlAttempts) {
+              res = await fetch(proxyBase + encodeURIComponent(attemptUrl), { cache: "no-store", signal: timeoutSignal(requestTimeoutMs) });
+              if (res.ok) break;
+            }
 
             if (!res.ok) {
               throw new Error(`Failed to fetch RSS feed: ${res.status} ${res.statusText}`);
@@ -1355,7 +1409,7 @@
             // declaring xmlns:media on the <rss> root — that's malformed XML
             // and browser DOMParser rejects the whole document, returning
             // zero items. Inject the standard namespace if it's missing.
-            const repairedXmlText = repairFeedNamespaces(xmlText);
+            const repairedXmlText = repairFeedNamespaces(escapeBareAmpersands(trimFeedEnvelope(xmlText)));
             const xml = new DOMParser().parseFromString(repairedXmlText, "text/xml");
 
             const parseError = xml.querySelector("parsererror");

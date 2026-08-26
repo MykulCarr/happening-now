@@ -20,9 +20,10 @@
     "ALLOWED_ORIGINS": "https://happening-now.net,http://localhost:8080,http://127.0.0.1:8080"
   },
 
-  // Daily sweep of the curated feed list. Each firing checks a slice and stores
-  // its position in KV; the digest email goes out when the sweep wraps, which
-  // works out to roughly weekly. See src/curate.js.
+  // Daily sweep of both curated feed lists (places + topic tabs). Each firing
+  // checks a slice and stores its position in KV; the digest email goes out
+  // when the sweep wraps, which at ~400 feeds works out to every week and a
+  // half. See src/curate.js for the batching and the two-phase verify.
   "triggers": {
     "crons": ["0 13 * * *"]
   },
