@@ -174,7 +174,27 @@
     dxy: "US Dollar Index DXY news",
     eurusd: "EUR USD forex news",
     bitcoin: "Bitcoin market news",
-    ethereum: "Ethereum market news"
+    ethereum: "Ethereum market news",
+    // Everything else falls back to "<NAME> market news", which reads fine for
+    // the likes of PLATINUM or NIFTY 50. These are the ones where the tile name
+    // alone would fetch the wrong thing.
+    vxn: "CBOE VXN Nasdaq volatility index news",
+    sti: "Straits Times Index news",
+    setindex: "Thailand SET Index news",
+    ta125: "Tel Aviv 125 index news",
+    gasoline: "RBOB gasoline futures news",
+    oats: "oat futures market news",
+    us3m: "US 3-month Treasury bill yield news",
+    us5y: "US 5-year Treasury yield news",
+    us30y: "US 30-year Treasury yield news",
+    gbpusd: "GBP USD forex news",
+    audusd: "AUD USD forex news",
+    usdjpy: "USD JPY forex news",
+    usdchf: "USD CHF forex news",
+    usdcad: "USD CAD forex news",
+    usdcny: "USD CNY forex news",
+    bnb: "BNB Binance Coin news",
+    tron: "TRON TRX crypto news"
   };
 
   const INDEX_DIRECT_SOURCE_URLS = {
@@ -229,6 +249,19 @@
     ethereum: "CoinDesk"
   };
 
+  // Per-key entries above cover the original two dozen tiles; the rest of the
+  // catalog lands here by group. Before this existed a key with no entry fell
+  // through to Google News while the badge still read "Direct Source" — with a
+  // hundred tiles that would have been the common case rather than the corner.
+  const GROUP_DIRECT_SOURCES = {
+    "us-indices": ["https://www.reuters.com/markets/us/", "Reuters"],
+    "global-indices": ["https://www.reuters.com/markets/global-market-report/", "Reuters"],
+    commodities: ["https://www.bloomberg.com/markets/commodities", "Bloomberg"],
+    rates: ["https://www.reuters.com/markets/rates-bonds/", "Reuters"],
+    crypto: ["https://www.coindesk.com/markets/", "CoinDesk"],
+    currencies: ["https://www.reuters.com/markets/currencies/", "Reuters"]
+  };
+
   const marketIndexCatalog = Array.isArray(MARKET_INDEX_DEFS) && MARKET_INDEX_DEFS.length
     ? MARKET_INDEX_DEFS
     : [
@@ -238,10 +271,18 @@
     ];
 
 
+  // Only where convention beats magnitude: yields are quoted to three places
+  // and FX majors to four, whatever their size.
   const INDEX_VALUE_DECIMALS = {
+    us3m: 3,
+    us5y: 3,
     us10y: 3,
+    us30y: 3,
+    natgas: 3,
     eurusd: 4,
-    natgas: 3
+    gbpusd: 4,
+    audusd: 4,
+    usdchf: 4
   };
   
   let pins = loadPins();
@@ -474,11 +515,14 @@
       .map((key) => byKey.get(key))
       .filter(Boolean);
 
+    // Catalog entries the saved selection has never heard of. If the user has
+    // made any choice at all, a key they've never seen stays off — the catalog
+    // grew to a hundred instruments, and defaulting the unknown ones to visible
+    // would bury a six-tile board under ninety-five uninvited ones.
     const fallbackVisible = marketIndexCatalog.filter((idx) => {
       if(seenKeys.has(idx.key)) return false;
       if(isLegacySelection) return false;
-      if(visibleByKey.size === 0) return true;
-      return visibleByKey.get(idx.key) !== false;
+      return visibleByKey.size === 0;
     });
 
     return [...orderedVisible, ...fallbackVisible];
@@ -516,8 +560,20 @@
     });
   }
 
+  // Two decimals suits an index level or a dollar price, but it renders Shiba
+  // Inu as "0.00" and the Kuwaiti dinar as "0.31". Small numbers get the extra
+  // places they need to say anything at all.
+  function indexDecimals(index){
+    if(Number.isFinite(INDEX_VALUE_DECIMALS[index.key])) return INDEX_VALUE_DECIMALS[index.key];
+    const value = Math.abs(Number(index.value));
+    if(value >= 1) return 2;
+    if(value >= 0.01) return 4;
+    if(value >= 0.0001) return 6;
+    return 8;
+  }
+
   function formatIndexValue(index){
-    const decimals = Number.isFinite(INDEX_VALUE_DECIMALS[index.key]) ? INDEX_VALUE_DECIMALS[index.key] : 2;
+    const decimals = indexDecimals(index);
     return Number(index.value).toLocaleString("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
@@ -538,25 +594,28 @@
 
   function indexTileHtml(idx, now){
     const hasData = Number.isFinite(idx.value) && idx.value > 0;
+    // A move that rounds away to nothing is flat, not down. Currencies pegged
+    // to the dollar drift by a fraction of a basis point, and signing that as
+    // "▼ -0.00%" reads like a fall rather than a peg holding.
+    const isFlat = Number.isFinite(idx.changePercent) && Math.abs(idx.changePercent) < 0.005;
     const isPositive = hasData ? idx.change >= 0 : true;
-    const cls = isPositive ? "positive" : "negative";
+    const cls = isFlat ? "" : isPositive ? "positive" : "negative";
     const sign = isPositive ? "+" : "";
-    // getMarketSessionStatus falls through to CLOSED for keys it doesn't know,
-    // which would stamp every currency tile "CLOSED" — wrong for a daily
-    // reference rate that has no trading session at all.
-    const session = idx.group === "currencies" ? null : getMarketSessionStatus(idx.key, now);
+    const session = getMarketSessionStatus(idx, now);
     const newsUrl = getIndexNewsUrl(idx);
 
     const valueHtml = hasData ? formatIndexValue(idx) : `<span class="indexUnavailable">—</span>`;
 
-    // Currencies come from a feed that publishes once a day, so they carry no
-    // change figure. Showing a flat 0.00% would read as "the market didn't
-    // move" rather than "this isn't measured here" — the label goes instead.
+    // The muted branch is for a quote that arrived without a previous close, so
+    // there is no move to state. Showing a flat 0.00% would read as "the market
+    // didn't move" rather than "this isn't measured here".
     let changeHtml;
     if(!hasData){
       changeHtml = `<span class="indexUnavailable">Unavailable</span>`;
     } else if(idx.changePercent == null || idx.change == null){
-      changeHtml = `<span class="indexChangeMuted">${escapeHtml(idx.label || "daily rate")}</span>`;
+      changeHtml = `<span class="indexChangeMuted">${escapeHtml(idx.label || "no change data")}</span>`;
+    } else if(isFlat){
+      changeHtml = `<span class="indexChangeMuted">0.00%</span>`;
     } else {
       const arrow = isPositive ? "▲" : "▼";
       changeHtml = `${arrow} ${sign}${idx.changePercent.toFixed(2)}%`;
@@ -569,8 +628,13 @@
       ? `<span class="indexDot ${session.tone}" role="img" aria-label="${escapeHtml(session.label)}" title="${escapeHtml(session.label)}"></span>`
       : "";
 
+    // A currency tile reads "USD/SEK"; its friendly name used to sit where the
+    // change figure now goes, so it moves into the title and the label a screen
+    // reader announces rather than being dropped.
+    const fullName = idx.label ? `${idx.name} — ${idx.label}` : idx.name;
+
     return `
-      <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(idx.name)} news">
+      <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" title="${escapeHtml(fullName)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(fullName)} news">
         <div class="indexTopRow">
           <div class="indexName">${escapeHtml(idx.name)}</div>
           ${dotHtml}
@@ -584,7 +648,12 @@
   }
 
   // World currencies ride along in the same snapshot, so showing them costs no
-  // extra request. cfg.currencies picks which of the two dozen appear.
+  // extra request. cfg.currencies picks which of the four dozen appear.
+  //
+  // They used to arrive from a once-a-day rate feed and were pinned to a null
+  // change on purpose. They're live FX quotes now, so the real move comes
+  // through like any other tile — the null coalescing below is just the guard
+  // for a symbol the upstream answered without a previous close.
   function getCurrencyTiles(snapshot){
     const wanted = Array.isArray(cfg.currencies) ? cfg.currencies : [];
     if(!wanted.length) return [];
@@ -597,9 +666,10 @@
         name: item.name,
         label: item.label,
         group: "currencies",
+        region: "Global",
         value: Number(item.price),
-        change: null,
-        changePercent: null,
+        change: Number.isFinite(Number(item.change)) ? Number(item.change) : null,
+        changePercent: Number.isFinite(Number(item.changePercent)) ? Number(item.changePercent) : null,
       }));
   }
 
@@ -668,23 +738,29 @@
 
   function getIndexNewsUrl(indexDef){
     const key = String(indexDef?.key || "").toLowerCase();
+    const group = String(indexDef?.group || "us-indices");
     const sourceMode = cfg.marketNewsSourceMode === "direct" ? "direct" : "google";
 
     if(sourceMode === "direct"){
-      const directUrl = INDEX_DIRECT_SOURCE_URLS[key];
+      const directUrl = INDEX_DIRECT_SOURCE_URLS[key] || GROUP_DIRECT_SOURCES[group]?.[0];
       if(directUrl) return directUrl;
     }
 
     const fallbackName = String(indexDef?.name || "market");
-    const query = INDEX_NEWS_QUERY_OVERRIDES[key] || `${fallbackName} market news`;
+    // A currency tile is named "USD/SEK"; searching that finds a rate table,
+    // not news. Its friendly label ("Swedish Krona") reads far better.
+    const query = INDEX_NEWS_QUERY_OVERRIDES[key]
+      || (group === "currencies" && indexDef?.label ? `${indexDef.label} exchange rate news` : null)
+      || `${fallbackName} market news`;
     return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
   }
 
   function getIndexSourceLabel(indexDef){
     const key = String(indexDef?.key || "").toLowerCase();
+    const group = String(indexDef?.group || "us-indices");
     const sourceMode = cfg.marketNewsSourceMode === "direct" ? "direct" : "google";
     if(sourceMode === "direct"){
-      return INDEX_DIRECT_SOURCE_LABELS[key] || "Direct Source";
+      return INDEX_DIRECT_SOURCE_LABELS[key] || GROUP_DIRECT_SOURCES[group]?.[1] || "Direct Source";
     }
     return "Google News";
   }
@@ -750,56 +826,80 @@
     return { tone: "open", label: "OPEN" };
   }
 
-  function getMarketSessionStatus(indexKey, now = new Date()){
-    const key = String(indexKey || "").toLowerCase();
+  // Trading hours per catalog region, in that exchange's own local time.
+  // `lunch` is the midday break some Asian exchanges take; `weekend` is only
+  // set where it isn't Saturday/Sunday — Tel Aviv and Cairo trade Sunday to
+  // Thursday, so assuming Sat/Sun would show them open on their day off and
+  // closed on a normal trading Sunday.
+  //
+  // Keys are the `region` values in MARKET_INDEX_DEFS (assets/common.js). A
+  // region with no row here reads CLOSED around the clock, which is the visible
+  // symptom of adding an index without adding its exchange.
+  const EXCHANGE_HOURS = {
+    "United Kingdom": { tz: "Europe/London", open: "08:00", close: "16:30" },
+    "Germany": { tz: "Europe/Berlin", open: "09:00", close: "17:30" },
+    "France": { tz: "Europe/Paris", open: "09:00", close: "17:30" },
+    "Spain": { tz: "Europe/Madrid", open: "09:00", close: "17:30" },
+    "Italy": { tz: "Europe/Rome", open: "09:00", close: "17:30" },
+    "Switzerland": { tz: "Europe/Zurich", open: "09:00", close: "17:30" },
+    "Netherlands": { tz: "Europe/Amsterdam", open: "09:00", close: "17:30" },
+    "Belgium": { tz: "Europe/Brussels", open: "09:00", close: "17:30" },
+    "Sweden": { tz: "Europe/Stockholm", open: "09:00", close: "17:30" },
+    "Euro Area": { tz: "Europe/Paris", open: "09:00", close: "17:30" },
+    "Canada": { tz: "America/Toronto", open: "09:30", close: "16:00" },
+    "Australia": { tz: "Australia/Sydney", open: "10:00", close: "16:00" },
+    "New Zealand": { tz: "Pacific/Auckland", open: "10:00", close: "16:45" },
+    "Japan": { tz: "Asia/Tokyo", open: "09:00", close: "15:30", lunch: ["11:30", "12:30"] },
+    "Hong Kong": { tz: "Asia/Hong_Kong", open: "09:30", close: "16:00", lunch: ["12:00", "13:00"] },
+    "South Korea": { tz: "Asia/Seoul", open: "09:00", close: "15:30" },
+    "China": { tz: "Asia/Shanghai", open: "09:30", close: "15:00", lunch: ["11:30", "13:00"] },
+    "Taiwan": { tz: "Asia/Taipei", open: "09:00", close: "13:30" },
+    "Singapore": { tz: "Asia/Singapore", open: "09:00", close: "17:00", lunch: ["12:00", "13:00"] },
+    "Indonesia": { tz: "Asia/Jakarta", open: "09:00", close: "15:50", lunch: ["11:30", "13:30"] },
+    "Malaysia": { tz: "Asia/Kuala_Lumpur", open: "09:00", close: "17:00", lunch: ["12:30", "14:30"] },
+    "Thailand": { tz: "Asia/Bangkok", open: "10:00", close: "16:30", lunch: ["12:30", "14:30"] },
+    "India": { tz: "Asia/Kolkata", open: "09:15", close: "15:30" },
+    "Brazil": { tz: "America/Sao_Paulo", open: "10:00", close: "17:55" },
+    "Mexico": { tz: "America/Mexico_City", open: "08:30", close: "15:00" },
+    "Argentina": { tz: "America/Argentina/Buenos_Aires", open: "11:00", close: "17:00" },
+    "Israel": { tz: "Asia/Jerusalem", open: "10:00", close: "17:15", weekend: ["Fri", "Sat"] },
+    "Egypt": { tz: "Africa/Cairo", open: "10:00", close: "14:30", weekend: ["Fri", "Sat"] },
+    "South Africa": { tz: "Africa/Johannesburg", open: "09:00", close: "17:00" }
+  };
 
-    if(["dow", "sp500", "nasdaq", "russell2000", "sp400", "sp600", "microcap", "vix"].includes(key)){
-      return getUsEquitySession(now);
-    }
+  function hm(text){
+    const [hours, minutes] = String(text).split(":");
+    return Number(hours) * 60 + Number(minutes);
+  }
 
-    if(key === "ftse100"){
-      const uk = getClockParts("Europe/London", now);
-      if(isWeekendDay(uk.day)) return { tone: "closed", label: "CLOSED" };
-      return (uk.minutes >= 480 && uk.minutes < 990)
-        ? { tone: "open", label: "OPEN" }
-        : { tone: "closed", label: "CLOSED" };
-    }
+  function getExchangeSession(region, now){
+    const hours = EXCHANGE_HOURS[region];
+    if(!hours) return { tone: "closed", label: "CLOSED" };
 
-    if(key === "dax"){
-      const eu = getClockParts("Europe/Berlin", now);
-      if(isWeekendDay(eu.day)) return { tone: "closed", label: "CLOSED" };
-      return (eu.minutes >= 540 && eu.minutes < 1050)
-        ? { tone: "open", label: "OPEN" }
-        : { tone: "closed", label: "CLOSED" };
-    }
-
-    if(key === "nikkei225"){
-      const jp = getClockParts("Asia/Tokyo", now);
-      if(isWeekendDay(jp.day)) return { tone: "closed", label: "CLOSED" };
-      if(jp.minutes >= 540 && jp.minutes < 690) return { tone: "open", label: "OPEN" };
-      if(jp.minutes >= 690 && jp.minutes < 750) return { tone: "paused", label: "LUNCH" };
-      if(jp.minutes >= 750 && jp.minutes < 900) return { tone: "open", label: "OPEN" };
+    const local = getClockParts(hours.tz, now);
+    const weekend = hours.weekend || ["Sat", "Sun"];
+    if(weekend.includes(local.day)) return { tone: "closed", label: "CLOSED" };
+    if(local.minutes < hm(hours.open) || local.minutes >= hm(hours.close)){
       return { tone: "closed", label: "CLOSED" };
     }
-
-    if(key === "hangseng"){
-      const hk = getClockParts("Asia/Hong_Kong", now);
-      if(isWeekendDay(hk.day)) return { tone: "closed", label: "CLOSED" };
-      if(hk.minutes >= 570 && hk.minutes < 720) return { tone: "open", label: "OPEN" };
-      if(hk.minutes >= 720 && hk.minutes < 780) return { tone: "paused", label: "LUNCH" };
-      if(hk.minutes >= 780 && hk.minutes < 960) return { tone: "open", label: "OPEN" };
-      return { tone: "closed", label: "CLOSED" };
+    if(hours.lunch && local.minutes >= hm(hours.lunch[0]) && local.minutes < hm(hours.lunch[1])){
+      return { tone: "paused", label: "LUNCH" };
     }
+    return { tone: "open", label: "OPEN" };
+  }
 
-    if(["gold", "silver", "copper", "crudeoil", "brent", "natgas", "us10y", "dxy", "eurusd"].includes(key)){
-      return getTwentyFourFiveSession(now);
-    }
-
-    if(["bitcoin", "ethereum"].includes(key)){
-      return { tone: "open", label: "24/7" };
-    }
-
-    return { tone: "closed", label: "CLOSED" };
+  // Group first, then region: the group says what kind of clock an instrument
+  // runs on, and only listed equities need a specific exchange. That keeps the
+  // US Treasury tiles on the 24/5 futures clock rather than NYSE hours, even
+  // though the catalog files them under the United States.
+  function getMarketSessionStatus(index, now = new Date()){
+    const group = String(index?.group || "us-indices");
+    if(group === "crypto") return { tone: "open", label: "24/7" };
+    if(group === "us-indices") return getUsEquitySession(now);
+    if(group === "global-indices") return getExchangeSession(index?.region, now);
+    // Commodities, rates and FX — including the currency tiles, which trade
+    // round the clock on weekdays now that they carry a live quote.
+    return getTwentyFourFiveSession(now);
   }
 
   // ===== PIN MANAGEMENT =====

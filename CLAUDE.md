@@ -155,14 +155,50 @@ Two different shapes, for two different problems:
   5-minute freshness window instead. Two people holding NVDA cost one upstream
   call between them, and the browser makes one request rather than one per row.
 
-Both read Yahoo's v8 chart endpoint through the same `fetchYahooChartQuote`, and
-both need the browser User-Agent — Yahoo answers a bare API client from a Worker
-IP with an error page rather than JSON.
+Both need the browser User-Agent — Yahoo answers a bare API client from a Worker
+IP with an error page rather than JSON. They parse the same `meta` block through
+the same `quoteFromMeta`, but they fetch differently:
+
+- The board uses Yahoo's **v7 `spark`** endpoint, which takes many symbols per
+  call and needs no crumb. **The cap is exactly 20 symbols — 21 answers 400**,
+  verified from a Worker IP. Raising `SPARK_BATCH` past 20 doesn't fail loudly;
+  it silently drops a whole batch of twenty tiles. 149 symbols is 8 calls, which
+  is what makes the board affordable — a Worker request may only make 50
+  subrequests on the free plan, so one-call-per-symbol could never have grown
+  past ~45 tiles.
+- The watchlist stays on **v8 `chart`**, one symbol at a time, via the exported
+  `fetchYahooChartQuote`.
+
+**The board catalog lives in two files that must agree**: `INSTRUMENTS` in the
+Worker's `markets.js` (which owns the Yahoo symbol) and `MARKET_INDEX_DEFS` in
+`assets/common.js` (which owns `type`/`region` for the Settings picker and the
+session dot). A key in one and not the other is a permanently empty tile, or a
+fetched quote nothing renders. Every `region` on a `global-indices` entry also
+needs a row in `EXCHANGE_HOURS` in `assets/stocks.js`, or its dot reads CLOSED
+around the clock.
+
+**New catalog keys must default to hidden.** Both `normalizeConfig` (common.js)
+and `getConfiguredIndices` (stocks.js) append keys a saved config has never seen;
+both used to append them **visible**. That was harmless when the catalog gained
+one index at a time — going from 23 to 101 would have buried every existing
+six-tile board under ninety-five uninvited ones.
+
+**Currencies are live FX quotes, not reference rates.** They were on
+open.er-api.com, whose free tier publishes once a day, which is why they used to
+render a "daily rate" label where every other tile shows a percentage. They're
+Yahoo `USD<code>=X` symbols now, batched with everything else, so they carry a
+real move and a 24/5 session dot. Verify a new code through the proxy before
+adding it, the same way feeds are checked:
+
+```bash
+curl -s 'https://happening-now.net/v1/rss/raw?url=<urlencoded yahoo spark url>' | head -c 300
+```
 
 **Don't put Finnhub back at the front of the watchlist.** `fetchYahooBatchQuotes`
-was a stub returning `null` (Yahoo's *v7* batch endpoint needs an authenticated
-crumb, so it was disabled), which sent every symbol down the browser fallback
-chain starting at Finnhub — 60 calls a minute shared by all visitors. The four
+was a stub returning `null` (Yahoo's v7 *quote* endpoint needs an authenticated
+crumb — note that v7 *spark*, used by the board, does not), which sent every
+symbol down the browser fallback chain starting at Finnhub — 60 calls a minute
+shared by all visitors. The four
 default symbols alone drew 429s on a single page load. `/v1/stocks/quote`
 (singular, Finnhub-backed) is still there as the per-symbol fallback for whatever
 the batch misses; that's the only job it should have.

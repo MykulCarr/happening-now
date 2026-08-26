@@ -107,11 +107,12 @@
   // Shared market-strip catalog used by Stocks and Settings.
   // value/change/changePercent are populated at runtime from live quotes; no defaults here
   // so that failed fetches render "—" rather than convincing-looking stale numbers.
-  // Shown on a first visit. The other indices stay one tick away in Settings —
+  // Shown on a first visit. The other hundred stay one tick away in Settings —
   // this is about what a new visitor meets, not what is available. All 23 were
-  // visible by default, and each tile costs a quote lookup: a cold stocks page
-  // fired 39 of them, well past Finnhub's 60/min free tier, so the page was
-  // rate-limiting itself before anyone touched it.
+  // visible by default, and each tile then cost its own quote lookup: a cold
+  // stocks page fired 39 of them, well past Finnhub's 60/min free tier, so the
+  // page was rate-limiting itself before anyone touched it. Tiles are free now
+  // (one cached snapshot covers the lot), but a readable board still isn't.
   const DEFAULT_VISIBLE_INDICES = new Set([
     "dow", "sp500", "nasdaq", "russell2000", "gold", "bitcoin",
   ]);
@@ -124,31 +125,119 @@
   ];
 
   // `group` drives how the markets board arranges its tiles, and matches the
-  // group each item carries in /v1/markets/snapshot.
+  // group each item carries in /v1/markets/snapshot. `type` and `region` are
+  // what Settings sorts the picker by, and `region` is also how stocks.js finds
+  // the exchange hours behind each tile's session dot — so an entry with a new
+  // region needs a matching row in EXCHANGE_HOURS there, or it reads "CLOSED".
+  //
+  // Keys and names must stay in step with INSTRUMENTS in the Worker's
+  // markets.js; a key here with no counterpart there is a permanently empty tile.
   const MARKET_INDEX_DEFS = [
-    { key: "dow", name: "DOW", group: "us-indices" },
-    { key: "sp500", name: "S&P 500", group: "us-indices" },
-    { key: "nasdaq", name: "NASDAQ", group: "us-indices" },
-    { key: "russell2000", name: "RUSSELL 2000", group: "us-indices" },
-    { key: "sp400", name: "S&P MIDCAP 400", group: "us-indices" },
-    { key: "sp600", name: "S&P SMALLCAP 600", group: "us-indices" },
-    { key: "microcap", name: "MICROCAP", group: "us-indices" },
-    { key: "vix", name: "VIX", group: "us-indices" },
-    { key: "ftse100", name: "FTSE 100", group: "global-indices" },
-    { key: "dax", name: "DAX", group: "global-indices" },
-    { key: "nikkei225", name: "NIKKEI 225", group: "global-indices" },
-    { key: "hangseng", name: "HANG SENG", group: "global-indices" },
-    { key: "gold", name: "GOLD", group: "commodities" },
-    { key: "silver", name: "SILVER", group: "commodities" },
-    { key: "copper", name: "COPPER", group: "commodities" },
-    { key: "crudeoil", name: "CRUDE OIL", group: "commodities" },
-    { key: "brent", name: "BRENT", group: "commodities" },
-    { key: "natgas", name: "NAT GAS", group: "commodities" },
-    { key: "us10y", name: "US 10Y", group: "rates" },
-    { key: "dxy", name: "DXY", group: "rates" },
-    { key: "eurusd", name: "EUR/USD", group: "rates" },
-    { key: "bitcoin", name: "BITCOIN", group: "crypto" },
-    { key: "ethereum", name: "ETHEREUM", group: "crypto" }
+    { key: "dow", name: "DOW", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "sp500", name: "S&P 500", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "nasdaq", name: "NASDAQ", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "nasdaq100", name: "NASDAQ 100", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "sp100", name: "S&P 100", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "nyse", name: "NYSE COMPOSITE", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "wilshire5000", name: "WILSHIRE 5000", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "russell1000", name: "RUSSELL 1000", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "russell2000", name: "RUSSELL 2000", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "russell3000", name: "RUSSELL 3000", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "sp400", name: "S&P MIDCAP 400", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "sp600", name: "S&P SMALLCAP 600", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "microcap", name: "MICROCAP", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "djtransport", name: "DOW TRANSPORTS", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "djutility", name: "DOW UTILITIES", group: "us-indices", type: "US Equity", region: "United States" },
+    { key: "vix", name: "VIX", group: "us-indices", type: "Volatility", region: "United States" },
+    { key: "vxn", name: "VXN", group: "us-indices", type: "Volatility", region: "United States" },
+
+    { key: "ftse100", name: "FTSE 100", group: "global-indices", type: "Global Equity", region: "United Kingdom" },
+    { key: "dax", name: "DAX", group: "global-indices", type: "Global Equity", region: "Germany" },
+    { key: "cac40", name: "CAC 40", group: "global-indices", type: "Global Equity", region: "France" },
+    { key: "ibex35", name: "IBEX 35", group: "global-indices", type: "Global Equity", region: "Spain" },
+    { key: "ftsemib", name: "FTSE MIB", group: "global-indices", type: "Global Equity", region: "Italy" },
+    { key: "smi", name: "SWISS SMI", group: "global-indices", type: "Global Equity", region: "Switzerland" },
+    { key: "aex", name: "AEX", group: "global-indices", type: "Global Equity", region: "Netherlands" },
+    { key: "bel20", name: "BEL 20", group: "global-indices", type: "Global Equity", region: "Belgium" },
+    { key: "omx30", name: "OMX STOCKHOLM 30", group: "global-indices", type: "Global Equity", region: "Sweden" },
+    { key: "estoxx50", name: "EURO STOXX 50", group: "global-indices", type: "Global Equity", region: "Euro Area" },
+    { key: "stoxx600", name: "STOXX EUROPE 600", group: "global-indices", type: "Global Equity", region: "Euro Area" },
+    { key: "euronext100", name: "EURONEXT 100", group: "global-indices", type: "Global Equity", region: "Euro Area" },
+    { key: "tsx", name: "S&P/TSX", group: "global-indices", type: "Global Equity", region: "Canada" },
+    { key: "asx200", name: "ASX 200", group: "global-indices", type: "Global Equity", region: "Australia" },
+    { key: "nzx50", name: "NZX 50", group: "global-indices", type: "Global Equity", region: "New Zealand" },
+    { key: "nikkei225", name: "NIKKEI 225", group: "global-indices", type: "Global Equity", region: "Japan" },
+    { key: "hangseng", name: "HANG SENG", group: "global-indices", type: "Global Equity", region: "Hong Kong" },
+    { key: "kospi", name: "KOSPI", group: "global-indices", type: "Global Equity", region: "South Korea" },
+    { key: "shanghai", name: "SHANGHAI COMP", group: "global-indices", type: "Global Equity", region: "China" },
+    { key: "shenzhen", name: "SHENZHEN COMP", group: "global-indices", type: "Global Equity", region: "China" },
+    { key: "taiex", name: "TAIEX", group: "global-indices", type: "Global Equity", region: "Taiwan" },
+    { key: "sti", name: "STRAITS TIMES", group: "global-indices", type: "Global Equity", region: "Singapore" },
+    { key: "jakarta", name: "JAKARTA COMP", group: "global-indices", type: "Global Equity", region: "Indonesia" },
+    { key: "klci", name: "MALAYSIA KLCI", group: "global-indices", type: "Global Equity", region: "Malaysia" },
+    { key: "setindex", name: "SET THAILAND", group: "global-indices", type: "Global Equity", region: "Thailand" },
+    { key: "sensex", name: "BSE SENSEX", group: "global-indices", type: "Global Equity", region: "India" },
+    { key: "nifty50", name: "NIFTY 50", group: "global-indices", type: "Global Equity", region: "India" },
+    { key: "bovespa", name: "BOVESPA", group: "global-indices", type: "Global Equity", region: "Brazil" },
+    { key: "ipcmexico", name: "IPC MEXICO", group: "global-indices", type: "Global Equity", region: "Mexico" },
+    { key: "merval", name: "MERVAL", group: "global-indices", type: "Global Equity", region: "Argentina" },
+    { key: "ta125", name: "TA-125", group: "global-indices", type: "Global Equity", region: "Israel" },
+    { key: "egx30", name: "EGX 30", group: "global-indices", type: "Global Equity", region: "Egypt" },
+    { key: "jsetop40", name: "JSE TOP 40", group: "global-indices", type: "Global Equity", region: "South Africa" },
+
+    { key: "gold", name: "GOLD", group: "commodities", type: "Metals", region: "Global" },
+    { key: "silver", name: "SILVER", group: "commodities", type: "Metals", region: "Global" },
+    { key: "platinum", name: "PLATINUM", group: "commodities", type: "Metals", region: "Global" },
+    { key: "palladium", name: "PALLADIUM", group: "commodities", type: "Metals", region: "Global" },
+    { key: "copper", name: "COPPER", group: "commodities", type: "Metals", region: "Global" },
+    { key: "aluminium", name: "ALUMINIUM", group: "commodities", type: "Metals", region: "Global" },
+    { key: "crudeoil", name: "CRUDE OIL", group: "commodities", type: "Energy", region: "Global" },
+    { key: "brent", name: "BRENT", group: "commodities", type: "Energy", region: "Global" },
+    { key: "natgas", name: "NAT GAS", group: "commodities", type: "Energy", region: "Global" },
+    { key: "heatingoil", name: "HEATING OIL", group: "commodities", type: "Energy", region: "Global" },
+    { key: "gasoline", name: "GASOLINE", group: "commodities", type: "Energy", region: "Global" },
+    { key: "corn", name: "CORN", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "wheat", name: "WHEAT", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "soybeans", name: "SOYBEANS", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "oats", name: "OATS", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "coffee", name: "COFFEE", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "sugar", name: "SUGAR", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "cocoa", name: "COCOA", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "cotton", name: "COTTON", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "orangejuice", name: "ORANGE JUICE", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "lumber", name: "LUMBER", group: "commodities", type: "Agriculture", region: "Global" },
+    { key: "livecattle", name: "LIVE CATTLE", group: "commodities", type: "Livestock", region: "Global" },
+    { key: "leanhogs", name: "LEAN HOGS", group: "commodities", type: "Livestock", region: "Global" },
+    { key: "gsci", name: "S&P GSCI", group: "commodities", type: "Commodities", region: "Global" },
+
+    { key: "us3m", name: "US 3M", group: "rates", type: "Rates", region: "United States" },
+    { key: "us5y", name: "US 5Y", group: "rates", type: "Rates", region: "United States" },
+    { key: "us10y", name: "US 10Y", group: "rates", type: "Rates", region: "United States" },
+    { key: "us30y", name: "US 30Y", group: "rates", type: "Rates", region: "United States" },
+    { key: "dxy", name: "DXY", group: "rates", type: "FX", region: "United States" },
+    { key: "eurusd", name: "EUR/USD", group: "rates", type: "FX", region: "Global" },
+    { key: "gbpusd", name: "GBP/USD", group: "rates", type: "FX", region: "Global" },
+    { key: "audusd", name: "AUD/USD", group: "rates", type: "FX", region: "Global" },
+    { key: "usdjpy", name: "USD/JPY", group: "rates", type: "FX", region: "Global" },
+    { key: "usdchf", name: "USD/CHF", group: "rates", type: "FX", region: "Global" },
+    { key: "usdcad", name: "USD/CAD", group: "rates", type: "FX", region: "Global" },
+    { key: "usdcny", name: "USD/CNY", group: "rates", type: "FX", region: "Global" },
+
+    { key: "bitcoin", name: "BITCOIN", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "ethereum", name: "ETHEREUM", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "bnb", name: "BNB", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "solana", name: "SOLANA", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "xrp", name: "XRP", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "cardano", name: "CARDANO", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "dogecoin", name: "DOGECOIN", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "tron", name: "TRON", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "chainlink", name: "CHAINLINK", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "avalanche", name: "AVALANCHE", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "litecoin", name: "LITECOIN", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "bitcoincash", name: "BITCOIN CASH", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "stellar", name: "STELLAR", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "polkadot", name: "POLKADOT", group: "crypto", type: "Crypto", region: "Global" },
+    { key: "shiba", name: "SHIBA INU", group: "crypto", type: "Crypto", region: "Global" }
   ];
 
   const LEGACY_MARKET_INDEX_NAME_TO_KEY = {
@@ -199,7 +288,7 @@
     })),
 
     // World currencies shown on the markets board, by ISO code. The snapshot
-    // carries two dozen; this is the starting set so the board stays scannable.
+    // carries four dozen; this is the starting set so the board stays scannable.
     currencies: ["EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "MXN"],
 
     // News preferences
@@ -523,9 +612,13 @@
           key,
           visible: explicitVisibility.has(key) ? explicitVisibility.get(key) : true
         })),
+        // Keys the catalog has gained since this config was saved. They default
+        // to hidden, not visible: the catalog grew from 23 instruments to 101,
+        // and inheriting `true` here would have turned every existing board
+        // into a wall of ninety-odd tiles without anyone asking for them.
         ...MARKET_INDEX_DEFS
           .filter((item) => !seenKeys.has(item.key))
-          .map((item) => ({ key: item.key, visible: true }))
+          .map((item) => ({ key: item.key, visible: DEFAULT_VISIBLE_INDICES.has(item.key) }))
       ];
     }
     return out;

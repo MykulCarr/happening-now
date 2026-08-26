@@ -3,33 +3,28 @@
 
   let { cfg, applyThemeDensity } = window.App;
   const MARKET_INDEX_DEFS = Array.isArray(window.App.MARKET_INDEX_DEFS) ? window.App.MARKET_INDEX_DEFS : [];
-  const MARKET_INDEX_META = {
-    dow: { type: "US Equity", region: "United States" },
-    sp500: { type: "US Equity", region: "United States" },
-    nasdaq: { type: "US Equity", region: "United States" },
-    russell2000: { type: "US Equity", region: "United States" },
-    sp400: { type: "US Equity", region: "United States" },
-    sp600: { type: "US Equity", region: "United States" },
-    microcap: { type: "US Equity", region: "United States" },
-    vix: { type: "Volatility", region: "United States" },
-    ftse100: { type: "Global Equity", region: "United Kingdom" },
-    dax: { type: "Global Equity", region: "Germany" },
-    nikkei225: { type: "Global Equity", region: "Japan" },
-    hangseng: { type: "Global Equity", region: "Hong Kong" },
-    gold: { type: "Commodities", region: "Global" },
-    silver: { type: "Commodities", region: "Global" },
-    copper: { type: "Commodities", region: "Global" },
-    crudeoil: { type: "Commodities", region: "Global" },
-    brent: { type: "Commodities", region: "Global" },
-    natgas: { type: "Commodities", region: "Global" },
-    us10y: { type: "Rates", region: "United States" },
-    dxy: { type: "FX", region: "United States" },
-    eurusd: { type: "FX", region: "Global" },
-    bitcoin: { type: "Crypto", region: "Global" },
-    ethereum: { type: "Crypto", region: "Global" }
-  };
-  const TYPE_SORT_ORDER = ["US Equity", "Global Equity", "Volatility", "Commodities", "Rates", "FX", "Crypto", "Other"];
-  const REGION_SORT_ORDER = ["United States", "United Kingdom", "Germany", "Japan", "Hong Kong", "Global", "Other"];
+  // Type and region come from the catalog itself rather than a second table
+  // kept alongside it — with a hundred instruments, the copy that drifts is the
+  // one nobody remembers to update.
+  const MARKET_INDEX_META = Object.fromEntries(
+    MARKET_INDEX_DEFS.map((item) => [item.key, { type: item.type || "Other", region: item.region || "Other" }])
+  );
+  const TYPE_SORT_ORDER = [
+    "US Equity", "Global Equity", "Volatility",
+    "Metals", "Energy", "Agriculture", "Livestock", "Commodities",
+    "Rates", "FX", "Crypto", "Other"
+  ];
+  // Roughly by trading day, west to east, so sorting by region walks the world
+  // in the order the exchanges actually open.
+  const REGION_SORT_ORDER = [
+    "United States", "Canada", "Mexico", "Brazil", "Argentina",
+    "United Kingdom", "Euro Area", "Germany", "France", "Netherlands", "Belgium",
+    "Spain", "Italy", "Switzerland", "Sweden",
+    "South Africa", "Egypt", "Israel",
+    "India", "Thailand", "Indonesia", "Singapore", "Malaysia", "Hong Kong",
+    "China", "Taiwan", "South Korea", "Japan", "Australia", "New Zealand",
+    "Global", "Other"
+  ];
   const AUTO_MARKET_INDICES_SORT_MODE = "region";
   let marketIndicesSortMode = "manual";
 
