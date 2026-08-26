@@ -273,8 +273,12 @@ addable by pasting its RSS URL.
 ### Other things live under this zone — don't break them
 
 `happening-now.net` is shared. **`flights.happening-now.net`** is FlightTrack,
-which runs its own `server.js` on a different machine and only borrows the
-subdomain — it never calls `/v1/*`. AstroLAB is fully separate (own Cloudflare
+which runs its own `server.js` and only borrows the subdomain — it never calls
+`/v1/*`. It used to be served from the MEOOEM laptop; on 2026-08-26 it moved to
+OEMMEO, so every part of happening-now now lives on this machine. It reaches the
+internet through a cloudflared tunnel rather than Cloudflare's edge, so it is
+the one piece that does **not** come back with `scripts/deploy-prod.ps1` — see
+`C:\TEMP\Projectslighttrack\deploy\` for how it is installed. AstroLAB is fully separate (own Cloudflare
 project, own repo). Worker routes are `happening-now.net/*` and
 `happening-now.net/v1/*`, which match the apex hostname only, so subdomains are
 untouched by anything here.
