@@ -1498,9 +1498,12 @@ header#topbar .pageHeadActions {
 
 /* Alerts bar (top of weather page) */
 .alertsBar {
-  margin-left: 0;
-  margin-right: -20px;
-  width: calc(100% + 20px);
+  /* No horizontal bleed. This used to be width: calc(100% + 20px) with
+     margin-right: -20px, pushing the bar 20px past the container on the right
+     only — already lopsided on desktop (32px gutter left, 12px right), and at
+     phone width, where the body padding drops to 12px, the 20px overhang spilled
+     8px past the viewport and made the whole weather page scroll sideways. */
+  width: 100%;
   overflow: hidden;
   background: linear-gradient(90deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .01));
   border: 1px solid var(--border);
