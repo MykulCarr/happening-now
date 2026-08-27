@@ -1,6 +1,7 @@
 import { runCurationSweep } from "./curate.js";
 import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
+import { fetchFavicon } from "./favicon.js";
 
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -544,6 +545,10 @@ export default {
 
     if (url.pathname === "/v1/rss/raw") {
       return fetchRssThroughProxy(request, env, url);
+    }
+
+    if (url.pathname === "/v1/favicon") {
+      return fetchFavicon(request, url);
     }
 
     if (url.pathname === "/v1/markets/snapshot") {

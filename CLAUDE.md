@@ -144,6 +144,71 @@ Two traps that both produce confident, wrong answers:
   scans the served HTML source and found nothing. Don't refactor it back out
   into a shared file.
 
+## Privacy posture — what leaves a visitor's browser
+
+Audited 2026-08-27. The site collects **nothing** about visitors server-side: no
+cookies of its own, no accounts, no `POST`/`PUT` from the browser anywhere, and
+KV holds only the market snapshot, Artemis updates and feed-sweep state. Settings
+live in three `localStorage` keys and never leave the device — `settings-sync.js`
+writes to a file the user picked and has no network code at all.
+
+Keep it that way. Two rules follow from the audit:
+
+- **Never point client code at a third-party asset host.** It is not the obvious
+  trackers that leak; it is the convenient ones. Source icons used to come
+  straight from `google.com/s2/favicons`, which handed Google one request per
+  news source per reader — carrying the reader's IP and a happening-now.net
+  referrer, and so building a per-visitor record of *which outlets they read*.
+  That was more identifying than the GA4 tag, and it wasn't in the privacy
+  policy. It now goes through `/v1/favicon`. Fonts, icons, embeds and image CDNs
+  are all the same trap: proxy them or self-host them.
+- **Prefer the Worker as a shield.** `/v1/rss/raw` sends a synthetic User-Agent
+  and forwards none of the visitor's headers, so publishers and Yahoo see the
+  Worker rather than readers. That is a real privacy feature — don't "fix" it by
+  passing headers through.
+
+What still legitimately leaves the browser, and why:
+
+| Destination | Carries | Why |
+| --- | --- | --- |
+| `googletagmanager.com` | cookieless GA4 ping | analytics; consent denied by default and never granted |
+| Cloudflare | hosting + RUM | operational |
+| `api.open-meteo.com`, `geocoding-api.open-meteo.com`, `api.weather.gov` | lat/lon | forecasts and alerts |
+| `api.zippopotam.us` | ZIP | ZIP → coordinates |
+| `api.bigdatacloud.net`, `nominatim.openstreetmap.org` | lat/lon | reverse geocoding |
+| `embed.windy.com` | lat/lon in an **iframe** URL, plus IP and referrer | radar map; the leakiest remaining item |
+| publisher CDN | image request | the Comic widget only (`news.js`) — headline cards load no publisher images |
+| `api.codetabs.com`, `corsproxy.io` | feed URL + IP | fallback CORS proxies, only when the first-party path fails |
+| `duckduckgo.com` | the query | `form-action`, only on an explicit search |
+
+`/v1/state/<namespace>` is a dormant route from the sync-worker heritage that the
+site never calls. It is bearer-token protected — verified live, it answers 401.
+Don't remove the token check to "simplify" it.
+
+`observability` is on in `wrangler.jsonc`, so Cloudflare retains Worker request
+logs, and those URLs include `?symbols=NVDA,MSFT,...`. That is the one place
+per-visitor data gets written down.
+
+### Source icons: `/v1/favicon`
+
+`cloudflare-sync-worker/src/favicon.js` proxies Google's favicon service, with a
+7-day edge cache and a 30-day browser cache. Google still sees which domains the
+site shows icons for, in aggregate, but can no longer tie any of it to a reader.
+
+**Self-hosting the publishers' own icons was measured and rejected** — don't
+re-propose it without new numbers. From a Worker IP: `bbc.com/favicon.ico` is
+39 KB and `arstechnica.com` 41 KB against Google's 285 bytes,
+`propublica.org` answers with a 272-byte stub, and Gray-owned stations
+(`wilx.com`) **502** outright, the same block that affects their RSS. Normalising
+that spread down to the 14–18px these render at needs Cloudflare Image Resizing,
+a paid feature. Through Google, `wilx.com` returns a working 7 KB icon.
+
+Both call sites go through `App.faviconUrl(siteOrHostname, size)` — the news card
+header in `common.js` and the stocks news list in `stocks.js`, which used to
+build the URL inline. Keep it that way, and note the route is built from
+`API_ORIGIN` like every other first-party path: a bare `/v1/favicon` works in
+production and 404s every icon in local dev.
+
 ## Stock quotes
 
 Two different shapes, for two different problems:

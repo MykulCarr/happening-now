@@ -42,6 +42,12 @@
   // quote call per tile — see cloudflare-sync-worker/src/markets.js.
   const MARKETS_SNAPSHOT_URL = `${API_ORIGIN}/v1/markets/snapshot`;
 
+  // Source icons, proxied so Google never sees a reader's IP — see
+  // cloudflare-sync-worker/src/favicon.js. Like every first-party route this is
+  // built from API_ORIGIN; a bare "/v1/favicon" works in production and 404s
+  // every icon on the local dev server.
+  const FAVICON_BASE = `${API_ORIGIN}/v1/favicon`;
+
   // Optional direct-call fallbacks. Left empty on purpose; filling either one in
   // publishes it, so prefer adding a Worker route instead.
   const STOCK_API_KEYS = {
@@ -842,16 +848,20 @@
       .trim();
   }
 
-  function faviconUrl(site) {
+  // Accepts a full URL (news cards pass the configured `site`) or a bare
+  // hostname (the stocks list passes extractDomain output). Returns "" for
+  // anything that isn't a hostname, which leaves img.src empty and lets the
+  // call sites' onerror handlers hide the icon.
+  function faviconUrl(site, size = 64) {
+    let host;
     try {
-      const u = new URL(site);
-      // Google's favicon service: 32x32 PNG, cached/optimized, gracefully
-      // returns a generic globe icon for sites without a favicon. Avoids
-      // 404s and the 5-22 KB per-source /favicon.ico downloads PSI flags.
-      return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+      host = new URL(site).hostname;
     } catch {
-      return "";
+      host = String(site || "").trim();
     }
+    host = host.toLowerCase();
+    if (!/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(host)) return "";
+    return `${FAVICON_BASE}?domain=${encodeURIComponent(host)}&sz=${size}`;
   }
 
   function normalizeOutboundLink(url) {

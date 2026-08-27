@@ -1463,7 +1463,9 @@
 
     container.innerHTML = fallbackHtml + cooldownHtml + lastSuccessHtml + renderItems.map(article => {
       const domain = extractDomain(article.url);
-      const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+      // Shared helper, not a hand-written URL: it routes through our own
+      // /v1/favicon so Google never sees the reader (see common.js).
+      const favicon = window.App.faviconUrl(article.url, 32);
       const timeAgo = article.pubDate ? getTimeAgo(new Date(article.pubDate)) : "";
 
       return `
