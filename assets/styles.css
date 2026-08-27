@@ -3389,6 +3389,77 @@ details.chip>.alertChipBody a {
   display: none;
 }
 
+/* Third-party embed gate. The wrap ships with .isGated (see weather.html), so
+   the Windy iframe stays unloaded — and the loading skeleton stays hidden —
+   until the viewer asks for it. */
+.weatherMapConsent {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  background: var(--card-bg);
+}
+
+.weatherMapWrap.isGated .weatherMapConsent {
+  display: flex;
+}
+
+/* Gated: no skeleton shimmering behind the prompt, nothing to load yet. */
+.weatherMapWrap.isGated .weatherMapPlaceholder {
+  display: none;
+}
+
+.weatherMapConsentIcon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.weatherMapConsentText {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.weatherMapLoadBtn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  /* Comfortable finger target on a phone. */
+  min-height: 44px;
+  padding: 10px 22px;
+}
+
+.weatherMapLoadBtn:hover {
+  background: var(--accentHover);
+  border-color: var(--accentHover);
+}
+
+.weatherMapConsentRemember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  /* Keeps the label itself an easy tap target next to the checkbox. */
+  min-height: 32px;
+}
+
+.weatherMapConsentRemember input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 .criticalTickerEmpty {
   display: inline-block;
   color: var(--muted);

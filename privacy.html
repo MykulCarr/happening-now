@@ -90,7 +90,7 @@
     <section class="pageHead">
       <div>
         <h1>Privacy Policy</h1>
-        <div class="sub">Last updated: April 15, 2026</div>
+        <div class="sub">Last updated: August 27, 2026</div>
       </div>
     </section>
 
@@ -104,8 +104,11 @@
       <h2 class="legalSectionTitle">Data Sent To Third Parties</h2>
       <p class="hint">When you use dashboard features, your browser requests data from third-party providers, including weather APIs, news feeds, market data providers, and NASA/public space-data services. Your IP address and request metadata may be visible to those providers as part of normal web requests.</p>
 
+      <h2 class="legalSectionTitle">Weather Map Embed</h2>
+      <p class="hint">The interactive weather map on the Weather page is embedded from <a href="https://www.windy.com/privacy-policy" target="_blank" rel="noopener noreferrer">Windy.com</a>. Because it is an embedded frame, loading it shares your approximate location, IP address and referring page with Windy, under their own privacy policy. <strong>It does not load until you ask for it</strong> — the map area shows a prompt with a Load map button, and nothing is requested from Windy until you click it. You can tick "Always load without asking" to skip the prompt; that choice is stored only in the browser you tick it in, and clearing site data resets it.</p>
+
       <h2 class="legalSectionTitle">RSS Proxy</h2>
-      <p class="hint">News requests may pass through a Cloudflare Worker RSS proxy for CORS compatibility. The proxy is used to fetch feed data and return it to your browser.</p>
+      <p class="hint">News requests and source icons pass through a Cloudflare Worker proxy on this domain. As well as solving cross-origin restrictions, this means publishers, market-data providers and the icon service see the proxy rather than you: the proxy sends its own request headers and does not forward your IP address or referring page to them.</p>
 
       <h2 class="legalSectionTitle">Cookies And Tracking</h2>
       <p class="hint">This site does not use advertising cookies or behavioral profiling scripts. Cloudflare Web Analytics or Real User Measurement may be enabled to collect aggregated, privacy-preserving traffic and performance data for site operations. Some third-party embeds or external links you open may use their own cookies under their own policies.</p>

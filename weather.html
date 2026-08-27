@@ -172,7 +172,22 @@
             <button id="mapLegendBtn" class="btn" type="button" title="Show map legend">📋</button>
           </div>
           <div class="cardBody">
-            <div id="weatherMapWrap" class="weatherMapWrap isPending">
+            <!-- Ships gated on purpose: the Windy iframe hands a third party the
+                 viewer's coordinates, IP and referrer, so nothing loads until it
+                 is asked for. Keeping the default in the markup means a JS
+                 failure can't accidentally load it. -->
+            <div id="weatherMapWrap" class="weatherMapWrap isPending isGated">
+              <div id="weatherMapConsent" class="weatherMapConsent">
+                <div class="weatherMapConsentIcon" aria-hidden="true">🌧️</div>
+                <p class="weatherMapConsentText">
+                  The interactive map is embedded from <strong>Windy.com</strong>.
+                  Loading it shares your approximate location and IP address with them.
+                </p>
+                <button id="weatherMapLoadBtn" class="btn weatherMapLoadBtn" type="button">Load map</button>
+                <label class="weatherMapConsentRemember">
+                  <input type="checkbox" id="weatherMapRemember"> Always load without asking
+                </label>
+              </div>
               <div id="weatherMapPlaceholder" class="weatherMapPlaceholder" aria-live="polite">Loading map layer…</div>
               <iframe
                 id="weatherMapFrame"

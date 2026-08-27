@@ -176,7 +176,7 @@ What still legitimately leaves the browser, and why:
 | `api.open-meteo.com`, `geocoding-api.open-meteo.com`, `api.weather.gov` | lat/lon | forecasts and alerts |
 | `api.zippopotam.us` | ZIP | ZIP → coordinates |
 | `api.bigdatacloud.net`, `nominatim.openstreetmap.org` | lat/lon | reverse geocoding |
-| `embed.windy.com` | lat/lon in an **iframe** URL, plus IP and referrer | radar map; the leakiest remaining item |
+| `embed.windy.com` | lat/lon in an **iframe** URL, plus IP and referrer | radar map — **click-to-load**, see below; nothing is requested until asked |
 | publisher CDN | image request | the Comic widget only (`news.js`) — headline cards load no publisher images |
 | `api.codetabs.com`, `corsproxy.io` | feed URL + IP | fallback CORS proxies, only when the first-party path fails |
 | `duckduckgo.com` | the query | `form-action`, only on an explicit search |
@@ -188,6 +188,36 @@ Don't remove the token check to "simplify" it.
 `observability` is on in `wrangler.jsonc`, so Cloudflare retains Worker request
 logs, and those URLs include `?symbols=NVDA,MSFT,...`. That is the one place
 per-visitor data gets written down.
+
+### The weather map is gated — keep it that way
+
+The Windy embed is the one remaining third party that gets a viewer's location,
+and an iframe is the worst shape for it: the coordinates are in the URL, and the
+frame can set its own cookies. So `weatherMapWrap` **ships with `isGated`** in
+`weather.html` and the iframe sits on `about:blank` until someone clicks.
+
+The default lives in the markup, not in JS, deliberately — the same reasoning as
+the collapsed News settings sections. A JS failure then leaves the map unloaded
+rather than silently loading a third party.
+
+Three things not to "tidy up":
+
+- `updateMap()` and `scheduleMapLoad()` both check `mapConsented`. The second
+  check is not redundant: `scheduleMapLoad` also starts an IntersectionObserver
+  and an idle timer, and neither should exist for a map nobody asked for.
+- **Changing the layer dropdown or hitting Recenter lifts the gate for that
+  visit.** Those are explicit interactions with the map, and leaving them as
+  dead controls is worse. They do *not* persist the choice — only the checkbox
+  does.
+- The remembered answer is `hn_map_consent_v1` in localStorage, **not** in
+  `cfg`. It must not travel in a settings export: importing someone else's
+  config should never silently grant a third party access to a new browser.
+  Same reasoning as `hn_sync_prefs_v1`.
+
+Verified at a real 390px viewport: gated on first visit with zero windy.com
+requests, one request after the click, gated again on reload when the box was
+left unticked, auto-loading once ticked, and still unloaded when the radar card
+is hidden in Settings.
 
 ### Source icons: `/v1/favicon`
 

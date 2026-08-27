@@ -1953,6 +1953,39 @@
   let mapHasLoaded = false;
   let mapObserver = null;
 
+  // Windy is a third-party embed, and the coordinates sit in the iframe URL, so
+  // loading it hands them the viewer's location, IP and referrer before the
+  // viewer has asked for a map at all. It stays gated until an explicit click.
+  //
+  // The remembered answer lives in its own localStorage key rather than in cfg
+  // on purpose: it is a per-browser decision to share data with someone else,
+  // and it must not ride along in a settings export into a browser whose owner
+  // never agreed to it. Same reasoning as hn_sync_prefs_v1.
+  const MAP_CONSENT_KEY = "hn_map_consent_v1";
+  let mapConsented = (() => {
+    try { return localStorage.getItem(MAP_CONSENT_KEY) === "always"; }
+    catch { return false; }
+  })();
+  if (mapConsented) weatherMapWrap?.classList.remove("isGated");
+
+  // Lifts the gate. Does not load anything itself — callers already know
+  // whether they want updateMap(true) now or the deferred scheduler.
+  function grantMapConsent(remember) {
+    mapConsented = true;
+    // The caller loads directly, so the idle timer and observer would only
+    // duplicate the work.
+    mapLoadScheduled = true;
+    weatherMapWrap?.classList.remove("isGated");
+    if (remember) {
+      try { localStorage.setItem(MAP_CONSENT_KEY, "always"); } catch { /* private mode */ }
+    }
+  }
+
+  document.getElementById("weatherMapLoadBtn")?.addEventListener("click", () => {
+    grantMapConsent(!!document.getElementById("weatherMapRemember")?.checked);
+    updateMap(true);
+  });
+
   // Apply show/hide map preference
   if(weatherMapSection){
     weatherMapSection.style.display = cfg.weatherShowMap !== false ? "" : "none";
@@ -1978,6 +2011,7 @@
 
   function updateMap(forceLoad = false) {
     if (!weatherMapFrame) return;
+    if (!mapConsented) return;
     if(!forceLoad && !mapHasLoaded) return;
     // Skip the heavy Windy embed when the radar card is hidden via Settings.
     if(window.App?.isSectionHidden?.("weather","radar")) return;
@@ -2016,6 +2050,7 @@
   // pan/zoom inside the iframe — only reload it with a new URL.
   const mapRecenterBtn = document.getElementById("mapRecenterBtn");
   mapRecenterBtn?.addEventListener("click", async () => {
+    if(!mapConsented) grantMapConsent(false);
     mapRecenterBtn.disabled = true;
     const originalLabel = mapRecenterBtn.textContent;
     mapRecenterBtn.textContent = "⌛";
@@ -2040,6 +2075,7 @@
 
   function scheduleMapLoad(){
     if(!weatherMapFrame || mapLoadScheduled) return;
+    if(!mapConsented) return;
     mapLoadScheduled = true;
     let triggered = false;
 
@@ -2075,6 +2111,9 @@
 
   if (mapTypeSelect) {
     mapTypeSelect.addEventListener("change", () => {
+      // Picking a layer is an explicit request to see the map, so it lifts the
+      // gate for this visit — but only the checkbox remembers the answer.
+      if(!mapConsented) grantMapConsent(false);
       scheduleMapLoad();
       updateMap(true);
     });
