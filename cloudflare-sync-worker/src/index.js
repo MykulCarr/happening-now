@@ -3,6 +3,7 @@ import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
 import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
+import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -280,7 +281,7 @@ function parseRssProxyTarget(url) {
   return { ok: true, target: target.toString() };
 }
 
-async function fetchRssThroughProxy(request, env, url) {
+async function fetchRssThroughProxy(request, env, url, ctx) {
   if (request.method !== "GET") {
     return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
   }
@@ -289,6 +290,27 @@ async function fetchRssThroughProxy(request, env, url) {
   if (!parsed.ok) {
     return jsonResponse({ ok: false, error: parsed.error }, 400, request, env);
   }
+
+  const cache = caches.default;
+  const mayServeStale = staleAllowed(request.url);
+
+  // Falls back to the last good copy of this feed instead of a bare 502. See
+  // rss-cache.mjs for why that replaced the third-party proxy that used to sit
+  // here. Transport failures only — a 200 carrying an empty or malformed feed
+  // is passed through untouched further down, so the health sweep can still
+  // diagnose it precisely rather than seeing a blanket 502.
+  const serveStaleOr = async (errorBody, status) => {
+    if (mayServeStale) {
+      const stale = await readLastGood(cache, parsed.target);
+      if (stale) {
+        return rssResponse(await stale.text(), request, env, {
+          cacheState: "stale",
+          storedAt: stale.headers.get("X-HN-Stored-At") || "",
+        });
+      }
+    }
+    return jsonResponse({ ok: false, error: errorBody }, status, request, env);
+  };
 
   let upstream;
   try {
@@ -300,30 +322,58 @@ async function fetchRssThroughProxy(request, env, url) {
       },
     });
   } catch {
-    return jsonResponse({ ok: false, error: "Failed to fetch target feed" }, 502, request, env);
+    return serveStaleOr("Failed to fetch target feed", 502);
   }
 
   if (!upstream.ok) {
-    return jsonResponse({ ok: false, error: `Target feed error: ${upstream.status}` }, 502, request, env);
+    return serveStaleOr(`Target feed error: ${upstream.status}`, 502);
   }
 
   const xmlText = await upstream.text();
 
-  // Always answer as XML, never echo the upstream Content-Type. Some publishers
-  // serve a perfectly valid feed as text/html (canarymedia.com/rss.xml does),
-  // and this Worker sits behind our own Cloudflare zone — which post-processes
-  // anything labelled HTML and appended its tracking beacon *after* `</rss>`.
-  // That trailing junk is not well-formed XML, so browser DOMParser rejected
-  // the whole document and the feed rendered zero items while every curl-and-
-  // grep check called it healthy. Upstream charset is handled too: .text()
-  // has already decoded to a JS string, so what we emit is always UTF-8 and
-  // passing through e.g. `charset=ISO-8859-1` would actively mislabel it.
+  // Refresh the good copy only when this really is a feed, so a bot-wall page
+  // served with a 200 can never become what we fall back to. Deliberately not
+  // awaited: storing it must not add latency to the reader's response.
+  if (looksLikeFeed(xmlText)) {
+    const stored = writeLastGood(cache, parsed.target, xmlText);
+    if (ctx?.waitUntil) ctx.waitUntil(stored); else await stored;
+  } else if (mayServeStale) {
+    // Reachable but not serving a feed — prefer the last good copy if we have
+    // one, otherwise fall through and hand the body over as-is.
+    const stale = await readLastGood(cache, parsed.target);
+    if (stale) {
+      return rssResponse(await stale.text(), request, env, {
+        cacheState: "stale",
+        storedAt: stale.headers.get("X-HN-Stored-At") || "",
+      });
+    }
+  }
+
+  return rssResponse(xmlText, request, env, { cacheState: "live" });
+}
+
+// Always answer as XML, never echo the upstream Content-Type. Some publishers
+// serve a perfectly valid feed as text/html (canarymedia.com/rss.xml does),
+// and this Worker sits behind our own Cloudflare zone — which post-processes
+// anything labelled HTML and appended its tracking beacon *after* `</rss>`.
+// That trailing junk is not well-formed XML, so browser DOMParser rejected
+// the whole document and the feed rendered zero items while every curl-and-
+// grep check called it healthy. Upstream charset is handled too: .text()
+// has already decoded to a JS string, so what we emit is always UTF-8 and
+// passing through e.g. `charset=ISO-8859-1` would actively mislabel it.
+//
+// A stale body gets a much shorter max-age than a live one: the reader still
+// sees headlines, but their browser comes back for the real thing in a minute
+// rather than sitting on an outage for two.
+function rssResponse(xmlText, request, env, { cacheState = "live", storedAt = "" } = {}) {
   return new Response(xmlText, {
     status: 200,
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=120",
+      "Cache-Control": cacheState === "stale" ? "public, max-age=60" : "public, max-age=120",
       "X-RSS-Proxy": "happening-now-sync",
+      "X-HN-Cache": cacheState,
+      ...(storedAt ? { "X-HN-Stored-At": storedAt } : {}),
       ...getCorsHeaders(request, env),
     },
   });
@@ -533,7 +583,7 @@ export default {
     }
 
     if (url.pathname === "/v1/rss/raw") {
-      return fetchRssThroughProxy(request, env, url);
+      return fetchRssThroughProxy(request, env, url, ctx);
     }
 
     if (url.pathname === "/v1/favicon") {

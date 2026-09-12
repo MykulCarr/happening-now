@@ -16,13 +16,21 @@
       : "";
 
   // First-party RSS proxy route served by cloudflare-sync-worker. Without the
-  // API_ORIGIN prefix this 404s on a local dev server and every feed silently
-  // falls through to the third-party codetabs proxy below.
+  // API_ORIGIN prefix this 404s on a local dev server and every feed fails.
   const RSS_PROXY_BASE = `${API_ORIGIN}/v1/rss/raw?url=`;
-  const RSS_PROXY_FALLBACKS = [
-    RSS_PROXY_BASE,
-    "https://api.codetabs.com/v1/proxy?quest="
-  ];
+
+  // One route, deliberately. This used to fall through to api.codetabs.com,
+  // which was never a reliable safety net: it was down (522) for all of
+  // 2026-09-12 while every feed that reached it paid a 9s timeout before
+  // giving up, and it could not cover the outage that would matter most —
+  // this Worker being unavailable — because these pages are served by Workers
+  // too. It also handed a third party each reader's IP and the feeds they read.
+  //
+  // Resilience lives in the Worker instead: /v1/rss/raw keeps the last good
+  // copy of every feed and serves that when a publisher is down or blocking
+  // Cloudflare IPs. See cloudflare-sync-worker/src/rss-cache.mjs. Adding
+  // another public proxy here would trade a real fallback for a slower one.
+  const RSS_PROXY_FALLBACKS = [RSS_PROXY_BASE];
 
   // RSS Aggregator endpoints - RSSHub is a robust alternative for hard-to-reach feeds
   const RSS_AGGREGATORS = {
@@ -1006,12 +1014,12 @@
     }
   }
 
-  function getRssProxyFallbacksForFeed(feedUrl) {
-    // Google News feeds are generally reachable through the primary worker and one fallback.
-    // Keeping this list short avoids long serial timeouts that block widget rendering.
-    if (isGoogleNewsRssUrl(feedUrl)) {
-      return RSS_PROXY_FALLBACKS.slice(0, 2);
-    }
+  function getRssProxyFallbacksForFeed() {
+    // There is only the first-party route now, for every feed alike — the
+    // Worker's last-known-good cache replaced the third-party fallback this
+    // used to trim for Google News. Kept as a function because the cooldown
+    // bookkeeping and the fetch loop both iterate over "routes to try", and
+    // that shape is what makes adding a real second route possible later.
     return RSS_PROXY_FALLBACKS;
   }
 

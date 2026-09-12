@@ -100,9 +100,10 @@ Two traps that both produce confident, wrong answers:
 - **Never write a bare `/v1/...` path.** Every first-party route must be built
   from `API_ORIGIN` (`assets/common.js`), which is empty in production and
   absolute on localhost. A literal path works in production and silently 404s in
-  local dev, where the failure is invisible: RSS just falls through to the
-  third-party codetabs proxy, and the news page's own health probe reports the
-  proxy "unreachable" while it is fine. Five copies of this bug had accumulated
+  local dev. That used to be invisible, because RSS fell through to a
+  third-party proxy while the news page's own health probe reported the proxy
+  "unreachable" when it was fine; with that fallback gone the symptom is now
+  simply that no feeds load locally. Five copies of this bug had accumulated
   — `RSS_PROXY_BASE` plus a hand-written probe URL in `news.js`, `stocks.js` and
   `weather.js` and the `PROXY` const in `source-search.js`. They now all read
   `App.RSS_PROXY_BASE`; keep it that way rather than re-typing the path.
@@ -178,7 +179,7 @@ What still legitimately leaves the browser, and why:
 | `api.bigdatacloud.net`, `nominatim.openstreetmap.org` | lat/lon | reverse geocoding |
 | `embed.windy.com` | lat/lon in an **iframe** URL, plus IP and referrer | radar map — **click-to-load**, see below; nothing is requested until asked |
 | publisher CDN | image request | the Comic widget only (`news.js`) — headline cards load no publisher images |
-| `api.codetabs.com`, `corsproxy.io` | feed URL + IP | fallback CORS proxies, only when the first-party path fails |
+| ~~`api.codetabs.com`, `corsproxy.io`~~ | — | **removed 2026-09-12.** No third-party proxy is in the path any more; see "Feed resilience" below |
 | `duckduckgo.com` | the query | `form-action`, only on an explicit search |
 
 `/v1/state/<namespace>` is a dormant route from the sync-worker heritage that the
@@ -437,6 +438,46 @@ Corollary: a digest row is a *lead*, not a verdict. Re-probe it through the
 proxy before editing the catalog — `scripts/check-feeds.mjs` is the arbiter,
 and it reports `emptyBlocks` for places left with no working feed at all,
 which is the line that actually matters.
+
+### Feed resilience: the Worker keeps the last good copy
+
+`/v1/rss/raw` stores every healthy feed response in the Cloudflare **Cache
+API** and serves that copy when the publisher is down, rate-limiting, or
+blocking Cloudflare Worker IPs (`cloudflare-sync-worker/src/rss-cache.mjs`,
+24h TTL). That replaced `api.codetabs.com`, which sat behind the first-party
+route as a CORS fallback until 2026-09-12.
+
+Why the cache is the more reliable design, so nobody re-adds a public proxy:
+
+- codetabs was **down (522) for the whole day** that was measured, and
+  `corsproxy.io` answered 403. Free public proxies are not a safety net.
+- Every feed that reached the dead fallback paid a **9s timeout** first, so
+  the fallback made outages slower rather than shorter.
+- It could never cover the outage that matters most — **this Worker being
+  unavailable** — because the site's own pages are served by Workers too. So
+  it only ever covered "publisher blocks Worker IPs", which a cached copy
+  covers *and* extends to publisher outages and transient 5xx.
+- It handed a third party each reader's IP and the list of feeds they read,
+  which the privacy posture above is explicitly against.
+
+Two things not to break:
+
+- **Cache API, not KV.** KV allows 1,000 writes/day on the free plan and a
+  single popular feed on a 120s cache would burn that by itself. The cost is
+  that entries are per-colo, so a reader in a cold data centre may have no
+  stale copy — partial cover, but no quota risk and no third party.
+- **`&nostale=1` must stay on the health checkers.** `scripts/check-feeds.mjs`
+  sends it, and it turns the fallback off for that request. Without it the
+  sweep gets handed a cached copy of a feed that died days ago and reports it
+  healthy — the same blind spot the curator User-Agent had, reintroduced from
+  the other end. Readers get the cache; the thing that decides what is broken
+  never does. (`curate.js` fetches publishers directly, so it is unaffected.)
+
+`npm run test:rss-cache` exercises the logic against a stubbed Cache API —
+including that a bot-wall page can never become the stored "good" copy, and
+that a throwing cache can't take the request down with it. Run it after
+touching `rss-cache.mjs`. Responses carry `X-HN-Cache: live|stale`, so which
+path served a feed is visible from `curl -I`.
 
 After changing that file, regenerate the public list on `sources.html`:
 

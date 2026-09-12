@@ -33,6 +33,11 @@ import { checkFeedText } from "../cloudflare-sync-worker/src/feed-health.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROXY = "https://happening-now.net/v1/rss/raw?url=";
+// nostale=1 turns off the proxy's last-known-good fallback for this request.
+// Without it the sweep would be handed a cached copy of a feed that died days
+// ago and report it healthy — the same blind spot the curator User-Agent had.
+// Readers get the cache; the thing that decides what's broken never does.
+const probeUrl = rss => `${PROXY}${encodeURIComponent(rss)}&nostale=1`;
 const CONCURRENCY = 6;   // be polite to our own worker and to publishers
 const TIMEOUT_MS = 20000;
 
@@ -42,7 +47,7 @@ async function check(entry) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(PROXY + encodeURIComponent(entry.rss), { signal: controller.signal });
+    const res = await fetch(probeUrl(entry.rss), { signal: controller.signal });
     if (!res.ok) return { ...entry, items: 0, ok: false, error: `HTTP ${res.status}` };
     const { ok, problem, items } = checkFeedText(await res.text());
     return { ...entry, items, ok, error: problem || undefined };
