@@ -1,3 +1,28 @@
+# Content-Security-Policy, tightened 2026-09-12. It used to read
+# `default-src 'self' https:` with `connect-src 'self' https:` and
+# `frame-src 'self' https:`, which allowed the page to talk to, and embed,
+# any host on the internet — so it documented nothing and stopped nothing.
+# Every origin below is one the client code actually reaches; the inventory
+# behind it is in CLAUDE.md under "What the CSP allows, and why".
+#
+# Two wildcards are deliberate and should stay:
+#   img-src https:  — the Comic widget renders images straight from whatever
+#                     webcomic host a feed names, so the set is unknowable.
+#                     Images can't execute, so this is the cheap wildcard.
+#   'unsafe-inline' — the GA4 tag must stay inline in <head> on every page
+#                     (Google's detector scans served HTML), and JS sets
+#                     inline styles throughout. A nonce can't come from a
+#                     static _headers file; it would need the Worker to
+#                     rewrite every HTML response.
+#
+# https://happening-now.net is listed in connect-src even though it IS 'self'
+# in production. That is for previews: a staged build served from 127.0.0.1
+# still calls the production Worker for /v1 data (see API_ORIGIN in
+# assets/common.js), which is cross-origin there and same-origin here. Without
+# it a local preview reports violations production would never see.
+#
+# Adding a third-party endpoint means adding it here too, or it works locally
+# (python -m http.server sends no CSP) and is blocked in production only.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
@@ -5,7 +30,7 @@
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=()
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
-  Content-Security-Policy: default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src 'self' https: https://cloudflareinsights.com; frame-src 'self' https:; media-src 'self' https: blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self' https://duckduckgo.com;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://happening-now.net https://cloudflareinsights.com https://static.cloudflareinsights.com https://*.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://api.open-meteo.com https://geocoding-api.open-meteo.com https://api.weather.gov https://api.zippopotam.us https://api.bigdatacloud.net https://nominatim.openstreetmap.org; frame-src 'self' https://embed.windy.com; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self' https://duckduckgo.com; upgrade-insecure-requests
 
 /*.html
   Cache-Control: public, max-age=0, must-revalidate

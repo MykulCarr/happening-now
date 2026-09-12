@@ -190,6 +190,50 @@ Don't remove the token check to "simplify" it.
 logs, and those URLs include `?symbols=NVDA,MSFT,...`. That is the one place
 per-visitor data gets written down.
 
+### What the CSP allows, and why
+
+Tightened 2026-09-12. It had been `default-src 'self' https:` with
+`connect-src 'self' https:` and `frame-src 'self' https:` — which let the page
+talk to, and embed, any host on the internet. It documented nothing and
+stopped nothing. It now names every origin the client actually reaches:
+
+| Directive | Allowed beyond `'self'` | Why |
+| --- | --- | --- |
+| `script-src` | `static.cloudflareinsights.com`, `*.googletagmanager.com` | RUM beacon (injected by the CF edge, so it never appears in a local build) and the GA4 tag |
+| `connect-src` | `happening-now.net`, `cloudflareinsights.com`, `static.cloudflareinsights.com`, `*.googletagmanager.com`, `*.google-analytics.com`, `*.analytics.google.com`, `api.open-meteo.com`, `geocoding-api.open-meteo.com`, `api.weather.gov`, `api.zippopotam.us`, `api.bigdatacloud.net`, `nominatim.openstreetmap.org` | the Worker plus the six geo/weather APIs the browser calls directly |
+| `frame-src` | `embed.windy.com` | the radar map, the only iframe on the site |
+| `img-src` | `https:` (wildcard) | **deliberate** — the Comic widget renders images from whatever webcomic host a feed names, so the set is unknowable. Images can't execute; this is the cheap wildcard |
+| `font-src` | *(nothing)* | system fonts only |
+| `media-src` | `blob:` | no `<audio>`/`<video>` anywhere |
+
+`'unsafe-inline'` stays on `script-src` and `style-src`: the GA4 tag must be
+inline in `<head>` on every page, and JS sets inline styles throughout. A
+nonce can't come from a static `_headers` file — it would need the Worker to
+rewrite every HTML response.
+
+Things that are **not** in the policy because nothing reaches them:
+`cdn.jsdelivr.net` was allowed for scripts and styles and is referenced
+nowhere. `www.alphavantage.co`, `cloud.iexapis.com`, `newsapi.org`,
+`gnews.io` and `mediastack.com` all appear in `assets/` but behind
+`if (KEY)` guards on keys that are empty strings, so they are never contacted
+— don't re-add them to the CSP without re-adding a key. Every stock and feed
+call that looks third-party goes through `/v1/rss/raw`, which is `'self'`.
+
+**`https://happening-now.net` is listed in `connect-src` even though it is
+`'self'` in production.** That is for previews: a staged build served from
+127.0.0.1 still calls the production Worker for `/v1` data (`API_ORIGIN` in
+`assets/common.js`), which is cross-origin there. Note `wrangler dev` rewrites
+that entry to the dev origin in the response header, so it cannot be used to
+test the real policy — serve `.deploy-public` with the header applied verbatim
+instead.
+
+Verified in headless Chrome at a real 390px viewport: all seven pages clean,
+with the ZIP → `zippopotam` → `open-meteo` → `weather.gov` chain, the Windy
+frame, and the three geocoders all exercised. Plus a negative test — the
+policy actually refuses `api.codetabs.com`, an arbitrary host, an unlisted CDN
+script and a non-Windy iframe. A policy that allows everything also reports
+zero violations, so re-run the negative half whenever this changes.
+
 ### The weather map is gated — keep it that way
 
 The Windy embed is the one remaining third party that gets a viewer's location,
