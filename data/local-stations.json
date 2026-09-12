@@ -504,15 +504,15 @@
         },
         "entries": [
           {
-            "name": "Cal Coast News",
-            "rss": "https://calcoastnews.com/feed/",
-            "site": "https://calcoastnews.com",
-            "type": "paper"
-          },
-          {
             "name": "KEYT NewsChannel 3-12 (Central Coast)",
             "rss": "https://keyt.com/feed/",
             "site": "https://keyt.com",
+            "type": "tv"
+          },
+          {
+            "name": "KSBY NewsChannel 6 (Central Coast)",
+            "rss": "https://www.ksby.com/news.rss",
+            "site": "https://www.ksby.com",
             "type": "tv"
           },
           {
@@ -935,10 +935,10 @@
         },
         "entries": [
           {
-            "name": "Atlanta Civic Circle (nonprofit)",
-            "rss": "https://atlantaciviccircle.org/feed/",
-            "site": "https://atlantaciviccircle.org",
-            "type": "paper"
+            "name": "Capital B Atlanta (nonprofit)",
+            "rss": "https://capitalbnews.org/feed/",
+            "site": "https://capitalbnews.org",
+            "type": "community"
           },
           {
             "name": "FOX 5 Atlanta",
@@ -1266,8 +1266,32 @@
         },
         "entries": [
           {
+            "name": "CBS4 Indy (WTTV)",
+            "rss": "https://cbs4indy.com/feed/",
+            "site": "https://cbs4indy.com",
+            "type": "tv"
+          },
+          {
+            "name": "FOX59 Indianapolis (WXIN)",
+            "rss": "https://fox59.com/feed/",
+            "site": "https://fox59.com",
+            "type": "tv"
+          },
+          {
+            "name": "Mirror Indy (nonprofit)",
+            "rss": "https://mirrorindy.org/feed/",
+            "site": "https://mirrorindy.org",
+            "type": "community"
+          },
+          {
+            "name": "WISH-TV 8 (Indianapolis)",
+            "rss": "https://www.wishtv.com/feed/",
+            "site": "https://www.wishtv.com",
+            "type": "tv"
+          },
+          {
             "name": "WRTV 6 (Indianapolis, ABC)",
-            "rss": "https://www.wrtv.com/news.rss",
+            "rss": "https://www.wrtv.com/feed/",
             "site": "https://www.wrtv.com",
             "type": "tv"
           }
@@ -1372,10 +1396,16 @@
         },
         "entries": [
           {
-            "name": "WDRB (Louisville, FOX)",
-            "rss": "https://www.wdrb.com/search/?f=rss&t=article&c=news",
-            "site": "https://www.wdrb.com",
-            "type": "tv"
+            "name": "LEO Weekly (Louisville alt-weekly)",
+            "rss": "https://www.leoweekly.com/feed/",
+            "site": "https://www.leoweekly.com",
+            "type": "paper"
+          },
+          {
+            "name": "WFPL News (Louisville Public Media)",
+            "rss": "https://wfpl.org/feed/",
+            "site": "https://wfpl.org",
+            "type": "radio"
           }
         ],
         "subreddits": [
@@ -2490,9 +2520,9 @@
         },
         "entries": [
           {
-            "name": "Gothamist",
-            "rss": "https://gothamist.com/feed",
-            "site": "https://gothamist.com",
+            "name": "amNewYork",
+            "rss": "https://www.amny.com/feed/",
+            "site": "https://www.amny.com",
             "type": "paper"
           },
           {
@@ -2979,7 +3009,7 @@
           },
           {
             "name": "TribLive (Pittsburgh Tribune-Review)",
-            "rss": "https://triblive.com/rss/",
+            "rss": "https://triblive.com/feed/",
             "site": "https://triblive.com",
             "type": "paper"
           }

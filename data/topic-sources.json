@@ -177,9 +177,9 @@
           "type": "paper"
         },
         {
-          "name": "Sky & Telescope",
-          "rss": "https://skyandtelescope.org/feed/",
-          "site": "https://skyandtelescope.org",
+          "name": "Universe Today",
+          "rss": "https://www.universetoday.com/feed/",
+          "site": "https://www.universetoday.com",
           "type": "paper"
         }
       ]
@@ -266,7 +266,7 @@
         },
         {
           "name": "Polygon",
-          "rss": "https://www.polygon.com/rss/index.xml",
+          "rss": "https://www.polygon.com/feed/",
           "site": "https://www.polygon.com",
           "type": "paper"
         },
@@ -506,9 +506,9 @@
       "emoji": "🎧",
       "entries": [
         {
-          "name": "Bandcamp Daily",
-          "rss": "https://daily.bandcamp.com/feed",
-          "site": "https://daily.bandcamp.com",
+          "name": "BrooklynVegan",
+          "rss": "https://www.brooklynvegan.com/feed/",
+          "site": "https://www.brooklynvegan.com",
           "type": "paper"
         },
         {
