@@ -34,6 +34,9 @@
 // nice-to-have; it must not be able to break the endpoints the site depends on.
 
 import { feedProblem } from "./feed-health.mjs";
+// Same headers /v1/rss/raw sends, so this sweep tests the path that feeds the
+// site rather than a client nobody uses.
+import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
 
 const STATE_KEY = "curate:state";
 const STATIONS_URL = "https://happening-now.net/data/local-stations.json";
@@ -50,6 +53,12 @@ const TIMEOUT_MS = 15000;
 // canarymedia.com and lwlies.com were both broken on the live site for weeks
 // while this sweep reported them healthy every single night. feed-health.js
 // applies the same repairs the browser does and then judges what's left.
+//
+// RSS_FETCH_HEADERS is not optional: it is the difference between asking "can
+// some HTTP client reach this feed?" and "can the site?". On 2026-09-12 a
+// sweep using its own curator User-Agent called 17 healthy feeds dead and 7
+// dead ones healthy — see upstream-headers.mjs for what went wrong and why the
+// two-day verify phase could not catch it.
 async function probe(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -57,7 +66,7 @@ async function probe(url) {
     const res = await fetch(url, {
       signal: controller.signal,
       cf: { cacheTtl: 0 },
-      headers: { "User-Agent": "happening-now-curator/1.0 (+https://happening-now.net)" },
+      headers: RSS_FETCH_HEADERS,
     });
     if (!res.ok) return `HTTP ${res.status}`;
     return feedProblem(await res.text());
@@ -66,6 +75,15 @@ async function probe(url) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// One row per feed URL, first occurrence winning. Both sweep phases accumulate
+// across cron firings, and neither the scan nor the verify pass can assume it
+// ran exactly once over a given slice.
+function dedupeByRss(rows) {
+  const seen = new Map();
+  for (const r of rows) if (!seen.has(r.rss)) seen.set(r.rss, r);
+  return [...seen.values()];
 }
 
 // Both catalogs flattened into one list. Topic feeds rot exactly like the
@@ -157,7 +175,7 @@ async function runVerifyPhase(env, state) {
     if (problem) stillDead.push({ ...f, problem });
   }
 
-  const confirmed = [...(state.confirmed || []), ...stillDead];
+  const confirmed = dedupeByRss([...(state.confirmed || []), ...stillDead]);
   const next = start + slice.length;
 
   if (next < state.findings.length) {
@@ -187,7 +205,12 @@ export async function runCurationSweep(env) {
   const feeds = flatten((await stationsRes.json()).states, (await topicsRes.json()).topics);
 
   // The list changes between runs; if it shrank past the cursor, start over.
-  const start = state.cursor >= feeds.length ? 0 : state.cursor;
+  // Restarting has to drop the findings too. Keeping them meant a wrapped scan
+  // re-walked feeds it had already flagged and appended a second copy, so
+  // TribLive printed twice in one digest and read as two separate breakages.
+  const wrapped = state.cursor >= feeds.length;
+  const start = wrapped ? 0 : state.cursor;
+  const carried = wrapped ? [] : state.findings;
   const slice = feeds.slice(start, start + BATCH);
 
   const dead = [];
@@ -196,8 +219,12 @@ export async function runCurationSweep(env) {
     if (problem) dead.push({ ...f, problem });
   }
 
-  const findings = [...state.findings, ...dead];
-  const checked = state.checked + slice.length;
+  // Keyed by feed URL: a scheduled event can be delivered more than once, and
+  // a re-run slice would otherwise append duplicates of everything in it.
+  const findings = dedupeByRss([...carried, ...dead]);
+  // Resets with the findings on a wrap, or the digest's "N feeds checked"
+  // keeps climbing past the size of the catalog.
+  const checked = (wrapped ? 0 : state.checked) + slice.length;
   const next = start + slice.length;
 
   if (next < feeds.length) {

@@ -19,8 +19,16 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-// Same verdict the nightly digest email uses, so the two can't disagree about
-// what "dead" means. Counting <item> is not the question — see feed-health.js.
+// Same verdict the nightly digest email uses. Counting <item> is not the
+// question — see feed-health.js.
+//
+// Sharing the verdict is not enough on its own, and this comment used to claim
+// the two "can't disagree". They diverged anyway, because a verdict only
+// judges bytes somebody already fetched: the digest fetched publishers direct
+// with its own curator User-Agent while this script goes through the proxy, and
+// the two got different answers from the same feeds on the same day. Both sides
+// now send RSS_FETCH_HEADERS over the proxy path. Keep it that way — the fetch
+// matters as much as the verdict.
 import { checkFeedText } from "../cloudflare-sync-worker/src/feed-health.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");

@@ -420,6 +420,24 @@ sweep is ~10 daily firings, so the digest arrives every week and a half rather
 than weekly — raise `BATCH` toward the 50-subrequest cap or fire the cron twice
 a day to tighten that.
 
+**Anything that asks "is this feed usable?" must send `RSS_FETCH_HEADERS`**
+(`cloudflare-sync-worker/src/upstream-headers.mjs`). Sharing `feed-health.mjs`
+is not enough — a verdict only judges bytes somebody already fetched, and the
+fetch is where the two checkers diverged. The digest used to fetch publishers
+**direct** with its own `happening-now-curator/1.0` UA while the site goes
+through `/v1/rss/raw` with a browser UA, and from Worker IPs publishers treat
+those as different clients. The 2026-09-12 digest was wrong both ways at once:
+of the 18 feeds it flagged, **17 were healthy** (nine NBC O&Os "403", six
+TownNews papers "401/451/404" — WAF signatures, not outages) and it **missed 7
+genuinely dead feeds**, including two cities serving nothing. The two-day
+verify phase cannot catch this: it re-probes with the same headers, and a WAF
+rule reproduces perfectly on day two. Don't add a third fetch path.
+
+Corollary: a digest row is a *lead*, not a verdict. Re-probe it through the
+proxy before editing the catalog — `scripts/check-feeds.mjs` is the arbiter,
+and it reports `emptyBlocks` for places left with no working feed at all,
+which is the line that actually matters.
+
 After changing that file, regenerate the public list on `sources.html`:
 
 ```bash
