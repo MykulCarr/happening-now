@@ -1,4 +1,5 @@
 import { runCurationSweep } from "./curate.js";
+import { runReminders } from "./reminders.mjs";
 import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
@@ -84,11 +85,6 @@ function jsonResponse(body, status = 200, request = null, env = {}) {
   });
 }
 
-const ARTEMIS_UPDATES_CACHE_KEY = "public:artemis-updates:v1";
-const ARTEMIS_UPDATES_TTL_MS = 5 * 60 * 1000;
-const NASA_WP_BASE = "https://www.nasa.gov/wp-json/wp/v2";
-const ARTEMIS_CATEGORY_ID = 2918;
-
 const RSS_PROXY_ALLOWED_PROTOCOLS = new Set(["http:", "https:"]);
 const RSS_PROXY_BLOCKED_HOSTS = new Set([
   "localhost",
@@ -122,104 +118,6 @@ function isPrivateAddress(host) {
       /^fe[89ab]/i.test(v6);       // link-local fe80::/10
   }
   return false;
-}
-
-async function fetchJson(url) {
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`Failed ${response.status} for ${url}`);
-  }
-  return response.json();
-}
-
-function stripHtml(value) {
-  return String(value || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&#8216;|&#8217;|&rsquo;/gi, "'")
-    .replace(/&#8220;|&#8221;|&ldquo;|&rdquo;/gi, '"')
-    .replace(/&#8211;|&#8212;/gi, "-")
-    .replace(/&#8230;|&hellip;/gi, "...")
-    .replace(/&amp;/gi, "&")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function ensureIsoString(value) {
-  if (!value) return "";
-  const text = String(value);
-  return /Z$/.test(text) ? text : `${text}Z`;
-}
-
-function normalizeWpItems(items, source) {
-  return (Array.isArray(items) ? items : []).map((item) => ({
-    id: item?.id || item?.link || item?.title?.rendered || "item",
-    title: stripHtml(item?.title?.rendered || item?.title || "Artemis II update"),
-    summary: stripHtml(item?.excerpt?.rendered || item?.excerpt || ""),
-    url: item?.link || "https://www.nasa.gov/mission/artemis-ii/",
-    published_at: ensureIsoString(item?.date_gmt || item?.date),
-    modified_at: ensureIsoString(item?.modified_gmt || item?.modified),
-    news_site: source,
-    source,
-  })).filter((item) => /artemis\s*(ii|2)/i.test(`${item.title} ${item.summary}`));
-}
-
-function uniqueBy(items, keyFn) {
-  const seen = new Set();
-  return (Array.isArray(items) ? items : []).filter((item) => {
-    const key = keyFn(item);
-    if (!key || seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
-function deriveWatchItems(items) {
-  const cautionPattern = /(troubleshoot|issue|warning|problem|fault|anomaly|hold|delay|scrub|abort|leak|comm|communication|toilet|concern)/i;
-  return items.filter((item) => cautionPattern.test(`${item.title} ${item.summary}`)).slice(0, 4);
-}
-
-async function fetchArtemisUpdates(env) {
-  const cached = await env.HN_STATE_DATA.get(ARTEMIS_UPDATES_CACHE_KEY, { type: "json" });
-  const cachedAt = cached?.cachedAt ? Date.parse(cached.cachedAt) : 0;
-  if (cached?.payload && Number.isFinite(cachedAt) && (Date.now() - cachedAt) < ARTEMIS_UPDATES_TTL_MS) {
-    return cached.payload;
-  }
-
-  const [blogItems, postItems] = await Promise.all([
-    fetchJson(`${NASA_WP_BASE}/nasa-blog?categories=${ARTEMIS_CATEGORY_ID}&per_page=8&_fields=id,date_gmt,link,title,excerpt`),
-    fetchJson(`${NASA_WP_BASE}/posts?categories=${ARTEMIS_CATEGORY_ID}&per_page=6&_fields=id,date_gmt,modified_gmt,link,title,excerpt`),
-  ]);
-
-  const officialUpdates = normalizeWpItems(blogItems, "NASA Blog");
-  const officialBriefings = normalizeWpItems(postItems, "NASA");
-  const combined = uniqueBy(
-    [...officialUpdates, ...officialBriefings].sort((left, right) => Date.parse(right.published_at || 0) - Date.parse(left.published_at || 0)),
-    (item) => item.url || item.title
-  );
-
-  const payload = {
-    source: "worker",
-    fetchedAt: new Date().toISOString(),
-    officialUpdates,
-    officialBriefings,
-    updates: combined.slice(0, 10),
-    watchItems: deriveWatchItems(combined),
-    missionUrl: "https://www.nasa.gov/mission/artemis-ii/",
-    coverageUrl: "https://www.nasa.gov/missions/artemis/artemis-2/nasa-sets-coverage-for-artemis-ii-moon-mission/",
-    trackUrl: "https://www.nasa.gov/missions/artemis-ii/arow/",
-  };
-
-  await env.HN_STATE_DATA.put(ARTEMIS_UPDATES_CACHE_KEY, JSON.stringify({
-    cachedAt: new Date().toISOString(),
-    payload,
-  }));
-
-  return payload;
 }
 
 function getNamespaceFromPath(pathname) {
@@ -546,6 +444,14 @@ export default {
         .then(r => console.log("[curate]", JSON.stringify(r)))
         .catch(err => console.error("[curate] failed:", err?.message || err)),
     );
+    // Rides on the same daily firing rather than getting its own cron — see
+    // reminders.mjs. Kept on a separate waitUntil and its own catch so neither
+    // job can take the other down.
+    ctx.waitUntil(
+      runReminders(env)
+        .then(r => console.log("[reminders]", JSON.stringify(r)))
+        .catch(err => console.error("[reminders] failed:", err?.message || err)),
+    );
   },
 
   async fetch(request, env, ctx) {
@@ -567,19 +473,6 @@ export default {
         rssProxyRoute: "/v1/rss/raw",
         timestamp: new Date().toISOString(),
       }, 200, request, env);
-    }
-
-    if (url.pathname === "/v1/artemis/updates") {
-      if (request.method !== "GET") {
-        return jsonResponse({ ok: false, error: "Method not allowed" }, 405, request, env);
-      }
-
-      try {
-        const payload = await fetchArtemisUpdates(env);
-        return jsonResponse(payload, 200, request, env);
-      } catch (error) {
-        return jsonResponse({ ok: false, error: error instanceof Error ? error.message : "Failed to fetch Artemis updates" }, 502, request, env);
-      }
     }
 
     if (url.pathname === "/v1/rss/raw") {
