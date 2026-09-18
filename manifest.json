@@ -1,7 +1,7 @@
 {
     "name": "HAPPENING NOW! Dashboard",
     "short_name": "HAPPENING NOW",
-    "description": "Personal information dashboard with news, weather, stocks, and astronomy data",
+    "description": "Personal information dashboard with news, weather and stocks",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0c3142",
