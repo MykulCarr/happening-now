@@ -21,6 +21,12 @@
 //            second look reaches the report. If the scan found nothing, this
 //            phase is skipped and the "all healthy" email goes out immediately.
 //
+//            The re-probe goes through /v1/rss/raw rather than straight at the
+//            publisher, so the two looks ask genuinely different questions.
+//            Waiting a day is not enough on its own: a WAF rule answers a
+//            Worker IP the same way every day, so a second identical probe
+//            confirms it rather than clearing it.
+//
 // A bad scan week (many feeds flagged) can push verify past one day's BATCH,
 // which delays the email by an extra cron firing or two — an acceptable
 // trade for not crying wolf. It only ever reports; adding or removing a news
@@ -30,19 +36,21 @@
 // `cloudflare:email` is imported lazily, inside the send path, on purpose. A
 // static top-level import is evaluated when the module loads, so if the email
 // binding is ever missing or misconfigured the whole Worker fails to start —
-// taking /v1/rss, /v1/stocks and /v1/artemis down with it. This is a weekly
+// taking /v1/rss, /v1/stocks and /v1/favicon down with it. This is a weekly
 // nice-to-have; it must not be able to break the endpoints the site depends on.
 
 import { feedProblem } from "./feed-health.mjs";
 // Same headers /v1/rss/raw sends, so this sweep tests the path that feeds the
 // site rather than a client nobody uses.
 import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
+// Shared with the ops reminders; see mailer.mjs for why the email binding
+// is imported lazily rather than at the top of the file.
+import { sendHtmlMail } from "./mailer.mjs";
 
 const STATE_KEY = "curate:state";
 const STATIONS_URL = "https://happening-now.net/data/local-stations.json";
 const TOPICS_URL = "https://happening-now.net/data/topic-sources.json";
 const BATCH = 40;              // + 2 subrequests for the two catalog files
-const FROM = "digest@happening-now.net";
 const TIMEOUT_MS = 15000;
 
 // Returns "" when the feed is healthy, or a short reason why it isn't.
@@ -69,6 +77,51 @@ async function probe(url) {
       headers: RSS_FETCH_HEADERS,
     });
     if (!res.ok) return `HTTP ${res.status}`;
+    return feedProblem(await res.text());
+  } catch (err) {
+    return err?.name === "AbortError" ? "timeout" : "unreachable";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Second opinion, over the site's own path, used only to confirm a finding
+// before it can reach the email.
+//
+// probe() above fetches the publisher directly. That answers "is the publisher
+// refusing us?", which is a *lead*, not a verdict — the 2026-09-12 digest
+// reported 21 feeds and every one of them rendered fine on the site. Publisher
+// WAFs return 401/403 to a Cloudflare Worker IP intermittently, and the two-day
+// verify phase cannot filter that on its own: re-probing the same way a day
+// later reproduces the same WAF answer.
+//
+// So verification asks a different question, through /v1/rss/raw — the exact
+// path readers' feeds travel, and the arbiter scripts/check-feeds.mjs already
+// uses. A row now has to fail a direct probe *and* fail through the site, on
+// two different days, before anyone is emailed about it.
+//
+// nostale=1 for the same reason check-feeds.mjs sends it: readers may be
+// covered by the 24h last-good cache, but the thing deciding what is broken
+// must never be handed a cached copy of a feed that died days ago.
+const SITE_PROXY = "https://happening-now.net/v1/rss/raw?url=";
+
+async function probeViaSite(rss) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(`${SITE_PROXY}${encodeURIComponent(rss)}&nostale=1`, {
+      signal: controller.signal,
+      cf: { cacheTtl: 0 },
+    });
+    if (!res.ok) {
+      // The proxy reports a failed upstream as 502 carrying the real status,
+      // e.g. "Target feed error: 403". Prefer that over a blanket "HTTP 502".
+      try {
+        const body = await res.json();
+        if (body && typeof body.error === "string") return body.error;
+      } catch { /* not JSON; fall through */ }
+      return `HTTP ${res.status}`;
+    }
     return feedProblem(await res.text());
   } catch (err) {
     return err?.name === "AbortError" ? "timeout" : "unreachable";
@@ -139,39 +192,31 @@ function buildReport(findings, total) {
 
 const escapeHtml = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 
-// Minimal RFC-5322 message. The send_email binding wants raw MIME, and pulling
-// in a MIME library for one HTML part isn't worth it.
-function mime({ from, to, subject, html }) {
-  return [
-    `From: Happening Now <${from}>`,
-    `To: <${to}>`,
-    `Subject: ${subject}`,
-    "MIME-Version: 1.0",
-    "Content-Type: text/html; charset=utf-8",
-    "",
-    html,
-  ].join("\r\n");
-}
-
 async function sendDigest(env, findings, checked) {
   const { subject, html } = buildReport(findings, checked);
-  const to = env.ADMIN_EMAIL_ADDRESS || "hn-station@protonmail.com";
-  const { EmailMessage } = await import("cloudflare:email");
-  await env.ADMIN_EMAIL.send(new EmailMessage(FROM, to, mime({ from: FROM, to, subject, html })));
+  await sendHtmlMail(env, { subject, html });
   await env.HN_STATE_DATA.put(STATE_KEY, JSON.stringify({ phase: "scan", cursor: 0, findings: [], checked: 0 }));
   return { sent: true, checked, dead: findings.length };
 }
 
 // Second look at whatever the scan flagged, at least a day later. Same BATCH
-// budget and probe() as the scan phase, just walking `findings` instead of
-// the full feed list.
+// budget, walking `findings` instead of the full feed list — but a *different*
+// probe: probeViaSite, over /v1/rss/raw.
+//
+// Re-probing the same way a day later only filters same-day hiccups. It cannot
+// filter a publisher WAF that refuses Cloudflare Worker IPs, because that
+// reproduces perfectly on day two — which is how the 2026-09-12 digest
+// confirmed 21 feeds that were all rendering fine.
 async function runVerifyPhase(env, state) {
   const start = Math.min(state.cursor, state.findings.length);
   const slice = state.findings.slice(start, start + BATCH);
 
   const stillDead = [];
   for (const f of slice) {
-    const problem = await probe(f.rss);
+    // Deliberately probeViaSite, not probe: confirmation has to come from the
+    // path the site actually uses, or a publisher WAF that dislikes Worker IPs
+    // gets reported as a dead feed. See probeViaSite.
+    const problem = await probeViaSite(f.rss);
     if (problem) stillDead.push({ ...f, problem });
   }
 
@@ -221,7 +266,16 @@ export async function runCurationSweep(env) {
 
   // Keyed by feed URL: a scheduled event can be delivered more than once, and
   // a re-run slice would otherwise append duplicates of everything in it.
-  const findings = dedupeByRss([...carried, ...dead]);
+  //
+  // Then dropped to what the catalog still lists. A full sweep spans ~10 daily
+  // firings, so a feed fixed or removed partway through would otherwise sit in
+  // `findings` and get emailed days later as though it were still broken. The
+  // 2026-09-12 digest did exactly that for three feeds — Sky & Telescope,
+  // Atlanta Civic Circle and TribLive's old /rss/ URL — all three already
+  // replaced in a209b0a while the sweep was mid-flight. Pruning here is free:
+  // this phase has the fresh catalog in hand anyway.
+  const listed = new Set(feeds.map(f => f.rss));
+  const findings = dedupeByRss([...carried, ...dead]).filter(f => listed.has(f.rss));
   // Resets with the findings on a wrap, or the digest's "N feeds checked"
   // keeps climbing past the size of the catalog.
   const checked = (wrapped ? 0 : state.checked) + slice.length;

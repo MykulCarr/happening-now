@@ -37,6 +37,16 @@ const PROXY = "https://happening-now.net/v1/rss/raw?url=";
 // Without it the sweep would be handed a cached copy of a feed that died days
 // ago and report it healthy — the same blind spot the curator User-Agent had.
 // Readers get the cache; the thing that decides what's broken never does.
+//
+// It is not a fully cold fetch, though, and this comment used to imply it was:
+// /v1/rss/raw fetches upstream with `cf: { cacheEverything: true, cacheTtl: 120 }`,
+// so a feed another reader pulled in the last two minutes is answered from
+// Cloudflare's edge cache without the publisher being touched. nostale=1 only
+// disables the 24h last-good store layered above that. A 120s window is far too
+// short to hide a dead feed, so this is accurate enough for a health sweep — but
+// when you need a genuinely cold probe (checking whether a publisher is
+// blocking Worker IPs right now), add a unique `_hn` value to the *target* URL
+// so the edge cache key differs. `_hn`, never `t` — see CLAUDE.md.
 const probeUrl = rss => `${PROXY}${encodeURIComponent(rss)}&nostale=1`;
 const CONCURRENCY = 6;   // be polite to our own worker and to publishers
 const TIMEOUT_MS = 20000;
