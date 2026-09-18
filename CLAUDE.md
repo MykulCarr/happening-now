@@ -149,7 +149,7 @@ Two traps that both produce confident, wrong answers:
 
 Audited 2026-08-27. The site collects **nothing** about visitors server-side: no
 cookies of its own, no accounts, no `POST`/`PUT` from the browser anywhere, and
-KV holds only the market snapshot, Artemis updates and feed-sweep state. Settings
+KV holds only the market snapshot and feed-sweep state. Settings
 live in three `localStorage` keys and never leave the device — `settings-sync.js`
 writes to a file the user picked and has no network code at all.
 
@@ -424,7 +424,7 @@ project, own repo). Worker routes are `happening-now.net/*` and
 untouched by anything here.
 
 The one way to break them from this repo is the shared Worker: `/v1/rss`,
-`/v1/stocks` and `/v1/artemis` all live in `cloudflare-sync-worker`, and a
+`/v1/stocks` and `/v1/favicon` all live in `cloudflare-sync-worker`, and a
 module that throws at *import* time takes the whole Worker down, not just the
 feature that imported it. That's why `curate.js` imports `cloudflare:email`
 lazily inside the send path rather than at the top of the file. Keep optional
@@ -483,6 +483,30 @@ proxy before editing the catalog — `scripts/check-feeds.mjs` is the arbiter,
 and it reports `emptyBlocks` for places left with no working feed at all,
 which is the line that actually matters.
 
+**That corollary is now enforced in code (2026-09-18).** Matching the headers
+was not enough: the 2026-09-12 digest reported 21 feeds and *every one* was
+healthy. Two more things were wrong, both fixed in `curate.js`:
+
+- **The two phases asked the same question.** `scan` probes the publisher
+  direct; `verify` used to re-probe the same way a day later, which confirms a
+  WAF rule rather than clearing it. `verify` now calls `probeViaSite`, going
+  through `/v1/rss/raw?...&nostale=1` — the site's own path, the same arbiter
+  `check-feeds.mjs` uses. A row must fail a direct probe **and** fail through
+  the site, on two different days, before it is emailed. This is not the
+  "third fetch path" warned about above; it is the site's path, used as the
+  final gate.
+- **Findings outlived the catalog.** A full sweep spans ~10 daily firings, so
+  feeds fixed mid-sweep were still emailed days later. Three of the 21 rows
+  were feeds already replaced in `a209b0a` — including TribLive's old `/rss/`
+  URL, which had simply moved to `/feed/`. The scan phase now prunes
+  `findings` to what the freshly-fetched catalog still lists.
+
+Replayed against those 21 rows, the gates drop 3 as unlisted and clear 18 via
+the site path: the digest reports **zero**. If a digest still surprises you,
+re-probe by hand before editing anything — the failures are intermittent and
+were not reproducible from a Worker IP by any client shape, including the old
+curator UA.
+
 ### Feed resilience: the Worker keeps the last good copy
 
 `/v1/rss/raw` stores every healthy feed response in the Cloudflare **Cache
@@ -515,7 +539,15 @@ Two things not to break:
   sweep gets handed a cached copy of a feed that died days ago and reports it
   healthy — the same blind spot the curator User-Agent had, reintroduced from
   the other end. Readers get the cache; the thing that decides what is broken
-  never does. (`curate.js` fetches publishers directly, so it is unaffected.)
+  never does. (`curate.js`'s scan phase fetches publishers directly; its verify
+  phase goes through the proxy and sends `nostale=1` for this exact reason.)
+
+  Note `nostale=1` is not a *cold* fetch: `/v1/rss/raw` fetches upstream with
+  `cf: { cacheEverything: true, cacheTtl: 120 }`, so a feed pulled by anyone in
+  the last two minutes is answered from Cloudflare's edge cache. 120s is far too
+  short to hide a dead feed, so it doesn't affect health sweeps — but to test
+  whether a publisher is blocking Worker IPs *right now*, add a unique `_hn`
+  value to the target URL so the edge cache key differs.
 
 `npm run test:rss-cache` exercises the logic against a stubbed Cache API —
 including that a bot-wall page can never become the stored "good" copy, and
@@ -532,6 +564,42 @@ npm run coverage
 That rewrites the block between the `coverage:start`/`coverage:end` markers from
 the JSON, so the page can't drift from the data. It's written into the committed
 HTML rather than rendered client-side so crawlers can see the city names.
+
+## Ops reminders
+
+The two things here that fail *silently* get an email, sent by
+`cloudflare-sync-worker/src/reminders.mjs`:
+
+- the **weekly / monthly / quarterly check-ins** in
+  `docs/ops-monitoring-checklist.md`, which were backed only by
+  `docs/happening-now-ops-checkins.ics` — if that calendar was never imported,
+  nothing ever asked for them, and the omission looked exactly like everything
+  being fine;
+- **`.well-known/security.txt`**, whose RFC 9116 `Expires` is stamped at deploy
+  time. Any deploy re-stamps it a year out, so it self-heals — but a year
+  without one leaves an expired, invalid file that simply stops counting.
+  Warning starts 60 days out and repeats weekly.
+
+**It rides on the existing daily curation cron rather than getting its own.**
+A second scheduled task is one more thing that can quietly stop firing with
+nobody noticing; riding along means it is exactly as reliable as the digest,
+and dies loudly with it. It is best-effort on a separate `waitUntil` with its
+own `catch`, so neither job can take the other down.
+
+**`npm run test:reminders` forces every check to fire**, and that is the point
+of it. A reminder that only ever reports "nothing due" is indistinguishable
+from a broken one, so every branch — each period rollover, the expiry window,
+the already-expired wording, the repeat-suppression window — is provoked on
+demand rather than waited for. Run it after touching `reminders.mjs`.
+
+Deliberately **not** covered: feed rot. The digest it rides on already owns
+that question, and a second checker asking it would reproduce the exact
+disagreement documented in `upstream-headers.mjs`.
+
+Mail for both the digest and the reminders goes through
+`cloudflare-sync-worker/src/mailer.mjs`, which keeps the lazy
+`cloudflare:email` import in one place — a static top-level import would take
+the whole Worker down if the binding were ever misconfigured.
 
 ## Deploying
 

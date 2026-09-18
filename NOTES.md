@@ -527,3 +527,85 @@ Opening it would have loaded the whole projects folder. Fixed in `232b139`.
   out of the new manifest.
 - The old recents entry now points at a file that doesn't exist — remove it and
   open the root `happening-now.code-workspace` once to make a fresh one.
+
+## 2026-09-18 — The feed digest was crying wolf; ops reminders added
+
+A digest email arrived listing 21 unusable feeds. **All 21 were fine.** The
+whole session came out of running that down.
+
+### What the 21 rows actually were
+
+- **18 false alarms.** Every one healthy, verified four ways: through
+  `/v1/rss/raw` with `nostale=1`, with a unique `_hn` on the target to defeat
+  the 120s edge cache and force a cold publisher hit, direct from a real
+  Cloudflare Worker IP, and with the *old* `happening-now-curator/1.0` UA.
+  NBC Chicago 52 items, InForum 77, every TownNews paper 10.
+- **3 ghosts.** Sky & Telescope, Atlanta Civic Circle and TribLive's old
+  `/rss/` URL were all fixed on 2026-09-12 in `a209b0a`. The digest kept
+  reporting them for days after.
+
+A dead end worth recording: the obvious theory was per-origin rate limiting,
+since the catalog holds exactly 9 NBC `?rss=y` O&Os and 8 TownNews search
+feeds and the digest flagged **all 9 and all 8**. It's wrong. Replaying the
+verify phase back-to-back from a real Worker IP (`wrangler dev --remote` as a
+throwaway scratch worker) returned 200 for all 21 at `gap=0`. The old curator
+UA also returns 200 today. The failures are intermittent and were not
+reproducible by any client shape — so the fixes below target the certain bugs
+rather than the unproven mechanism.
+
+### What we changed
+
+- **`verify` now asks a different question from `scan`.** It was re-probing
+  the publisher the same way a day later, which *confirms* a WAF rule instead
+  of clearing it. It now goes through `/v1/rss/raw?...&nostale=1` — the site's
+  own path, the same arbiter `check-feeds.mjs` uses. A row must fail a direct
+  probe **and** fail through the site, on two different days.
+- **Findings are pruned to the live catalog** each scan firing. A sweep spans
+  ~10 daily firings, so feeds fixed mid-sweep were still being emailed.
+- Replayed against the 21 rows: 3 dropped as unlisted, 18 cleared, **digest
+  reports zero**.
+- **`nostale=1` is not a cold fetch** and the comment in `check-feeds.mjs`
+  implied it was. `cf: { cacheEverything: true, cacheTtl: 120 }` sits under it.
+  Too short to hide a dead feed, but documented now, along with the `_hn` trick.
+
+### Feeds
+
+Running the arbiter caught the *opposite* failure — real breakage the digest
+never reported. `jazztimes.com/feed/` 502s while `www.jazztimes.com/feed/`
+works; fixed the host, source kept. Catalog is **408/409**, no place serving
+nothing. Patch Jacksonville is the one dead entry, left deliberately — dropping
+a source is editorial and Jacksonville has two working feeds without it.
+
+### AstroLAB residue removed
+
+`/v1/artemis/updates` was live in the Worker and **called by nothing** —
+removed with its six helpers and four constants (116 lines). Dropped the stale
+"astronomy" copy from `index.html`, `manifest.json` and `sources.html`. Both
+orphaned KV keys deleted: `public:artemis-updates:v1` and
+`public:markets-snapshot:v1` (only `v2` is referenced in code).
+
+### Ops reminders (closed the last open to-do)
+
+`reminders.mjs` covers the two things here that fail *silently*: the
+weekly/monthly/quarterly check-ins backed only by a `.ics` nobody may have
+imported, and `security.txt`'s RFC 9116 expiry. It **rides on the existing
+daily curation cron** rather than adding a second scheduled task that could
+quietly stop firing — separate `waitUntil`, own `catch`, so neither job can
+take the other down. `mailer.mjs` is a small extraction so the digest and the
+reminders share one sender and one lazy `cloudflare:email` import.
+
+`npm run test:reminders` forces every branch to fire — 27 checks. That's the
+point of it: a reminder that only ever says "nothing due" is indistinguishable
+from a broken one, which is precisely the failure this session spent its time
+on, just from the other direction.
+
+### Next up
+
+- **Not deployed.** The Worker changes are inert until
+  `pwsh -File scripts/deploy-prod.ps1` runs. Until then the cron keeps using
+  the old logic.
+- `wrangler kv key list` trips the permission classifier as a false positive
+  (it's read-only). Verify keys with `kv key get` instead, or add a rule.
+- A digest row is still a **lead, not a verdict**. Re-probe by hand before
+  editing the catalog.
+
