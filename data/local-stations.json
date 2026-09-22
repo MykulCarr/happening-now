@@ -1780,6 +1780,12 @@
         },
         "entries": [
           {
+            "name": "JTV Jackson",
+            "rss": "https://jtv.tv/feed",
+            "site": "https://jtv.tv",
+            "type": "tv"
+          },
+          {
             "name": "MLive Jackson",
             "rss": "https://www.mlive.com/arc/outboundfeeds/rss/category/news/jackson/",
             "site": "https://www.mlive.com/jackson",
