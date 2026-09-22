@@ -1727,7 +1727,7 @@
 
     topbar.innerHTML = `
       <div class="topbarInner">
-        <a href="index.html" class="brand" aria-label="Home">
+        <a href="/" class="brand" aria-label="Home">
           <div class="dot" aria-hidden="true"></div>
           <div>
             <div class="brandTitle">Happening Now!</div>
@@ -1745,27 +1745,27 @@
             <div class="navMain">
               ${active("news")
         ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">News</span>`
-        : `<a class="btn btnMain" href="index.html">News</a>`}
-            
+        : `<a class="btn btnMain" href="/">News</a>`}
+
               ${active("weather")
         ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Weather</span>`
-        : `<a class="btn btnMain" href="weather.html">Weather</a>`}
-            
+        : `<a class="btn btnMain" href="/weather">Weather</a>`}
+
               ${active("stocks")
         ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Stocks</span>`
-        : `<a class="btn btnMain" href="stocks.html">Stocks</a>`}
+        : `<a class="btn btnMain" href="/stocks">Stocks</a>`}
             </div>
 
             <div class="navSettings">
               ${active("settings")
         ? `<span class="btn btnSettings btnActive btnDisabled" aria-current="page">Settings</span>`
-        : `<a class="btn btnSettings" href="settings.html">Settings</a>`}
+        : `<a class="btn btnSettings" href="/settings">Settings</a>`}
             </div>
           </nav>
         </div>
 
         <div class="topRight">
-          <a class="topClockLink" href="settings.html" aria-label="Open settings">
+          <a class="topClockLink" href="/settings" aria-label="Open settings">
             <div class="topClock" aria-label="Local time and date">
               <div class="topClockDate" id="topClockDate">—</div>
               <div class="topClockTime" id="topClockTime">--:--:--</div>

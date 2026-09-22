@@ -26,10 +26,10 @@
         ? `<a href="${href}" class="hn-nav-link" data-nav-key="${key}">${label}</a>`
         : '';
     const navHtml =
-      navLinkHtml('news', 'index.html', 'NEWS') +
-      navLinkHtml('weather', 'weather.html', 'WEATHER') +
-      navLinkHtml('stocks', 'stocks.html', 'STOCKS') +
-      '<a href="settings.html" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>' +
+      navLinkHtml('news', '/', 'NEWS') +
+      navLinkHtml('weather', '/weather', 'WEATHER') +
+      navLinkHtml('stocks', '/stocks', 'STOCKS') +
+      '<a href="/settings" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>' +
       '<button type="button" class="hn-nav-link hn-nav-action hn-location-nav-btn" aria-label="Change location"><span class="hn-nav-action-icon" aria-hidden="true">📍</span> LOCATION</button>';
     mount.innerHTML = `
       <div class="hn-inner">
@@ -39,7 +39,7 @@
             <span></span>
             <span></span>
           </button>
-          <a href="index.html" class="hn-brand" id="hnBrand" aria-label="HAPPENING NOW Home">
+          <a href="/" class="hn-brand" id="hnBrand" aria-label="HAPPENING NOW Home">
             <span class="hn-dot" aria-hidden="true"></span>
             <span class="hn-title">HAPPENING NOW!</span>
           </a>
@@ -245,7 +245,7 @@
           <button id="hnWelcomeSetLocBtn" class="btn primary hnWelcomeSetLocBtn" type="button">📍 Set my location</button>
           <button id="hnWelcomeSkipBtn" class="btn hnWelcomeSkipBtn" type="button">Skip for now</button>
         </div>
-        <p class="hnWelcomeSettingHint">You can always update your location in <a href="settings.html">Settings</a>.</p>
+        <p class="hnWelcomeSettingHint">You can always update your location in <a href="/settings">Settings</a>.</p>
       </div>
     `;
 

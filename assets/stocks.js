@@ -689,7 +689,7 @@
       const tiles = [...indices, ...getCurrencyTiles(snapshot)];
 
       if(tiles.length === 0){
-        container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">No markets selected. Enable items in <a href="settings.html">Settings</a>.</div>`;
+        container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">No markets selected. Enable items in <a href="/settings">Settings</a>.</div>`;
         return;
       }
 
@@ -955,7 +955,7 @@
     updateLastUpdated();
 
     if (sorted.length === 0) {
-      container.innerHTML = `<div class="hint">No stocks added yet. Visit <a href="settings.html">Settings</a> to add stocks.</div>`;
+      container.innerHTML = `<div class="hint">No stocks added yet. Visit <a href="/settings">Settings</a> to add stocks.</div>`;
       return;
     }
 

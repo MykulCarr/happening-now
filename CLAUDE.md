@@ -28,11 +28,18 @@ happens only inside the staged deploy bundle.
 
 ## Running and testing changes
 
-Serve the repo root over HTTP — `file://` breaks fetch and the service worker:
+Serve the repo root over HTTP — `file://` breaks fetch and the service worker.
+All internal nav/footer links (topbar, footer) point at **clean paths**
+(`/weather`, not `weather.html`), matching production and `_redirects` — so
+use the clean-URL dev server, which resolves `/weather` → `weather.html` the
+same way Cloudflare does, or nav clicks will 404:
 
 ```powershell
-python -m http.server 8080
+python scripts/dev-server.py 8080
 ```
+
+Plain `python -m http.server 8080` still works for loading a page directly by
+its `.html` filename, but clicking nav links from it will 404.
 
 The pages call the **production** Worker for feed, stock and market data even
 when served locally, so the widgets work without running anything else. That
@@ -66,6 +73,18 @@ Two traps that both produce confident, wrong answers:
 
 ## Gotchas that have actually bitten
 
+- **Internal links must use clean paths (`/weather`), never `.html`.** The
+  topbar (`scripts/topbar-template.html` + its dev-time fallback
+  `assets/topbar.js`, plus the legacy renderer in `assets/common.js`) and
+  every page's footer used to link to `index.html`/`weather.html`/etc.
+  Those still worked — `_redirects` 301s them to the clean path — but it meant
+  the site perpetually re-fed Google its own non-canonical URLs, which is
+  exactly what Search Console's "Page with redirect" report was flagging
+  (2026-09-21). A 301 target is for outside links and old bookmarks; a site's
+  *own* nav should link straight to the canonical path so neither Googlebot
+  nor a real visitor ever takes the redirect hop. Test locally with
+  `scripts/dev-server.py`, not plain `python -m http.server` — see "Running
+  and testing changes" above.
 - **New public files don't ship unless you list them.** `scripts/stage-public-assets.ps1`
   copies an explicit `$publicFiles` allow-list (plus the `assets/`, `data/`,
   `.well-known/` directories). Add a new top-level file to that array or it
