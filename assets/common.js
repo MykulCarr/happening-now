@@ -1353,8 +1353,20 @@
   function escapeBareAmpersands(xmlText) {
     return xmlText
       .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
-      .map((part, i) => (i % 2 ? part : part.replace(/&(?![a-zA-Z][a-zA-Z0-9]*;|#\d+;|#x[0-9a-fA-F]+;)/g, "&amp;")))
+      .map((part, i) => (i % 2 ? part : part
+        .replace(/&(?![a-zA-Z][a-zA-Z0-9]*;|#\d+;|#x[0-9a-fA-F]+;)/g, "&amp;")
+        .replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, fixHtmlEntity)))
       .join("");
+  }
+
+  // XML defines only five named entities; a feed that says `&nbsp;` outside
+  // CDATA is fatal to DOMParser ("Entity 'nbsp' not defined"). Ancient Origins
+  // did this and its whole card rendered "No articles available". Known HTML
+  // names become numeric references; anything else is shown as literal text.
+  const HTML_ENTITIES = { nbsp: 160, hellip: 8230, mdash: 8212, ndash: 8211, lsquo: 8216, rsquo: 8217, ldquo: 8220, rdquo: 8221, copy: 169, reg: 174, trade: 8482, bull: 8226, middot: 183, laquo: 171, raquo: 187, eacute: 233, egrave: 232, uuml: 252, ouml: 246, auml: 228 };
+  function fixHtmlEntity(match, name) {
+    if (/^(amp|lt|gt|quot|apos)$/.test(name)) return match;
+    return HTML_ENTITIES[name] ? `&#${HTML_ENTITIES[name]};` : `&amp;${name};`;
   }
 
   // Inject missing xmlns declarations for namespace prefixes that show up in
