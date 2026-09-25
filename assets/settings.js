@@ -3098,7 +3098,41 @@
       return Array.isArray(v) ? v : [];
     }
 
+    function save(next, msg){
+      window.App.saveConfig(next);
+      cfg = next;
+      paint();
+      window.dispatchEvent(new CustomEvent("hn:topicschange"));
+      setStatus(msg, "saved");
+    }
+
+    // Tab order = order of cfg.topics. Arrow buttons rather than drag, because
+    // drag-and-drop is unreliable on a phone.
+    function paintOrder(){
+      const list = document.getElementById("topicOrder");
+      if(!list) return;
+      const byId = new Map(topics.map(t => [t.id, t]));
+      const ids = chosen().filter(id => byId.has(id));
+      list.innerHTML = "";
+      ids.forEach((id, i) => {
+        const t = byId.get(id);
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="topicEmoji">${escapeHtmlSafe(t.emoji)}</span>
+          <span class="topicOrderName">${escapeHtmlSafe(t.label)}</span>
+          <button type="button" data-dir="-1" aria-label="Move ${escapeHtmlSafe(t.label)} earlier" ${i === 0 ? "disabled" : ""}>▲</button>
+          <button type="button" data-dir="1" aria-label="Move ${escapeHtmlSafe(t.label)} later" ${i === ids.length - 1 ? "disabled" : ""}>▼</button>`;
+        li.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
+          const order = [...ids];
+          const j = i + Number(btn.dataset.dir);
+          [order[i], order[j]] = [order[j], order[i]];
+          save({ ...(window.App?.cfg || cfg), topics: order }, `Moved ${t.label} tab`);
+        }));
+        list.appendChild(li);
+      });
+    }
+
     function paint(){
+      paintOrder();
       const on = new Set(chosen());
       grid.innerHTML = "";
       // Topics arrive pre-clustered by data/topic-sources.json's file order
@@ -3143,11 +3177,7 @@
           const list = new Set(Array.isArray(next.topics) ? next.topics : []);
           box.checked ? list.add(id) : list.delete(id);
           next.topics = [...list];
-          window.App.saveConfig(next);
-          cfg = next;
-          paint();
-          window.dispatchEvent(new CustomEvent("hn:topicschange"));
-          setStatus(box.checked ? `Added ${id} tab` : `Removed ${id} tab`, "saved");
+          save(next, box.checked ? `Added ${id} tab` : `Removed ${id} tab`);
         });
       });
     }

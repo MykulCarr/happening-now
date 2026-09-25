@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 1,
-    "purpose": "Curated feeds for the topic tabs (Science, Health, Human Interest, Tech, Comics, Vibe Coding, Music, Sports, Entertainment, Gaming, Business, Food, Travel, Environment, Books, Conspiracies, Odd News). Parallel to local-stations.json, which covers the geographic scopes — this covers the topical ones. Users choose which topics appear as tabs in Settings.",
+    "purpose": "Curated feeds for the topic tabs (Science, Archaeology, Health, Human Interest, Tech, Comics, Vibe Coding, Music, Sports, Entertainment, Gaming, Business, Food, Travel, Environment, Books, Conspiracies, Odd News). Parallel to local-stations.json, which covers the geographic scopes — this covers the topical ones. Users choose which topics appear as tabs in Settings.",
     "schema": {
       "topics": {
         "<topic-id>": {
@@ -180,6 +180,56 @@
           "name": "Universe Today",
           "rss": "https://www.universetoday.com/feed/",
           "site": "https://www.universetoday.com",
+          "type": "paper"
+        }
+      ]
+    },
+    "archaeology": {
+      "label": "ARCHAEOLOGY",
+      "title": "Archaeology",
+      "group": "Science & Environment",
+      "emoji": "🏺",
+      "entries": [
+        {
+          "name": "Ancient Origins",
+          "rss": "https://www.ancient-origins.net/rss.xml",
+          "site": "https://www.ancient-origins.net",
+          "type": "paper"
+        },
+        {
+          "name": "Archaeology Magazine",
+          "rss": "https://www.archaeology.org/feed",
+          "site": "https://www.archaeology.org",
+          "type": "paper"
+        },
+        {
+          "name": "Archaeology Magazine (archaeologymag.com)",
+          "rss": "https://www.archaeologymag.com/feed/",
+          "site": "https://www.archaeologymag.com",
+          "type": "paper"
+        },
+        {
+          "name": "Phys.org Archaeology & Fossils",
+          "rss": "https://phys.org/rss-feed/science-news/archaeology-fossils/",
+          "site": "https://phys.org",
+          "type": "paper"
+        },
+        {
+          "name": "ScienceDaily Archaeology",
+          "rss": "https://www.sciencedaily.com/rss/fossils_ruins/archaeology.xml",
+          "site": "https://www.sciencedaily.com",
+          "type": "paper"
+        },
+        {
+          "name": "Sci.News Archaeology",
+          "rss": "https://www.sci.news/archaeology/feed",
+          "site": "https://www.sci.news",
+          "type": "paper"
+        },
+        {
+          "name": "The Archaeologist",
+          "rss": "https://www.thearchaeologist.org/blog?format=rss",
+          "site": "https://www.thearchaeologist.org",
           "type": "paper"
         }
       ]

@@ -3176,14 +3176,15 @@
     }));
   }
 
-  // The topics this user turned on, in the repo's order so the tab bar doesn't
-  // reshuffle when they toggle one. Unknown ids in saved config are dropped,
-  // which keeps an old config working after a topic is renamed or removed.
+  // The topics this user turned on, in the order they saved them (Settings lets
+  // them reorder; newly ticked topics append to the end). Unknown ids in saved
+  // config are dropped, which keeps an old config working after a topic is
+  // renamed or removed.
   async function getEnabledTopics() {
     const chosen = window.App?.cfg?.topics;
     if (!Array.isArray(chosen) || !chosen.length) return [];
-    const wanted = new Set(chosen);
-    return (await getAllTopics()).filter(t => wanted.has(t.id));
+    const byId = new Map((await getAllTopics()).map(t => [t.id, t]));
+    return chosen.map(id => byId.get(id)).filter(Boolean);
   }
 
   async function getTopicEntries(id) {
