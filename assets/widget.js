@@ -1,4 +1,5 @@
-// Standalone widgets: /widget?w=weather (more types are added to WIDGETS below).
+// Standalone widgets: /widget?w=weather | headlines | markets | watchlist
+// (headlines also takes &scope=world). Add a new one by adding to WIDGETS below.
 // Reuses common.js for saved settings + theme and common-weather.js for the
 // location lookup, so a widget shows exactly what the main site would.
 (function () {
@@ -64,8 +65,84 @@
       <a class="wMeta" href="/weather" target="_top">Full forecast →</a>`;
   }
 
+  // ---- shared bits for the list-style widgets ------------------------------
+  const clock = () => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const shell = (title, body, moreHref, moreText) => {
+    root.innerHTML = `
+      <div class="wHead"><span class="wTitle">${title}</span><span class="wMeta">Updated ${clock()}</span></div>
+      ${body}
+      <a class="wMeta" href="${moreHref}" target="_top">${moreText} →</a>`;
+  };
+
+  // ---- headlines ----------------------------------------------------------
+  // Same curated outlet feeds the site's top ticker uses (news.js), so they
+  // are known to work through the Worker. &scope=world swaps in international.
+  const HEADLINE_FEEDS = {
+    national: ["https://feeds.npr.org/1001/rss.xml", "https://feeds.feedburner.com/reuters/topNews"],
+    world: ["https://feeds.bbci.co.uk/news/world/rss.xml", "https://www.theguardian.com/world/rss"],
+  };
+  async function headlines() {
+    const scope = new URLSearchParams(location.search).get("scope") === "world" ? "world" : "national";
+    const lists = await Promise.all(HEADLINE_FEEDS[scope].map((u) => App.fetchNewsItems(u, 8).catch(() => [])));
+    // Interleave the feeds so one outlet doesn't fill the whole list.
+    const seen = new Set(), items = [];
+    for (let i = 0; i < 8; i++) for (const l of lists) {
+      const it = l?.[i];
+      if (it?.title && it.url && !seen.has(it.title)) { seen.add(it.title); items.push(it); }
+    }
+    if (!items.length) { say("No headlines right now."); return; }
+    const rows = items.slice(0, 10).map((it) =>
+      `<a class="wRow wHeadline" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a>`).join("");
+    shell(scope === "world" ? "World headlines" : "Top headlines", `<div class="wList">${rows}</div>`, "/", "More news");
+  }
+
+  // ---- stock tiles (markets board + watchlist share one row layout) -------
+  const row = (name, price, pct) => {
+    const flat = Math.abs(pct) < 0.005, up = pct > 0;
+    const cls = flat ? "flat" : up ? "up" : "down";
+    const sign = flat ? "" : up ? "▲ " : "▼ ";
+    const dec = Math.abs(price) >= 1 ? 2 : 4;
+    return `<div class="wRow wQuote"><span class="wQName">${esc(name)}</span>
+      <span class="wQPrice">${price.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec })}</span>
+      <span class="wQMove ${cls}">${sign}${Math.abs(pct).toFixed(2)}%</span></div>`;
+  };
+
+  // The board: the tiles you've switched on in Settings, in your order,
+  // read from the same cached snapshot the Stocks page uses.
+  async function markets() {
+    const res = await fetch(App.MARKETS_SNAPSHOT_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error("snapshot " + res.status);
+    const byKey = new Map(((await res.json()).items || []).map((i) => [i.key, i]));
+    const names = new Map(App.MARKET_INDEX_DEFS.map((d) => [d.key, d.name]));
+    let keys = (cfg.marketIndices || []).filter((e) => e && e.visible !== false).map((e) => e.key);
+    keys = keys.filter((k) => byKey.has(k)).slice(0, 8);
+    const rows = keys.map((k) => {
+      const q = byKey.get(k);
+      return Number.isFinite(+q.price) ? row(q.name || names.get(k) || k, +q.price, +q.changePercent || 0) : "";
+    }).join("");
+    if (!rows) { say(`Nothing to show. <a href="/settings#stocks" target="_top">Pick market tiles in Settings</a>.`); return; }
+    shell("Markets", `<div class="wList">${rows}</div>`, "/stocks", "Full board");
+  }
+
+  // The watchlist: one request for all symbols, via the Worker's per-symbol cache.
+  async function watchlist() {
+    const stocks = (cfg.stocks || []).slice(0, 10);
+    if (!stocks.length) { say(`No stocks yet. <a href="/stocks" target="_top">Add some on the Stocks page</a>.`); return; }
+    const sym = (s) => String(s.symbol || s).split(":").pop().toUpperCase();
+    const url = `${App.STOCKS_PROXY_BASE}/quotes?symbols=${encodeURIComponent(stocks.map(sym).join(","))}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("quotes " + res.status);
+    const quotes = (await res.json()).quotes || {};
+    const rows = stocks.map((s) => {
+      const q = quotes[sym(s)];
+      return q && Number.isFinite(+q.price) ? row(sym(s), +q.price, +q.changePercent || 0) : "";
+    }).join("");
+    if (!rows) throw new Error("no quotes");
+    shell("Watchlist", `<div class="wList">${rows}</div>`, "/stocks", "Full stocks page");
+  }
+
   // ---- boot ---------------------------------------------------------------
-  const WIDGETS = { weather };
+  const WIDGETS = { weather, headlines, markets, watchlist };
   const name = new URLSearchParams(location.search).get("w") || "weather";
   const render = WIDGETS[name];
 
