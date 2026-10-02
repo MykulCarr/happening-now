@@ -1,0 +1,36 @@
+/* Standalone widget pages (/widget?w=...). Colors come from styles.css tokens. */
+.widgetPage { min-height: 100vh; padding: 0; margin: 0; }
+.widget {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text);
+}
+.widget .wHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.widget .wTitle { font-weight: 600; font-size: 1rem; }
+.widget .wMeta { color: var(--muted); font-size: .75rem; white-space: nowrap; }
+.widget a { color: var(--accent); }
+.widget .wMsg { margin: auto; text-align: center; color: var(--muted); }
+
+.wNow { display: flex; align-items: center; gap: 14px; }
+.wNow .wIcon { font-size: 3.2rem; line-height: 1; }
+.wNow .wTemp { font-size: 3rem; font-weight: 700; line-height: 1; }
+.wNow .wDesc { font-size: 1rem; }
+.wNow .wSub { color: var(--muted); font-size: .85rem; margin-top: 2px; }
+
+.wHours { scrollbar-width: none; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.wHour {
+  flex: 1 0 56px;
+  min-width: 56px;
+  text-align: center;
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  font-size: .8rem;
+}
+.wHour .wHIcon { font-size: 1.3rem; margin: 2px 0; }
+.wHour .wHRain { color: var(--muted); font-size: .7rem; min-height: 1em; }

@@ -49,6 +49,13 @@
             "description": "Monitor stock prices",
             "url": "/stocks.html",
             "icons": []
+        },
+        {
+            "name": "Weather widget",
+            "short_name": "Weather widget",
+            "description": "Compact weather for a small window or home screen",
+            "url": "/widget?w=weather",
+            "icons": []
         }
     ]
 }
