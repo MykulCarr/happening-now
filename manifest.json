@@ -8,18 +8,11 @@
     "theme_color": "#0c3142",
     "orientation": "any",
     "icons": [
-        {
-            "src": "/assets/icons/icon.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any"
-        },
-        {
-            "src": "/assets/icons/icon-maskable.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "maskable"
-        }
+        { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/assets/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+        { "src": "/assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
     ],
     "categories": [
         "news",
@@ -33,21 +26,21 @@
             "name": "News",
             "short_name": "News",
             "description": "View latest news headlines",
-            "url": "/index.html",
+            "url": "/",
             "icons": []
         },
         {
             "name": "Weather",
             "short_name": "Weather",
             "description": "Check weather forecast",
-            "url": "/weather.html",
+            "url": "/weather",
             "icons": []
         },
         {
             "name": "Stocks",
             "short_name": "Stocks",
             "description": "Monitor stock prices",
-            "url": "/stocks.html",
+            "url": "/stocks",
             "icons": []
         },
         {
