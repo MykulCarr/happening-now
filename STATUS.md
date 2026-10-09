@@ -4,9 +4,9 @@ Read by the Projects Dashboard's sync and used to rank what to work on next.
 Only the `key: value` lines below are parsed; prose around them is ignored, so
 write freely.
 
-updated: 2026-09-18
-health: needs-attention
-next: Deploy the digest fix, Artemis removal and ops reminders â€” pwsh -File scripts/deploy-prod.ps1
+updated: 2026-10-09
+health: ok
+next: Optional — clean sw.js precache list to clean paths; add units to any other bare numbers
 blocked:
 capabilities: public news/weather/stocks aggregation at happening-now.net, Cloudflare Pages and Workers hosting, installable PWA, RSS proxy with last-good caching, curated 409-feed local and topic news catalog
 

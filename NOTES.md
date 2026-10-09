@@ -609,3 +609,20 @@ on, just from the other direction.
 - A digest row is still a **lead, not a verdict**. Re-probe by hand before
   editing the catalog.
 
+
+## 2026-10-09 — Search Console "Page with redirect" + tile units
+
+- GSC flagged 4 URLs (`http://` root, `/index.html` on http and https,
+  `/terms.html`). All are correct 301s to the canonical paths; sitemap,
+  canonicals and page links were already clean, so it's old URLs Google keeps
+  re-crawling. No action needed beyond waiting. `http://…/index.html` takes two
+  hops (http→https is a Cloudflare setting, not in this repo).
+- Fixed the last internal `index.html` links (logo click in `topbar.js`,
+  desktop shortcut in `settings.js`). `sw.js` still precaches `/index.html`,
+  `/weather.html` etc. — left alone, needs a careful SW test.
+- Markets board tiles now show their unit (`TILE_UNITS` + `tileUnit()` in
+  `stocks.js`, `.indexUnit` in `styles.css`). Grains/softs/livestock are US
+  cents (Yahoo currency `USX`), shown as `¢ / bushel` etc. A new catalog key
+  falls back to "index pts" — add a `TILE_UNITS` line for new commodities.
+- Everything deployed. Next: units on other non-market prices if wanted
+  (watchlist already uses `$`).
