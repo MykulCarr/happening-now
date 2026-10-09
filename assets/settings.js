@@ -3938,7 +3938,7 @@
   }
 
   function getShortcutLaunchUrl(){
-    return new URL("index.html", window.location.href).href;
+    return new URL("/", window.location.href).href;
   }
 
   function buildWindowsShortcutContent(){

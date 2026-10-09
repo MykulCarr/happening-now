@@ -188,7 +188,7 @@
   const brand = document.getElementById('hnBrand');
   brand.addEventListener('click', (e) => {
     e.preventDefault();
-    window.location.href = 'index.html';
+    window.location.href = '/';
   });
 
   // Topbar Location button — wired here once (not per-page) so all pages
