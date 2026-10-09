@@ -572,6 +572,35 @@
     return 8;
   }
 
+  // What the number on a tile is measured in. A bare "2,341.50" could be
+  // dollars, cents or index points, so every tile says which. Futures quoted by
+  // Yahoo in US cents (grains, softs, livestock) are labelled ¢, not USD.
+  const TILE_UNITS = {
+    gold: "USD / troy oz", silver: "USD / troy oz", platinum: "USD / troy oz", palladium: "USD / troy oz",
+    copper: "USD / lb", aluminium: "USD / tonne",
+    crudeoil: "USD / barrel", brent: "USD / barrel", natgas: "USD / MMBtu",
+    heatingoil: "USD / gallon", gasoline: "USD / gallon",
+    corn: "¢ / bushel", wheat: "¢ / bushel", soybeans: "¢ / bushel", oats: "¢ / bushel",
+    coffee: "¢ / lb", sugar: "¢ / lb", cotton: "¢ / lb", orangejuice: "¢ / lb",
+    cocoa: "USD / tonne", lumber: "USD / 1,000 board ft",
+    livecattle: "¢ / lb", leanhogs: "¢ / lb",
+    dxy: "index pts (USD vs basket)",
+    eurusd: "USD per EUR", gbpusd: "USD per GBP", audusd: "USD per AUD"
+  };
+
+  function tileUnit(idx){
+    if(TILE_UNITS[idx.key]) return TILE_UNITS[idx.key];
+    if(idx.group === "currencies"){
+      const quote = String(idx.name || "").split("/")[1];
+      return quote ? `${quote} per 1 USD` : "";
+    }
+    if(/^usd[a-z]{3}$/.test(idx.key)) return `${idx.key.slice(3).toUpperCase()} per USD`;
+    if(/^us\d+[my]$/.test(idx.key)) return "yield, % per year";
+    if(idx.group === "crypto") return "USD per coin";
+    if(idx.key === "vix" || idx.key === "vxn") return "volatility pts";
+    return "index pts";
+  }
+
   function formatIndexValue(index){
     const decimals = indexDecimals(index);
     return Number(index.value).toLocaleString("en-US", {
@@ -631,7 +660,9 @@
     // A currency tile reads "USD/SEK"; its friendly name used to sit where the
     // change figure now goes, so it moves into the title and the label a screen
     // reader announces rather than being dropped.
-    const fullName = idx.label ? `${idx.name} — ${idx.label}` : idx.name;
+    const unit = hasData ? tileUnit(idx) : "";
+    const fullName = (idx.label ? `${idx.name} — ${idx.label}` : idx.name) + (unit ? ` (${unit})` : "");
+    const unitHtml = unit ? `<div class="indexUnit">${escapeHtml(unit)}</div>` : "";
 
     return `
       <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" title="${escapeHtml(fullName)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(fullName)} news">
@@ -643,6 +674,7 @@
           <div class="indexValue">${valueHtml}</div>
           <div class="indexChange ${changeCls}">${changeHtml}</div>
         </div>
+        ${unitHtml}
       </div>
     `;
   }

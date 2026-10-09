@@ -5580,6 +5580,15 @@ body.stockLookupModalOpen {
   white-space: nowrap;
 }
 
+.indexUnit {
+  font-size: 10px;
+  color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .indexChange {
   font-size: 11px;
   font-weight: 700;
