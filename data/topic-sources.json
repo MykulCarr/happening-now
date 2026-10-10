@@ -47,12 +47,6 @@
           "type": "paper"
         },
         {
-          "name": "Hakai Magazine",
-          "rss": "https://hakaimagazine.com/feed/",
-          "site": "https://hakaimagazine.com",
-          "type": "paper"
-        },
-        {
           "name": "Inside Climate News",
           "rss": "https://insideclimatenews.org/feed/",
           "site": "https://insideclimatenews.org",
@@ -78,12 +72,6 @@
       "group": "Science & Environment",
       "emoji": "🩺",
       "entries": [
-        {
-          "name": "CIDRAP (U. Minnesota)",
-          "rss": "https://www.cidrap.umn.edu/rss.xml",
-          "site": "https://www.cidrap.umn.edu",
-          "type": "paper"
-        },
         {
           "name": "KFF Health News (nonprofit)",
           "rss": "https://kffhealthnews.org/feed/",
@@ -117,12 +105,6 @@
       "emoji": "🔬",
       "entries": [
         {
-          "name": "APOD (NASA Astronomy Picture of the Day)",
-          "rss": "https://apod.nasa.gov/apod.rss",
-          "site": "https://apod.nasa.gov",
-          "type": "paper"
-        },
-        {
           "name": "Eos (Earth & space science)",
           "rss": "https://eos.org/feed",
           "site": "https://eos.org",
@@ -138,12 +120,6 @@
           "name": "NASA Breaking News",
           "rss": "https://www.nasa.gov/rss/dyn/breaking_news.rss",
           "site": "https://www.nasa.gov",
-          "type": "paper"
-        },
-        {
-          "name": "New Scientist",
-          "rss": "https://www.newscientist.com/feed/home/",
-          "site": "https://www.newscientist.com",
           "type": "paper"
         },
         {
@@ -171,15 +147,21 @@
           "type": "paper"
         },
         {
-          "name": "Scientific American",
-          "rss": "https://www.scientificamerican.com/platform/syndication/rss/",
-          "site": "https://www.scientificamerican.com",
-          "type": "paper"
-        },
-        {
           "name": "Universe Today",
           "rss": "https://www.universetoday.com/feed/",
           "site": "https://www.universetoday.com",
+          "type": "paper"
+        },
+        {
+          "name": "Live Science",
+          "rss": "https://www.livescience.com/feeds/all",
+          "site": "https://www.livescience.com",
+          "type": "paper"
+        },
+        {
+          "name": "NASA",
+          "rss": "https://www.nasa.gov/feed/",
+          "site": "https://www.nasa.gov",
           "type": "paper"
         }
       ]
@@ -190,12 +172,6 @@
       "group": "Science & Environment",
       "emoji": "🏺",
       "entries": [
-        {
-          "name": "Ancient Origins",
-          "rss": "https://www.ancient-origins.net/rss.xml",
-          "site": "https://www.ancient-origins.net",
-          "type": "paper"
-        },
         {
           "name": "Archaeology Magazine",
           "rss": "https://www.archaeology.org/feed",
@@ -441,14 +417,6 @@
           "embed": false
         },
         {
-          "name": "The Nib (political cartoons)",
-          "rss": "https://thenib.com/feed/",
-          "site": "https://thenib.com",
-          "type": "community",
-          "license": "All rights reserved",
-          "embed": false
-        },
-        {
           "name": "War and Peas",
           "rss": "https://warandpeas.com/feed/",
           "site": "https://warandpeas.com",
@@ -612,12 +580,6 @@
       "emoji": "💼",
       "entries": [
         {
-          "name": "Business Insider",
-          "rss": "https://www.businessinsider.com/rss",
-          "site": "https://www.businessinsider.com",
-          "type": "paper"
-        },
-        {
           "name": "Fast Company",
           "rss": "https://www.fastcompany.com/rss",
           "site": "https://www.fastcompany.com",
@@ -638,6 +600,18 @@
         {
           "name": "MarketWatch",
           "rss": "https://www.marketwatch.com/rss/topstories",
+          "site": "https://www.marketwatch.com",
+          "type": "paper"
+        },
+        {
+          "name": "CNBC",
+          "rss": "https://www.cnbc.com/id/10001147/device/rss/rss.html",
+          "site": "https://www.cnbc.com",
+          "type": "paper"
+        },
+        {
+          "name": "MarketWatch",
+          "rss": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
           "site": "https://www.marketwatch.com",
           "type": "paper"
         }
@@ -723,12 +697,6 @@
           "name": "Condé Nast Traveler",
           "rss": "https://www.cntraveler.com/feed/rss",
           "site": "https://www.cntraveler.com",
-          "type": "paper"
-        },
-        {
-          "name": "Fodor's Travel",
-          "rss": "https://www.fodors.com/feed",
-          "site": "https://www.fodors.com",
           "type": "paper"
         },
         {

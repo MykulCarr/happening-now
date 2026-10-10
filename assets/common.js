@@ -367,7 +367,7 @@
       { name: "BBC", rss: "https://feeds.bbci.co.uk/news/rss.xml", site: "https://www.bbc.com/news", headlinesCount: 5, scopes: ["international"] },
       { name: "The Guardian (US)", rss: "https://www.theguardian.com/us-news/rss", site: "https://www.theguardian.com/us-news", headlinesCount: 5, scopes: ["national"] },
       { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
-      { name: "The Atlantic", rss: "https://www.theatlantic.com/feed/all/", site: "https://www.theatlantic.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "Christian Science Monitor", rss: "https://rss.csmonitor.com/feeds/all", site: "https://www.csmonitor.com", headlinesCount: 5, scopes: ["national"] },
       { name: "ArsTechnica", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", headlinesCount: 5, scopes: ["national"] },
       { name: "ProPublica", rss: "https://www.propublica.org/feeds/propublica/main", site: "https://www.propublica.org", headlinesCount: 5, scopes: ["national"] },
       { name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", headlinesCount: 5, scopes: ["international"] },
@@ -396,7 +396,8 @@
   // Migrate old RSS feeds to working alternatives
   function migrateWidgets(widgets) {
     if (!Array.isArray(widgets)) return clone(DEFAULTS.widgets);
-    return widgets;
+    // The Atlantic went behind a paywall; drop it from configs saved before the swap.
+    return widgets.filter(w => !/theatlantic\.com/.test(w && w.rss || ""));
   }
 
   function normalizeConfig(cfg) {
@@ -902,6 +903,7 @@
   // covers the realistic worst-case while still failing fast enough that
   // we move on to the fallback proxy.
   const RSS_REQUEST_TIMEOUT_FAST_MS = 8000;
+  const MAX_ITEM_AGE_MS = 45 * 24 * 60 * 60 * 1000; // hide headlines older than this
   const RSS_STALE_CACHE_MAX_AGE_MS = 30 * 60 * 1000; // serve stale for up to 30 minutes on failures
   const RSS_ROUTE_COOLDOWN_BASE_MS = 8000;
   const RSS_ROUTE_COOLDOWN_MAX_MS = 60000;
@@ -1555,6 +1557,15 @@
               }
               return "";
             };
+
+            // Drop items older than MAX_ITEM_AGE_MS so a feed that quietly died doesn't
+            // keep showing months-old headlines as if they were current. Undated
+            // items are kept; we can't tell they're old.
+            const cutoff = Date.now() - MAX_ITEM_AGE_MS;
+            items = items.filter(it => {
+              const t = Date.parse(firstText(it, "pubDate", "updated", "published", "dc:date").trim());
+              return Number.isNaN(t) || t >= cutoff;
+            });
 
             const result = annotateNewsItems(items.slice(0, limit).map(it => {
               const title = (firstText(it, "title", "dc:title") || "Untitled").trim();

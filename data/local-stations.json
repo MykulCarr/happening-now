@@ -217,12 +217,6 @@
             "rss": "https://www.abc15.com/news.rss",
             "site": "https://www.abc15.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch Phoenix",
-            "rss": "https://patch.com/feeds/arizona/phoenix",
-            "site": "https://patch.com/arizona/phoenix",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -240,12 +234,6 @@
             "rss": "https://www.kgun9.com/news.rss",
             "site": "https://www.kgun9.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch Tucson",
-            "rss": "https://patch.com/feeds/arizona/tucson",
-            "site": "https://patch.com/arizona/tucson",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -340,12 +328,6 @@
             "name": "Los Angeles Magazine",
             "rss": "https://www.lamag.com/feed/",
             "site": "https://www.lamag.com",
-            "type": "paper"
-          },
-          {
-            "name": "Los Angeles Times — California",
-            "rss": "https://www.latimes.com/california/rss2.0.xml",
-            "site": "https://www.latimes.com",
             "type": "paper"
           },
           {
@@ -1099,12 +1081,6 @@
             "rss": "https://www.kivitv.com/news.rss",
             "site": "https://www.kivitv.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch Boise",
-            "rss": "https://patch.com/feeds/idaho/boise",
-            "site": "https://patch.com/idaho/boise",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -1442,12 +1418,6 @@
             "rss": "https://www.brproud.com/feed/",
             "site": "https://www.brproud.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch Baton Rouge",
-            "rss": "https://patch.com/feeds/louisiana/baton-rouge",
-            "site": "https://patch.com/louisiana/baton-rouge",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -1874,9 +1844,9 @@
             "type": "community"
           },
           {
-            "name": "Star Tribune (Minneapolis)",
-            "rss": "https://www.startribune.com/rss/",
-            "site": "https://www.startribune.com",
+            "name": "MinnPost (nonprofit)",
+            "rss": "https://www.minnpost.com/feed/",
+            "site": "https://www.minnpost.com",
             "type": "paper"
           }
         ],
@@ -2003,12 +1973,6 @@
         },
         "entries": [
           {
-            "name": "Patch Jackson",
-            "rss": "https://patch.com/feeds/mississippi/jackson",
-            "site": "https://patch.com/mississippi/jackson",
-            "type": "community"
-          },
-          {
             "name": "WJTV 12 (Jackson, CBS)",
             "rss": "https://www.wjtv.com/feed/",
             "site": "https://www.wjtv.com",
@@ -2083,12 +2047,6 @@
             "rss": "https://www.kpax.com/news.rss",
             "site": "https://www.kpax.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch Missoula",
-            "rss": "https://patch.com/feeds/montana/missoula",
-            "site": "https://patch.com/montana/missoula",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -2320,12 +2278,6 @@
           "lon": -71.4548
         },
         "entries": [
-          {
-            "name": "New Hampshire Union Leader",
-            "rss": "https://www.unionleader.com/search/?f=rss&t=article&c=news",
-            "site": "https://www.unionleader.com",
-            "type": "paper"
-          },
           {
             "name": "NHPR (New Hampshire Public Radio)",
             "rss": "https://www.nhpr.org/rss.xml",
@@ -3332,12 +3284,6 @@
             "type": "paper"
           },
           {
-            "name": "KERA News (NPR North Texas)",
-            "rss": "https://www.keranews.org/news.rss",
-            "site": "https://www.keranews.org",
-            "type": "paper"
-          },
-          {
             "name": "Texas Standard (statewide radio)",
             "rss": "https://www.texasstandard.org/feed/",
             "site": "https://www.texasstandard.org",
@@ -3424,16 +3370,16 @@
         },
         "entries": [
           {
-            "name": "Austin Monitor (nonprofit)",
-            "rss": "https://www.austinmonitor.com/feed/",
-            "site": "https://www.austinmonitor.com",
-            "type": "paper"
-          },
-          {
             "name": "KXAN Austin (NBC 36)",
             "rss": "https://www.kxan.com/news/feed/",
             "site": "https://www.kxan.com",
             "type": "tv"
+          },
+          {
+            "name": "Texas Tribune (nonprofit)",
+            "rss": "https://www.texastribune.org/feeds/main/",
+            "site": "https://www.texastribune.org",
+            "type": "paper"
           }
         ],
         "subreddits": [
@@ -3457,12 +3403,6 @@
             "rss": "https://kvia.com/feed/",
             "site": "https://kvia.com",
             "type": "tv"
-          },
-          {
-            "name": "Patch El Paso",
-            "rss": "https://patch.com/feeds/texas/el-paso",
-            "site": "https://patch.com/texas/el-paso",
-            "type": "community"
           }
         ],
         "subreddits": [
@@ -3860,36 +3800,10 @@
             "rss": "https://oilcity.news/feed/",
             "site": "https://oilcity.news",
             "type": "paper"
-          },
-          {
-            "name": "Patch Casper",
-            "rss": "https://patch.com/feeds/wyoming/casper",
-            "site": "https://patch.com/wyoming/casper",
-            "type": "community"
           }
         ],
         "subreddits": [
           "Casper"
-        ]
-      },
-      "cheyenne": {
-        "coords": {
-          "lat": 41.14,
-          "lon": -104.8202
-        },
-        "entries": [
-          {
-            "name": "Patch Cheyenne",
-            "rss": "https://patch.com/feeds/wyoming/cheyenne",
-            "site": "https://patch.com/wyoming/cheyenne",
-            "type": "community"
-          },
-          {
-            "name": "Wyoming Tribune Eagle (Cheyenne)",
-            "rss": "https://www.wyomingnews.com/search/?f=rss&t=article&c=news",
-            "site": "https://www.wyomingnews.com",
-            "type": "paper"
-          }
         ]
       }
     }
