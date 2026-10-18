@@ -50,6 +50,7 @@ import { sendHtmlMail } from "./mailer.mjs";
 const STATE_KEY = "curate:state";
 const STATIONS_URL = "https://happening-now.net/data/local-stations.json";
 const TOPICS_URL = "https://happening-now.net/data/topic-sources.json";
+const NEWS_URL = "https://happening-now.net/data/news-sources.json";
 const BATCH = 40;              // + 2 subrequests for the two catalog files
 const TIMEOUT_MS = 15000;
 
@@ -143,7 +144,7 @@ function dedupeByRss(rows) {
 // geographic ones and were previously swept by nothing at all — the Climate,
 // Tech, Screen, Business and Food tabs each lost a source with no alert.
 // `state: "topic"` matches how scripts/check-feeds.mjs labels them.
-function flatten(states, topics) {
+function flatten(states, topics, news) {
   const out = [];
   for (const [state, block] of Object.entries(states || {})) {
     for (const [place, node] of Object.entries(block)) {
@@ -156,6 +157,10 @@ function flatten(states, topics) {
     for (const e of topic.entries || []) {
       out.push({ state: "topic", place: id, name: e.name, rss: e.rss });
     }
+  }
+  // The National / International picker catalog.
+  for (const e of news || []) {
+    out.push({ state: "news", place: e.scope, name: e.name, rss: e.rss });
   }
   // Sorted so the cursor stays meaningful across runs even as the list grows.
   return out.sort((a, b) => a.rss.localeCompare(b.rss));
@@ -241,13 +246,17 @@ export async function runCurationSweep(env) {
 
   if (state.phase === "verify") return runVerifyPhase(env, state);
 
-  const [stationsRes, topicsRes] = await Promise.all([
+  const [stationsRes, topicsRes, newsRes] = await Promise.all([
     fetch(STATIONS_URL, { cf: { cacheTtl: 0 } }),
     fetch(TOPICS_URL, { cf: { cacheTtl: 0 } }),
+    fetch(NEWS_URL, { cf: { cacheTtl: 0 } }),
   ]);
   if (!stationsRes.ok) return { error: `stations fetch ${stationsRes.status}` };
   if (!topicsRes.ok) return { error: `topics fetch ${topicsRes.status}` };
-  const feeds = flatten((await stationsRes.json()).states, (await topicsRes.json()).topics);
+  // The news catalog is optional: a Worker deployed before the site would
+  // otherwise abort every sweep on its 404.
+  const news = newsRes.ok ? (await newsRes.json()).sources : [];
+  const feeds = flatten((await stationsRes.json()).states, (await topicsRes.json()).topics, news);
 
   // The list changes between runs; if it shrank past the cursor, start over.
   // Restarting has to drop the findings too. Keeping them meant a wrapped scan

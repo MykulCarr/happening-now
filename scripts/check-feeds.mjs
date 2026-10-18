@@ -1,4 +1,5 @@
-// Health-check every feed in data/local-stations.json through the production
+// Health-check every feed in data/local-stations.json, topic-sources.json and
+// news-sources.json through the production
 // Worker proxy — the same check data/local-stations.json's _meta.howToAdd
 // requires before a feed is added.
 //
@@ -59,13 +60,28 @@ async function check(entry) {
   try {
     const res = await fetch(probeUrl(entry.rss), { signal: controller.signal });
     if (!res.ok) return { ...entry, items: 0, ok: false, error: `HTTP ${res.status}` };
-    const { ok, problem, items } = checkFeedText(await res.text());
-    return { ...entry, items, ok, error: problem || undefined };
+    const text = await res.text();
+    const { ok, problem, items } = checkFeedText(text);
+    return { ...entry, items, ok, error: problem || undefined, newestMs: newestItemMs(text) };
   } catch (err) {
     return { ...entry, items: 0, ok: false, error: err.name === "AbortError" ? "timeout" : err.message };
   } finally {
     clearTimeout(timer);
   }
+}
+
+// A feed can parse perfectly and still be dead: CNN's rss.cnn.com kept
+// serving a valid feed whose newest story was from 2023. So also report how
+// old the newest dated item is. Undated feeds return null and aren't judged.
+const STALE_DAYS = 14;
+function newestItemMs(text) {
+  const now = Date.now();
+  let newest = null;
+  for (const m of text.matchAll(/<(pubDate|published|updated|dc:date)>([^<]+)<\/\1>/g)) {
+    const t = Date.parse(m[2].trim());
+    if (Number.isFinite(t) && t <= now + 3600e3 && (newest === null || t > newest)) newest = t;
+  }
+  return newest;
 }
 
 async function pool(items, worker, limit) {
@@ -97,9 +113,17 @@ for (const [id, topic] of Object.entries(topics)) {
   }
 }
 
+// The National / International picker catalog.
+const { sources } = await read("news-sources.json");
+for (const e of sources) {
+  feeds.push({ state: "news", place: e.scope, name: e.name, rss: e.rss });
+}
+
 if (!asJson) console.error(`Checking ${feeds.length} feeds…`);
 const results = await pool(feeds, check, CONCURRENCY);
 const dead = results.filter(r => !r.ok);
+const staleCutoff = Date.now() - STALE_DAYS * 86400e3;
+const stale = results.filter(r => r.ok && r.newestMs !== null && r.newestMs < staleCutoff);
 
 // A block losing every feed is the failure that actually hurts: that place
 // silently shows no local news at all.
@@ -119,6 +143,7 @@ if (asJson) {
     dead: dead.length,
     emptyBlocks: empty,
     deadFeeds: dead.map(({ state, place, name, rss, error }) => ({ state, place, name, rss, error })),
+    staleFeeds: stale.map(({ state, place, name, rss, newestMs }) => ({ state, place, name, rss, newest: new Date(newestMs).toISOString() })),
   }, null, 2));
 } else {
   console.log(`\n${results.length - dead.length}/${results.length} alive`);
@@ -126,6 +151,12 @@ if (asJson) {
     console.log(`\nDEAD (${dead.length}):`);
     for (const r of dead.sort((a, b) => a.state.localeCompare(b.state))) {
       console.log(`  ${r.state}/${r.place}  ${r.name}\n      ${r.rss}${r.error ? `  (${r.error})` : ""}`);
+    }
+  }
+  if (stale.length) {
+    console.log(`\nSTALE: parses, but nothing new in ${STALE_DAYS}+ days (${stale.length}):`);
+    for (const r of stale) {
+      console.log(`  ${r.state}/${r.place}  ${r.name}  newest ${new Date(r.newestMs).toISOString().slice(0, 10)}\n      ${r.rss}`);
     }
   }
   if (empty.length) {
