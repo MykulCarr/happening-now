@@ -78,7 +78,7 @@
   // Same curated outlet feeds the site's top ticker uses (news.js), so they
   // are known to work through the Worker. &scope=world swaps in international.
   const HEADLINE_FEEDS = {
-    national: ["https://feeds.npr.org/1001/rss.xml", "https://feeds.feedburner.com/reuters/topNews"],
+    national: ["https://feeds.npr.org/1001/rss.xml", "https://www.cbsnews.com/latest/rss/main"],
     world: ["https://rss.dw.com/rdf/rss-en-all", "https://www.theguardian.com/world/rss"],
   };
   async function headlines() {

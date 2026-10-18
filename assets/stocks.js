@@ -197,54 +197,46 @@
     tron: "TRON TRX crypto news"
   };
 
+  // Where a tile's "Direct Source" link goes. Free-to-read only: these were
+  // Reuters (metered since Oct 2024), WSJ and Bloomberg (hard paywalls), so a
+  // tap from the board landed most readers on a subscribe page. Yahoo Finance
+  // is where the numbers come from anyway, and its market pages are free.
+  const YAHOO_MARKETS = {
+    us: "https://finance.yahoo.com/markets/",
+    world: "https://finance.yahoo.com/markets/world-indices/",
+    commodities: "https://finance.yahoo.com/markets/commodities/",
+    bonds: "https://finance.yahoo.com/markets/bonds/",
+    currencies: "https://finance.yahoo.com/markets/currencies/"
+  };
   const INDEX_DIRECT_SOURCE_URLS = {
-    dow: "https://www.reuters.com/markets/us/",
-    sp500: "https://www.reuters.com/markets/us/",
-    nasdaq: "https://www.reuters.com/markets/us/",
-    russell2000: "https://www.reuters.com/markets/us/",
-    sp400: "https://www.reuters.com/markets/us/",
-    sp600: "https://www.reuters.com/markets/us/",
-    microcap: "https://www.wsj.com/market-data/stocks",
+    dow: YAHOO_MARKETS.us,
+    sp500: YAHOO_MARKETS.us,
+    nasdaq: YAHOO_MARKETS.us,
+    russell2000: YAHOO_MARKETS.us,
+    sp400: YAHOO_MARKETS.us,
+    sp600: YAHOO_MARKETS.us,
+    microcap: YAHOO_MARKETS.us,
     vix: "https://www.cboe.com/tradable_products/vix/",
-    ftse100: "https://www.reuters.com/world/uk/",
-    dax: "https://www.reuters.com/world/europe/",
-    nikkei225: "https://www.reuters.com/world/asia-pacific/",
-    hangseng: "https://www.reuters.com/world/china/",
-    gold: "https://www.bloomberg.com/markets/commodities",
-    silver: "https://www.bloomberg.com/markets/commodities",
-    copper: "https://www.bloomberg.com/markets/commodities",
-    crudeoil: "https://www.bloomberg.com/energy",
-    brent: "https://www.bloomberg.com/energy",
-    natgas: "https://www.bloomberg.com/energy",
-    us10y: "https://www.reuters.com/markets/rates-bonds/",
-    dxy: "https://www.reuters.com/markets/currencies/",
-    eurusd: "https://www.reuters.com/markets/currencies/",
+    ftse100: YAHOO_MARKETS.world,
+    dax: YAHOO_MARKETS.world,
+    nikkei225: YAHOO_MARKETS.world,
+    hangseng: YAHOO_MARKETS.world,
+    gold: YAHOO_MARKETS.commodities,
+    silver: YAHOO_MARKETS.commodities,
+    copper: YAHOO_MARKETS.commodities,
+    crudeoil: YAHOO_MARKETS.commodities,
+    brent: YAHOO_MARKETS.commodities,
+    natgas: YAHOO_MARKETS.commodities,
+    us10y: YAHOO_MARKETS.bonds,
+    dxy: YAHOO_MARKETS.currencies,
+    eurusd: YAHOO_MARKETS.currencies,
     bitcoin: "https://www.coindesk.com/markets/",
     ethereum: "https://www.coindesk.com/markets/"
   };
 
+  // Every key not named here reads "Yahoo Finance".
   const INDEX_DIRECT_SOURCE_LABELS = {
-    dow: "Reuters",
-    sp500: "Reuters",
-    nasdaq: "Reuters",
-    russell2000: "Reuters",
-    sp400: "Reuters",
-    sp600: "Reuters",
-    microcap: "WSJ",
     vix: "CBOE",
-    ftse100: "Reuters",
-    dax: "Reuters",
-    nikkei225: "Reuters",
-    hangseng: "Reuters",
-    gold: "Bloomberg",
-    silver: "Bloomberg",
-    copper: "Bloomberg",
-    crudeoil: "Bloomberg",
-    brent: "Bloomberg",
-    natgas: "Bloomberg",
-    us10y: "Reuters",
-    dxy: "Reuters",
-    eurusd: "Reuters",
     bitcoin: "CoinDesk",
     ethereum: "CoinDesk"
   };
@@ -254,12 +246,12 @@
   // through to Google News while the badge still read "Direct Source" — with a
   // hundred tiles that would have been the common case rather than the corner.
   const GROUP_DIRECT_SOURCES = {
-    "us-indices": ["https://www.reuters.com/markets/us/", "Reuters"],
-    "global-indices": ["https://www.reuters.com/markets/global-market-report/", "Reuters"],
-    commodities: ["https://www.bloomberg.com/markets/commodities", "Bloomberg"],
-    rates: ["https://www.reuters.com/markets/rates-bonds/", "Reuters"],
+    "us-indices": [YAHOO_MARKETS.us, "Yahoo Finance"],
+    "global-indices": [YAHOO_MARKETS.world, "Yahoo Finance"],
+    commodities: [YAHOO_MARKETS.commodities, "Yahoo Finance"],
+    rates: [YAHOO_MARKETS.bonds, "Yahoo Finance"],
     crypto: ["https://www.coindesk.com/markets/", "CoinDesk"],
-    currencies: ["https://www.reuters.com/markets/currencies/", "Reuters"]
+    currencies: [YAHOO_MARKETS.currencies, "Yahoo Finance"]
   };
 
   const marketIndexCatalog = Array.isArray(MARKET_INDEX_DEFS) && MARKET_INDEX_DEFS.length

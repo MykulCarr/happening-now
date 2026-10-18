@@ -743,12 +743,7 @@
           "site": "https://www.bellingcat.com",
           "type": "paper"
         },
-        {
-          "name": "Fortean Times",
-          "rss": "https://www.forteantimes.com/feed",
-          "site": "https://www.forteantimes.com",
-          "type": "paper"
-        },
+
         {
           "name": "Full Fact",
           "rss": "https://fullfact.org/feed/",
@@ -759,6 +754,18 @@
           "name": "Snopes",
           "rss": "https://www.snopes.com/feed/",
           "site": "https://www.snopes.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Black Vault",
+          "rss": "https://www.theblackvault.com/documentarchive/feed/",
+          "site": "https://www.theblackvault.com",
+          "type": "paper"
+        },
+        {
+          "name": "The Daily Grail",
+          "rss": "https://www.dailygrail.com/feed/",
+          "site": "https://www.dailygrail.com",
           "type": "paper"
         },
         {

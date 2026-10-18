@@ -24,13 +24,14 @@
         "Times of India": "TOI+ subscriber-only articles mixed into the feed — 2026-10-18",
         "The Independent": "Independent Premium articles mixed into the feed — 2026-10-18",
         "Irish Times": "metered — 2026-10-18",
+        "Reuters": "metered paywall since Oct 2024 ($1/week after a few free articles) — 2026-10-18",
         "The Atlantic, NYT, WSJ, Washington Post, FT, Bloomberg, The Economist, SCMP, The Hindu, Haaretz, Business Insider, MarketWatch, Fortune": "hard or metered paywalls",
         "The Dispatch, The Free Press, The Bulwark": "substantial subscriber-only share",
         "CNBC": "CNBC Pro (subscriber) stories appear in the top-news feed"
       },
       "dead_or_unreachable": {
         "CNN": "rss.cnn.com parses but its newest item is from 2023",
-        "AP, Reuters": "no public RSS",
+        "AP": "no public RSS",
         "PBS NewsHour, ESPN, NHK World, Japan Today, Rest of World, Global Voices, Hong Kong Free Press, Mail & Guardian, The Wire, Brazilian Report, RFE/RL, Inquirer.net, Asia Times, Yahoo Finance": "empty or 502 through the Worker proxy on 2026-10-18",
         "Taipei Times, Hindustan Times": "feeds carry no dates, so freshness can't be shown"
       }

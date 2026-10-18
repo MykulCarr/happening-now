@@ -27,7 +27,7 @@
   // multiple feeds are deduped and trimmed downstream.
   const CRITICAL_NATIONAL_FEEDS = [
     { rss: "https://feeds.npr.org/1001/rss.xml", scope: "national", label: "US" },
-    { rss: "https://feeds.feedburner.com/reuters/topNews", scope: "national", label: "US" }
+    { rss: "https://www.cbsnews.com/latest/rss/main", scope: "national", label: "US" }  // was Reuters: metered paywall since Oct 2024
   ];
   const CRITICAL_INTERNATIONAL_FEEDS = [
     { rss: "https://rss.dw.com/rdf/rss-en-all", scope: "international", label: "WORLD" },  // was BBC World: US paywall since 2025
