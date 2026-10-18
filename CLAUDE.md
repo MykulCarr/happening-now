@@ -366,6 +366,43 @@ The gainers / losers / trending widgets still fan out over `POPULAR_STOCKS`
 through Finnhub, but only after both Yahoo movers and FMP have failed, so it's a
 rare path rather than a per-load one.
 
+## National / International source picker
+
+Rebuilt 2026-10-18. Settings > News leads with **National News** and
+**International News**: a compact list per scope (favicon, name, −/+ headline
+count, ↑/↓, ✕) and a **Browse sources** button that opens
+`assets/news-picker.js` (+ `news-picker.css`). The picker browses
+`data/news-sources.json`, filters by beat (national) or region
+(international), and a tap on any source **peeks**: its five latest real
+headlines plus "N stories in the last 24 hours · newest Xh ago", measured live
+from the same `App.fetchRssItems` path the news page uses.
+
+Rules that matter:
+
+- **Free to read, full stop.** No meters, no premium-article mix. The
+  catalog's `_meta.excluded` lists what was rejected and why (BBC: US paywall
+  since June 2025; CS Monitor: 5-article meter) — check it before "adding
+  back" a big name. A clearly-labelled, off-by-default "free articles each
+  month" tier was floated and not decided; do **not** build anything that
+  circumvents a meter (archive links, full-text fetching).
+- **Peek numbers are measured, never typed in.** That's the honesty of it.
+  Don't add hand-written "posts daily" claims to the catalog.
+- **The six-per-scope defaults live twice**: `default: true` in the catalog and
+  `DEFAULT_CONFIG.widgets` in `common.js` (a first visit can't wait on a fetch).
+  Keep them in step. Existing visitors' saved lists are never rewritten.
+- **These lists save immediately**, like Local and State beside them. The old
+  editor waited for Save Changes with no unsaved-changes warning.
+- Reordering is ↑/↓ buttons because HTML5 drag-and-drop never fires on touch.
+- **Probe every new feed with *and* without the `_hn` cache-buster.** The Hill
+  answers a busted URL with a valid one-item feed (100 without), so nothing
+  errors and the retry never fires. CBS, NBC, Vox, UN News, Politico Europe and
+  AllAfrica return empty. All are in `NO_CACHE_BUST_HOSTS`.
+- **Check freshness, not just parsing.** CNN's RSS parses perfectly and its
+  newest item is from 2023. `check-feeds` now reports `STALE` (newest dated
+  item older than 14 days) alongside `DEAD`. A stale feed can be a quiet
+  section rather than a dead one — Sci.News stopped posting archaeology for a
+  month in Sept–Oct 2026 while the rest of the site carried on.
+
 ## Local news coverage list
 
 `data/local-stations.json` is the curated per-state/per-city feed list behind the
