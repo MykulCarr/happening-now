@@ -17,29 +17,48 @@
 <body>
   <header id="topbar"></header>
 
-  <main class="container">
-    <section class="pageHead">
-      <div>
-        <h1>Admin</h1>
-        <div class="sub" id="adSignedIn">Loading…</div>
+  <main class="container adPage">
+    <div class="adHead">
+      <h1>Admin</h1>
+      <span class="adWho" id="adSignedIn">Loading…</span>
+      <button type="button" class="btn adIconBtn" id="adRefresh" aria-label="Refresh" title="Refresh">↻</button>
+    </div>
+
+    <!-- Summary tiles: everything at a glance; tap one to open its detail view. -->
+    <div class="adTiles" role="tablist" aria-label="Sections">
+      <button type="button" class="adTile" role="tab" data-view="reports" aria-selected="false" aria-controls="adDetail">
+        <span class="adTileNum" id="tReports">–</span>
+        <span class="adTileLabel">Reports</span>
+        <span class="adTileSub" id="tReportsSub">&nbsp;</span>
+      </button>
+      <button type="button" class="adTile" role="tab" data-view="pulse" aria-selected="false" aria-controls="adDetail">
+        <span class="adTileNum" id="tPulse">–</span>
+        <span class="adTileLabel">Useful</span>
+        <span class="adTileSub" id="tPulseSub">&nbsp;</span>
+      </button>
+      <button type="button" class="adTile" role="tab" data-view="sweep" aria-selected="false" aria-controls="adDetail">
+        <span class="adTileNum" id="tSweep">–</span>
+        <span class="adTileLabel">Feed sweep</span>
+        <span class="adTileSub" id="tSweepSub">&nbsp;</span>
+      </button>
+    </div>
+
+    <section class="card adDetail" id="adDetail" role="tabpanel" hidden>
+      <div class="adDetailHead">
+        <h2 id="adDetailTitle"></h2>
+        <button type="button" class="btn adIconBtn" id="adClose" aria-label="Close">✕</button>
       </div>
-      <button type="button" class="btn" id="adRefresh">Refresh</button>
+      <div id="adDetailBody"></div>
     </section>
 
-    <section class="card fbCard">
-      <h2>Reader reports <span class="adWindow">last 30 days</span></h2>
-      <div id="adReports"><p class="hint">Loading…</p></div>
-    </section>
-
-    <section class="card fbCard">
-      <h2>Is it useful? <span class="adWindow">last 30 days</span></h2>
-      <div id="adPulse"><p class="hint">Loading…</p></div>
-    </section>
-
-    <section class="card fbCard">
-      <h2>Feed sweep</h2>
-      <div id="adSweep"><p class="hint">Loading…</p></div>
-    </section>
+    <nav class="adLinks" aria-label="Admin links">
+      <a href="https://dash.cloudflare.com/3949da63d9ab140c1997f85b14086013/workers/services/view/happening-now-sync/production" target="_blank" rel="noopener">Worker</a>
+      <a href="https://dash.cloudflare.com/3949da63d9ab140c1997f85b14086013/workers/d1/databases/7b2d7670-f0db-40a3-8fa3-ca102585b6dc" target="_blank" rel="noopener">Database</a>
+      <a href="https://dash.cloudflare.com/3949da63d9ab140c1997f85b14086013/one/access-controls/apps" target="_blank" rel="noopener">Access</a>
+      <a href="https://analytics.google.com/" target="_blank" rel="noopener">Analytics</a>
+      <a href="https://search.google.com/search-console" target="_blank" rel="noopener">Search Console</a>
+      <a href="/feedback">Feedback page</a>
+    </nav>
   </main>
 
   <script defer src="assets/common.js"></script>
