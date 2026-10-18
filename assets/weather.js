@@ -52,7 +52,7 @@
   // populated) — the widget would intermittently render empty.
   const WEATHER_NEWS_PRIMARY_QUERY = "https://www.theguardian.com/environment/rss";
   const WEATHER_NEWS_SECONDARY_QUERIES = [
-    "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",   // BBC Science & Environment
+    "https://grist.org/feed/",                                         // Grist (was BBC: US paywall since 2025)
     "https://www.nhc.noaa.gov/index-at.xml"                            // NOAA NHC Atlantic tropical
   ];
   // Built from App.RSS_PROXY_BASE rather than a literal path so it carries the

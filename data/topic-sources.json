@@ -203,9 +203,21 @@
           "type": "paper"
         },
         {
+          "name": "Sci.News Paleontology",
+          "rss": "https://www.sci.news/paleontology/feed",
+          "site": "https://www.sci.news",
+          "type": "paper"
+        },
+        {
           "name": "The Archaeologist",
           "rss": "https://www.thearchaeologist.org/blog?format=rss",
           "site": "https://www.thearchaeologist.org",
+          "type": "paper"
+        },
+        {
+          "name": "The Guardian Archaeology",
+          "rss": "https://www.theguardian.com/science/archaeology/rss",
+          "site": "https://www.theguardian.com/science/archaeology",
           "type": "paper"
         }
       ]

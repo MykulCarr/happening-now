@@ -79,7 +79,7 @@
   // are known to work through the Worker. &scope=world swaps in international.
   const HEADLINE_FEEDS = {
     national: ["https://feeds.npr.org/1001/rss.xml", "https://feeds.feedburner.com/reuters/topNews"],
-    world: ["https://feeds.bbci.co.uk/news/world/rss.xml", "https://www.theguardian.com/world/rss"],
+    world: ["https://rss.dw.com/rdf/rss-en-all", "https://www.theguardian.com/world/rss"],
   };
   async function headlines() {
     const scope = new URLSearchParams(location.search).get("scope") === "world" ? "world" : "national";
