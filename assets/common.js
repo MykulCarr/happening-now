@@ -363,18 +363,23 @@
       // `scopes` controls which scope tab(s) on the news page show this widget.
       // Widgets without a `scopes` field are treated as ["national","international"]
       // by getWidgetsForScope so older saved configs still render.
+      // The six-per-scope starter set. Every entry must also be marked
+      // `default: true` in data/news-sources.json (the picker's catalog) —
+      // this copy exists because a first visit can't wait on that fetch.
+      // Chosen for: free to read, posts many times a day, and broad — between
+      // them politics, breaking news, business, science and people stories.
       { name: "NPR", rss: "https://feeds.npr.org/1001/rss.xml", site: "https://www.npr.org", headlinesCount: 5, scopes: ["national"] },
-      { name: "BBC", rss: "https://feeds.bbci.co.uk/news/rss.xml", site: "https://www.bbc.com/news", headlinesCount: 5, scopes: ["international"] },
-      { name: "The Guardian (US)", rss: "https://www.theguardian.com/us-news/rss", site: "https://www.theguardian.com/us-news", headlinesCount: 5, scopes: ["national"] },
-      { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
-      { name: "Christian Science Monitor", rss: "https://rss.csmonitor.com/feeds/all", site: "https://www.csmonitor.com", headlinesCount: 5, scopes: ["national"] },
-      { name: "ArsTechnica", rss: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", headlinesCount: 5, scopes: ["national"] },
-      { name: "ProPublica", rss: "https://www.propublica.org/feeds/propublica/main", site: "https://www.propublica.org", headlinesCount: 5, scopes: ["national"] },
+      { name: "CBS News", rss: "https://www.cbsnews.com/latest/rss/main", site: "https://www.cbsnews.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "Axios", rss: "https://api.axios.com/feed/", site: "https://www.axios.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "The Hill", rss: "https://thehill.com/feed/", site: "https://thehill.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "Fox News", rss: "https://moxie.foxnews.com/google-publisher/latest.xml", site: "https://www.foxnews.com", headlinesCount: 5, scopes: ["national"] },
+      { name: "NBC News", rss: "https://feeds.nbcnews.com/nbcnews/public/news", site: "https://www.nbcnews.com", headlinesCount: 5, scopes: ["national"] },
       { name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml", site: "https://www.aljazeera.com", headlinesCount: 5, scopes: ["international"] },
-      { name: "Hacker News", rss: "https://news.ycombinator.com/rss", site: "https://news.ycombinator.com", headlinesCount: 5, scopes: ["national"] },
-      { name: "Deutsche Welle", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", headlinesCount: 5, scopes: ["international"] },
-      { name: "Nature", rss: "https://www.nature.com/nature.rss", site: "https://www.nature.com", headlinesCount: 5, scopes: ["international"] },
-      { name: "The Conversation (Global)", rss: "https://theconversation.com/global/articles.atom", site: "https://theconversation.com/global", headlinesCount: 5, scopes: ["international"] }
+      { name: "The Guardian (World)", rss: "https://www.theguardian.com/world/rss", site: "https://www.theguardian.com/world", headlinesCount: 5, scopes: ["international"] },
+      { name: "DW", rss: "https://rss.dw.com/rdf/rss-en-all", site: "https://www.dw.com", headlinesCount: 5, scopes: ["international"] },
+      { name: "France 24", rss: "https://www.france24.com/en/rss", site: "https://www.france24.com/en", headlinesCount: 5, scopes: ["international"] },
+      { name: "CNA", rss: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml", site: "https://www.channelnewsasia.com", headlinesCount: 5, scopes: ["international"] },
+      { name: "Africanews", rss: "https://www.africanews.com/feed/rss", site: "https://www.africanews.com", headlinesCount: 5, scopes: ["international"] }
     ],
 
     // Four household names a first-time visitor will recognise. The previous
@@ -444,7 +449,13 @@
     // Lookup table for restoring `scopes` on legacy saved configs whose
     // widgets predate the field. Built from DEFAULTS.widgets so the 9
     // canonical sources keep their intended scope after a config reload.
-    const defaultScopesByRss = {};
+    // Old default feeds that were international, so a saved config from
+    // before 2026-10-18 that lacks `scopes` still files them correctly.
+    const defaultScopesByRss = {
+      "https://feeds.bbci.co.uk/news/rss.xml": ["international"],
+      "https://www.nature.com/nature.rss": ["international"],
+      "https://theconversation.com/global/articles.atom": ["international"]
+    };
     for (const dw of DEFAULTS.widgets || []) {
       if (dw?.rss && Array.isArray(dw?.scopes) && dw.scopes.length) {
         defaultScopesByRss[dw.rss] = clone(dw.scopes);
@@ -853,6 +864,14 @@
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
       .replace(/<\/?[^>]+(>|$)/g, "")
+      // Some feeds (Fox News) double-encode, so `&apos;` survives XML parsing
+      // and printed literally. Decode the harmless entities; never < or >,
+      // which could turn text back into markup for a caller using innerHTML.
+      .replace(/&(apos|#39|#x27);/gi, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&nbsp;/g, " ")
+      .replace(/&#(\d+);/g, (m, n) => (n === "60" || n === "62") ? m : String.fromCodePoint(Number(n)))
+      .replace(/&amp;/g, "&")
       .replace(/\s+/g, " ")
       .trim();
   }
@@ -1483,7 +1502,16 @@
         "www.theverge.com", "theverge.com",
         "www.eater.com", "eater.com",
         "www.businessinsider.com", "businessinsider.com",
-        "hnrss.org"
+        "hnrss.org",
+        // The Hill is the dangerous kind: with any extra param it answers a
+        // valid feed holding ONE item instead of 100, so nothing fails and the
+        // retry never fires — the card just quietly shows a single headline.
+        "thehill.com",
+        // These return an empty feed with the buster (found 2026-10-18 by
+        // probing every news-sources.json feed both ways). Retry recovers
+        // them; listing them saves the round trip.
+        "www.cbsnews.com", "feeds.nbcnews.com", "www.vox.com", "news.un.org",
+        "www.politico.eu", "allafrica.com"
       ]);
       const skipCacheBust = (url) => {
         try { return NO_CACHE_BUST_HOSTS.has(new URL(url).host); }

@@ -1,0 +1,142 @@
+/* Settings > News: the National / International source lists and the
+   picker sheet (assets/news-picker.js). Kept out of styles.css, which is
+   already the size of a small book. Uses its colour tokens only. */
+
+/* ── Saved-source rows ─────────────────────────────────────────── */
+.srcList { display: grid; gap: 8px; }
+
+.srcRow {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "icon text count move remove";
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.srcRowIcon { grid-area: icon; width: 20px; height: 20px; border-radius: 4px; }
+.srcRowText { grid-area: text; min-width: 0; }
+.srcRowName { font-weight: 700; overflow-wrap: anywhere; }
+.srcRowHost { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srcRowCount { grid-area: count; display: flex; align-items: center; gap: 2px; }
+.srcRowCountNum { min-width: 9ch; font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; }
+.srcRowMove { grid-area: move; display: flex; gap: 2px; }
+.srcRowRemove { grid-area: remove; justify-self: end; }
+
+.srcRowBtn {
+  min-width: 40px; min-height: 40px;           /* finger-sized */
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel2);
+  color: var(--text);
+  font: inherit; font-size: 16px;
+  cursor: pointer;
+}
+.srcRowBtn:hover:not(:disabled) { background: var(--panelHover); }
+.srcRowBtn:disabled { opacity: .35; cursor: default; }
+.srcRowRemove:hover { color: #ff6b6b; }
+
+/* Phone: name gets the whole first line, controls drop to a second. */
+@media (max-width: 560px) {
+  .srcRow {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-areas: "icon text remove" ". count move";
+    row-gap: 6px;
+  }
+  .srcRowCount { justify-self: start; }
+}
+
+/* ── Picker sheet ──────────────────────────────────────────────── */
+body.npOpen { overflow: hidden; }
+
+.npOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, .72);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.npSheet {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  width: 100%; max-width: 640px; max-height: 88vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  padding: 16px 16px 0;
+}
+/* Only the list scrolls; everything else keeps its natural height. */
+.npSheet > * { flex: none; }
+.npSheet > .npList { flex: 1 1 auto; min-height: 0; }
+.npHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.npTitle { margin: 0; font-size: 20px; }
+.npClose {
+  min-width: 44px; min-height: 44px;
+  border: 0; border-radius: 12px; background: transparent;
+  color: var(--text); font-size: 20px; cursor: pointer;
+}
+.npClose:hover { background: var(--panel); }
+.npLead { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
+.npSearch { width: 100%; }
+
+.npChips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
+.npChips::-webkit-scrollbar { display: none; }
+.npChip {
+  flex: none; min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--panel); color: var(--text);
+  font: inherit; font-size: 14px; cursor: pointer;
+}
+.npChip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.npStatus { min-height: 20px; font-size: 13px; color: var(--muted); padding: 2px 0 6px; }
+.npStatus.isError { color: #ff8a80; }
+
+.npList { overflow-y: auto; display: grid; gap: 8px; align-content: start; padding-bottom: 12px; }
+
+.npCard { border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.npCardRow { display: flex; align-items: center; gap: 8px; padding-right: 10px; }
+.npCardMain {
+  flex: 1; min-width: 0;
+  display: flex; gap: 12px; align-items: flex-start; text-align: left;
+  padding: 12px; border: 0; background: transparent; color: var(--text);
+  font: inherit; cursor: pointer; border-radius: 14px;
+}
+.npIcon { width: 24px; height: 24px; border-radius: 5px; flex: none; margin-top: 2px; }
+.npCardText { display: grid; gap: 3px; min-width: 0; }
+.npName { font-weight: 700; }
+.npBadge {
+  margin-left: 8px; padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; vertical-align: 2px;
+  background: var(--panel2); color: var(--muted);
+}
+.npBlurb { font-size: 14px; line-height: 1.35; }
+.npMeta { font-size: 12px; color: var(--muted); }
+.npPeekHint { color: var(--accent); font-weight: 600; }
+
+.npAdd { flex: none; min-width: 92px; min-height: 40px; }
+.npAdd.isAdded { background: var(--panel2); border-color: var(--accent); color: var(--accent); }
+
+.npPeek { padding: 0 14px 12px 48px; }
+.npPeekStats { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.npPeekStats.isQuiet { color: #ffb74d; }
+.npPeekList { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.npPeekList a { color: var(--text); }
+.npPeekAge { margin-left: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.npPeekSite { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--accent); }
+.npPeekNote { margin: 0; font-size: 14px; color: var(--muted); }
+
+.npCustom { border-top: 1px solid var(--border); padding: 10px 0 14px; }
+.npCustom summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
+.npCustomRow { display: flex; gap: 6px; margin-top: 8px; }
+.npCustomInput { flex: 1; min-width: 0; }
+.npCustomPeekBody { padding: 10px 0 0; }
+
+@media (max-width: 560px) {
+  .npOverlay { padding: 0; align-items: stretch; }
+  .npSheet { max-width: none; max-height: none; height: 100%; border-radius: 0; border: 0; }
+  .npPeek { padding-left: 14px; }
+  .npAdd { min-width: 80px; }
+}

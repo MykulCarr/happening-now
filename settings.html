@@ -64,6 +64,7 @@
     }
   </style>
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/news-picker.css">
   <script>
     if (location.protocol !== "file:") {
       const manifestLink = document.createElement("link");
@@ -346,8 +347,40 @@
       <!-- TAB: News -->
       <div class="settingsTabContent active" data-tab="news">
 
-        <!-- Categories first: it's the cheapest way to change what the news
-             page shows (one click per tab, no picker step), so it leads. -->
+        <!-- National & International lead (2026-10-18; Categories used to):
+             they are what every visitor sees on the news page's default tabs,
+             and they were buried at the bottom. cfg.widgets is one
+             array; each section lists the widgets tagged for its scope.
+             The picker itself (assets/news-picker.js) builds its own DOM. -->
+        <div class="collapsibleSection sourceCard sourceCard--global">
+          <button class="collapsibleHeader" data-section="news-national" aria-expanded="false">
+            <span class="collapsibleHeaderMain">🗽 National News</span>
+            <span class="sourceCountBadge" id="newsNationalCount"></span>
+            <span class="collapsibleHeaderMeta sourceCardMeta">US outlets, all free to read</span>
+          </button>
+          <div class="collapsibleBody sourceCardBody">
+            <div class="newsEditorToolbar">
+              <button id="addNationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">Browse sources</button>
+            </div>
+            <div id="newsEditorNational" class="srcList"></div>
+          </div>
+        </div>
+
+        <div class="collapsibleSection sourceCard sourceCard--global">
+          <button class="collapsibleHeader" data-section="news-international" aria-expanded="false">
+            <span class="collapsibleHeaderMain">🌍 International News</span>
+            <span class="sourceCountBadge" id="newsInternationalCount"></span>
+            <span class="collapsibleHeaderMeta sourceCardMeta">Every region, all free to read</span>
+          </button>
+          <div class="collapsibleBody sourceCardBody">
+            <div class="newsEditorToolbar">
+              <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">Browse sources</button>
+            </div>
+            <div id="newsEditorInternational" class="srcList"></div>
+            <div class="hint hintMt10">National and International share a limit of 15 sources.</div>
+          </div>
+        </div>
+
         <div class="collapsibleSection sourceCard" id="news-topic-sources">
           <button class="collapsibleHeader" data-section="news-topic-sources-body" aria-expanded="false">
             <span class="collapsibleHeaderMain">🗂️ News Categories</span>
@@ -444,59 +477,6 @@
           </div>
         </div>
 
-        <!-- National & International live at the bottom — they use a richer
-             editor (drag-reorder, headlines count, multi-publisher picker)
-             and aren't tied to the user's geo, so they don't fit the same
-             3-column tile layout. Split into two sections so each scope is
-             managed independently. cfg.widgets is still a single array; the
-             two sections are filtered views over it (by scopes membership). -->
-        <div class="collapsibleSection sourceCard sourceCard--global">
-          <button class="collapsibleHeader" data-section="news-national" aria-expanded="false">
-            <span class="collapsibleHeaderMain">🇺🇸 National News Sources</span>
-            <span class="sourceCountBadge" id="newsNationalCount"></span>
-            <span id="newsHeaderInfoToggle" class="collapsibleHeaderInfo" data-expanded="false"
-              title="Show editor tips">
-              <span class="usageGuideIcon">i</span>
-              How to add/remove news sources
-            </span>
-          </button>
-          <div class="collapsibleBody sourceCardBody">
-            <div id="newsHeaderGuide" class="headerGuidePanel" hidden>
-              <p>Click <strong>+ Add Source</strong> to open the source picker. Choose a category, then click a
-                publisher chip to see its available feeds, or type directly into the search bar.</p>
-              <p>Use <strong>Add Top 3</strong> to add a publisher's top sections at once, or <strong>Add This
-                  Source</strong> for a single feed. The modal closes automatically after adding.</p>
-              <p>For a custom RSS URL, use <strong>Manual RSS URL</strong> at the bottom of the picker. Source Name and
-                Site fields auto-fill when possible.</p>
-              <p>Drag the grip icon to reorder saved sources, adjust the Headlines count per card, then click
-                <strong>Save Changes</strong>.
-              </p>
-            </div>
-            <div class="newsEditorToolbar">
-              <button id="addNationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add National
-                Source</button>
-            </div>
-            <div id="newsEditorNational" class="stack newsEditorStack"></div>
-          </div>
-        </div>
-
-        <div class="collapsibleSection sourceCard sourceCard--global">
-          <button class="collapsibleHeader" data-section="news-international" aria-expanded="false">
-            <span class="collapsibleHeaderMain">🌍 International News Sources</span>
-            <span class="sourceCountBadge" id="newsInternationalCount"></span>
-          </button>
-          <div class="collapsibleBody sourceCardBody">
-            <div class="newsEditorToolbar">
-              <button id="addInternationalSourceBtn" class="btn primary newsAddTriggerBtn" type="button">+ Add
-                International Source</button>
-            </div>
-            <div id="newsEditorInternational" class="stack newsEditorStack"></div>
-            <div class="hint hintMt10">
-              National + International together cap at 15 sources. Best performance: keep counts lean and headlines per
-              card between 5 and 8.
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- TAB: Stocks -->
@@ -852,37 +832,6 @@
     </div>
   </div>
 
-  <!-- News Discovery Modal -->
-  <div id="newsDiscoveryModal" class="newsDiscoveryModal" role="dialog" aria-modal="true"
-    aria-labelledby="newsDiscoveryModalTitle" hidden>
-    <div class="newsDiscoveryModalBackdrop" id="newsDiscoveryModalBackdrop"></div>
-    <div class="newsDiscoveryModalSheet">
-      <div class="newsDiscoveryModalHead">
-        <div id="newsDiscoveryModalTitle" class="newsDiscoveryModalTitle">Add News Sources</div>
-        <button class="newsDiscoveryModalClose" id="newsDiscoveryModalClose" type="button"
-          aria-label="Close">&#x2715;</button>
-      </div>
-      <div class="newsDiscoveryModalBody">
-        <form id="newsDiscoveryForm" class="newsDiscoveryForm" novalidate>
-          <input id="newsDiscoveryInput" class="input newsDiscoveryInput" type="search"
-            placeholder="Try BBC, Reuters, npr.org, or https://example.com" aria-label="Search for a news feed" />
-          <button id="newsDiscoveryBtn" class="btn newsDiscoveryBtn" type="submit">Search Feeds</button>
-        </form>
-        <div id="newsDiscoveryBrowse" class="newsDiscoveryBrowse" aria-label="Browse by category"></div>
-        <div id="newsDiscoveryStatus" class="newsDiscoveryStatus" aria-live="polite"></div>
-        <div id="newsDiscoveryResults" class="newsDiscoveryResults" aria-live="polite"></div>
-        <section class="newsManualWrap" aria-labelledby="newsManualToggle">
-          <button id="newsManualToggle" class="btn newsManualToggle" type="button" aria-expanded="false">Manual RSS
-            URL</button>
-          <div id="newsManualBody" class="newsManualBody" hidden>
-            <button id="addNewsBtn" class="btn" type="button">+ Add News Source Manually</button>
-            <div class="hint">Use manual mode when search and category browse don't list your source.</div>
-          </div>
-        </section>
-      </div>
-    </div>
-  </div>
-
   <!-- Stock Lookup Modal -->
   <div id="stockLookupModal" class="stockLookupModal" role="dialog" aria-modal="true"
     aria-labelledby="stockLookupModalTitle" hidden>
@@ -923,7 +872,8 @@
   <script defer src="assets/topbar.js"></script>
   <script defer src="assets/infobar.js"></script>
   <script defer src="assets/source-search.js"></script>
-  <script defer src="assets/settings.js?v=20260604b"></script>
+  <script defer src="assets/news-picker.js"></script>
+  <script defer src="assets/settings.js?v=20261018"></script>
   <script defer src="assets/settings-sync.js"></script>
 </body>
 
