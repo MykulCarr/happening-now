@@ -21,5 +21,24 @@
       "pattern": "happening-now.net/*",
       "zone_name": "happening-now.net"
     }
-  ]
+  ],
+
+  // Beta: scripts/deploy-beta.ps1. Same staged files, on its own Worker at
+  // beta.happening-now.net (a Workers custom domain, so Cloudflare makes the
+  // DNS record). Behind Cloudflare Access. /v1/* goes to the beta API Worker
+  // via scripts/beta-router.js and the API service binding.
+  "env": {
+    "beta": {
+      "name": "news-pages-beta",
+      "main": "scripts/beta-router.js",
+      "assets": { "directory": ".deploy-public", "binding": "ASSETS" },
+      "routes": [
+        { "pattern": "beta.happening-now.net", "custom_domain": true }
+      ],
+      "workers_dev": false,
+      "services": [
+        { "binding": "API", "service": "happening-now-sync-beta" }
+      ]
+    }
+  }
 }

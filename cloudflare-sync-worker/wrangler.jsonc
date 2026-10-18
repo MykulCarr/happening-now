@@ -65,5 +65,31 @@
 
   "observability": {
     "enabled": true
+  },
+
+  // Beta: `wrangler deploy --env beta` (scripts/deploy-beta.ps1). A separate
+  // Worker with its own KV and D1, so testing never touches production
+  // reports, the quote cache or the sweep state. No routes: it is reached
+  // only through the beta site Worker's service binding (scripts/beta-router.js),
+  // which sits behind Cloudflare Access. No cron, and no send_email binding
+  // (bindings aren't inherited), so beta can never email the digest.
+  "env": {
+    "beta": {
+      "name": "happening-now-sync-beta",
+      "routes": [],
+      "workers_dev": false,
+      "triggers": { "crons": [] },
+      "vars": {
+        "ALLOWED_ORIGINS": "https://beta.happening-now.net",
+        "ACCESS_TEAM_DOMAIN": "happening-now.cloudflareaccess.com",
+        "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556"
+      },
+      "kv_namespaces": [
+        { "binding": "HN_STATE_DATA", "id": "f4ae09f8969e47f58a29100e31ee65a8" }
+      ],
+      "d1_databases": [
+        { "binding": "HN_REPORTS", "database_name": "hn-reports-beta", "database_id": "57c05ae6-313f-4b3f-974e-00188bf6f300" }
+      ]
+    }
   }
 }
