@@ -46,6 +46,11 @@
     row-gap: 6px;
   }
   .srcRowCount { justify-self: start; }
+  /* Local / State rows have no headline stepper, so they fit on one line. */
+  .srcRow--compact {
+    grid-template-columns: 22px minmax(0, 1fr) auto auto;
+    grid-template-areas: "icon text move remove";
+  }
 }
 
 /* ── Picker sheet ──────────────────────────────────────────────── */
@@ -114,7 +119,7 @@ body.npOpen { overflow: hidden; }
 }
 .npBlurb { font-size: 14px; line-height: 1.35; }
 .npMeta { font-size: 12px; color: var(--muted); }
-.npPeekHint { color: var(--accent); font-weight: 600; }
+.npPeekHint { color: var(--accent); font-weight: 600; white-space: nowrap; }
 
 .npAdd { flex: none; min-width: 92px; min-height: 40px; }
 .npAdd.isAdded { background: var(--panel2); border-color: var(--accent); color: var(--accent); }
@@ -140,3 +145,14 @@ body.npOpen { overflow: hidden; }
   .npPeek { padding-left: 14px; }
   .npAdd { min-width: 80px; }
 }
+
+/* Local / State extras */
+.npWhere { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; margin: 2px 0 10px; }
+.npWhereText { flex: 1; min-width: 0; }
+.npWhereBtn { min-height: 40px; }
+.npQuick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.npQuick .btn { min-height: 40px; }
+.npQuick[hidden], .npQuick .btn[hidden] { display: none; }
+.npNearby { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 4px 0; }
+.npNearbyBtn, .npSearchMore { min-height: 40px; }
+.npSearchMore { justify-self: start; }

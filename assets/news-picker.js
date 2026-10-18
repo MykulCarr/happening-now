@@ -1,16 +1,21 @@
-/* National / International source picker.
+/* The news source picker, for all four scopes.
  *
- * Opened from Settings > News. Browses data/news-sources.json, and lets a
- * reader "peek" at any source before adding it: its latest real headlines,
- * fetched live through the same /v1/rss/raw path the news page uses, plus
- * numbers measured from that fetch (how many stories in the last 24h, how
- * long since the last one). Nothing about a source's activity is typed in
- * by hand, so the peek can't flatter a feed that has gone quiet — CNN's
- * feed parses perfectly and stopped updating in 2023.
+ * National / International browse data/news-sources.json. Local / State
+ * browse the outlets we curate near the reader plus Reddit communities
+ * (assets/news-picker-local.js finds them). Either way a reader can "peek"
+ * at any source before adding it: its latest real headlines, fetched live
+ * through the same /v1/rss/raw path the news page uses, plus numbers measured
+ * from that fetch (stories in the last 24h, time since the last one).
+ * Nothing about a source's activity is typed in by hand, so the peek can't
+ * flatter a feed that has gone quiet — CNN's feed parses perfectly and
+ * stopped updating in 2023.
  *
- * It never touches cfg itself. Settings passes callbacks:
+ * It never touches cfg itself. The caller passes callbacks:
  *   NewsPicker.open({ scope, isAdded(rss), add(entry) -> errorText,
- *                     remove(rss), addCustom(rss) -> Promise<errorText>, returnFocus })
+ *                     remove(rss), addCustom(rss) -> Promise<errorText>,
+ *                     returnFocus, onClose,
+ *                     // Local / State only:
+ *                     addMany(entries) -> count, skip() })
  */
 (function () {
   "use strict";
@@ -28,7 +33,13 @@
     global: "Global", europe: "Europe", "middle-east": "Middle East", africa: "Africa",
     "asia-pacific": "Asia-Pacific", americas: "Americas"
   };
-  const KIND_LABELS = { public: "Public or state-funded", nonprofit: "Nonprofit", commercial: "Commercial", wire: "Wire service" };
+  // Local / State filter chips, by source kind.
+  const GROUP_LABELS = { tv: "TV", paper: "Newspapers", community: "Community", radio: "Radio", reddit: "Reddit", search: "Search results" };
+  const KIND_LABELS = {
+    public: "Public or state-funded", nonprofit: "Nonprofit", commercial: "Commercial", wire: "Wire service",
+    tv: "Local TV", paper: "Newspaper", community: "Community news", radio: "Radio", reddit: "Reddit community", search: "Search result"
+  };
+  const TITLES = { national: "National sources", international: "International sources", local: "Local sources", regional: "State & regional sources" };
 
   let catalogPromise = null;
   const peekCache = new Map();     // rss -> Promise<items[]>, per page load
@@ -97,8 +108,9 @@
 
   function open(opts) {
     if (document.getElementById("npOverlay")) return;
-    const scope = opts.scope === "international" ? "international" : "national";
+    const scope = ["national", "international", "local", "regional"].includes(opts.scope) ? opts.scope : "national";
     const intl = scope === "international";
+    const geoMode = scope === "local" || scope === "regional";
 
     const overlay = document.createElement("div");
     overlay.id = "npOverlay";
@@ -109,11 +121,18 @@
     overlay.innerHTML = `
       <div class="npSheet">
         <div class="npHead">
-          <h2 id="npTitle" class="npTitle">${intl ? "International sources" : "National sources"}</h2>
+          <h2 id="npTitle" class="npTitle">${TITLES[scope]}</h2>
           <button type="button" class="npClose" aria-label="Close">✕</button>
         </div>
-        <p class="npLead">Every source here is free to read, with no paywall. Tap one to peek at what it's publishing right now.</p>
-        <input type="search" class="input npSearch" placeholder="Search by name or subject" aria-label="Search sources">
+        ${geoMode ? `
+          <div class="npWhere"><span class="npWhereText">Finding your area…</span>
+            <button type="button" class="btn npWhereBtn">Change</button></div>
+          <div class="npQuick" hidden>
+            <button type="button" class="btn primary npAddAll"></button>
+            <button type="button" class="btn npSkip">Use automatic picks</button>
+          </div>`
+        : `<p class="npLead">Every source here is free to read, with no paywall. Tap one to peek at what it's publishing right now.</p>`}
+        <input type="search" class="input npSearch" placeholder="${geoMode ? "Filter, or search a place or topic" : "Search by name or subject"}" aria-label="Search sources">
         <div class="npChips" role="group" aria-label="Filter"></div>
         <div class="npStatus" aria-live="polite"></div>
         <div class="npList" role="list"><p class="npPeekNote">Loading sources…</p></div>
@@ -133,6 +152,7 @@
     const $ = (sel) => overlay.querySelector(sel);
     const listEl = $(".npList"), chipsEl = $(".npChips"), searchEl = $(".npSearch"), statusEl = $(".npStatus");
     let sources = [];
+    let nearby = [];
     let filter = "all";
 
     const status = (msg, isError) => {
@@ -144,25 +164,28 @@
       overlay.remove();
       document.body.classList.remove("npOpen");
       opts.returnFocus?.focus?.();
+      try { opts.onClose?.(); } catch {}
     }
     $(".npClose").addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     overlay.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
+    // What a chip filters on: region (international), beat (national), kind (local/state).
+    const tagsOf = (s) => (geoMode ? [s.kind] : intl ? s.regions : s.beats) || [];
+    const chipLabels = geoMode ? GROUP_LABELS : intl ? REGION_LABELS : BEAT_LABELS;
+
     function matches(src) {
-      if (filter !== "all" && !(intl ? src.regions : src.beats)?.includes(filter)) return false;
+      if (filter !== "all" && !tagsOf(src).includes(filter)) return false;
       const q = searchEl.value.trim().toLowerCase();
-      if (!q) return true;
+      if (!q || src.kind === "search") return true;   // search results already match their query
       const tags = [...(src.beats || []).map((b) => BEAT_LABELS[b]), ...(src.regions || []).map((r) => REGION_LABELS[r])];
       return [src.name, src.blurb, KIND_LABELS[src.kind], ...tags].join(" ").toLowerCase().includes(q);
     }
 
     function renderChips() {
-      // International filters by where a source is from; national by what it covers.
-      const labels = intl ? REGION_LABELS : BEAT_LABELS;
-      const present = Object.keys(labels).filter((k) => sources.some((s) => (intl ? s.regions : s.beats)?.includes(k)));
+      const present = Object.keys(chipLabels).filter((k) => sources.some((s) => tagsOf(s).includes(k)));
       chipsEl.innerHTML = ["all", ...present].map((k) =>
-        `<button type="button" class="npChip${k === filter ? " active" : ""}" data-k="${k}" aria-pressed="${k === filter}">${k === "all" ? "All" : esc(labels[k])}</button>`
+        `<button type="button" class="npChip${k === filter ? " active" : ""}" data-k="${k}" aria-pressed="${k === filter}">${k === "all" ? "All" : esc(chipLabels[k])}</button>`
       ).join("");
     }
     chipsEl.addEventListener("click", (e) => {
@@ -182,56 +205,150 @@
       btn.setAttribute("aria-label", `${added ? "Remove" : "Add"} ${src.name}`);
     }
 
+    function card(src) {
+      const el = document.createElement("div");
+      el.className = "npCard";
+      el.setAttribute("role", "listitem");
+      const where = intl ? (src.regions || []).map((r) => REGION_LABELS[r]).join(", ") : (src.where || "");
+      el.innerHTML = `
+        <div class="npCardRow">
+          <button type="button" class="npCardMain" aria-expanded="false">
+            <img class="npIcon" alt="" loading="lazy" src="${esc(window.App.faviconUrl(src.site || src.rss, 32))}">
+            <span class="npCardText">
+              <span class="npName">${esc(src.name)}${src.default ? `<span class="npBadge">Starter</span>` : ""}${src.suggested ? `<span class="npBadge">Suggested</span>` : ""}</span>
+              ${src.blurb ? `<span class="npBlurb">${esc(src.blurb)}</span>` : ""}
+              <span class="npMeta">${esc(KIND_LABELS[src.kind] || "")}${where ? ` · ${esc(where)}` : ""} · <span class="npPeekHint">Peek ▾</span></span>
+            </span>
+          </button>
+          <button type="button" class="btn npAdd"></button>
+        </div>
+        <div class="npPeek" hidden></div>`;
+      const addBtn = el.querySelector(".npAdd");
+      addButtonState(addBtn, src);
+      addBtn.addEventListener("click", () => {
+        if (opts.isAdded(src.rss)) { opts.remove(src.rss); status(`Removed ${src.name}.`); }
+        else {
+          const err = opts.add(src);
+          status(err || `Added ${src.name}.`, !!err);
+        }
+        addButtonState(addBtn, src);
+        updateQuick();
+      });
+      const main = el.querySelector(".npCardMain");
+      const peekEl = el.querySelector(".npPeek");
+      main.addEventListener("click", async () => {
+        const opening = peekEl.hidden;
+        peekEl.hidden = !opening;
+        main.setAttribute("aria-expanded", String(opening));
+        el.querySelector(".npPeekHint").textContent = opening ? "Hide ▴" : "Peek ▾";
+        if (!opening || peekEl.dataset.loaded) return;
+        peekEl.innerHTML = `<p class="npPeekNote">Fetching the latest from ${esc(src.name)}…</p>`;
+        const items = await peekItems(src.rss);
+        if (items) peekEl.dataset.loaded = "1";
+        renderPeek(peekEl, items, src.site);
+      });
+      return el;
+    }
+
     function renderList() {
       const shown = sources.filter(matches);
-      if (!shown.length) {
+      listEl.innerHTML = "";
+      for (const src of shown) listEl.appendChild(card(src));
+      // Local / State: offer the nearest places we cover when we don't cover theirs.
+      if (geoMode && nearby.length && filter === "all") {
+        const box = document.createElement("div");
+        box.className = "npNearby";
+        box.innerHTML = `<p class="npPeekNote">${scope === "local" ? "Nearest cities we cover:" : "Nearest states we cover:"}</p>`;
+        for (const n of nearby) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn npNearbyBtn";
+          b.textContent = `${n.label} · ${Math.round(n.distanceMi)} mi`;
+          b.addEventListener("click", () => loadGeo(n.geo));
+          box.appendChild(b);
+        }
+        listEl.appendChild(box);
+      }
+      // Local / State: a typed place or topic can search beyond this list.
+      const q = searchEl.value.trim();
+      if (geoMode && q.length >= 3 && window.App.searchSources) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn npSearchMore";
+        b.textContent = `Search places and Reddit for “${q}”`;
+        b.addEventListener("click", () => runSearch(q));
+        listEl.appendChild(b);
+      }
+      if (!listEl.children.length) {
         listEl.innerHTML = `<p class="npPeekNote">Nothing matches. Try another word, or add a feed by its address below.</p>`;
+      }
+    }
+
+    // ── Local / State ──
+    function updateQuick() {
+      if (!geoMode) return;
+      const todo = sources.filter((s) => s.suggested && !opts.isAdded(s.rss));
+      $(".npQuick").hidden = !sources.length;
+      const addAll = $(".npAddAll");
+      addAll.hidden = !todo.length;
+      addAll.textContent = `Add all suggested (${todo.length})`;
+    }
+
+    async function loadGeo(geoOverride) {
+      listEl.innerHTML = `<p class="npPeekNote">Loading sources…</p>`;
+      const res = await window.NewsPickerLocal.load(scope, geoOverride).catch(() => null);
+      if (!res) { listEl.innerHTML = `<p class="npPeekNote">Couldn't load sources. You can still add a feed by its address below.</p>`; return; }
+      if (!res.geo) {
+        $(".npWhereText").textContent = scope === "local" ? "We need your area to find local sources." : "We need your state.";
+        $(".npWhereBtn").textContent = "📍 Set location";
+        sources = []; nearby = [];
+        listEl.innerHTML = "";
+        updateQuick();
         return;
       }
-      listEl.innerHTML = "";
-      for (const src of shown) {
-        const card = document.createElement("div");
-        card.className = "npCard";
-        card.setAttribute("role", "listitem");
-        const where = intl ? (src.regions || []).map((r) => REGION_LABELS[r]).join(", ") : "";
-        card.innerHTML = `
-          <div class="npCardRow">
-            <button type="button" class="npCardMain" aria-expanded="false">
-              <img class="npIcon" alt="" loading="lazy" src="${esc(window.App.faviconUrl(src.site, 32))}">
-              <span class="npCardText">
-                <span class="npName">${esc(src.name)}${src.default ? `<span class="npBadge">Starter</span>` : ""}</span>
-                <span class="npBlurb">${esc(src.blurb)}</span>
-                <span class="npMeta">${esc(KIND_LABELS[src.kind] || "")}${where ? ` · ${esc(where)}` : ""} · <span class="npPeekHint">Peek ▾</span></span>
-              </span>
-            </button>
-            <button type="button" class="btn npAdd"></button>
-          </div>
-          <div class="npPeek" hidden></div>`;
-        const addBtn = card.querySelector(".npAdd");
-        addButtonState(addBtn, src);
-        addBtn.addEventListener("click", () => {
-          if (opts.isAdded(src.rss)) { opts.remove(src.rss); status(`Removed ${src.name}.`); }
-          else {
-            const err = opts.add(src);
-            status(err || `Added ${src.name}. It's on your ${intl ? "International" : "National"} tab now.`, !!err);
-          }
-          addButtonState(addBtn, src);
-        });
-        const main = card.querySelector(".npCardMain");
-        const peekEl = card.querySelector(".npPeek");
-        main.addEventListener("click", async () => {
-          const opening = peekEl.hidden;
-          peekEl.hidden = !opening;
-          main.setAttribute("aria-expanded", String(opening));
-          card.querySelector(".npPeekHint").textContent = opening ? "Hide ▴" : "Peek ▾";
-          if (!opening || peekEl.dataset.loaded) return;
-          peekEl.innerHTML = `<p class="npPeekNote">Fetching the latest from ${esc(src.name)}…</p>`;
-          const items = await peekItems(src.rss);
-          if (items) peekEl.dataset.loaded = "1";
-          renderPeek(peekEl, items, src.site);
-        });
-        listEl.appendChild(card);
+      $(".npWhereText").innerHTML = res.whereHtml;
+      $(".npWhereBtn").textContent = "Change";
+      sources = res.sources;
+      nearby = res.nearby;
+      filter = "all";
+      renderChips();
+      renderList();
+      updateQuick();
+    }
+
+    async function runSearch(q) {
+      status(`Searching for “${q}”…`);
+      try {
+        const groups = await window.App.searchSources(q);
+        const found = groups.flatMap((g) => g.items.map((it) => ({
+          name: it.name, rss: it.rss, site: it.site || (g.id === "reddit" ? "https://www.reddit.com" : ""),
+          kind: "search", blurb: it.detail || "", where: g.label,
+        })));
+        sources = [...found, ...sources.filter((s) => s.kind !== "search" && !found.some((f) => f.rss === s.rss))];
+        filter = found.length ? "search" : "all";
+        searchEl.value = "";
+        renderChips();
+        renderList();
+        status(found.length ? `${found.length} result${found.length === 1 ? "" : "s"} for “${q}”.` : `Nothing found for “${q}”.`, !found.length);
+      } catch {
+        status("Search failed. Try again in a moment.", true);
       }
+    }
+
+    if (geoMode) {
+      $(".npWhereBtn").addEventListener("click", () => {
+        window.App.openLocationPicker?.({ onApply: () => loadGeo() });
+      });
+      $(".npAddAll").addEventListener("click", () => {
+        const todo = sources.filter((s) => s.suggested && !opts.isAdded(s.rss));
+        const n = opts.addMany(todo);
+        status(!n ? "No room left: the page shows up to 8 here. Remove one first."
+          : n < todo.length ? `Added ${n}. The page shows up to 8 here, so ${todo.length - n} didn't fit.`
+          : `Added ${n} source${n === 1 ? "" : "s"}.`, !n);
+        renderList();
+        updateQuick();
+      });
+      $(".npSkip").addEventListener("click", () => { opts.skip(); close(); });
     }
 
     // Custom feed: the same peek, then Add.
@@ -260,13 +377,17 @@
       if (!err) { customInput.value = ""; customPeek.hidden = true; }
     });
 
-    loadCatalog().then((all) => {
-      sources = all.filter((s) => s.scope === scope);
-      renderChips();
-      renderList();
-    }).catch(() => {
-      listEl.innerHTML = `<p class="npPeekNote">Couldn't load the source list. You can still add a feed by its address below.</p>`;
-    });
+    if (geoMode) {
+      loadGeo();
+    } else {
+      loadCatalog().then((all) => {
+        sources = all.filter((s) => s.scope === scope);
+        renderChips();
+        renderList();
+      }).catch(() => {
+        listEl.innerHTML = `<p class="npPeekNote">Couldn't load the source list. You can still add a feed by its address below.</p>`;
+      });
+    }
     searchEl.focus();
   }
 

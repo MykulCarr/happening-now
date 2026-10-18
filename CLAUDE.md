@@ -396,7 +396,25 @@ The gainers / losers / trending widgets still fan out over `POPULAR_STOCKS`
 through Finnhub, but only after both Yahoo movers and FMP have failed, so it's a
 rare path rather than a per-load one.
 
-## National / International source picker
+## News source picker (all four scopes)
+
+**Local / State joined the same picker on 2026-10-18.** `App.openSourcePicker`
+(common.js) is now a thin wrapper that hands `localSources`/`regionalSources`
+to `assets/news-picker.js`, with the data coming from
+`assets/news-picker-local.js` (curated outlets for the reader's city/state,
+the nearest covered places when theirs isn't, and Reddit via
+`discoverSourcesForScope`). Add/remove saves at once; there is no "Save
+selection" any more. "Add all suggested" reproduces what the old picker
+pre-ticked. **Closing with nothing saved sets `*SourcesSkipped`**, which is
+what the old Skip button did and is what stops the news page re-opening the
+picker on every visit. Up to 8 per scope (news.js shows the first 8). The
+place / Reddit keyword search (`source-search.js`) lives inside the picker
+now and is loaded on the news page too. Bing searches were dropped (that
+helper had returned nothing for months; Bing/Google/Yahoo news RSS block
+Worker IPs). Local feeds are NOT vetted for paywalls the way the national
+catalog is, so the picker doesn't claim they're free.
+
+### National / International
 
 Rebuilt 2026-10-18. Settings > News leads with **National News** and
 **International News**: a compact list per scope (favicon, name, −/+ headline

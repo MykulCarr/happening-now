@@ -3318,17 +3318,6 @@
     });
   }
 
-  // ── Web-search feed builders ────────────────────────────────────────────
-  // Disabled. Google News, Bing News, and Yahoo News all block traffic
-  // from Cloudflare Worker IP ranges (either hard 503 or 200-OK with an
-  // HTML anti-bot challenge instead of RSS). Returning [] keeps the
-  // picker's web-search section hidden; if a viable query-based news RSS
-  // ever surfaces, swap this body to build feeds again and the rest of
-  // the picker wiring will pick it up.
-  function getWebSearchFeeds(/* geo, scope */) {
-    return [];
-  }
-
   // Great-circle distance in miles between two lat/lon points.
   function haversineMiles(lat1, lon1, lat2, lon2) {
     const toRad = d => d * Math.PI / 180;
@@ -3478,448 +3467,53 @@
     return picks;
   }
 
-  // Modal that lets the user curate which Reddit subs (and any custom RSS
-  // URLs) feed the local/regional scopes. Calls `onSaved` after the user
-  // saves or skips so the caller can re-render its UI.
-  async function openSourcePicker(scope, onSaved) {
-    if (scope !== "local" && scope !== "regional") return; // not supported (yet)
-    if (document.getElementById("hnSourcePicker")) return; // block reentry
+  // Local / State source picker. Replaced 2026-10-18: the old 500-line modal
+  // here (checkbox lists, a Save button that replaced the whole list) became
+  // the shared picker in assets/news-picker.js, which every scope now uses.
+  // This keeps the old entry point, so news.js and settings.js are
+  // unchanged, and owns the cfg side: one-tap add/remove that saves at once.
+  //
+  // `onSaved` runs on close if anything changed. Closing with nothing saved
+  // counts as "use automatic picks" (the old Skip), so the news page doesn't
+  // reopen the picker on every visit.
+  const SCOPED_SOURCE_LIMIT = 8; // news.js shows the first 8 per scope
+  function openSourcePicker(scope, onSaved) {
+    if (scope !== "local" && scope !== "regional") return;
+    if (!window.NewsPicker) return;
+    const key = scope === "local" ? "localSources" : "regionalSources";
+    const skipKey = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
+    // Same feed arrives as .../feed and .../feed/ from different catalogues.
+    const feedKey = (u) => String(u || "").trim().replace(/\/+$/, "").toLowerCase();
+    const list = () => (Array.isArray(window.App.cfg?.[key]) ? window.App.cfg[key] : []);
+    const write = (next, extra = {}) => saveConfig({ ...window.App.cfg, [key]: next, ...extra });
+    let changed = false;
 
-    const overlay = document.createElement("div");
-    overlay.id = "hnSourcePicker";
-    overlay.className = "hnPickerOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-labelledby", "hnPickerTitle");
-    overlay.innerHTML = `
-      <div class="hnPickerSheet">
-        <div class="hnPickerHead">
-          <h2 id="hnPickerTitle" class="hnPickerTitle">${scope === "local" ? "News Sources Near You" : "State & Regional Sources"}</h2>
-          <button type="button" class="hnPickerClose" aria-label="Close">×</button>
-        </div>
-        <div class="hnPickerBody">
-          <p class="hnPickerLead" id="hnPickerLead">Loading sources for your area…</p>
-          <div class="hnPickerSection" id="hnPickerFallbackSection" hidden>
-            <div class="hnPickerSectionLabel" id="hnPickerFallbackLabel">📍 ${scope === "local" ? "Nearest cities we cover" : "Nearest states we cover"}</div>
-            <div class="hnPickerList" id="hnPickerFallbackList" role="list"></div>
-          </div>
-          <div class="hnPickerSection" id="hnPickerStationsSection" hidden>
-            <div class="hnPickerSectionLabel">📺 Local TV &amp; papers</div>
-            <div class="hnPickerList" id="hnPickerStations" role="list"></div>
-          </div>
-          <div class="hnPickerSection" id="hnPickerWebSection" hidden>
-            <div class="hnPickerSectionLabel">🌐 News searches (Bing)</div>
-            <div class="hnPickerList" id="hnPickerWebList" role="list"></div>
-          </div>
-          <div class="hnPickerSection">
-            <div class="hnPickerSectionLabel">💬 Reddit communities</div>
-            <div class="hnPickerList" id="hnPickerList" role="list"></div>
-          </div>
-          <div class="hnPickerCustom">
-            <label for="hnPickerCustomInput" class="hnPickerCustomLabel">Add a custom RSS URL:</label>
-            <div class="hnPickerCustomRow">
-              <input id="hnPickerCustomInput" type="url" class="input" placeholder="https://example.com/feed.rss" />
-              <button id="hnPickerCustomAdd" type="button" class="btn">Add</button>
-            </div>
-            <div id="hnPickerCustomList" class="hnPickerCustomItems"></div>
-          </div>
-        </div>
-        <div class="hnPickerActions">
-          <button id="hnPickerSave" type="button" class="btn primary">Save selection</button>
-          <button id="hnPickerSkip" type="button" class="btn">Skip — use auto search</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const closeBtn = overlay.querySelector(".hnPickerClose");
-    const listEl = overlay.querySelector("#hnPickerList");
-    const stationsSection = overlay.querySelector("#hnPickerStationsSection");
-    const stationsListEl = overlay.querySelector("#hnPickerStations");
-    const fallbackSection = overlay.querySelector("#hnPickerFallbackSection");
-    const fallbackListEl = overlay.querySelector("#hnPickerFallbackList");
-    const webSection = overlay.querySelector("#hnPickerWebSection");
-    const webListEl = overlay.querySelector("#hnPickerWebList");
-    const leadEl = overlay.querySelector("#hnPickerLead");
-    const customIn = overlay.querySelector("#hnPickerCustomInput");
-    const customAdd = overlay.querySelector("#hnPickerCustomAdd");
-    const customLi = overlay.querySelector("#hnPickerCustomList");
-    const saveBtn = overlay.querySelector("#hnPickerSave");
-    const skipBtn = overlay.querySelector("#hnPickerSkip");
-
-    const customSources = [];
-    let suggestions = [];
-    let stations = [];
-    let webFeeds = [];
-    let preChecked = new Set();
-
-    // What this scope already has saved. Rows for those feeds start checked
-    // and show an "Added" tag, and anything saved that the picker can't
-    // re-offer gets carried into the custom list — Save replaces the whole
-    // list, so an entry that isn't on screen would be silently dropped.
-    // Compared on a trailing-slash- and case-insensitive key: the same feed
-    // reaches us as .../feed and .../feed/ from different catalogues.
-    const feedKey = u => String(u || "").trim().replace(/\/+$/, "").toLowerCase();
-    const savedSources = (scope === "local"
-      ? window.App.cfg?.localSources
-      : window.App.cfg?.regionalSources) || [];
-    const savedKeys = new Set(savedSources.map(s => feedKey(s.rss)));
-    const addedTag = rss => savedKeys.has(feedKey(rss))
-      ? ' <span class="hnPickerRowAdded">Added</span>'
-      : "";
-
-    function close() { overlay.remove(); }
-    closeBtn.addEventListener("click", close);
-    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
-
-    function renderCustomList() {
-      customLi.innerHTML = "";
-      customSources.forEach((src, idx) => {
-        const row = document.createElement("div");
-        row.className = "hnPickerCustomItem";
-        row.innerHTML = `<span class="hnPickerCustomName">${escapeHtml(src.name)}</span> <button type="button" class="hnPickerCustomRm" data-idx="${idx}" aria-label="Remove">×</button>`;
-        customLi.appendChild(row);
-      });
-      customLi.querySelectorAll(".hnPickerCustomRm").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const i = Number(btn.dataset.idx);
-          customSources.splice(i, 1);
-          renderCustomList();
-        });
-      });
+    function add(entry) {
+      const cur = list();
+      if (cur.some((s) => feedKey(s.rss) === feedKey(entry.rss))) return "";
+      if (cur.length >= SCOPED_SOURCE_LIMIT) return `Up to ${SCOPED_SOURCE_LIMIT} sources show on the page. Remove one in Settings first.`;
+      write([...cur, { name: entry.name, rss: entry.rss, site: entry.site || "", headlinesCount: 8 }], { [skipKey]: false });
+      changed = true;
+      return "";
     }
 
-    customAdd.addEventListener("click", () => {
-      const url = customIn.value.trim();
-      if (!url) return;
-      try { new URL(url); } catch { leadEl.textContent = "That doesn't look like a valid URL."; return; }
-      const name = url.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
-      customSources.push({ name, rss: url });
-      customIn.value = "";
-      renderCustomList();
+    window.NewsPicker.open({
+      scope,
+      isAdded: (rss) => list().some((s) => feedKey(s.rss) === feedKey(rss)),
+      add,
+      addMany: (entries) => entries.reduce((n, e) => n + (add(e) === "" && list().some((s) => feedKey(s.rss) === feedKey(e.rss)) ? 1 : 0), 0),
+      remove: (rss) => { write(list().filter((s) => feedKey(s.rss) !== feedKey(rss))); changed = true; },
+      addCustom: async (rss) => {
+        let name = "Custom feed";
+        try { name = new URL(rss).hostname.replace(/^www\./, ""); } catch {}
+        return add({ name, rss, site: "" });
+      },
+      skip: () => { write(list(), { [skipKey]: true }); changed = true; },
+      onClose: () => {
+        if (!list().length && !window.App.cfg?.[skipKey]) { write([], { [skipKey]: true }); changed = true; }
+        if (changed) { try { onSaved?.(); } catch { } }
+      },
     });
-    customIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); customAdd.click(); } });
-
-    skipBtn.addEventListener("click", () => {
-      const next = { ...window.App.cfg };
-      if (scope === "local") next.localSourcesSkipped = true;
-      else next.regionalSourcesSkipped = true;
-      saveConfig(next);
-      close();
-      try { onSaved?.(); } catch { }
-    });
-
-    saveBtn.addEventListener("click", () => {
-      const checkedStations = Array.from(stationsListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
-        const idx = Number(cb.dataset.idx);
-        return stations[idx];
-      }).filter(Boolean);
-      const checkedWeb = Array.from(webListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
-        const idx = Number(cb.dataset.idx);
-        return webFeeds[idx];
-      }).filter(Boolean);
-      const checkedSubs = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
-        const idx = Number(cb.dataset.idx);
-        return suggestions[idx];
-      }).filter(Boolean);
-      // Order matters: news.js trims to the first 8 saved sources. Put
-      // curated TV/papers first (most trustworthy), then web searches
-      // (broad coverage), then Reddit (color/community), then customs.
-      const sources = [
-        ...checkedStations.map(s => ({ name: s.name, rss: s.rss, site: s.site || "", headlinesCount: 8 })),
-        ...checkedWeb.map(w => ({ name: w.name, rss: w.rss, site: w.site || "", headlinesCount: 8 })),
-        ...checkedSubs.map(s => ({ name: `r/${s.displayName}`, rss: s.rss, site: "https://www.reddit.com", headlinesCount: 8 })),
-        ...customSources.map(s => ({ name: s.name, rss: s.rss, site: "", headlinesCount: 8 }))
-      ];
-      if (sources.length === 0) {
-        leadEl.textContent = "Pick at least one source, or click Skip to use auto search.";
-        return;
-      }
-      const next = { ...window.App.cfg };
-      if (scope === "local") { next.localSources = sources; next.localSourcesSkipped = false; }
-      else { next.regionalSources = sources; next.regionalSourcesSkipped = false; }
-      saveConfig(next);
-      close();
-      try { onSaved?.(); } catch { }
-    });
-
-    // Run station catalog lookup and Reddit discovery in parallel.
-    const [stationsRes, discoverRes] = await Promise.all([
-      (async () => {
-        try {
-          // Need geo before we can look up stations — discoverSourcesForScope
-          // resolves and returns it. We reuse here rather than calling
-          // resolvePreferredLocation twice.
-          return null; // placeholder, replaced below after we have geo
-        } catch { return []; }
-      })(),
-      discoverSourcesForScope(scope)
-    ]);
-    const { results, geo } = discoverRes;
-    if (!geo) {
-      // Don't dead-end the user. Replace the lead with a clear CTA that
-      // opens the location picker inline. After they Apply, we re-run the
-      // discovery in place so the source picker populates without them
-      // having to close and reopen it.
-      leadEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <span>${scope === "local" ? "We need to know your area to find local sources." : "We need to know your state."}</span>
-          <button type="button" class="btn primary" id="hnPickerSetLocationBtn">📍 Set Location</button>
-        </div>
-      `;
-      // Hide the suggestion sections until we have a location.
-      stationsSection.hidden = true;
-      listEl.innerHTML = "";
-      overlay.querySelector("#hnPickerSetLocationBtn")?.addEventListener("click", () => {
-        if (typeof window.App?.openLocationPicker !== "function") return;
-        window.App.openLocationPicker({
-          onApply: async () => {
-            // Re-run discovery now that location is set. Reuses the same
-            // modal instance so the user stays in flow.
-            leadEl.textContent = "Loading sources for your area…";
-            const fresh = await discoverSourcesForScope(scope);
-            const newGeo = fresh.geo;
-            const newResults = fresh.results;
-            if (!newGeo) {
-              leadEl.textContent = "Couldn't resolve that location. Try again or add a custom RSS URL below.";
-              return;
-            }
-            try { stations = await getStationsForGeo(newGeo, scope); } catch { stations = []; }
-            try { webFeeds = getWebSearchFeeds(newGeo, scope); } catch { webFeeds = []; }
-            let newCityCovered = false;
-            try { newCityCovered = await hasCitySources(newGeo); } catch { }
-            suggestions = newResults;
-            preChecked = defaultPickedSubs(newResults, newGeo);
-            renderPickerSuggestions(newGeo, newResults, newCityCovered);
-          }
-        });
-      });
-      return;
-    }
-
-    // Now load stations for this geo (we have geo from the discover step).
-    try {
-      stations = await getStationsForGeo(geo, scope);
-    } catch { stations = []; }
-    try { webFeeds = getWebSearchFeeds(geo, scope); } catch { webFeeds = []; }
-
-    let cityCovered = false;
-    try { cityCovered = await hasCitySources(geo); } catch { cityCovered = false; }
-
-    suggestions = results;
-    preChecked = defaultPickedSubs(results, geo);
-
-    renderPickerSuggestions(geo, results, cityCovered);
-
-    // ── nested helper so the inline "Set Location" path can re-render
-    // after the user picks a location without reopening the modal ───────
-    function renderPickerSuggestions(g, subs, hasHyperlocalCoverage) {
-      const hasStations = stations.length > 0;
-      const hasSubs = (subs || []).length > 0;
-      const hasLatLon = Number.isFinite(g?.lat) && Number.isFinite(g?.lon);
-      // Fire fallback:
-      //   local    → no city-level coverage (statewide entries don't count;
-      //              the user wants "near me", not "across the state").
-      //   regional → no statewide entries for the user's state at all.
-      const canOfferFallback = hasLatLon && (
-        (scope === "local" && !hasHyperlocalCoverage)
-        || (scope === "regional" && !hasStations)
-      );
-
-      if (canOfferFallback) {
-        if (scope === "local") {
-          leadEl.textContent = `No local sources for ${g.city}, ${g.state} yet — try the nearest city we cover.`;
-        } else {
-          const fullState = expandStateName(g.state) || g.state;
-          leadEl.textContent = `No regional sources for ${fullState} yet — try the nearest state we cover.`;
-        }
-        renderFallbackList(g);
-      } else {
-        fallbackSection.hidden = true;
-        fallbackListEl.innerHTML = "";
-        if (!hasStations && !hasSubs) {
-          leadEl.textContent = `No suggestions for ${g.city}, ${g.state} yet. Add a custom RSS URL below.`;
-        } else {
-          leadEl.textContent = `Suggestions for ${g.city}, ${g.state} — pick what you want, then Save.`;
-        }
-      }
-      if (hasStations) {
-        stationsSection.hidden = false;
-        stationsListEl.innerHTML = "";
-        stations.forEach((s, idx) => {
-          const row = document.createElement("label");
-          row.className = "hnPickerRow";
-          row.setAttribute("role", "listitem");
-          const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
-          row.innerHTML = `
-            <input type="checkbox" data-idx="${idx}" checked />
-            <div class="hnPickerRowMain">
-              <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}${addedTag(s.rss)}</div>
-              ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
-            </div>
-          `;
-          stationsListEl.appendChild(row);
-        });
-      } else {
-        stationsSection.hidden = true;
-      }
-
-      renderWebFeedRows();
-
-      listEl.innerHTML = "";
-      (subs || []).forEach((r, idx) => {
-        const row = document.createElement("label");
-        row.className = "hnPickerRow";
-        row.setAttribute("role", "listitem");
-        const checked = (preChecked.has(r.displayName) || savedKeys.has(feedKey(r.rss))) ? "checked" : "";
-        // Subscriber counts only show when known (Reddit's discovery API used
-        // to populate this; the curated-list path can't, so we hide the chip
-        // rather than print "0 subs" which looks broken).
-        const subsLabel = r.subscribers >= 1000
-          ? `${(r.subscribers / 1000).toFixed(1)}K subs`
-          : (r.subscribers > 0 ? `${r.subscribers} subs` : "");
-        row.innerHTML = `
-          <input type="checkbox" data-idx="${idx}" ${checked} />
-          <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">💬 r/${escapeHtml(r.displayName)}${subsLabel ? ` <span class="hnPickerRowSubs">${subsLabel}</span>` : ""}${addedTag(r.rss)}</div>
-            ${r.description ? `<div class="hnPickerRowDesc">${escapeHtml(r.description)}</div>` : ""}
-          </div>
-        `;
-        listEl.appendChild(row);
-      });
-
-      carryOverSavedSources(subs);
-    }
-
-    // Saved sources this picker has no row for — a pasted RSS URL, or an
-    // outlet from a city the user has since moved away from — would vanish on
-    // Save, which replaces the whole list. Show them in the custom list so
-    // they survive by default and can still be removed with the × there.
-    // Idempotent: re-renders call this again with the same entries.
-    function carryOverSavedSources(subs) {
-      const offered = new Set([
-        ...stations.map(s => feedKey(s.rss)),
-        ...webFeeds.map(w => feedKey(w.rss)),
-        ...(subs || []).map(s => feedKey(s.rss)),
-      ]);
-      let addedAny = false;
-      savedSources.forEach(s => {
-        const key = feedKey(s.rss);
-        if (!key || offered.has(key)) return;
-        if (customSources.some(c => feedKey(c.rss) === key)) return;
-        customSources.push({ name: s.name || key, rss: s.rss });
-        addedAny = true;
-      });
-      if (addedAny) renderCustomList();
-    }
-
-    // Renders the web-search section. Reads from the `webFeeds` closure
-    // variable so the fallback-click path can update webFeeds and call this
-    // without going through the full renderPickerSuggestions flow (which
-    // would re-fire the fallback detection).
-    function renderWebFeedRows() {
-      if (!webFeeds.length) {
-        webSection.hidden = true;
-        webListEl.innerHTML = "";
-        return;
-      }
-      webSection.hidden = false;
-      webListEl.innerHTML = "";
-      webFeeds.forEach((w, idx) => {
-        const row = document.createElement("label");
-        row.className = "hnPickerRow";
-        row.setAttribute("role", "listitem");
-        const providerBadge = w.provider === "bing" ? "🅱️" : "🔎";
-        const checked = (w.defaultChecked || savedKeys.has(feedKey(w.rss))) ? "checked" : "";
-        row.innerHTML = `
-          <input type="checkbox" data-idx="${idx}" ${checked} />
-          <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">${providerBadge} ${escapeHtml(w.name)}${addedTag(w.rss)}</div>
-          </div>
-        `;
-        webListEl.appendChild(row);
-      });
-    }
-
-    // Renders the "Nearest [cities|states] we cover" panel. Clicking a row
-    // loads that location's stations into the regular stations section so the
-    // user can check/uncheck and save like any other pick. The user's actual
-    // geo stays intact (Reddit suggestions, future location-aware features
-    // still see their real location); only the station list is borrowed.
-    async function renderFallbackList(g) {
-      fallbackSection.hidden = false;
-      const loadingLabel = scope === "local" ? "Loading nearby cities…" : "Loading nearby states…";
-      fallbackListEl.innerHTML = `<div class="hnPickerLeadMuted">${loadingLabel}</div>`;
-      let nearest = [];
-      try {
-        nearest = scope === "local"
-          ? await getNearestCities(g.lat, g.lon, 3)
-          : await getNearestStates(g.lat, g.lon, 3);
-      } catch { nearest = []; }
-      if (!nearest.length) {
-        const emptyLabel = scope === "local"
-          ? "No nearby cities in our repo yet. Add a custom RSS URL below."
-          : "No nearby states in our repo yet. Add a custom RSS URL below.";
-        fallbackListEl.innerHTML = `<div class="hnPickerLeadMuted">${emptyLabel}</div>`;
-        return;
-      }
-      fallbackListEl.innerHTML = "";
-      nearest.forEach((n) => {
-        const row = document.createElement("button");
-        row.type = "button";
-        row.className = "hnPickerRow hnPickerRowBtn";
-        row.setAttribute("role", "listitem");
-        const miles = Math.round(n.distanceMi);
-        const label = scope === "local"
-          ? `${escapeHtml(n.displayCity)}, ${escapeHtml(n.state)}`
-          : `${escapeHtml(n.displayState)}`;
-        const action = scope === "local"
-          ? "tap to load this city's sources"
-          : "tap to load this state's sources";
-        row.innerHTML = `
-          <div class="hnPickerRowMain">
-            <div class="hnPickerRowName">📍 ${label}</div>
-            <div class="hnPickerRowDesc">${miles} mi away · ${action}</div>
-          </div>
-        `;
-        row.addEventListener("click", async () => {
-          const syntheticGeo = scope === "local"
-            ? { state: n.state, city: n.city, lat: n.lat, lon: n.lon }
-            : { state: n.state, city: g.city, lat: n.lat, lon: n.lon };
-          try { stations = await getStationsForGeo(syntheticGeo, scope); }
-          catch { stations = []; }
-          try { webFeeds = getWebSearchFeeds(syntheticGeo, scope); }
-          catch { webFeeds = []; }
-          fallbackSection.hidden = true;
-          if (scope === "local") {
-            leadEl.textContent = `Showing local sources for ${n.displayCity}, ${n.state} (${miles} mi from ${g.city}, ${g.state}).`;
-          } else {
-            const fromState = expandStateName(g.state) || g.state;
-            leadEl.textContent = `Showing regional sources for ${n.displayState} (${miles} mi from ${fromState}).`;
-          }
-          // Re-render stations section without re-running the fallback check.
-          stationsSection.hidden = false;
-          stationsListEl.innerHTML = "";
-          stations.forEach((s, idx) => {
-            const stRow = document.createElement("label");
-            stRow.className = "hnPickerRow";
-            stRow.setAttribute("role", "listitem");
-            const typeBadge = s.type === "tv" ? "📺" : s.type === "paper" ? "📰" : "📡";
-            stRow.innerHTML = `
-              <input type="checkbox" data-idx="${idx}" checked />
-              <div class="hnPickerRowMain">
-                <div class="hnPickerRowName">${typeBadge} ${escapeHtml(s.name)}${addedTag(s.rss)}</div>
-                ${s.site ? `<div class="hnPickerRowDesc">${escapeHtml(String(s.site).replace(/^https?:\/\//, ""))}</div>` : ""}
-              </div>
-            `;
-            stationsListEl.appendChild(stRow);
-          });
-          renderWebFeedRows();
-          carryOverSavedSources(suggestions);
-        });
-        fallbackListEl.appendChild(row);
-      });
-    }
   }
 
   window.App = {
@@ -3973,6 +3567,8 @@
     expandStateName,
     isSectionHidden,
     openSourcePicker,
+    discoverSourcesForScope,
+    defaultPickedSubs,
     loadLocalStations,
     loadTopicSources,
     getAllTopics,
@@ -3983,7 +3579,6 @@
     getNearestCities,
     getNearestStates,
     hasCitySources,
-    getWebSearchFeeds,
     getActiveLocationOverride,
     setActiveLocationOverride,
     clearActiveLocationOverride,

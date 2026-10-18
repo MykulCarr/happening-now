@@ -177,7 +177,6 @@ html {
   display: none !important;
 }
 
-
 /* Location override banner — shows at the top of every page when the user
    has chosen a session-only "viewing X" location. CSS var --hn-override-height
    is set by common.js when the banner is visible so the fixed topbar and
@@ -255,131 +254,6 @@ html[data-override-active] body {
    to re-rasterize on every frame and the GPU drops frames mid-paint,
    showing as flicker most visibly along the topbar edge. The darker
    solid rgba below provides enough page separation without the cost. */
-.hnPickerOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.hnPickerSheet {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  max-width: 560px;
-  width: 100%;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.hnPickerHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.hnPickerTitle {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-  text-transform: capitalize;
-}
-
-.hnPickerClose {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 6px;
-}
-
-.hnPickerClose:hover {
-  color: var(--text);
-}
-
-.hnPickerBody {
-  padding: 14px 20px;
-  overflow-y: auto;
-  flex: 1 1 auto;
-}
-
-.hnPickerLead {
-  margin: 0 0 14px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.hnPickerList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.hnPickerSection {
-  margin-bottom: 14px;
-}
-
-.hnPickerSectionLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 6px 0 6px;
-}
-
-.hnPickerRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.hnPickerRow:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.hnPickerRow input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  cursor: pointer;
-  accent-color: var(--accent);
-  margin-top: 2px;
-}
-
-.hnPickerRowMain {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.hnPickerRowName {
-  font-weight: 700;
-  color: var(--text);
-  font-size: 14px;
-}
-
-.hnPickerRowSubs {
-  color: var(--muted);
-  font-weight: 500;
-  font-size: 11px;
-  margin-left: 6px;
-}
 
 /* Settings → System → Sync to a File: one status line above the buttons. */
 .syncStatusPanel {
@@ -406,119 +280,6 @@ html[data-override-active] body {
 }
 
 /* Marks a row whose feed is already saved for this scope. */
-.hnPickerRowAdded {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.45);
-  background: rgba(16, 185, 129, 0.14);
-  color: #34d399;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  vertical-align: middle;
-}
-
-.hnPickerRowDesc {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 3px;
-  line-height: 1.4;
-}
-
-.hnPickerRowBtn {
-  background: rgba(198, 111, 28, 0.08);
-  border: 1px solid rgba(198, 111, 28, 0.25);
-  text-align: left;
-  width: 100%;
-  color: inherit;
-  font: inherit;
-}
-
-.hnPickerRowBtn:hover {
-  background: rgba(198, 111, 28, 0.16);
-}
-
-.hnPickerLeadMuted {
-  color: var(--muted);
-  font-size: 12px;
-  padding: 8px 4px;
-}
-
-.hnPickerCustom {
-  border-top: 1px solid var(--border);
-  padding-top: 14px;
-  margin-top: 8px;
-}
-
-.hnPickerCustomLabel {
-  display: block;
-  color: var(--text);
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-
-.hnPickerCustomRow {
-  display: flex;
-  gap: 8px;
-}
-
-.hnPickerCustomRow .input {
-  flex: 1 1 auto;
-}
-
-.hnPickerCustomItems {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.hnPickerCustomItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 12px;
-}
-
-.hnPickerCustomName {
-  color: var(--text);
-  word-break: break-all;
-}
-
-.hnPickerCustomRm {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 6px;
-}
-
-.hnPickerCustomRm:hover {
-  color: var(--accentHover);
-}
-
-.hnPickerActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.hnPickerActions .btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
 
 /* Settings: News-tab source-card layout. Each scope's section becomes a
    visual "card" that mirrors how news cards look on the news page; saved
@@ -582,152 +343,6 @@ html[data-override-active] body {
 }
 
 /* 3-column tile grid mirroring the news page's grid layout. */
-.sourceTileGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 10px 0 14px;
-}
-
-@media (max-width:1100px) {
-  .sourceTileGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width:640px) {
-  .sourceTileGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sourceTileEmpty {
-  grid-column: 1 / -1;
-  color: var(--muted);
-  font-size: 12px;
-  padding: 18px 14px;
-  text-align: center;
-  border: 1px dashed var(--border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.sourceTile {
-  position: relative;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-height: 84px;
-  transition: all 0.18s ease;
-}
-
-.sourceTile:hover {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.22);
-  transform: translateY(-1px);
-}
-
-.sourceTileBadge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 6px;
-  text-transform: uppercase;
-}
-
-.sourceTileBadge.isReddit {
-  color: #ff4500;
-  border-color: rgba(255, 69, 0, 0.35);
-}
-
-.sourceTileRm {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.sourceTileRm:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.45);
-}
-
-.sourceTileName {
-  margin-top: 22px;
-  font-weight: 700;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.3;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.sourceTileHost {
-  color: var(--muted);
-  font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sourceCardActions {
-  display: flex;
-  gap: 8px;
-  margin: 6px 0 10px;
-  flex-wrap: wrap;
-}
-
-.sourceCardActions .btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.sourceCardActions .btn.primary:hover {
-  background: var(--accentHover);
-  border-color: var(--accentHover);
-}
-
-.sourceCardCustomRow {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.sourceCardCustomRow .input {
-  flex: 1 1 auto;
-}
-
-.sourceCardSkipRow {
-  margin-top: 12px;
-}
 
 /* Settings: per-section toggle list */
 .sectionToggleList {
@@ -957,7 +572,6 @@ h2 {
     justify-content: flex-start;
   }
 }
-
 
 header#topbar {
   position: fixed;
@@ -1662,7 +1276,6 @@ header#topbar .pageHeadActions {
   }
 }
 
-
 /* Alerts card should visually match current card height by default */
 .weatherAlertsCard {
   display: flex;
@@ -2033,7 +1646,6 @@ header#topbar {
 .hn-inlineSearch {
   width: 100%;
 }
-
 
 .hn-host-weather .weatherWidget {
   width: 100%;
@@ -2503,7 +2115,6 @@ header#topbar>.infoBar .infoBarRight {
     overflow: hidden;
   }
 
-
   /* Compact time widget for mobile */
 
   /* Weather widget for mobile - show icon, temp, and hi/lo */
@@ -2730,7 +2341,6 @@ header#topbar>.infoBar .infoBarRight {
   outline-offset: 2px;
 }
 
-
 .weatherWidgetIcon {
   font-size: 36px;
   line-height: 1;
@@ -2754,7 +2364,6 @@ header#topbar>.infoBar .infoBarRight {
   position: relative;
   z-index: 1;
 }
-
 
 .weatherWidgetDetails {
   display: flex;
@@ -2821,7 +2430,6 @@ header#topbar>.infoBar .infoBarRight {
   background: linear-gradient(90deg, rgba(59, 130, 246, .6), rgba(34, 197, 94, .6));
   transition: width 0.3s ease;
 }
-
 
 @media (max-width:720px) {
   .brand {
@@ -3516,7 +3124,6 @@ details.chip>.alertChipBody a {
   line-height: 1.2;
 }
 
-
 .criticalNewsBar .criticalTickerItem:hover,
 .criticalNewsBar .criticalTickerItem:focus-visible {
   color: var(--accentHover);
@@ -3833,7 +3440,6 @@ select.input optgroup,
   color: var(--text);
   flex: 0 0 18px;
 }
-
 
 .newsSourceCategory {
   display: inline-flex;
@@ -4220,7 +3826,6 @@ body.stockLookupModalOpen {
   grid-column: 1 / -1;
 }
 
-
 @media (max-width:1320px) {
   .stockEditorStack {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4351,7 +3956,6 @@ body.stockLookupModalOpen {
   }
 }
 
-
 /* --- Weather Page New Layout --- */
 
 /* Restore previous weatherGrid and card layout */
@@ -4367,7 +3971,6 @@ body.stockLookupModalOpen {
     grid-template-columns: 1fr;
   }
 }
-
 
 .weatherCurrent {
   grid-row: span 2;
@@ -4576,7 +4179,6 @@ body.stockLookupModalOpen {
     font-size: 10px;
   }
 
-
   .current-stats-unified {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px 12px;
@@ -4620,7 +4222,6 @@ body.stockLookupModalOpen {
     opacity: 0.5;
   }
 }
-
 
 .wxTableWrap {
   border: 1px solid var(--border);
@@ -4780,7 +4381,6 @@ body.stockLookupModalOpen {
     flex-wrap: wrap;
   }
 
-
   .weatherWidgetIcon {
     font-size: 36px;
   }
@@ -4804,7 +4404,6 @@ body.stockLookupModalOpen {
     font-size: 10px;
   }
 }
-
 
 /* ===== STOCKS PAGE STYLES ===== */
 
@@ -5494,7 +5093,6 @@ body.stockLookupModalOpen {
   transform: translateY(-1px);
 }
 
-
 .newsContent {
   flex: 1;
   min-width: 0;
@@ -5578,7 +5176,6 @@ body.stockLookupModalOpen {
 }
 
 /* Mover Item (Gainers/Losers/Trending) */
-
 
 .moverChange.positive {
   color: #10b981;
@@ -5682,7 +5279,7 @@ body.stockLookupModalOpen {
 #locationPickerModal {
   background: transparent;
   pointer-events: none;
-  /* Sits above the source picker (.hnPickerOverlay z-index:9999) so the
+  /* Sits above the source picker (.npOverlay z-index:9999) so the
      "Set Location" CTA inside the source picker can summon this modal
      and have it visible on top of its caller. */
   z-index: 10000;
@@ -6811,7 +6408,6 @@ body.stockLookupModalOpen {
     flex-direction: column;
   }
 
-
   .settingRowPair {
     grid-template-columns: 1fr;
     gap: 0;
@@ -6921,7 +6517,6 @@ body.stockLookupModalOpen {
   -webkit-user-select: none;
   user-select: none;
 }
-
 
 .settingRowGroup {
   display: grid;
@@ -7105,7 +6700,6 @@ body.stockLookupModalOpen {
     width: 100%;
   }
 }
-
 
 .resetButton {
   margin-top: 12px;
@@ -7376,65 +6970,6 @@ body.stockLookupModalOpen {
 /* ── Source search results (settings → Local / Regional cards) ─────────────
    Populated by setupScopedSourceManager when the custom row is used as a
    search box rather than a pasted RSS URL. */
-.sourceSearchResults {
-  margin-top: 10px;
-  border: 1px solid var(--line, rgba(255, 255, 255, .14));
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.sourceSearchGroup {
-  padding: 8px 12px;
-  font-size: calc(11px * var(--font-multiplier, 1));
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  background: rgba(255, 255, 255, .06);
-}
-
-.sourceSearchRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--line, rgba(255, 255, 255, .1));
-}
-
-.sourceSearchInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.sourceSearchName {
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.sourceSearchDetail {
-  color: var(--muted);
-  font-size: calc(11px * var(--font-multiplier, 1));
-  overflow-wrap: anywhere;
-}
-
-.sourceSearchAdd {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 6px 14px;
-}
-
-.sourceSearchAdded {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: calc(11px * var(--font-multiplier, 1));
-  font-weight: 700;
-}
-
-.sourceSearchEmpty {
-  padding: 12px;
-  color: var(--muted);
-  font-size: calc(12px * var(--font-multiplier, 1));
-  font-weight: 600;
-}
 
 /* ── News category picker (settings) ──────────────────────────────────────
    One row per topic in data/topic-sources.json, clustered into groups

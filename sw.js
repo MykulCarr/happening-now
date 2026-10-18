@@ -15,6 +15,8 @@ const ASSETS_TO_CACHE = [
   '/assets/settings.js',
   '/assets/news-picker.js',
   '/assets/news-picker.css',
+  '/assets/news-picker-local.js',
+  '/assets/source-search.js',
   '/assets/report.js',
   '/assets/report.css',
   '/assets/feedback.js',

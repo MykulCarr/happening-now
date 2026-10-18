@@ -401,24 +401,10 @@
             <span class="collapsibleHeaderMeta sourceCardMeta">Communities, papers and TV in your city</span>
           </button>
           <div class="collapsibleBody sourceCardBody" id="localSourcesBody">
-            <div class="sourceCardHint" id="localSourcesHint">Open the picker to discover Reddit communities for your
-              city, or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
-            <div class="sourceTileGrid" id="localSourcesList"></div>
-            <div class="sourceCardActions">
-              <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
-                picker</button>
-              <button id="clearLocalSourcesBtn" class="btn" type="button">Clear all</button>
+            <div class="newsEditorToolbar">
+              <button id="openLocalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">Browse sources</button>
             </div>
-            <div class="sourceCardCustomRow">
-              <input id="localCustomRssInput" type="text" class="input"
-                placeholder="RSS URL, an address or city, or a keyword to search" />
-              <button id="localCustomAddBtn" class="btn" type="button">Search</button>
-            </div>
-            <div class="sourceSearchResults" id="localSearchResults" hidden></div>
-            <label class="sectionToggleRow sourceCardSkipRow">
-              <input type="checkbox" id="localSkipToggle" />
-              <span>Skip picker — use Google News auto-search instead</span>
-            </label>
+            <div class="srcList" id="localSourcesList"></div>
           </div>
         </div>
 
@@ -428,24 +414,10 @@
             <span class="collapsibleHeaderMeta sourceCardMeta">State-level communities and outlets</span>
           </button>
           <div class="collapsibleBody sourceCardBody" id="regionalSourcesBody">
-            <div class="sourceCardHint" id="regionalSourcesHint">Open the picker to find state-wide Reddit communities,
-              or use the box below to paste an RSS URL, look up another address, or search Reddit by keyword.</div>
-            <div class="sourceTileGrid" id="regionalSourcesList"></div>
-            <div class="sourceCardActions">
-              <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">📍 Open
-                picker</button>
-              <button id="clearRegionalSourcesBtn" class="btn" type="button">Clear all</button>
+            <div class="newsEditorToolbar">
+              <button id="openRegionalPickerBtn" class="btn primary newsAddTriggerBtn" type="button">Browse sources</button>
             </div>
-            <div class="sourceCardCustomRow">
-              <input id="regionalCustomRssInput" type="text" class="input"
-                placeholder="RSS URL, an address or city, or a keyword to search" />
-              <button id="regionalCustomAddBtn" class="btn" type="button">Search</button>
-            </div>
-            <div class="sourceSearchResults" id="regionalSearchResults" hidden></div>
-            <label class="sectionToggleRow sourceCardSkipRow">
-              <input type="checkbox" id="regionalSkipToggle" />
-              <span>Skip picker — use Google News auto-search instead</span>
-            </label>
+            <div class="srcList" id="regionalSourcesList"></div>
           </div>
         </div>
 
@@ -869,6 +841,7 @@
   <script defer src="assets/infobar.js"></script>
   <script defer src="assets/source-search.js"></script>
   <script defer src="assets/news-picker.js"></script>
+  <script defer src="assets/news-picker-local.js"></script>
   <script defer src="assets/settings.js?v=20261018"></script>
   <script defer src="assets/settings-sync.js"></script>
 </body>

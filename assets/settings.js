@@ -1520,209 +1520,78 @@
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // Local / Regional source manager (inline panels in News tab)
+  // Local / State source lists (News tab)
   // ──────────────────────────────────────────────────────────────────
-  // Each panel mirrors what the picker modal does, but without the
-  // discovery step — users can list/add/remove their saved sources here
-  // and click "Open picker" to launch the Reddit-search modal when they
-  // want to discover new ones.
+  // Same compact rows as National / International: favicon, name, up/down,
+  // remove. "Browse sources" opens the shared picker (assets/news-picker.js
+  // via App.openSourcePicker), which also holds the place / Reddit search
+  // that used to live in a box here. Rebuilt 2026-10-18; the old tile grid,
+  // search box, "Clear all" and "Skip picker" checkbox went with it — an
+  // empty list now simply means "automatic picks", which is what Skip did.
   function setupScopedSourceManager(scope){
     const cap = scope === "local" ? "local" : "regional";
     const Cap = cap.charAt(0).toUpperCase() + cap.slice(1);
     const cfgKey = `${cap}Sources`;
     const skipKey = `${cap}SourcesSkipped`;
     const listEl  = document.getElementById(`${cap}SourcesList`);
-    const hintEl  = document.getElementById(`${cap}SourcesHint`);
     const openBtn = document.getElementById(`open${Cap}PickerBtn`);
-    const clearBtn = document.getElementById(`clear${Cap}SourcesBtn`);
-    const inputEl  = document.getElementById(`${cap}CustomRssInput`);
-    const addBtn   = document.getElementById(`${cap}CustomAddBtn`);
-    const skipEl   = document.getElementById(`${cap}SkipToggle`);
     if(!listEl) return;
 
-    function liveCfg(){ return window.App?.cfg || cfg; }
+    const liveCfg = () => window.App?.cfg || cfg;
+    const sources = () => (Array.isArray(liveCfg()[cfgKey]) ? liveCfg()[cfgKey] : []);
 
-    // Render saved sources as 3-column tile grid that mirrors the news page layout.
-    // Each tile is a mini-card showing name, source URL host, and a remove button.
-    // The grid wraps to 2 columns on tablet and 1 on mobile via the .sourceTileGrid CSS.
+    function commit(next, message){
+      const saved = window.App.saveConfig({ ...liveCfg(), [cfgKey]: next });
+      cfg[cfgKey] = saved[cfgKey];
+      cfg[skipKey] = saved[skipKey];
+      render();
+      if(message) setStatus(message, "saved");
+    }
+
     function render(){
-      const sources = Array.isArray(liveCfg()[cfgKey]) ? liveCfg()[cfgKey] : [];
-      const skipped = liveCfg()[skipKey] === true;
+      const list = sources();
       listEl.innerHTML = "";
-      if(sources.length === 0){
-        const empty = document.createElement("div");
-        empty.className = "sourceTileEmpty";
-        empty.textContent = skipped
-          ? "Auto-search active — uncheck Skip below to use saved sources."
-          : "No saved sources yet. Open the picker or paste a custom RSS URL.";
-        listEl.appendChild(empty);
-      } else {
-        sources.forEach((s, idx) => {
-          const tile = document.createElement("div");
-          tile.className = "sourceTile";
-          const host = (() => {
-            try { return new URL(s.rss).hostname.replace(/^www\./, ""); }
-            catch { return s.rss || ""; }
-          })();
-          const isReddit = /reddit\.com/i.test(host);
-          tile.innerHTML = `
-            <button type="button" class="sourceTileRm" data-idx="${idx}" aria-label="Remove ${escapeHtmlSafe(s.name || "source")}">×</button>
-            <div class="sourceTileBadge ${isReddit ? "isReddit" : ""}">${isReddit ? "r/" : "RSS"}</div>
-            <div class="sourceTileName">${escapeHtmlSafe(s.name || "Source")}</div>
-            <div class="sourceTileHost">${escapeHtmlSafe(host)}</div>
-          `;
-          listEl.appendChild(tile);
-        });
-        listEl.querySelectorAll(".sourceTileRm").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const i = Number(btn.dataset.idx);
-            const next = { ...liveCfg() };
-            next[cfgKey] = (next[cfgKey] || []).filter((_, j) => j !== i);
-            window.App.saveConfig(next);
-            cfg = next;
-            render();
-            setStatus(`${Cap} source removed`, "saved");
-          });
-        });
+      if(!list.length){
+        listEl.innerHTML = `<div class="hint">Using automatic picks: the outlets we curate near you. Tap <strong>Browse sources</strong> to choose your own.</div>`;
+        return;
       }
-      if(skipEl) skipEl.checked = !!skipped;
+      list.forEach((s, i) => {
+        let host = "";
+        try{ host = new URL(s.site || s.rss).hostname.replace(/^www\./, ""); }catch{}
+        const row = document.createElement("div");
+        row.className = "srcRow srcRow--compact";
+        row.innerHTML = `
+          <img class="srcRowIcon" alt="" loading="lazy" src="${escapeHtmlSafe(window.App.faviconUrl(s.site || s.rss, 32))}">
+          <div class="srcRowText">
+            <div class="srcRowName">${escapeHtmlSafe(s.name || host || "Source")}</div>
+            <div class="srcRowHost">${escapeHtmlSafe(host)}</div>
+          </div>
+          <div class="srcRowMove">
+            <button type="button" class="srcRowBtn" data-move="-1" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button type="button" class="srcRowBtn" data-move="1" aria-label="Move down" ${i === list.length - 1 ? "disabled" : ""}>↓</button>
+          </div>
+          <button type="button" class="srcRowBtn srcRowRemove" aria-label="Remove ${escapeHtmlSafe(s.name || "source")}">✕</button>`;
+        row.querySelectorAll("[data-move]").forEach(btn => btn.addEventListener("click", () => {
+          const j = i + Number(btn.dataset.move);
+          const next = [...list];
+          [next[i], next[j]] = [next[j], next[i]];
+          commit(next, "Reordered");
+          listEl.children[j]?.querySelector(`[data-move="${btn.dataset.move}"]`)?.focus();
+        }));
+        row.querySelector(".srcRowRemove").addEventListener("click", () => {
+          commit(list.filter((_, j) => j !== i), `Removed ${s.name || "source"}`);
+        });
+        listEl.appendChild(row);
+      });
     }
 
     openBtn?.addEventListener("click", () => {
-      // Clear skip so the picker treats it as a fresh selection.
-      const next = { ...liveCfg() };
-      next[skipKey] = false;
-      window.App.saveConfig(next);
-      cfg = next;
       window.App?.openSourcePicker?.(scope, () => {
-        // After save/skip, re-read cfg and re-render.
-        cfg = window.App?.cfg || cfg;
+        cfg[cfgKey] = liveCfg()[cfgKey];
+        cfg[skipKey] = liveCfg()[skipKey];
         render();
         setStatus(`${Cap} sources updated`, "saved");
       });
-    });
-
-    clearBtn?.addEventListener("click", () => {
-      const next = { ...liveCfg() };
-      next[cfgKey] = [];
-      window.App.saveConfig(next);
-      cfg = next;
-      render();
-      setStatus(`${Cap} sources cleared`, "saved");
-    });
-
-    // The custom row takes three kinds of input: a pasted RSS URL (added
-    // straight away), or a place / keyword, which runs a search and offers
-    // the matches. looksLikeUrl decides which, and relabels the button so
-    // it's obvious which one is about to happen.
-    const resultsEl = document.getElementById(`${cap}SearchResults`);
-    const looksLikeUrl = v => /^https?:\/\//i.test(v.trim());
-    // Same feed arrives as .../feed and .../feed/ from different catalogues,
-    // so compare on a trailing-slash- and case-insensitive key.
-    const feedKey = u => String(u || "").trim().replace(/\/+$/, "").toLowerCase();
-    const alreadySaved = rss => (liveCfg()[cfgKey] || []).some(s => feedKey(s.rss) === feedKey(rss));
-
-    function addSource(entry){
-      const next = { ...liveCfg() };
-      const list = Array.isArray(next[cfgKey]) ? [...next[cfgKey]] : [];
-      if(list.some(s => s.rss === entry.rss)){
-        setStatus(`${entry.name} is already saved`, "error");
-        return false;
-      }
-      list.push({ name: entry.name, rss: entry.rss, site: entry.site || "", headlinesCount: 8 });
-      next[cfgKey] = list;
-      next[skipKey] = false;
-      window.App.saveConfig(next);
-      cfg = next;
-      render();
-      setStatus(`Added ${entry.name}`, "saved");
-      return true;
-    }
-
-    function renderResults(groups){
-      if(!resultsEl) return;
-      resultsEl.innerHTML = "";
-      const total = groups.reduce((n, g) => n + g.items.length, 0);
-      if(total === 0){
-        resultsEl.hidden = false;
-        const failed = groups.filter(g => g.error);
-        resultsEl.innerHTML = `<div class="sourceSearchEmpty">No matches. ${
-          failed.length ? `(${escapeHtmlSafe(failed.map(f => f.label).join(", "))} unavailable)` : "Try a city, ZIP, full address, or a topic."
-        }</div>`;
-        return;
-      }
-      groups.filter(g => g.items.length).forEach(group => {
-        const head = document.createElement("div");
-        head.className = "sourceSearchGroup";
-        head.textContent = group.label;
-        resultsEl.appendChild(head);
-        group.items.forEach(item => {
-          const row = document.createElement("div");
-          row.className = "sourceSearchRow";
-          // Anything already in this scope's list shows as "Added" instead of
-          // an Add button that would only report "already saved".
-          const already = alreadySaved(item.rss);
-          row.innerHTML = `
-            <div class="sourceSearchInfo">
-              <div class="sourceSearchName">${escapeHtmlSafe(item.name)}</div>
-              ${item.detail ? `<div class="sourceSearchDetail">${escapeHtmlSafe(item.detail)}</div>` : ""}
-            </div>
-            ${already
-              ? `<span class="sourceSearchAdded">Added</span>`
-              : `<button type="button" class="btn sourceSearchAdd">Add</button>`}
-          `;
-          row.querySelector(".sourceSearchAdd")?.addEventListener("click", (ev) => {
-            if(addSource(item)) ev.target.replaceWith(Object.assign(
-              document.createElement("span"), { className: "sourceSearchAdded", textContent: "Added" }));
-          });
-          resultsEl.appendChild(row);
-        });
-      });
-      resultsEl.hidden = false;
-    }
-
-    async function runSearch(query){
-      if(!resultsEl) return;
-      resultsEl.hidden = false;
-      resultsEl.innerHTML = `<div class="sourceSearchEmpty">Searching…</div>`;
-      try {
-        renderResults(await window.App.searchSources(query));
-      } catch (err) {
-        resultsEl.innerHTML = `<div class="sourceSearchEmpty">Search failed: ${escapeHtmlSafe(err?.message || "unknown error")}</div>`;
-      }
-    }
-
-    addBtn?.addEventListener("click", () => {
-      const value = (inputEl?.value || "").trim();
-      if(!value) return;
-      if(looksLikeUrl(value)){
-        try { new URL(value); } catch {
-          setStatus("That doesn't look like a valid URL", "error");
-          return;
-        }
-        const name = value.replace(/^https?:\/\//, "").split("/")[0] || "Custom feed";
-        if(addSource({ name, rss: value, site: "" }) && inputEl) inputEl.value = "";
-        if(resultsEl) resultsEl.hidden = true;
-        return;
-      }
-      runSearch(value);
-    });
-
-    inputEl?.addEventListener("input", () => {
-      if(addBtn) addBtn.textContent = looksLikeUrl(inputEl.value || "") ? "Add" : "Search";
-    });
-
-    inputEl?.addEventListener("keydown", (e) => {
-      if(e.key === "Enter"){ e.preventDefault(); addBtn?.click(); }
-    });
-
-    skipEl?.addEventListener("change", () => {
-      const next = { ...liveCfg() };
-      next[skipKey] = !!skipEl.checked;
-      window.App.saveConfig(next);
-      cfg = next;
-      render();
-      setStatus(`${Cap} skip preference updated`, "saved");
     });
 
     render();
