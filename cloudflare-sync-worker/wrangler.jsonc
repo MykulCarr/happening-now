@@ -17,7 +17,12 @@
   // pages served by `python -m http.server 8080` call this production Worker for
   // feed data, so dropping them breaks local development.
   "vars": {
-    "ALLOWED_ORIGINS": "https://happening-now.net,http://localhost:8080,http://127.0.0.1:8080"
+    "ALLOWED_ORIGINS": "https://happening-now.net,http://localhost:8080,http://127.0.0.1:8080",
+    // Cloudflare Access app guarding /admin and /v1/admin/* (src/admin.mjs).
+    // Empty = every admin request refused. Not secrets: the team domain is
+    // public and the AUD tag only names which Access app a token is for.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
   },
 
   // Daily sweep of both curated feed lists (places + topic tabs). Each firing

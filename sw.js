@@ -66,6 +66,12 @@ self.addEventListener('fetch', (event) => {
   // Skip external requests
   if (!event.request.url.startsWith(self.location.origin)) return;
 
+  // Never cache the admin page or its data: this handler stores every 200 it
+  // sees, which would leave reader reports on the device after one visit and
+  // serve them offline with no login.
+  const path = new URL(event.request.url).pathname;
+  if (path === '/admin' || path === '/admin.html' || path.startsWith('/v1/admin/')) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {

@@ -10,7 +10,8 @@
     "curate": "node scripts/curate-report.mjs",
     "test:rss-cache": "node scripts/test-rss-cache.mjs",
     "test:reminders": "node scripts/test-reminders.mjs",
-    "test:reports": "node scripts/test-reports.mjs"
+    "test:reports": "node scripts/test-reports.mjs",
+    "test:admin": "node scripts/test-admin.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0"

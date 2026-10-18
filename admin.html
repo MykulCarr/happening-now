@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Admin only: behind Cloudflare Access, plus a token check in the Worker
+       (cloudflare-sync-worker/src/admin.mjs). No GA tag on purpose — the
+       owner's own visits aren't traffic. -->
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Happening Now! - Admin</title>
+  <style>html,body{background:#0c3142;margin:0}</style>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/report.css">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Admin</h1>
+        <div class="sub" id="adSignedIn">Loading…</div>
+      </div>
+      <button type="button" class="btn" id="adRefresh">Refresh</button>
+    </section>
+
+    <section class="card fbCard">
+      <h2>Reader reports <span class="adWindow">last 30 days</span></h2>
+      <div id="adReports"><p class="hint">Loading…</p></div>
+    </section>
+
+    <section class="card fbCard">
+      <h2>Is it useful? <span class="adWindow">last 30 days</span></h2>
+      <div id="adPulse"><p class="hint">Loading…</p></div>
+    </section>
+
+    <section class="card fbCard">
+      <h2>Feed sweep</h2>
+      <div id="adSweep"><p class="hint">Loading…</p></div>
+    </section>
+  </main>
+
+  <script defer src="assets/common.js"></script>
+  <script defer src="assets/topbar.js"></script>
+  <script defer src="assets/admin.js"></script>
+</body>
+</html>

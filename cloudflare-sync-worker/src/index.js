@@ -4,6 +4,7 @@ import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
 import { handleReport, handlePulse } from "./reports.mjs";
+import { handleAdmin } from "./admin.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
@@ -483,6 +484,11 @@ export default {
     // visitor's browser; see reports.mjs for what it does and doesn't keep.
     if (url.pathname === "/v1/report") {
       return handleReport(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
+    }
+
+    // Behind Cloudflare Access AND its own token check; see admin.mjs.
+    if (url.pathname.startsWith("/v1/admin/")) {
+      return handleAdmin(request, env, (body, status) => jsonResponse(body, status, request, env));
     }
 
     if (url.pathname === "/v1/pulse") {

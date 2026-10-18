@@ -85,7 +85,8 @@ export async function handleReport(request, env, allowedOrigins, respond) {
 // still filling up — it goes in the next digest), grouped by feed
 // and reason, with up to three example articles each. Also prunes rows older
 // than KEEP_DAYS — reports are for acting on, not for keeping.
-export async function summarizeReports(env, sinceDay) {
+// `untilDay` (exclusive) defaults to today; the admin page passes tomorrow.
+export async function summarizeReports(env, sinceDay, untilDay = today()) {
   if (!env.HN_REPORTS) return { rows: [], total: 0, capped: [] };
   const since = sinceDay || daysAgo(30);
   // Grouped per article and folded in JS: group_concat would join URLs with
@@ -93,10 +94,10 @@ export async function summarizeReports(env, sinceDay) {
   const { results } = await env.HN_REPORTS.prepare(
     `SELECT feed, reason, article, COUNT(*) AS n
        FROM reports WHERE day > ? AND day < ? GROUP BY feed, reason, article ORDER BY n DESC LIMIT 500`
-  ).bind(since, today()).all();
+  ).bind(since, untilDay).all();
   const { results: days } = await env.HN_REPORTS.prepare(
     "SELECT day, COUNT(*) AS n FROM reports WHERE day > ? AND day < ? GROUP BY day HAVING n >= ?"
-  ).bind(since, today(), DAILY_CAP).all();
+  ).bind(since, untilDay, DAILY_CAP).all();
   await env.HN_REPORTS.prepare("DELETE FROM reports WHERE day < ?").bind(daysAgo(KEEP_DAYS)).run();
   const byKey = new Map();
   for (const r of results || []) {
@@ -150,12 +151,12 @@ export async function handlePulse(request, env, allowedOrigins, respond) {
 }
 
 // Counts for the digest, same window as summarizeReports.
-export async function summarizePulse(env, sinceDay) {
+export async function summarizePulse(env, sinceDay, untilDay = today()) {
   if (!env.HN_REPORTS) return { total: 0, useful: {}, uses: {} };
   const since = sinceDay || daysAgo(30);
   const { results } = await env.HN_REPORTS.prepare(
     "SELECT useful, uses, COUNT(*) AS n FROM pulse WHERE day > ? AND day < ? GROUP BY useful, uses"
-  ).bind(since, today()).all();
+  ).bind(since, untilDay).all();
   await env.HN_REPORTS.prepare("DELETE FROM pulse WHERE day < ?").bind(daysAgo(KEEP_DAYS)).run();
   const out = { total: 0, useful: { yes: 0, somewhat: 0, no: 0 }, uses: { news: 0, weather: 0, stocks: 0 } };
   for (const r of results || []) {
@@ -165,6 +166,8 @@ export async function summarizePulse(env, sinceDay) {
   }
   return out;
 }
+
+export const daysFromNow = (n) => daysAgo(-n);
 
 // The last day a digest sent now has fully covered.
 export const reportsCoveredThrough = () => daysAgo(1);

@@ -20,6 +20,7 @@ $publicFiles = @(
   "terms.html",
   "sources.html",
   "feedback.html",
+  "admin.html",
   "widget.html",
   "robots.txt",
   "sitemap.xml",
