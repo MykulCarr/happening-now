@@ -191,7 +191,12 @@ browser-to-us write, and it is shaped to stay boring: a fixed reason list and
 **no free-text field** (nothing personal can be typed in, nothing to spam),
 the row keeps the UTC day only — never IP, User-Agent or time — our-origin
 only, once per article per browser (`hn_reported_v1`, outside the config),
-a daily cap, and 90-day deletion. `privacy.html` describes exactly this; if
+a daily cap, and 90-day deletion. Its sibling is the one-question survey on
+`/feedback` (`assets/feedback.js` → `/v1/pulse`, `pulse` table): yes /
+somewhat / no plus which of news/weather/stocks, same rules, once per 30
+days per browser (`hn_pulse_v1`). Free text deliberately goes by `mailto:`
+from the reader's own mail app, so it never reaches our servers.
+`privacy.html` describes exactly this; if
 the payload grows, the policy changes in the same commit. Don't add a
 free-text box, and don't add a second browser write without the same audit.
 `npm run test:reports` forces every branch against a stand-in D1; run the

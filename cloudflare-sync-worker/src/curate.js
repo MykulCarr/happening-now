@@ -47,7 +47,7 @@ import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
 // is imported lazily rather than at the top of the file.
 import { sendHtmlMail } from "./mailer.mjs";
 // Reader "Report a problem" submissions ride along in the same email.
-import { summarizeReports, reportsCoveredThrough } from "./reports.mjs";
+import { summarizeReports, summarizePulse, reportsCoveredThrough } from "./reports.mjs";
 
 const STATE_KEY = "curate:state";
 // Last day whose reader reports were emailed, so each digest covers only new ones.
@@ -188,7 +188,17 @@ function buildReaderReports(reports) {
     <p style="color:#555">A report is a lead, not a verdict: open the example before removing a source.</p>`;
 }
 
-function buildReport(findings, total, reports) {
+// "Is it useful?" answers from /feedback, as plain counts.
+function buildPulse(pulse) {
+  if (!pulse) return "";
+  if (!pulse.total) return `<h2 style="font-size:16px;margin-top:24px">Is it useful?</h2><p style="color:#555">No answers since the last digest.</p>`;
+  const u = pulse.useful, x = pulse.uses;
+  return `<h2 style="font-size:16px;margin-top:24px">Is it useful? (${pulse.total} answer${pulse.total === 1 ? "" : "s"})</h2>
+    <p>Yes <b>${u.yes}</b> · Somewhat <b>${u.somewhat}</b> · Not really <b>${u.no}</b></p>
+    <p style="color:#555">Use most: News ${x.news} · Weather ${x.weather} · Stocks ${x.stocks}</p>`;
+}
+
+function buildReport(findings, total, reports, pulse) {
   const rows = findings.map(f =>
     `<tr><td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.state === "topic" ? `topic · ${f.place}` : `${f.state}/${f.place}`)}</td>
          <td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.name)}</td>
@@ -214,6 +224,7 @@ function buildReport(findings, total, reports) {
       <code>npm run check-feeds</code>.</p>`
     : `<p>Everything is returning items. Nothing to do.</p>`}
     ${buildReaderReports(reports)}
+    ${buildPulse(pulse)}
     <p style="color:#777;font-size:12px">Nothing has been changed automatically.</p></div>`;
   const reportNote = reports?.total ? ` · ${reports.total} reader report(s)` : "";
   return { subject: `Happening Now: ${findings.length ? `${findings.length} feed(s) need attention` : "all feeds healthy"}${reportNote}`, html };
@@ -223,11 +234,13 @@ const escapeHtml = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": 
 
 async function sendDigest(env, findings, checked) {
   // Best-effort: a D1 problem must not stop the feed digest going out.
-  let reports = null;
+  let reports = null, pulse = null;
   try {
-    reports = await summarizeReports(env, await env.HN_STATE_DATA.get(REPORTS_KEY));
+    const since = await env.HN_STATE_DATA.get(REPORTS_KEY);
+    reports = await summarizeReports(env, since);
+    pulse = await summarizePulse(env, since);
   } catch { /* reported as "couldn't read" in the email */ }
-  const { subject, html } = buildReport(findings, checked, reports);
+  const { subject, html } = buildReport(findings, checked, reports, pulse);
   await sendHtmlMail(env, { subject, html });
   if (reports) await env.HN_STATE_DATA.put(REPORTS_KEY, reportsCoveredThrough());
   await env.HN_STATE_DATA.put(STATE_KEY, JSON.stringify({ phase: "scan", cursor: 0, findings: [], checked: 0 }));

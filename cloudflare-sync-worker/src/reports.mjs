@@ -110,5 +110,61 @@ export async function summarizeReports(env, sinceDay) {
   return { rows, total: rows.reduce((s, r) => s + r.n, 0), capped: (days || []).map((d) => d.day) };
 }
 
+// ── "Is HAPPENING NOW useful to you?" (POST /v1/pulse, on /feedback) ──────
+// Same shape of caution as reports: fixed answers only, the day and nothing
+// else, our origins only, a daily cap. One answer per browser per 30 days is
+// enforced client-side (assets/feedback.js).
+const USEFUL = ["yes", "somewhat", "no"];
+const USES = ["news", "weather", "stocks"];
+
+export function parsePulse(text) {
+  if (!text || text.length > 500) return null;
+  let body;
+  try { body = JSON.parse(text); } catch { return null; }
+  const useful = String(body?.useful || "");
+  if (!USEFUL.includes(useful)) return null;
+  const raw = Array.isArray(body?.uses) ? body.uses.map(String) : [];
+  if (raw.some((u) => !USES.includes(u))) return null;
+  // Canonical order, so "weather,news" and "news,weather" count together.
+  return { useful, uses: USES.filter((u) => raw.includes(u)).join(",") };
+}
+
+export async function handlePulse(request, env, allowedOrigins, respond) {
+  if (request.method !== "POST") return respond({ ok: false, error: "POST only" }, 405);
+  const origin = String(request.headers.get("Origin") || "").replace(/\/+$/, "");
+  if (!origin || !allowedOrigins.includes(origin)) return respond({ ok: false, error: "Forbidden" }, 403);
+  if (!env.HN_REPORTS) return respond({ ok: false, error: "Unavailable" }, 503);
+  const row = parsePulse(await request.text());
+  if (!row) return respond({ ok: false, error: "Invalid answer" }, 400);
+  const day = today();
+  try {
+    const { n } = await env.HN_REPORTS.prepare("SELECT COUNT(*) AS n FROM pulse WHERE day = ?").bind(day).first();
+    if (n < DAILY_CAP) {
+      await env.HN_REPORTS.prepare("INSERT INTO pulse (day, useful, uses) VALUES (?, ?, ?)")
+        .bind(day, row.useful, row.uses).run();
+    }
+  } catch {
+    return respond({ ok: false, error: "Could not save" }, 500);
+  }
+  return respond({ ok: true }, 200);
+}
+
+// Counts for the digest, same window as summarizeReports.
+export async function summarizePulse(env, sinceDay) {
+  if (!env.HN_REPORTS) return { total: 0, useful: {}, uses: {} };
+  const since = sinceDay || daysAgo(30);
+  const { results } = await env.HN_REPORTS.prepare(
+    "SELECT useful, uses, COUNT(*) AS n FROM pulse WHERE day > ? AND day < ? GROUP BY useful, uses"
+  ).bind(since, today()).all();
+  await env.HN_REPORTS.prepare("DELETE FROM pulse WHERE day < ?").bind(daysAgo(KEEP_DAYS)).run();
+  const out = { total: 0, useful: { yes: 0, somewhat: 0, no: 0 }, uses: { news: 0, weather: 0, stocks: 0 } };
+  for (const r of results || []) {
+    out.total += r.n;
+    if (r.useful in out.useful) out.useful[r.useful] += r.n;
+    for (const u of String(r.uses || "").split(",")) if (u in out.uses) out.uses[u] += r.n;
+  }
+  return out;
+}
+
 // The last day a digest sent now has fully covered.
 export const reportsCoveredThrough = () => daysAgo(1);

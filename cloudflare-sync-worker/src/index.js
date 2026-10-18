@@ -3,7 +3,7 @@ import { runReminders } from "./reminders.mjs";
 import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
-import { handleReport } from "./reports.mjs";
+import { handleReport, handlePulse } from "./reports.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
@@ -483,6 +483,10 @@ export default {
     // visitor's browser; see reports.mjs for what it does and doesn't keep.
     if (url.pathname === "/v1/report") {
       return handleReport(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
+    }
+
+    if (url.pathname === "/v1/pulse") {
+      return handlePulse(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
     }
 
     if (url.pathname === "/v1/favicon") {

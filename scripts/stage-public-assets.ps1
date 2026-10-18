@@ -19,6 +19,7 @@ $publicFiles = @(
   "privacy.html",
   "terms.html",
   "sources.html",
+  "feedback.html",
   "widget.html",
   "robots.txt",
   "sitemap.xml",

@@ -11,3 +11,13 @@ CREATE TABLE IF NOT EXISTS reports (
   reason  TEXT NOT NULL       -- one of REASONS in src/reports.mjs
 );
 CREATE INDEX IF NOT EXISTS reports_day ON reports (day);
+
+-- "Is HAPPENING NOW useful to you?" on /feedback. One tap, no text, no
+-- identity: the answer and which parts of the site they use, by day.
+CREATE TABLE IF NOT EXISTS pulse (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  day     TEXT NOT NULL,      -- YYYY-MM-DD, UTC
+  useful  TEXT NOT NULL,      -- yes | somewhat | no
+  uses    TEXT NOT NULL       -- comma-joined subset of news,weather,stocks (fixed words only)
+);
+CREATE INDEX IF NOT EXISTS pulse_day ON pulse (day);

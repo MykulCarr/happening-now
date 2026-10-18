@@ -41,3 +41,22 @@
   .rpOverlay { align-items: flex-end; padding: 0; }
   .rpSheet { max-width: none; border-radius: 16px 16px 0 0; padding-bottom: 24px; }
 }
+
+/* ── /feedback page (assets/feedback.js) ───────────────────────── */
+.fbCard { display: grid; gap: 12px; padding: 18px; margin-bottom: 16px; }
+.fbCard h2 { margin: 0; font-size: 18px; }
+.fbCard .hint { margin: 0; }
+.fbChoices { display: flex; flex-wrap: wrap; gap: 8px; }
+.fbChoice { min-height: 44px; min-width: 96px; }
+.fbChoice[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fbLabel { margin: 4px 0 0; font-weight: 600; }
+.fbOptional { font-weight: 400; color: var(--muted); }
+.fbSend { justify-self: start; min-height: 44px; text-decoration: none; display: inline-flex; align-items: center; }
+.fbStatus { margin: 0; min-height: 18px; }
+.fbNote { margin: 0; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.fbNote a { color: var(--accent); }
+.fbNote strong { color: var(--text); overflow-wrap: anywhere; }
+.fbCopy { min-height: 36px; font-size: 13px; }
+.fbRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fbField { display: grid; gap: 6px; font-weight: 600; }
+@media (max-width: 560px) { .fbRow { grid-template-columns: 1fr; } }

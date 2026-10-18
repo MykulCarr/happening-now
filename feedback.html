@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
+       so GA4 runs cookieless: no cookies, no device id, no banner needed. See
+       privacy.html. Keep this INLINE and in <head> — Google's tag detection
+       scans the HTML source, so loading it from an external .js file makes the
+       property report "tag not installed" even though hits are being sent. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});
+    gtag('js', new Date());
+    gtag('config','G-XL3C28KRQX');
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XL3C28KRQX"></script>
+  <meta name="description" content="Tell Happening Now what's working: report a problem with a story, say whether the site is useful, or send an idea." />
+  <meta name="robots" content="noindex,follow" />
+  <!-- Perf hints: warm up TLS to the third-party origins our JS hits
+       so DNS + handshake happens in parallel with HTML parse. -->
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://api.zippopotam.us" crossorigin>
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+  <link rel="canonical" href="https://happening-now.net/feedback" />
+  <meta property="og:site_name" content="HAPPENING NOW" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Happening Now! - Feedback" />
+  <meta property="og:description" content="Tell Happening Now what's working: report a problem with a story, say whether the site is useful, or send an idea." />
+  <meta property="og:url" content="https://happening-now.net/feedback" />
+  <meta property="og:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:title" content="Happening Now! - Feedback" />
+  <meta name="twitter:description" content="Tell Happening Now what's working: report a problem with a story, say whether the site is useful, or send an idea." />
+  <title>Happening Now! - Feedback</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Happening Now! - Feedback",
+      "url": "https://happening-now.net/feedback",
+      "description": "Feedback for the HAPPENING NOW dashboard",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "HAPPENING NOW",
+        "url": "https://happening-now.net/"
+      },
+      "inLanguage": "en"
+    }
+  </script>
+  <style>html,body{background:#0c3142;margin:0}</style>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/report.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#0c3142";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Feedback</h1>
+        <div class="sub">Help keep HAPPENING NOW free, current and readable</div>
+      </div>
+    </section>
+
+    <section class="card fbCard">
+      <h2>Problem with a story or source?</h2>
+      <p class="hint">Tap the <strong>⚑</strong> in the corner of any headline on the <a href="/">News</a> page and pick what went wrong:
+        it hit a paywall, the link was broken, the news was old, it wasn't news, or it was hard to read on your device.
+        That tells us exactly which source to fix, and nothing else.</p>
+    </section>
+
+    <section class="card fbCard" id="fbPulse">
+      <h2>Is HAPPENING NOW useful to you?</h2>
+      <div class="fbChoices" role="group" aria-label="Is it useful?">
+        <button type="button" class="btn fbChoice" data-useful="yes" aria-pressed="false">Yes</button>
+        <button type="button" class="btn fbChoice" data-useful="somewhat" aria-pressed="false">Somewhat</button>
+        <button type="button" class="btn fbChoice" data-useful="no" aria-pressed="false">Not really</button>
+      </div>
+      <p class="fbLabel">What do you use most? <span class="fbOptional">(optional, pick any)</span></p>
+      <div class="fbChoices" role="group" aria-label="What do you use most?">
+        <button type="button" class="btn fbChoice" data-use="news" aria-pressed="false">News</button>
+        <button type="button" class="btn fbChoice" data-use="weather" aria-pressed="false">Weather</button>
+        <button type="button" class="btn fbChoice" data-use="stocks" aria-pressed="false">Stocks</button>
+      </div>
+      <button type="button" class="btn primary fbSend" id="fbPulseSend" disabled>Send</button>
+      <p class="fbStatus" id="fbPulseStatus" aria-live="polite"></p>
+      <p class="fbNote">Sends only your answers and today's date. No text, nothing about you.
+        <a href="/privacy">Privacy</a></p>
+    </section>
+
+    <section class="card fbCard">
+      <h2>Tell us more</h2>
+      <p class="hint">Ideas, a source you'd like added, or a bug. This goes by email from your own mail app,
+        so what you write never touches our servers.</p>
+      <div class="fbRow">
+        <label class="fbField">What's it about?
+          <select class="input" id="fbKind">
+            <option value="Something's broken">Something's broken</option>
+            <option value="Suggest a source">Suggest a source</option>
+            <option value="Idea">An idea</option>
+            <option value="Other">Something else</option>
+          </select>
+        </label>
+        <label class="fbField">Which part of the site?
+          <select class="input" id="fbArea">
+            <option>News</option>
+            <option>Weather</option>
+            <option>Stocks</option>
+            <option>Settings</option>
+            <option>Installed app</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+      <a class="btn primary fbSend" id="fbEmail" href="#">Write email</a>
+      <p class="fbNote">No mail app? Send to <strong id="fbAddress"></strong>
+        <button type="button" class="btn fbCopy" id="fbCopy">Copy address</button>
+        <span id="fbCopyStatus" aria-live="polite"></span></p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW feedback</p>
+    <p class="footerLinks"><a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
+  </footer>
+
+  <script defer src="assets/common.js"></script>
+  <script defer src="assets/topbar.js"></script>
+  <script defer src="assets/infobar.js"></script>
+  <script defer src="assets/feedback.js"></script>
+</body>
+</html>

@@ -3,34 +3,37 @@
 // the "today waits for the next digest" boundary, and pruning.
 //
 //   npm run test:reports
-import { handleReport, summarizeReports, parseReport, reportsCoveredThrough } from "../cloudflare-sync-worker/src/reports.mjs";
+import { handleReport, summarizeReports, parseReport, reportsCoveredThrough, handlePulse, parsePulse, summarizePulse } from "../cloudflare-sync-worker/src/reports.mjs";
 
 const day = (n) => new Date(Date.now() - n * 86400e3).toISOString().slice(0, 10);
 const TODAY = day(0);
 
-// Just enough of D1 for the five statements reports.mjs runs.
-function fakeD1(rows = []) {
-  const db = { rows };
+// Just enough of D1 for the statements reports.mjs runs, with the reports
+// and pulse tables kept apart (db.rows / db.pulse).
+function fakeD1(rows = [], pulse = []) {
+  const db = { rows, pulse };
+  const table = (sql) => (/\bpulse\b/.test(sql) ? "pulse" : "rows");
   db.prepare = (sql) => ({
     bind: (...a) => ({
-      first: async () => ({ n: db.rows.filter((r) => r.day === a[0]).length }),
+      first: async () => ({ n: db[table(sql)].filter((r) => r.day === a[0]).length }),
       run: async () => {
-        if (sql.startsWith("INSERT")) db.rows.push({ day: a[0], feed: a[1], article: a[2], reason: a[3] });
-        else if (sql.startsWith("DELETE")) db.rows = db.rows.filter((r) => r.day >= a[0]);
+        const t = table(sql);
+        if (sql.startsWith("INSERT") && t === "pulse") db.pulse.push({ day: a[0], useful: a[1], uses: a[2] });
+        else if (sql.startsWith("INSERT")) db.rows.push({ day: a[0], feed: a[1], article: a[2], reason: a[3] });
+        else if (sql.startsWith("DELETE")) db[t] = db[t].filter((r) => r.day >= a[0]);
         return {};
       },
       all: async () => {
-        const inRange = db.rows.filter((r) => r.day > a[0] && r.day < a[1]);
+        const t = table(sql);
+        const inRange = db[t].filter((r) => r.day > a[0] && r.day < a[1]);
         if (sql.includes("GROUP BY day")) {
           const counts = {};
           for (const r of inRange) counts[r.day] = (counts[r.day] || 0) + 1;
           return { results: Object.entries(counts).filter(([, n]) => n >= a[2]).map(([d, n]) => ({ day: d, n })) };
         }
+        const keyOf = t === "pulse" ? (r) => `${r.useful}|${r.uses}` : (r) => `${r.feed}|${r.reason}|${r.article}`;
         const g = new Map();
-        for (const r of inRange) {
-          const k = `${r.feed}|${r.reason}|${r.article}`;
-          g.set(k, { ...r, n: (g.get(k)?.n || 0) + 1 });
-        }
+        for (const r of inRange) g.set(keyOf(r), { ...r, n: (g.get(keyOf(r))?.n || 0) + 1 });
         return { results: [...g.values()].sort((x, y) => y.n - x.n) };
       },
     }),
@@ -105,6 +108,38 @@ const check = (name, ok) => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}`); i
   check("a day that hit the cap is flagged", s.capped.includes(day(2)));
 }
 check("parseReport keeps only the three fields", Object.keys(parseReport(JSON.stringify({ feed: "https://a.b/f", article: "https://a.b/x", reason: "stale", email: "me@x" }))).join() === "feed,article,reason");
+
+// ── pulse ("is it useful?") ──
+{
+  const env = { HN_REPORTS: fakeD1() };
+  const ok = JSON.stringify({ useful: "somewhat", uses: ["weather", "news"] });
+  const r = await handlePulse(req(ok), env, ORIGINS, respond);
+  check("pulse: a valid answer is stored", r.status === 200 && env.HN_REPORTS.pulse.length === 1);
+  check("pulse: uses are stored in canonical order", env.HN_REPORTS.pulse[0].uses === "news,weather");
+  check("pulse: nothing leaks into the reports table", env.HN_REPORTS.rows.length === 0);
+  const bad = [
+    ["pulse: an unknown answer is refused", JSON.stringify({ useful: "love it", uses: [] })],
+    ["pulse: an unknown 'uses' word is refused", JSON.stringify({ useful: "yes", uses: ["news", "<script>"] })],
+    ["pulse: junk JSON is refused", "{"],
+  ];
+  for (const [name, body] of bad) check(name, (await handlePulse(req(body), env, ORIGINS, respond)).status === 400);
+  check("pulse: a foreign origin is refused", (await handlePulse(req(ok, { origin: "https://evil.example" }), env, ORIGINS, respond)).status === 403);
+  check("pulse: GET is refused", (await handlePulse(req(ok, { method: "GET" }), env, ORIGINS, respond)).status === 405);
+  check("pulse: 'uses' may be empty", parsePulse(JSON.stringify({ useful: "no" }))?.uses === "");
+}
+{
+  const p = [
+    { day: day(2), useful: "yes", uses: "news,weather" },
+    { day: day(2), useful: "yes", uses: "news" },
+    { day: day(3), useful: "no", uses: "" },
+    { day: TODAY, useful: "yes", uses: "stocks" },          // waits for the next digest
+    { day: day(200), useful: "somewhat", uses: "news" },    // pruned
+  ];
+  const env = { HN_REPORTS: fakeD1([], p) };
+  const s = await summarizePulse(env, day(10));
+  check("pulse: totals and splits", s.total === 3 && s.useful.yes === 2 && s.useful.no === 1 && s.uses.news === 2 && s.uses.weather === 1 && s.uses.stocks === 0);
+  check("pulse: old answers are pruned", env.HN_REPORTS.pulse.length === 4);
+}
 
 console.log(failures ? `\n${failures} check(s) failed` : "\nAll checks passed");
 process.exit(failures ? 1 : 0);
