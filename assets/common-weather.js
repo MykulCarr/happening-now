@@ -9,34 +9,11 @@
     getCached,
     setCached,
     handleError,
-    escapeHtml
+    escapeHtml,
+    // Lives in common.js so every page has it — privacy/terms load no weather
+    // code, and common.js's own location picker calls it.
+    geocodeZip
   } = App;
-
-  async function geocodeZip(zip){
-    const cacheKey = `geo:${zip}`;
-    const cached = getCached(cacheKey);
-    if(cached) return cached;
-
-    try{
-      const url = `https://api.zippopotam.us/us/${zip}`;
-      const res = await fetch(url, { cache:"no-store" });
-      if(!res.ok) throw new Error("Bad ZIP");
-      const j = await res.json();
-      const place = j.places?.[0];
-      if(!place) throw new Error("No place");
-      const result = {
-        city: place["place name"],
-        state: place["state abbreviation"],
-        lat: Number(place.latitude),
-        lon: Number(place.longitude)
-      };
-      setCached(cacheKey, result);
-      return result;
-    }catch(error){
-      handleError(error, "Geocoding");
-      throw error;
-    }
-  }
 
   async function getCurrentPositionAsync(options = {}){
     return new Promise((resolve, reject) => {
@@ -500,7 +477,6 @@
   }
 
   Object.assign(App, {
-    geocodeZip,
     getCurrentPositionAsync,
     reverseGeocodeCoords,
     abbreviateState,

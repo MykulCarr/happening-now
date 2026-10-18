@@ -1741,28 +1741,12 @@
     return fetchRssItems(source, limit, useCache);
   }
 
+  // The real implementation is in common-weather.js, which has
+  // fetchCurrentWeather. This copy used to duplicate it and call both helpers
+  // by bare name, so it threw and silently left the clock on the default zone.
   async function syncTimezoneFromZip(cfg) {
-    try {
-      const zip = String(cfg?.zipCode || "").trim();
-      if (!/^\d{5}$/.test(zip)) return cfg;
-
-      if (cfg?._zipTz === zip && cfg.timezone) return cfg;
-
-      const loc = await geocodeZip(zip);
-      const wx = await fetchCurrentWeather(loc.lat, loc.lon);
-      const tz = wx?.timezone;
-
-      if (tz && tz !== cfg.timezone) {
-        return saveConfig({ ...cfg, timezone: tz, _zipTz: zip });
-      }
-      if (tz && tz === cfg.timezone && cfg?._zipTz !== zip) {
-        return saveConfig({ ...cfg, _zipTz: zip });
-      }
-      if (!cfg.timezone) return saveConfig({ ...cfg, timezone: DEFAULTS.timezone });
-      return cfg;
-    } catch {
-      return cfg;
-    }
+    const sync = window.App?.syncTimezoneFromZip;
+    return typeof sync === "function" && sync !== syncTimezoneFromZip ? sync(cfg) : cfg;
   }
 
   function renderTopbar(cfg) {
@@ -2824,6 +2808,36 @@
   // launch the same modal. Reddit's subreddits/search.json reliably surfaces
   // city-named subs (r/JacksonMI), state subs (r/Michigan), and topical subs
   // for any US city — much better than guessing Google News query templates.
+
+  // ZIP -> { city, state, lat, lon } via zippopotam. Moved here from
+  // common-weather.js (2026-10-18): this file called it by bare name in three
+  // places — the location picker's ZIP tab, the local-news picker's saved-ZIP
+  // fallback and syncTimezoneFromZip — and every one threw ReferenceError.
+  async function geocodeZip(zip){
+    const cacheKey = `geo:${zip}`;
+    const cached = getCached(cacheKey);
+    if(cached) return cached;
+
+    try{
+      const url = `https://api.zippopotam.us/us/${zip}`;
+      const res = await fetch(url, { cache:"no-store" });
+      if(!res.ok) throw new Error("Bad ZIP");
+      const j = await res.json();
+      const place = j.places?.[0];
+      if(!place) throw new Error("No place");
+      const result = {
+        city: place["place name"],
+        state: place["state abbreviation"],
+        lat: Number(place.latitude),
+        lon: Number(place.longitude)
+      };
+      setCached(cacheKey, result);
+      return result;
+    }catch(error){
+      handleError(error, "Geocoding");
+      throw error;
+    }
+  }
 
   // Lightweight city-name geocoding via Open-Meteo (no API key needed).
   // Powers the location picker's "City Name" tab.
@@ -3973,6 +3987,7 @@
     setActiveLocationOverride,
     clearActiveLocationOverride,
     geocodeCityName,
+    geocodeZip,
     openLocationPicker
   };
 
