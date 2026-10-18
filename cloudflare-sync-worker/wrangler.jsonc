@@ -21,8 +21,8 @@
     // Cloudflare Access app guarding /admin and /v1/admin/* (src/admin.mjs).
     // Empty = every admin request refused. Not secrets: the team domain is
     // public and the AUD tag only names which Access app a token is for.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_TEAM_DOMAIN": "happening-now.cloudflareaccess.com",
+    "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556"
   },
 
   // Daily sweep of both curated feed lists (places + topic tabs). Each firing
