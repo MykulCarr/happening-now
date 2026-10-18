@@ -91,6 +91,17 @@ Two traps that both produce confident, wrong answers:
   silently never reaches production.
 - **`sw.js` and `.well-known/security.txt` contain placeholders** (`__BUILD_ID__`,
   `__EXPIRES__`) that are substituted at stage time. Don't "fix" them in source.
+- **`/v1/rss/raw` identifies honestly first, then retries as Chrome.** It
+  used to send only a Chrome User-Agent, and on 2026-10-18 that was what got
+  39 feeds blocked: the WordPress-hosted nonprofits (Texas Tribune,
+  CalMatters, VTDigger, WyoFile, CT Mirror, MinnPost...) share a 403
+  "Checking your browser..." wall (`/__challenge/probes.js`) aimed at clients
+  that claim to be a browser and can't run JavaScript. Measured from a Worker
+  IP across all 471 feeds: Chrome UA 420 worked, the honest
+  `happening-now.net feed reader` UA 457. Only CBC (and Yahoo's JSON) need the
+  browser UA, and they're in `BROWSER_FIRST_HOSTS`. All of it lives in
+  `fetchFeedUpstream` in `upstream-headers.mjs` — don't go back to a single
+  disguised UA.
 - **Some publishers block Cloudflare Worker IPs.** PBS NewsHour had to be swapped
   for ProPublica for exactly this reason (`fb3ca6e`). If a feed works in a browser
   but 403s from the Worker, that's the cause — replace the source rather than retry.

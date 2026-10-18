@@ -3,7 +3,7 @@ import { runReminders } from "./reminders.mjs";
 import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
-import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
+import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
 function normalizeOrigin(value) {
@@ -212,8 +212,7 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
 
   let upstream;
   try {
-    upstream = await fetch(parsed.target, {
-      headers: RSS_FETCH_HEADERS,
+    upstream = await fetchFeedUpstream(parsed.target, {
       cf: {
         cacheEverything: true,
         cacheTtl: 120,
@@ -227,7 +226,7 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
     return serveStaleOr(`Target feed error: ${upstream.status}`, 502);
   }
 
-  const xmlText = await upstream.text();
+  const xmlText = upstream.text;
 
   // Refresh the good copy only when this really is a feed, so a bot-wall page
   // served with a 200 can never become what we fall back to. Deliberately not
