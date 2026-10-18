@@ -46,8 +46,12 @@ import { RSS_FETCH_HEADERS } from "./upstream-headers.mjs";
 // Shared with the ops reminders; see mailer.mjs for why the email binding
 // is imported lazily rather than at the top of the file.
 import { sendHtmlMail } from "./mailer.mjs";
+// Reader "Report a problem" submissions ride along in the same email.
+import { summarizeReports, reportsCoveredThrough } from "./reports.mjs";
 
 const STATE_KEY = "curate:state";
+// Last day whose reader reports were emailed, so each digest covers only new ones.
+const REPORTS_KEY = "curate:reports-through";
 const STATIONS_URL = "https://happening-now.net/data/local-stations.json";
 const TOPICS_URL = "https://happening-now.net/data/topic-sources.json";
 const NEWS_URL = "https://happening-now.net/data/news-sources.json";
@@ -166,7 +170,25 @@ function flatten(states, topics, news) {
   return out.sort((a, b) => a.rss.localeCompare(b.rss));
 }
 
-function buildReport(findings, total) {
+// Reader reports: what the robots can't see. A sweep can tell a feed loads;
+// only a reader can tell the article behind it was paywalled or unreadable.
+function buildReaderReports(reports) {
+  if (!reports) return `<h2 style="font-size:16px;margin-top:24px">Reader reports</h2><p style="color:#a00">Couldn't read reports this time.</p>`;
+  if (!reports.rows.length) return `<h2 style="font-size:16px;margin-top:24px">Reader reports</h2><p style="color:#555">None since the last digest.</p>`;
+  const rows = reports.rows.map(r =>
+    `<tr><td style="padding:6px 10px;border-top:1px solid #ddd"><b>${r.n}×</b> ${escapeHtml(r.label)}</td>
+         <td style="padding:6px 10px;border-top:1px solid #ddd"><a href="${escapeHtml(r.feed)}">${escapeHtml(r.feed)}</a></td>
+         <td style="padding:6px 10px;border-top:1px solid #ddd">${r.articles.map(a => `<a href="${escapeHtml(a)}">${escapeHtml(a.length > 70 ? a.slice(0, 70) + "…" : a)}</a>`).join("<br>")}</td></tr>`).join("");
+  return `<h2 style="font-size:16px;margin-top:24px">Reader reports (${reports.total})</h2>
+    <table style="border-collapse:collapse;width:100%;font:13px system-ui">
+      <tr><th align="left" style="padding:6px 10px;background:#f3f4f6">Problem</th>
+          <th align="left" style="padding:6px 10px;background:#f3f4f6">Feed</th>
+          <th align="left" style="padding:6px 10px;background:#f3f4f6">Examples</th></tr>${rows}</table>
+    ${reports.capped.length ? `<p style="color:#a00">Daily cap hit on ${reports.capped.join(", ")}: some reports were dropped. Possibly a script.</p>` : ""}
+    <p style="color:#555">A report is a lead, not a verdict: open the example before removing a source.</p>`;
+}
+
+function buildReport(findings, total, reports) {
   const rows = findings.map(f =>
     `<tr><td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.state === "topic" ? `topic · ${f.place}` : `${f.state}/${f.place}`)}</td>
          <td style="padding:6px 10px;border-top:1px solid #ddd">${escapeHtml(f.name)}</td>
@@ -191,15 +213,23 @@ function buildReport(findings, total) {
       <code>data/topic-sources.json</code>. Either way finish with
       <code>npm run check-feeds</code>.</p>`
     : `<p>Everything is returning items. Nothing to do.</p>`}
+    ${buildReaderReports(reports)}
     <p style="color:#777;font-size:12px">Nothing has been changed automatically.</p></div>`;
-  return { subject: `Happening Now: ${findings.length ? `${findings.length} feed(s) need attention` : "all feeds healthy"}`, html };
+  const reportNote = reports?.total ? ` · ${reports.total} reader report(s)` : "";
+  return { subject: `Happening Now: ${findings.length ? `${findings.length} feed(s) need attention` : "all feeds healthy"}${reportNote}`, html };
 }
 
 const escapeHtml = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 
 async function sendDigest(env, findings, checked) {
-  const { subject, html } = buildReport(findings, checked);
+  // Best-effort: a D1 problem must not stop the feed digest going out.
+  let reports = null;
+  try {
+    reports = await summarizeReports(env, await env.HN_STATE_DATA.get(REPORTS_KEY));
+  } catch { /* reported as "couldn't read" in the email */ }
+  const { subject, html } = buildReport(findings, checked, reports);
   await sendHtmlMail(env, { subject, html });
+  if (reports) await env.HN_STATE_DATA.put(REPORTS_KEY, reportsCoveredThrough());
   await env.HN_STATE_DATA.put(STATE_KEY, JSON.stringify({ phase: "scan", cursor: 0, findings: [], checked: 0 }));
   return { sent: true, checked, dead: findings.length };
 }

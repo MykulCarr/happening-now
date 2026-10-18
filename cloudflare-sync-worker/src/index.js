@@ -3,6 +3,7 @@ import { runReminders } from "./reminders.mjs";
 import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
+import { handleReport } from "./reports.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
@@ -49,7 +50,7 @@ function getCorsHeaders(request, env) {
   const allowOrigin = getCorsAllowOrigin(request, env);
   const headers = {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
@@ -476,6 +477,12 @@ export default {
 
     if (url.pathname === "/v1/rss/raw") {
       return fetchRssThroughProxy(request, env, url, ctx);
+    }
+
+    // Reader "Report a problem". The only route that accepts data from a
+    // visitor's browser; see reports.mjs for what it does and doesn't keep.
+    if (url.pathname === "/v1/report") {
+      return handleReport(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
     }
 
     if (url.pathname === "/v1/favicon") {

@@ -811,7 +811,9 @@
 
         list.innerHTML = "";
         items.forEach(item => {
-          list.appendChild(createRssItem(item, w));
+          // report.js adds the "Report a problem" button; the page works without it.
+          const link = createRssItem(item, w);
+          list.appendChild(window.HNReport ? window.HNReport.wrap(link, item, w.rss) : link);
         });
         successCount++;
       } catch (error) {

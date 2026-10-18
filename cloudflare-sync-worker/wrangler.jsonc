@@ -46,6 +46,18 @@
     }
   ],
 
+  // Reader "Report a problem" submissions (src/reports.mjs). D1 rather than KV
+  // on purpose: KV's 1,000 writes/day are already spent on the stock-quote
+  // and market caches, and reports must never be able to starve those.
+  // Schema: schema/reports.sql.
+  "d1_databases": [
+    {
+      "binding": "HN_REPORTS",
+      "database_name": "hn-reports",
+      "database_id": "7b2d7670-f0db-40a3-8fa3-ca102585b6dc"
+    }
+  ],
+
   "observability": {
     "enabled": true
   }

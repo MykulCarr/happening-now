@@ -9,7 +9,8 @@
     "check-feeds": "node scripts/check-feeds.mjs",
     "curate": "node scripts/curate-report.mjs",
     "test:rss-cache": "node scripts/test-rss-cache.mjs",
-    "test:reminders": "node scripts/test-reminders.mjs"
+    "test:reminders": "node scripts/test-reminders.mjs",
+    "test:reports": "node scripts/test-reports.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0"

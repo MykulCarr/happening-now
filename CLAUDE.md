@@ -178,10 +178,24 @@ Two traps that both produce confident, wrong answers:
 ## Privacy posture — what leaves a visitor's browser
 
 Audited 2026-08-27. The site collects **nothing** about visitors server-side: no
-cookies of its own, no accounts, no `POST`/`PUT` from the browser anywhere, and
-KV holds only the market snapshot and feed-sweep state. Settings
+cookies of its own, no accounts, and KV holds only the market snapshot,
+quote cache and feed-sweep state. Settings
 live in three `localStorage` keys and never leave the device — `settings-sync.js`
 writes to a file the user picked and has no network code at all.
+
+**The one exception (2026-10-18): "Report a problem."** The ⚑ on each
+headline (`assets/report.js`) POSTs `{ feed, article, reason }` to
+`/v1/report` (`cloudflare-sync-worker/src/reports.mjs`), stored in the
+`hn-reports` D1 database and summarised in the digest email. It is the only
+browser-to-us write, and it is shaped to stay boring: a fixed reason list and
+**no free-text field** (nothing personal can be typed in, nothing to spam),
+the row keeps the UTC day only — never IP, User-Agent or time — our-origin
+only, once per article per browser (`hn_reported_v1`, outside the config),
+a daily cap, and 90-day deletion. `privacy.html` describes exactly this; if
+the payload grows, the policy changes in the same commit. Don't add a
+free-text box, and don't add a second browser write without the same audit.
+`npm run test:reports` forces every branch against a stand-in D1; run the
+real SQL with `wrangler d1 execute hn-reports --remote` after touching it.
 
 Keep it that way. Two rules follow from the audit:
 

@@ -1,0 +1,43 @@
+/* Headline "Report a problem" button and its sheet (assets/report.js). */
+
+.rssItemWrap { position: relative; }
+.rssItemWrap > .rssItem { padding-right: 46px; }   /* keep text clear of the button */
+
+.rpBtn {
+  position: absolute; top: 6px; right: 6px;
+  width: 36px; height: 36px;
+  border: 0; border-radius: 10px;
+  background: transparent; color: var(--muted);
+  font-size: 15px; line-height: 1; cursor: pointer;
+  opacity: .55;
+}
+.rpBtn:hover, .rpBtn:focus-visible { opacity: 1; background: var(--panel2); color: var(--text); }
+.rpBtn.isReported { opacity: .8; color: var(--accent); cursor: default; }
+
+.rpOverlay {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0, 0, 0, .6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.rpSheet {
+  width: 100%; max-width: 420px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  display: grid; gap: 10px;
+}
+.rpTitle { margin: 0; font-size: 18px; }
+.rpStory { margin: 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.rpReasons { display: grid; gap: 8px; }
+.rpReason { min-height: 44px; text-align: left; justify-content: flex-start; }
+.rpStatus { margin: 0; min-height: 18px; font-size: 14px; }
+.rpPrivacy { margin: 0; font-size: 12px; color: var(--muted); }
+.rpPrivacy a { color: var(--accent); }
+.rpCancel { min-height: 44px; }
+
+@media (max-width: 560px) {
+  .rpOverlay { align-items: flex-end; padding: 0; }
+  .rpSheet { max-width: none; border-radius: 16px 16px 0 0; padding-bottom: 24px; }
+}

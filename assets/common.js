@@ -3924,6 +3924,7 @@
 
   window.App = {
     LS_KEY,
+    API_ORIGIN,
     RSS_PROXY_BASE,
     RSS_AGGREGATORS,
     NEWS_API_KEY,
