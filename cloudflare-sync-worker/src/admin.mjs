@@ -11,6 +11,7 @@
 // Neither value is a secret — the AUD tag only says which Access app a token
 // was minted for; it can't be used to make one.
 import { summarizeReports, summarizePulse, daysFromNow } from "./reports.mjs";
+import { summarizeUsage } from "./usage.mjs";
 
 const CERTS_TTL_MS = 60 * 60 * 1000;
 let certCache = { at: 0, team: "", keys: [] };
@@ -69,11 +70,14 @@ export async function handleAdmin(request, env, respond, fetchImpl = fetch) {
   // not blank the whole page.
   const since = new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10);
   const tomorrow = daysFromNow(1);
-  const [reports, pulse, sweep, reportsThrough] = await Promise.all([
+  const week = new Date(Date.now() - 6 * 86400e3).toISOString().slice(0, 10);
+  const [reports, pulse, sweep, reportsThrough, usage30, usage7] = await Promise.all([
     summarizeReports(env, since, tomorrow).catch(() => null),
     summarizePulse(env, since, tomorrow).catch(() => null),
     env.HN_STATE_DATA?.get("curate:state", { type: "json" }).catch(() => null),
     env.HN_STATE_DATA?.get("curate:reports-through").catch(() => null),
+    summarizeUsage(env, since).catch(() => null),
+    summarizeUsage(env, week).catch(() => null),
   ]);
   return respond({
     ok: true,
@@ -81,6 +85,7 @@ export async function handleAdmin(request, env, respond, fetchImpl = fetch) {
     windowDays: 30,
     reports,
     pulse,
+    usage: { days30: usage30, days7: usage7 },
     sweep: sweep && {
       phase: sweep.phase,
       cursor: sweep.cursor,

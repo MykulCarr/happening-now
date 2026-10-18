@@ -202,6 +202,21 @@ free-text box, and don't add a second browser write without the same audit.
 `npm run test:reports` forces every branch against a stand-in D1; run the
 real SQL with `wrangler d1 execute hn-reports --remote` after touching it.
 
+**Anonymous usage counts (2026-10-18).** `assets/usage.js` (on every public
+page) batches what was used, sent by `sendBeacon` to `/v1/usage`
+(`cloudflare-sync-worker/src/usage.mjs`, `usage` table): page/tab moves as
+`from → to` pairs, named controls, the **hostname** of a clicked headline
+(never the article), and the visitor's country from `request.cf`, once per
+arrival. Each event only increments a `(day, kind, a, b)` counter — no ID,
+IP, UA or time — so the table can show single steps but never a journey.
+**Don't add a visitor or session ID to "get journeys"**; that is the line.
+Stock symbols are deliberately not sent. The only state kept is
+`hn_usage_place` in sessionStorage (where this tab was). Off for GPC/DNT,
+`navigator.webdriver` and localhost (dev pages call the production Worker).
+Control names live in two lists that must agree: `TAPS` in usage.js and
+`TAPS` in usage.mjs; an unknown one is dropped by itself, not the batch.
+Shown on /admin. `npm run test:usage`.
+
 Keep it that way. Two rules follow from the audit:
 
 - **Never point client code at a third-party asset host.** It is not the obvious

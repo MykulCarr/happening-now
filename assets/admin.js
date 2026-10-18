@@ -1,6 +1,6 @@
 /* /admin: three summary tiles that fit one screen; tapping a tile opens its
  * detail view below. Rows in a detail view are one line each and expand on
- * tap. The open view lives in the URL hash (#reports, #pulse, #sweep) so
+ * tap. The open view lives in the URL hash (#reports, #pulse, #usage, #sweep) so
  * refresh and Back keep your place. Read-only.
  *
  * Data comes from /v1/admin/summary, which needs a Cloudflare Access login.
@@ -11,10 +11,11 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => window.App.escapeHtml(String(s ?? ""));
-  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", sweep: "Feed sweep" };
+  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", usage: "How the site is used", sweep: "Feed sweep" };
   let data = null;
   let names = null;          // rss URL -> source name, from the three catalogs
   let reasonFilter = "all";
+  let usageDays = "days7";
 
   async function loadNames() {
     if (names) return;
@@ -36,6 +37,10 @@
     $("tReportsSub").textContent = !r ? "couldn't read" : r.rows[0] ? `top: ${r.rows[0].label.toLowerCase()}` : "none";
     $("tPulse").textContent = !p ? "!" : p.total ? `${Math.round((p.useful.yes / p.total) * 100)}%` : "–";
     $("tPulseSub").textContent = !p ? "couldn't read" : p.total ? plural(p.total, "answer") : "no answers";
+    const u = data?.usage?.days7;
+    const arrivals = u ? u.nav.filter((x) => x.a === "start").reduce((t, x) => t + x.n, 0) : 0;
+    $("tUsage").textContent = u ? arrivals : "!";
+    $("tUsageSub").textContent = !u ? "couldn't read" : u.country[0] ? `top: ${countryName(u.country[0].a)}` : "none yet";
     $("tSweep").textContent = s ? (s.phase === "verify" ? `${s.cursor}/${s.pending}` : String(s.cursor)) : "–";
     $("tSweepSub").textContent = !s ? "not started" : s.phase === "verify" ? "verifying" : `${plural(s.pending, "suspect")}`;
   }
@@ -79,6 +84,51 @@
       ${bar("News", p.uses.news, p.total)}${bar("Weather", p.uses.weather, p.total)}${bar("Stocks", p.uses.stocks, p.total)}`;
   }
 
+  // ── usage (anonymous counters from /v1/usage; see usage.mjs) ──
+  const regionNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; } })();
+  function countryName(cc) {
+    if (cc === "XX") return "Unknown";
+    try { return regionNames?.of(cc) || cc; } catch { return cc; }
+  }
+  // "news:science" -> "News › science"
+  const placeName = (p) => p === "start" ? "Arrived" : p.split(":").map((x, i) => (i ? x : x[0].toUpperCase() + x.slice(1))).join(" › ");
+  const wideBar = (label, n, max) => bar(label, n, max).replace('class="adBar"', 'class="adBar adBarWide"');
+  // Sum rows by a key, largest first.
+  function totals(rows, key) {
+    const m = new Map();
+    for (const r of rows) m.set(key(r), (m.get(key(r)) || 0) + r.n);
+    return [...m.entries()].sort((x, y) => y[1] - x[1]);
+  }
+  const bars = (pairs, label, limit = 12) => {
+    const top = pairs.slice(0, limit), max = top[0]?.[1] || 0;
+    return top.map(([k, n]) => wideBar(label(k), n, max)).join("");
+  };
+
+  function viewUsage() {
+    const u = data?.usage?.[usageDays];
+    if (!u) return `<p class="hint adBad">Couldn't read usage.</p>`;
+    const chips = `<div class="adChips">${[["days7", "7 days"], ["days30", "30 days"]].map(([k, l]) =>
+      `<button type="button" class="npChip${k === usageDays ? " active" : ""}" data-usage-days="${k}">${l}</button>`).join("")}</div>`;
+    if (!u.nav.length && !u.source.length) return `${chips}<p class="hint">Nothing counted yet.</p>`;
+    const arrivals = u.nav.filter((x) => x.a === "start");
+    const moves = u.nav.filter((x) => x.a !== "start");
+    const section = (title, body) => body ? `<h3 class="adSection">${esc(title)}</h3>${body}` : "";
+    const sources = totals(u.source, (r) => r.a);
+    return `${chips}
+      ${u.capped.length ? `<p class="hint adBad">Daily cap hit on ${esc(u.capped.join(", "))}: some counts were dropped.</p>` : ""}
+      <p class="adSmall">Counts only: nobody is followed, so these are single steps, not whole journeys.</p>
+      ${section("Visits by country", bars(totals(u.country, (r) => r.a), countryName))}
+      ${section("Where visits start", bars(totals(arrivals, (r) => r.b), placeName))}
+      ${section("Pages and tabs opened", bars(totals(u.nav, (r) => r.b), placeName, 20))}
+      ${section("Most common moves", moves.length ? `<div class="adList">${moves.slice(0, 25).map((m) => row(
+        `<span class="adCount">${m.n}×</span><span class="adName">${esc(placeName(m.a))} → ${esc(placeName(m.b))}</span>`,
+        `<p class="adSmall">${esc(m.a)} → ${esc(m.b)}</p>`)).join("")}</div>` : "")}
+      ${section("Sources clicked", sources.length ? `<div class="adList">${sources.slice(0, 40).map(([site, n]) => row(
+        `<span class="adCount">${n}×</span><span class="adName">${esc(site)}</span>`,
+        bars(totals(u.source.filter((r) => r.a === site), (r) => r.b), (p) => `from ${placeName(p)}`))).join("")}</div>` : "")}
+      ${section("Buttons and controls", bars(totals(u.tap, (r) => `${r.a}|${r.b}`), (k) => k.replace("|", " · "), 30))}`;
+  }
+
   function viewSweep() {
     const s = data?.sweep;
     if (!s) return `<p class="hint">No sweep state yet: the daily check hasn't run since the last digest.</p>`;
@@ -95,7 +145,7 @@
       <p class="adSmall adGap">Reports last emailed through ${esc(data.reportsThrough || "never")}. The digest goes out when a round finishes.</p>`;
   }
 
-  const RENDER = { reports: viewReports, pulse: viewPulse, sweep: viewSweep };
+  const RENDER = { reports: viewReports, pulse: viewPulse, usage: viewUsage, sweep: viewSweep };
 
   function show(view) {
     const open = RENDER[view] && data ? view : "";
@@ -119,6 +169,8 @@
   $("adClose").addEventListener("click", () => { history.pushState(null, "", location.pathname); show(""); });
   window.addEventListener("popstate", () => show(currentView()));
   $("adDetailBody").addEventListener("click", (e) => {
+    const days = e.target.closest("[data-usage-days]");
+    if (days) { usageDays = days.dataset.usageDays; show("usage"); return; }
     const chip = e.target.closest("[data-reason]");
     if (!chip) return;
     reasonFilter = chip.dataset.reason;

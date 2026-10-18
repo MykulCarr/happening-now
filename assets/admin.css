@@ -6,8 +6,8 @@
 .adWho { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adIconBtn { min-width: 44px; min-height: 44px; padding: 0; font-size: 18px; }
 
-/* Three across even on a phone: the whole picture on one screen. */
-.adTiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+/* Two across on a phone, more on wider screens: the whole picture on one screen. */
+.adTiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .adTile {
   display: grid; gap: 2px; justify-items: start; text-align: left;
   padding: 12px; min-height: 92px;
@@ -23,6 +23,9 @@
 
 .adDetail { padding: 14px 16px 16px; display: grid; gap: 10px; }
 .adDetail[hidden] { display: none; }   /* display:grid above would override the hidden attribute */
+/* Grid children default to min-width:auto, so one long unbreakable name
+   (a hostname) would stretch the card past a phone screen. */
+.adDetail > *, .adList, .adRow { min-width: 0; }
 .adDetailHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .adDetailHead h2 { margin: 0; font-size: 17px; }
 
@@ -54,6 +57,10 @@
 .adBarTrack { height: 10px; border-radius: 999px; background: var(--panel2); overflow: hidden; }
 .adBarFill { display: block; height: 100%; background: var(--accent); }
 .adBarNum { text-align: right; font-variant-numeric: tabular-nums; }
+/* Usage view: labels are site names and page paths, so they get more room. */
+.adBar.adBarWide { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 5ch; }
+.adBarWide > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adSection { margin: 12px 0 4px; font-size: 14px; }
 
 .adLinks { display: flex; flex-wrap: wrap; gap: 8px; }
 .adLinks a {

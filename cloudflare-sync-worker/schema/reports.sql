@@ -21,3 +21,15 @@ CREATE TABLE IF NOT EXISTS pulse (
   uses    TEXT NOT NULL       -- comma-joined subset of news,weather,stocks (fixed words only)
 );
 CREATE INDEX IF NOT EXISTS pulse_day ON pulse (day);
+
+-- Anonymous usage counters (src/usage.mjs). One row per day per thing that
+-- happened, holding only a count: no IP, no User-Agent, no visitor or session
+-- ID, nothing finer than the day.
+CREATE TABLE IF NOT EXISTS usage (
+  day   TEXT NOT NULL,        -- YYYY-MM-DD, UTC
+  kind  TEXT NOT NULL,        -- nav | tap | source | country
+  a     TEXT NOT NULL,        -- see src/usage.mjs for what a and b hold per kind
+  b     TEXT NOT NULL,
+  n     INTEGER NOT NULL,
+  PRIMARY KEY (day, kind, a, b)
+);
