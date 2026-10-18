@@ -206,9 +206,9 @@
   }
 
   // ── Auto-write: every config save anywhere in the app lands here ─────────
-  // Settings fires hn:config-reset when a reset is staged, but nothing is
-  // written until Save Changes — so remember it and pause on the save that
-  // follows. Writing defaults out would overwrite the very backup the user
+  // Settings fires hn:config-reset just before a reset, and the reset is
+  // saved straight away (settings auto-save) — so remember it and pause on
+  // the save that follows. Writing defaults out would overwrite the very backup the user
   // would want to restore from; pausing leaves both ways out on the buttons.
   let resetStaged = false;
   let writeTimer = 0;

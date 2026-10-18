@@ -31,7 +31,6 @@
   // Apply theme, density, and font size on page load
   applyThemeDensity(cfg);
 
-  const saveBtn = document.getElementById("saveBtn");
   const saveStatus = document.getElementById("saveStatus");
 
   // Tab elements
@@ -99,14 +98,40 @@
   const jsonBox = document.getElementById("jsonBox");
   const resetBtn = document.getElementById("resetBtn");
 
-  // Status. Updates the small label next to the Save Changes button to
-  // reflect the current dirty/saved/error state. type is one of
+  // Status pill beside the page title. type is one of
   // "default" | "unsaved" | "saved" | "error".
+  //
+  // Settings save themselves (2026-10-18). There used to be a Save Changes
+  // button and no unsaved-changes warning, so leaving the page quietly lost
+  // edits, while the Local/State sections and the news lists saved
+  // instantly. Every edit in this file already announces itself with
+  // setStatus(..., "unsaved"), so that announcement is the save trigger:
+  // one hook, no per-control wiring to forget.
   function setStatus(msg, type = "default"){
     if(!saveStatus) return;
+    if(type === "unsaved"){
+      scheduleSave();
+      msg = "Saving…";
+    }
     saveStatus.textContent = msg;
     saveStatus.className = `statusIndicator ${type}`;
   }
+
+  // Debounced so a burst (tapping a stepper, typing a number) is one write.
+  const SAVE_DELAY_MS = 500;
+  let saveTimer = 0;
+  function scheduleSave(){
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(doSave, SAVE_DELAY_MS);
+  }
+  // Leaving inside the debounce window must not drop the edit.
+  function flushSave(){
+    if(!saveTimer) return;
+    window.clearTimeout(saveTimer);
+    doSave();
+  }
+  window.addEventListener("pagehide", flushSave);
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") flushSave(); });
 
   // Tab switching
   function activateTab(tab, options = {}){
@@ -436,7 +461,7 @@
         label: result.label || cfg.stocks[targetIndex]?.label || result.symbol
       };
       renderStocks();
-      setStatus(`Assigned ${finalSymbol} to row ${targetIndex + 1} (not saved yet)`, "unsaved");
+      setStatus(`Assigned ${finalSymbol} to row ${targetIndex + 1}`, "unsaved");
       setStockLookupStatus(`Assigned ${finalSymbol} to row ${targetIndex + 1}.`, "success");
       setTimeout(() => closeStockLookupModal?.(), 600);
       return;
@@ -444,7 +469,7 @@
 
     cfg.stocks.push({ symbol: finalSymbol, label: result.label || result.symbol });
     renderStocks();
-    setStatus(`Added ${finalSymbol} to watchlist (not saved yet)`, "unsaved");
+    setStatus(`Added ${finalSymbol} to watchlist`, "unsaved");
     setStockLookupStatus(`Added ${result.symbol} as a new row.`, "success");
     if(stockAssignTarget) stockAssignTarget.value = "new";
     setTimeout(() => closeStockLookupModal?.(), 600);
@@ -742,7 +767,7 @@
     normalizeMarketIndicesConfig();
     cfg.marketIndices = cfg.marketIndices.map((entry) => ({ ...entry, visible: !!visible }));
     renderMarketIndices();
-    setStatus("Market strip updated (not saved yet)", "unsaved");
+    setStatus("Market strip updated", "unsaved");
   }
 
   function getMarketMeta(key){
@@ -799,7 +824,7 @@
 
     renderMarketIndices();
     if(markUnsaved){
-      setStatus("Market strip sorted (not saved yet)", "unsaved");
+      setStatus("Market strip sorted", "unsaved");
     }
   }
 
@@ -936,7 +961,7 @@
         });
 
         renderMarketIndices();
-        setStatus("Market strip updated (not saved yet)", "unsaved");
+        setStatus("Market strip updated", "unsaved");
       });
     });
 
@@ -946,7 +971,7 @@
         cfg.marketIndices = (cfg.marketIndices || []).map((entry) =>
           entry.key === key ? { ...entry, visible: cb.checked } : entry
         );
-        setStatus("Market strip updated (not saved yet)", "unsaved");
+        setStatus("Market strip updated", "unsaved");
       });
     });
 
@@ -986,7 +1011,7 @@
         if(!Number.isInteger(from) || !Number.isInteger(dragTo) || from === dragTo) return;
         moveMarketIndex(from, dragTo);
         renderMarketIndices();
-        setStatus("Market strip reordered (not saved yet)", "unsaved");
+        setStatus("Market strip reordered", "unsaved");
       });
     });
   }
@@ -1049,7 +1074,7 @@
 
         label.value = foundName;
         cfg.stocks[idx].label = foundName;
-        setStatus("Auto-filled name (not saved yet)", "unsaved");
+        setStatus("Auto-filled name", "unsaved");
       };
 
       sym.addEventListener("input", () => {
@@ -1100,7 +1125,7 @@
         renderStocks();
         const newDragBtn = stocksEditor.querySelectorAll(".stockDragBtn")[newIdx];
         newDragBtn?.focus();
-        setStatus("Reordered (not saved yet)", "unsaved");
+        setStatus("Reordered", "unsaved");
       });
 
       const del = createIconButton("✕", "Remove");
@@ -1108,7 +1133,7 @@
       del.addEventListener("click", () => {
         cfg.stocks.splice(idx, 1);
         renderStocks();
-        setStatus("Removed (not saved yet)", "unsaved");
+        setStatus("Removed", "unsaved");
       });
 
       const fields = document.createElement("div");
@@ -1165,7 +1190,7 @@
         const moved = cfg.stocks.splice(from, 1)[0];
         cfg.stocks.splice(insertAt, 0, moved);
         renderStocks();
-        setStatus("Reordered (not saved yet)", "unsaved");
+        setStatus("Reordered", "unsaved");
       });
 
       stocksEditor.appendChild(row);
@@ -1183,7 +1208,7 @@
   // ── National / International source lists ───────────────────────
   // cfg.widgets is one array; each widget's scopes[] says which tab(s) it
   // shows on. These lists save on every change, like the Local and State
-  // sections beside them — the old editor waited for Save Changes with no
+  // sections beside them — the old editor waited for a Save button with no
   // unsaved-changes warning, so a picked source was easy to lose.
   const scopesOf = (w) => Array.isArray(w?.scopes) && w.scopes.length ? w.scopes : ["national"];
 
@@ -1487,14 +1512,12 @@
 
   // Save config
   function doSave(){
+    saveTimer = 0;
     pullFromUI();
     cfg = window.App.saveConfig(cfg);
     window.App.applyThemeDensity(cfg);
     setStatus("✓ Saved", "saved");
-    setTimeout(() => setStatus("Ready"), 2000);
   }
-
-  saveBtn.addEventListener("click", doSave);
 
   // ──────────────────────────────────────────────────────────────────
   // Local / Regional source manager (inline panels in News tab)
@@ -1834,7 +1857,7 @@
       cb.addEventListener("change", () => {
         cfg.sectionVisibility[page] = cfg.sectionVisibility[page] || {};
         cfg.sectionVisibility[page][key] = cb.checked;
-        setStatus("Page sections updated (not saved yet)", "unsaved");
+        setStatus("Page sections updated", "unsaved");
       });
     });
   }
@@ -1881,14 +1904,14 @@
         updateButtonGroupState(newsTickerScopeButtons, value);
       }
 
-      setStatus("Modified (not saved yet)", "unsaved");
+      setStatus("Modified", "unsaved");
     });
   });
 
   if(weatherShowMapToggle){
     weatherShowMapToggle.addEventListener("change", () => {
       cfg.weatherShowMap = weatherShowMapToggle.checked;
-      setStatus("Modified (not saved yet)", "unsaved");
+      setStatus("Modified", "unsaved");
     });
   }
 
@@ -1898,26 +1921,26 @@
   themeSel.addEventListener("change", () => {
     cfg.theme = themeSel.value;
     applyThemeDensity(cfg); // Live preview
-    setStatus("Modified (not saved yet)", "unsaved");
+    setStatus("Modified", "unsaved");
   });
 
   if(renderModeSel){
     renderModeSel.addEventListener("change", () => {
       cfg.renderMode = renderModeSel.value;
       applyThemeDensity(cfg); // Live preview
-      setStatus("Modified (not saved yet)", "unsaved");
+      setStatus("Modified", "unsaved");
     });
   }
 
   startupPageSel.addEventListener("change", () => {
     cfg.startupPage = startupPageSel.value;
-    setStatus("Modified (not saved yet)", "unsaved");
+    setStatus("Modified", "unsaved");
   });
 
   if(marketGroupSel){
     marketGroupSel.addEventListener("change", () => {
       cfg.marketGroup = marketGroupSel.value;
-      setStatus("Modified (not saved yet)", "unsaved");
+      setStatus("Modified", "unsaved");
     });
   }
 
@@ -2088,24 +2111,29 @@
     }
     settLocHideApply();
     settLocUpdateCurrentDisplay();
-    setStatus("Location updated \u2014 click Save Changes to keep", "unsaved");
+    setStatus("Location updated", "unsaved");
   });
 
   settLocCancelGeoBtn?.addEventListener("click", settLocHideApply);
 
   // Location & Weather settings
+  // A ZIP saves only once it's complete, never half-typed.
   zipInput?.addEventListener("input", () => {
+    if(!/^\d{5}$/.test(String(zipInput.value || "").trim())){
+      setStatus("Finish the 5-digit ZIP to save it", "default");
+      return;
+    }
     cfg.useDeviceLocation = false; // typing a ZIP clears device mode
-    setStatus("Modified (not saved yet)", "unsaved");
+    setStatus("Modified", "unsaved");
   });
 
   wxRefreshInput.addEventListener("input", () => {
-    setStatus("Modified (not saved yet)", "unsaved");
+    setStatus("Modified", "unsaved");
   });
 
   if(weatherStaleWarnInput){
     weatherStaleWarnInput.addEventListener("input", () => {
-      setStatus("Modified (not saved yet)", "unsaved");
+      setStatus("Modified", "unsaved");
     });
   }
 
@@ -2168,7 +2196,7 @@
   exportBtn.addEventListener("click", () => {
     pullFromUI();
     jsonBox.value = JSON.stringify(window.App.normalizeConfig(cfg), null, 2);
-    setStatus("Exported to box (not saved unless you click Save)", "default");
+    setStatus("Exported to the box below", "default");
   });
 
   // Import config
@@ -2181,7 +2209,7 @@
     try{
       const parsed = JSON.parse(raw);
       cfg = window.App.normalizeConfig(parsed);
-      setStatus("Imported (click Save to commit)", "unsaved");
+      setStatus("Imported", "unsaved");
       loadToUI();
     }catch(e){
       setStatus("Invalid JSON", "error");
@@ -2194,10 +2222,11 @@
       return;
     }
     cfg = window.App.normalizeConfig(window.App.DEFAULTS);
-    // Tell settings-sync.js a reset is staged so that, when it is saved, it
-    // pauses instead of overwriting the sync file with empty defaults.
+    // Tell settings-sync.js a reset is coming so that the save it triggers
+    // (immediately, now that settings auto-save) pauses sync instead of
+    // overwriting the sync file with empty defaults.
     try { window.dispatchEvent(new CustomEvent("hn:config-reset")); } catch { }
-    setStatus("Reset to defaults (click Save to commit)", "unsaved");
+    setStatus("Reset to defaults", "unsaved");
     loadToUI();
   });
 
@@ -2695,5 +2724,5 @@
   loadToUI();
   activateTabFromHash();
   initUsageGuideBadges();
-  setStatus("Ready");
+  setStatus("Changes save automatically");
 })();
