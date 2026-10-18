@@ -693,6 +693,25 @@ the whole Worker down if the binding were ever misconfigured.
 pwsh -File scripts/deploy-prod.ps1
 ```
 
+**Try it on beta first** (2026-10-18):
+
+```powershell
+pwsh -File scripts/deploy-beta.ps1
+```
+
+Puts the working tree on **https://beta.happening-now.net**, behind the same
+Cloudflare Access login as `/admin` (the "HN Admin" app covers the whole beta
+host). Same staging and minification as production, so it tests what would
+ship. Beta is fully separate: its own Workers (`news-pages-beta`,
+`happening-now-sync-beta`), its own KV namespace and D1 database
+(`hn-reports-beta`), **no cron and no `send_email` binding**, so it can never
+email the digest, and the deploy skips IndexNow and Wayback. The beta site is a
+Workers custom domain; `scripts/beta-router.js` hands `/v1/*` to the beta API
+over a service binding, so the beta API has no public address. Pages still
+call the *production* Worker from localhost, so local dev is unchanged.
+GA4 does record your beta visits (hostname `beta.happening-now.net`); filter
+that hostname in GA if it ever matters.
+
 Needs `npm install` once (esbuild). It stages, minifies, `wrangler deploy`s, pings
 IndexNow and archives URLs to the Wayback Machine. To inspect what would ship
 without deploying, run `scripts/stage-public-assets.ps1` alone. Rollback procedure:
