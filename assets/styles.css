@@ -2945,7 +2945,7 @@ details.chip>.alertChipBody a {
 .weatherMapRings .ringPill { fill: rgba(0, 0, 0, .65); }
 .weatherMapRings .ringText { fill: #fff; font: 600 11px system-ui, sans-serif; text-anchor: middle; }
 /* Takes the reader's first touch/scroll so the rings can hide before the map moves. */
-.weatherMapRingsShield { position: absolute; inset: 0; background: transparent; cursor: grab; }
+.weatherMapRingsShield { position: absolute; inset: 0; background: transparent; cursor: grab; touch-action: none; }  /* a pinch here must not zoom the page */
 .weatherMapRingsShield[hidden] { display: none; }
 .weatherMapRingsNote {
   position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
@@ -2978,6 +2978,17 @@ details.chip>.alertChipBody a {
 
 .weatherMapTypeSelect {
   max-width: 160px;
+}
+
+/* Phone: the map's five controls didn't fit beside its title ("Ra…",
+   "NOA…"). Title gets the first line, controls share the second. */
+@media (max-width: 560px) {
+  .card[data-section="radar"] .weatherCardHeadInline { flex-wrap: wrap; gap: 8px; }
+  .card[data-section="radar"] .weatherHeadTitleGrow { flex: 1 1 100%; }
+  /* Layer menu gets its own full row; the four buttons share the next. */
+  .card[data-section="radar"] .weatherMapTypeSelect { flex: 1 1 100%; max-width: none; order: 1; }
+  .card[data-section="radar"] .weatherCardHeadInline > .btn { order: 2; min-height: 44px; }
+  #mapRecenterBtn, #mapRingsBtn, #mapLegendBtn { flex: none; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
 }
 
 .weatherHourlyCardBody {
@@ -7087,3 +7098,21 @@ body.stockLookupModalOpen {
 .topicOrderName { flex: 1; font-weight: 600; }
 .topicOrder button { min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border, #8884); background: transparent; color: inherit; cursor: pointer; }
 .topicOrder button:disabled { opacity: .3; cursor: default; }
+
+/* ── Touch screens: stop the page zooming itself (2026-10-18) ──────────
+   iPhone Safari zooms the whole page when a field under 16px gets focus;
+   the map's layer menu (14px), the topbar search and most Settings fields
+   were under it. 16px on coarse pointers fixes that everywhere. We do NOT
+   disable pinch-zoom (user-scalable=no): low-vision readers rely on it, and
+   iOS ignores it anyway. `manipulation` only removes double-tap zoom on
+   controls, so a quick second tap on a button can't zoom the page. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    /* !important on purpose: a floor, not a style. Fields like the map's
+       layer menu set their own smaller size with more specific selectors. */
+    font-size: 16px !important;
+  }
+}
+button, select, .btn, a.btn { touch-action: manipulation; }
