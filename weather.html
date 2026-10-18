@@ -161,6 +161,7 @@
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Weather Map</h2>
             <button id="mapRecenterBtn" class="btn" type="button" title="Recenter map on my location" aria-label="Recenter map on my location">📍</button>
+            <button id="mapRingsBtn" class="btn" type="button" title="Distance rings" aria-label="Distance rings" aria-pressed="true">◎</button>
             <button id="radarOpenBtn" class="btn" type="button">NOAA Radar</button>
             <select id="mapTypeSelect" class="input weatherMapTypeSelect" aria-label="Select weather map layer">
               <option value="radar" selected>Radar</option>
@@ -181,7 +182,8 @@
                 <div class="weatherMapConsentIcon" aria-hidden="true">🌧️</div>
                 <p class="weatherMapConsentText">
                   The interactive map is embedded from <strong>Windy.com</strong>.
-                  Loading it shares your approximate location and IP address with them.
+                  Loading it shares the spot the map is centred on (your exact position if you set your
+                  location by GPS, otherwise your town) and your IP address with them.
                 </p>
                 <button id="weatherMapLoadBtn" class="btn weatherMapLoadBtn" type="button">Load map</button>
                 <label class="weatherMapConsentRemember">
@@ -200,6 +202,10 @@
                 loading="lazy"
                 src="about:blank">
               </iframe>
+              <!-- Distance rings drawn over the Windy frame (weather.js, drawMapRings).
+                   pointer-events:none so the map underneath stays usable. -->
+              <svg id="weatherMapRings" class="weatherMapRings" aria-hidden="true" hidden></svg>
+              <div id="weatherMapRingsNote" class="weatherMapRingsNote" hidden>Rings hidden while you move the map · tap 📍 to bring them back</div>
             </div>
             <div class="weatherMapAttribution">
               U.S. National Weather Service Radar

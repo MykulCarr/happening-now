@@ -1604,7 +1604,9 @@
       if(runId !== refreshRunId) return;
 
       console.log("[weather] geocoded", { city, state, lat, lon });
-      lastGeo = { city, state, lat, lon, label: resolvedLoc.label };
+      // `precise`: the position came from the device's GPS, not a ZIP or city
+      // lookup (which only knows the town centre). Drives the map's zoom.
+      lastGeo = { city, state, lat, lon, label: resolvedLoc.label, precise: String(resolvedLoc.source || "").startsWith("device") };
       weatherSub.textContent = resolvedLoc.label || [city, state].filter(Boolean).join(", ") || "Current Location";
       if(radarOpenBtn) radarOpenBtn.disabled = false;
 
@@ -2009,6 +2011,11 @@
     weatherMapWrap.classList.toggle("isPending", !!pending);
   }
 
+  // Distance-ring state (see drawMapRings below). Declared before updateMap,
+  // which writes it and can run during start-up.
+  let ringsView = null;          // { lat, zoom } of the view the frame is showing
+  let ringsPending = null;       // view requested, frame still loading it
+  let ringsSuppressed = false;   // the reader has moved the map since
   function updateMap(forceLoad = false) {
     if (!weatherMapFrame) return;
     if (!mapConsented) return;
@@ -2022,22 +2029,121 @@
     // Get current coordinates from lastGeo (set during weather fetch) or default to US center
     const lat = lastGeo?.lat || 39.5;
     const lon = lastGeo?.lon || -98.35;
-    const zoom = lastGeo ? 8 : 4; // Zoom in on specific location, or show US overview
+    // A GPS position is exact, so zoom to street-and-neighbourhood level with a
+    // pin on it. A ZIP or city lookup only knows the town centre, so a pin
+    // there would claim a precision we don't have: keep the wider view.
+    // No location at all: US overview, no pin.
+    const zoom = !lastGeo ? 4 : lastGeo.precise ? 10 : 8;
+    const marker = lastGeo ? "true" : "";
 
     // Build Windy embed URL with the selected overlay
-    const windyUrl = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&width=650&height=450&zoom=${zoom}&level=surface&overlay=${overlay}&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
+    const windyUrl = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&width=650&height=450&zoom=${zoom}&level=surface&overlay=${overlay}&menu=&message=true&marker=${marker}&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
 
     if(!forceLoad && weatherMapFrame.dataset.loadedSrc === windyUrl) return;
 
+    // A fresh view. Rings wait for it to load: until then the frame still
+    // shows the previous view, and rings sized for the new one would lie.
+    ringsView = null;
+    ringsPending = { lat, zoom };
+    ringsSuppressed = false;
     weatherMapFrame.dataset.loadedSrc = windyUrl;
     setMapLoadingState(true);
     weatherMapFrame.src = windyUrl;
     mapHasLoaded = true;
+    drawMapRings();   // hides the old rings
   }
 
   weatherMapFrame?.addEventListener("load", () => {
     setMapLoadingState(false);
+    // The frame now shows the view we asked for. Windy paints a moment after
+    // its load event, so give it that moment before drawing.
+    if(ringsPending){
+      const view = ringsPending;
+      const src = weatherMapFrame.dataset.loadedSrc;
+      ringsPending = null;
+      setTimeout(() => {
+        if(weatherMapFrame.dataset.loadedSrc !== src) return;   // view changed again meanwhile
+        ringsView = view;
+        drawMapRings();
+      }, 600);
+    }
   });
+
+  // ── Distance rings over the radar map ────────────────────────────────
+  // Windy is a cross-origin iframe, so we can't draw inside it or see it pan.
+  // What we do know is the view we asked for (centre + zoom), and Windy uses
+  // standard Web Mercator: metres per CSS pixel = 156543.03 * cos(lat) / 2^zoom.
+  // Checked against real towns (Jackson -> Napoleon, MI: 15.9 km, predicted
+  // 140 px, measured 139). So rings are exact while the map sits where we put
+  // it. The moment the reader moves the map we can't follow, so the first
+  // touch / drag / scroll on the map hides them (a transparent shield takes
+  // that one gesture, then steps aside); Recenter brings them back.
+  const mapRings = document.getElementById("weatherMapRings");
+  const mapRingsNote = document.getElementById("weatherMapRingsNote");
+  const mapRingsBtn = document.getElementById("mapRingsBtn");
+  const RING_STEPS = [0.5, 1, 2, 3, 5, 10, 15, 25, 50, 100, 250];
+
+  let ringsShield = null;
+  function setShield(on){
+    if(!weatherMapWrap) return;
+    if(!ringsShield){
+      ringsShield = document.createElement("div");
+      ringsShield.className = "weatherMapRingsShield";
+      const hide = () => { ringsSuppressed = true; drawMapRings(); };
+      ringsShield.addEventListener("pointerdown", hide);
+      ringsShield.addEventListener("wheel", hide, { passive: true });
+      weatherMapWrap.appendChild(ringsShield);
+    }
+    ringsShield.hidden = !on;
+  }
+
+  function drawMapRings(){
+    if(!mapRings) return;
+    const on = cfg.weatherMapRings !== false;
+    if(mapRingsBtn){
+      mapRingsBtn.setAttribute("aria-pressed", String(on));
+      mapRingsBtn.classList.toggle("isOn", on);
+    }
+    const loaded = mapHasLoaded && weatherMapFrame && weatherMapFrame.src !== "about:blank";
+    const show = on && loaded && lastGeo && ringsView && !ringsSuppressed;
+    // toggleAttribute, not .hidden: `hidden` is an HTMLElement property, and
+    // on an <svg> assigning it just creates an expando while the attribute
+    // stays put — the rings were invisible while reporting themselves shown.
+    mapRings.toggleAttribute("hidden", !show);
+    setShield(!!show);
+    if(mapRingsNote) mapRingsNote.hidden = !(on && loaded && ringsSuppressed);
+    if(!show) return;
+
+    const w = weatherMapFrame.clientWidth, h = weatherMapFrame.clientHeight;
+    const cx = w / 2, cy = h / 2;
+    const mpp = 156543.03392 * Math.cos(ringsView.lat * Math.PI / 180) / Math.pow(2, ringsView.zoom);
+    // Distance unit follows the wind-speed setting: mph reads in miles.
+    const miles = (cfg.weatherWindUnit || "mph") === "mph";
+    const unitM = miles ? 1609.344 : 1000;
+    const maxR = Math.min(w, h) / 2 - 10;
+    const rings = RING_STEPS.map(d => ({ d, r: d * unitM / mpp })).filter(x => x.r >= 22 && x.r <= maxR).slice(-3);
+
+    mapRings.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    mapRings.style.height = `${h}px`;
+    // White on a dark halo: readable on Windy's grey basemap and on every
+    // radar colour from blue to purple.
+    mapRings.innerHTML = rings.map(({ d, r }) => {
+      const label = `${d} ${miles ? "mi" : "km"}`;
+      const lw = label.length * 6.4 + 12;
+      return `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" class="ringHalo"/>
+        <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" class="ringLine"/>
+        <rect x="${(cx - lw / 2).toFixed(1)}" y="${(cy - r - 9).toFixed(1)}" width="${lw.toFixed(1)}" height="18" rx="9" class="ringPill"/>
+        <text x="${cx}" y="${(cy - r + 4).toFixed(1)}" class="ringText">${label}</text>`;
+    }).join("");
+  }
+
+  mapRingsBtn?.addEventListener("click", () => {
+    cfg.weatherMapRings = cfg.weatherMapRings === false;
+    saveConfig(cfg);
+    ringsSuppressed = false;
+    drawMapRings();
+  });
+  window.addEventListener("resize", () => drawMapRings());
 
   weatherMapFrame?.addEventListener("error", () => {
     setMapLoadingState(false);
@@ -2064,7 +2170,7 @@
         } catch { /* permission denied, no fix, etc. — fall back below */ }
       }
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
-        lastGeo = { ...(lastGeo || {}), lat, lon };
+        lastGeo = { ...(lastGeo || {}), lat, lon, precise: true };
       }
       updateMap(true);
     } finally {

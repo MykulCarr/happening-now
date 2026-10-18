@@ -2936,6 +2936,26 @@ details.chip>.alertChipBody a {
   display: block;
 }
 
+/* Distance rings over the Windy frame (weather.js, drawMapRings). White on a
+   dark halo so they read on the grey basemap and every radar colour. */
+.weatherMapRings { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
+.weatherMapRings[hidden] { display: none; }
+.weatherMapRings .ringHalo { fill: none; stroke: rgba(0, 0, 0, .55); stroke-width: 4; }
+.weatherMapRings .ringLine { fill: none; stroke: #fff; stroke-width: 1.6; stroke-dasharray: 6 4; }
+.weatherMapRings .ringPill { fill: rgba(0, 0, 0, .65); }
+.weatherMapRings .ringText { fill: #fff; font: 600 11px system-ui, sans-serif; text-anchor: middle; }
+/* Takes the reader's first touch/scroll so the rings can hide before the map moves. */
+.weatherMapRingsShield { position: absolute; inset: 0; background: transparent; cursor: grab; }
+.weatherMapRingsShield[hidden] { display: none; }
+.weatherMapRingsNote {
+  position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
+  max-width: calc(100% - 24px); padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, .7); color: #fff; font-size: 12px; text-align: center;
+  pointer-events: none;
+}
+.weatherMapRingsNote[hidden] { display: none; }
+#mapRingsBtn.isOn { border-color: var(--accent); color: var(--accent); }
+
 .weatherMapAttribution {
   background: #222;
   border-radius: 6px;

@@ -286,6 +286,7 @@
     weatherWindUnit: "mph",
     weatherPrecipUnit: "inch",
     weatherShowMap: true,
+    weatherMapRings: true,   // distance rings over the radar map
     weatherStaleWarnMinutes: 30,
 
     // Stock preferences
@@ -587,6 +588,7 @@
     out.weatherWindUnit = ["mph", "kmh", "ms"].includes(out.weatherWindUnit) ? out.weatherWindUnit : "mph";
     out.weatherPrecipUnit = ["inch", "mm"].includes(out.weatherPrecipUnit) ? out.weatherPrecipUnit : "inch";
     out.weatherShowMap = out.weatherShowMap !== false;
+    out.weatherMapRings = out.weatherMapRings !== false;
     out.weatherStaleWarnMinutes = Number(out.weatherStaleWarnMinutes ?? DEFAULTS.weatherStaleWarnMinutes);
     if (!Number.isFinite(out.weatherStaleWarnMinutes)) out.weatherStaleWarnMinutes = DEFAULTS.weatherStaleWarnMinutes;
     out.weatherStaleWarnMinutes = Math.max(5, Math.min(180, Math.round(out.weatherStaleWarnMinutes)));

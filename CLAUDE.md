@@ -313,6 +313,30 @@ requests, one request after the click, gated again on reload when the box was
 left unticked, auto-loading once ticked, and still unloaded when the radar card
 is hidden in Settings.
 
+### Map pin, zoom and distance rings (2026-10-18)
+
+The Windy URL now asks for `marker=true`, and zoom **10** when the location
+came from the device GPS (`lastGeo.precise`, from `resolvePreferredLocation`'s
+`device-*` sources) versus **8** for a ZIP or city, which only knows the town
+centre. The consent text and privacy policy say plainly that a GPS location
+reaches Windy exactly.
+
+The ◎ rings (`drawMapRings` in `weather.js`) are an SVG over the frame,
+sized by Web Mercator: metres per CSS px = 156543.03 · cos(lat) / 2^zoom,
+verified against Jackson to Napoleon, MI (predicted 140 px, measured 139).
+Three rules that each fixed a real bug:
+
+- **Use `toggleAttribute("hidden")` on the SVG, not `.hidden`.** `hidden` is
+  an HTMLElement property; on SVG it silently creates an expando, the
+  attribute stays, and the rings were invisible while reporting "shown".
+- **Rings wait for the frame's `load` event** (plus a moment for Windy to
+  paint). The frame keeps showing the *previous* view while the new URL
+  loads, so rings drawn on `src` change were sized for a view not on screen.
+- **We can't see Windy pan or zoom** (cross-origin). A transparent shield
+  takes the reader's first touch or wheel, hides the rings and steps aside;
+  Recenter restores them. Don't remove the shield to "fix" the swallowed
+  gesture without another way to know the view moved.
+
 ### Source icons: `/v1/favicon`
 
 `cloudflare-sync-worker/src/favicon.js` proxies Google's favicon service, with a
