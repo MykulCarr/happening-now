@@ -206,8 +206,9 @@ real SQL with `wrangler d1 execute hn-reports --remote` after touching it.
 page) batches what was used, sent by `sendBeacon` to `/v1/usage`
 (`cloudflare-sync-worker/src/usage.mjs`, `usage` table): page/tab moves as
 `from → to` pairs, named controls, the **hostname** of a clicked headline
-(never the article), and the visitor's country from `request.cf`, once per
-arrival. Each event only increments a `(day, kind, a, b)` counter — no ID,
+(never the article), the visitor's country from `request.cf`, once per
+arrival, and time on screen per page as a **range** (`TIME_BUCKETS`, e.g.
+`1-3m`), sent each time the page leaves the screen — never exact seconds. Each event only increments a `(day, kind, a, b)` counter — no ID,
 IP, UA or time — so the table can show single steps but never a journey.
 **Don't add a visitor or session ID to "get journeys"**; that is the line.
 Stock symbols are deliberately not sent. The only state kept is
@@ -215,7 +216,9 @@ Stock symbols are deliberately not sent. The only state kept is
 `navigator.webdriver` and localhost (dev pages call the production Worker).
 Control names live in two lists that must agree: `TAPS` in usage.js and
 `TAPS` in usage.mjs; an unknown one is dropped by itself, not the batch.
-Shown on /admin. `npm run test:usage`.
+Shown on /admin (`assets/admin-analytics.js`, which also renders the
+Cloudflare view from `/v1/admin/cloudflare` — one GraphQL request per view,
+since parallel queries exhausted the API's rate budget). `npm run test:usage`.
 
 Keep it that way. Two rules follow from the audit:
 

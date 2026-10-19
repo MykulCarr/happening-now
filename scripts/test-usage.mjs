@@ -93,9 +93,12 @@ const count = (db, kind, a, b) => db.rows.get(`${TODAY}|${kind}|${a}|${b}`) || 0
     ["source", "npr.org", "nowhere"],
     ["country", "US", ""],                   // server-side only
     ["nav", "start"],                        // wrong arity
+    ["time", "news", "42s"],                 // exact durations are never accepted
+    ["time", "nowhere", "1-3m"],
   ];
   check("every bad event is dropped", bad.every((e) => parseUsage(JSON.stringify({ e: [e] })) === null));
   const mixed = parseUsage(JSON.stringify({ e: [["tap", "weather", "layer-unknown"], ["tap", "weather", "rings"]] }));
+  check("a time range is accepted", parseUsage(JSON.stringify({ e: [["time", "weather", "1-3m"]] }))?.length === 1);
   check("one unknown event doesn't sink the batch", mixed?.length === 1 && mixed[0][2] === "rings");
 }
 

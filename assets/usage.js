@@ -1,8 +1,9 @@
 /* Anonymous usage counters.
  *
  * Counts which pages, tabs and controls get used, how people move between
- * them, and which source a clicked headline came from (its website, never the
- * article). Events are batched and sent to /v1/usage when the page is hidden;
+ * them, which source a clicked headline came from (its website, never the
+ * article), and roughly how long a page stays on screen (a range like
+ * "1-3m", measured per look, never tied to a visit). Events are batched and sent to /v1/usage when the page is hidden;
  * the Worker only adds 1 to a daily total for each (see
  * cloudflare-sync-worker/src/usage.mjs). Nothing here identifies a reader:
  * no ID, no cookie, no stored history.
@@ -41,8 +42,24 @@
     queue.push([kind, a, b]);
     if (queue.length >= 40) flush();
   }
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
-  window.addEventListener("pagehide", flush);
+
+  // ── time on page ──
+  // Only time the page is actually on screen, sent as a range each time it
+  // leaves the screen (tab switch, app switch, navigation). Coming back starts
+  // a new look. Ranges must match TIME_BUCKETS in usage.mjs.
+  const BUCKETS = [[10, "0-10s"], [30, "10-30s"], [60, "30-60s"], [180, "1-3m"], [600, "3-10m"], [Infinity, "10m+"]];
+  let shownAt = document.visibilityState === "visible" ? performance.now() : null;
+  function endLook() {
+    if (shownAt == null) return;
+    const secs = (performance.now() - shownAt) / 1000;
+    shownAt = null;
+    add("time", page, BUCKETS.find(([max]) => secs < max)[1]);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") { endLook(); flush(); }
+    else shownAt = performance.now();
+  });
+  window.addEventListener("pagehide", () => { endLook(); flush(); });
 
   // ── movement ──
   const PLACE_KEY = "hn_usage_place";

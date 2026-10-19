@@ -29,8 +29,7 @@
 .adDetailHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .adDetailHead h2 { margin: 0; font-size: 17px; }
 
-.adChips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-.adChips::-webkit-scrollbar { display: none; }
+.adChips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .adChips .npChip { flex: none; min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
 .adChips .npChip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
@@ -58,12 +57,34 @@
 .adBarFill { display: block; height: 100%; background: var(--accent); }
 .adBarNum { text-align: right; font-variant-numeric: tabular-nums; }
 /* Usage view: labels are site names and page paths, so they get more room. */
-.adBar.adBarWide { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 5ch; }
+.adBar.adBarWide { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 9ch; }
+.adBarWide .adBarNum { display: flex; justify-content: flex-end; align-items: baseline; gap: 6px; }
+.adBarPct { min-width: 3.5ch; text-align: right; font-size: 12px; color: var(--muted); }
+.adCountEnd { margin-left: auto; }
 .adBarWide > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adSection { margin: 12px 0 4px; font-size: 14px; }
-.adStats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.adStats { margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
 .adStat { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); min-width: 0; }
 .adStatNum { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.adStatSub { font-size: 12px; font-weight: 700; }
+
+/* Column chart (visits per day). One series in the accent colour; values
+   appear on hover/focus, and the peak is labelled. */
+.adCols { display: flex; align-items: stretch; gap: 2px; height: 140px; padding-top: 18px; max-width: 640px; }
+.adCol { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; outline: none; }
+.adColArea { flex: 1; display: flex; align-items: flex-end; }
+.adColBar { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+.adCol:hover .adColBar, .adCol:focus .adColBar { filter: brightness(1.2); }
+.adColLabel { height: 18px; margin-top: 4px; font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; overflow: visible; }
+.adColPeak { position: absolute; left: 50%; transform: translateX(-50%); top: -18px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.adColTip {
+  display: none; position: absolute; z-index: 2; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+  padding: 4px 8px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--border);
+  font-size: 12px; white-space: nowrap; pointer-events: none;
+}
+.adCol:hover .adColTip, .adCol:focus .adColTip { display: block; }
+.adCol:first-child .adColTip { left: 0; transform: none; }
+.adCol:last-child .adColTip { left: auto; right: 0; transform: none; }
 
 .adLinks { display: flex; flex-wrap: wrap; gap: 8px; }
 .adLinks a {
@@ -78,3 +99,5 @@
   .adTileNum { font-size: 22px; }
   .adTag { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+/* A row with a right-aligned count: the arrow sits after it, not centred. */
+.adRow summary:has(.adCountEnd)::after { margin-left: 0; }

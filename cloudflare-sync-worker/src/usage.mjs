@@ -15,6 +15,7 @@
 //   nav     a = where they were, b = where they went ("start" = arrived)
 //   tap     a = page, b = control (fixed list in TAPS)
 //   source  a = hostname of the clicked headline, b = where it was clicked
+//   time    a = page, b = how long it was on screen, as a range (TIME_BUCKETS)
 //   country a = two-letter country from Cloudflare, counted once per arrival
 //
 // Same guard rails as reports.mjs: our origins only, text/plain (no CORS
@@ -32,6 +33,10 @@ const TAPS = {
   stocks: ["news-major", "news-watchlist", "sort-pinned", "sort-az", "sort-symbol", "refresh"],
   settings: ["watchlist-add", "watchlist-remove"],
 };
+
+// Must match BUCKETS in assets/usage.js. Ranges, never seconds: an exact
+// duration is a needlessly sharp detail about one person's visit.
+export const TIME_BUCKETS = ["0-10s", "10-30s", "30-60s", "1-3m", "3-10m", "10m+"];
 
 // Tabs (news scopes and topics, settings tabs) are ids from our own catalogs.
 // A tight token shape is the allow-list here: nothing personal fits in it.
@@ -59,6 +64,7 @@ function validEvent(e) {
   if (kind === "nav") return isPlace(a, true) && isPlace(b, false) && a !== b;
   if (kind === "tap") return Object.hasOwn(TAPS, a) && TAPS[a].includes(b);
   if (kind === "source") return HOST.test(a) && isPlace(b, false);
+  if (kind === "time") return PAGES.includes(a) && TIME_BUCKETS.includes(b);
   return false;     // "country" is added server-side only
 }
 
@@ -116,7 +122,7 @@ export async function summarizeUsage(env, sinceDay) {
     "SELECT day FROM usage WHERE day >= ? GROUP BY day HAVING SUM(n) >= ?"
   ).bind(sinceDay, DAILY_CAP).all();
   await env.HN_REPORTS.prepare("DELETE FROM usage WHERE day < ?").bind(daysAgo(KEEP_DAYS)).run();
-  const out = { nav: [], tap: [], source: [], country: [], capped: (capped || []).map((r) => r.day) };
+  const out = { nav: [], tap: [], source: [], time: [], country: [], capped: (capped || []).map((r) => r.day) };
   for (const r of results || []) if (out[r.kind] && out[r.kind].length < 100) out[r.kind].push({ a: r.a, b: r.b, n: r.n });
   return out;
 }
