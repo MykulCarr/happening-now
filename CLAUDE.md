@@ -209,8 +209,18 @@ page) batches what was used, sent by `sendBeacon` to `/v1/usage`
 (never the article), the visitor's country from `request.cf`, once per
 arrival, and time on screen per page as a **range** (`TIME_BUCKETS`, e.g.
 `1-3m`), sent each time the page leaves the screen — never exact seconds. Each event only increments a `(day, kind, a, b)` counter — no ID,
-IP, UA or time — so the table can show single steps but never a journey.
-**Don't add a visitor or session ID to "get journeys"**; that is the line.
+IP, UA or time.
+
+**Journeys, visit length and unique visitors (2026-10-19, owner's decision)**
+come from a *daily visitor hash* in `src/visitors.mjs`: SHA-256 of a random
+per-UTC-day salt + IP + User-Agent, first 16 hex. The salt lives in the D1
+`salts` table and yesterday's is **deleted** as soon as today's exists, so a
+past vid can never be recomputed or tied to an IP. One `visitors` row per vid
+per day: path (capped 400 chars), steps, on-screen seconds. IP and UA are
+hashed, never stored. **The line now: links last one UTC day.** Never keep a
+salt longer, never derive it from a fixed secret (that would make old vids
+recomputable), never add a cookie or any ID that survives the day.
+`npm run test:visitors` runs the real schema on node:sqlite.
 Stock symbols are deliberately not sent. The only state kept is
 `hn_usage_place` in sessionStorage (where this tab was). Off for GPC/DNT,
 `navigator.webdriver` and localhost (dev pages call the production Worker).

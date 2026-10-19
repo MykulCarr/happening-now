@@ -12,7 +12,8 @@
     "test:reminders": "node scripts/test-reminders.mjs",
     "test:reports": "node scripts/test-reports.mjs",
     "test:admin": "node scripts/test-admin.mjs",
-    "test:usage": "node scripts/test-usage.mjs"
+    "test:usage": "node scripts/test-usage.mjs",
+    "test:visitors": "node scripts/test-visitors.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0"

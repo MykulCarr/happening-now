@@ -12,6 +12,7 @@
 // was minted for; it can't be used to make one.
 import { summarizeReports, summarizePulse, daysFromNow } from "./reports.mjs";
 import { summarizeUsage } from "./usage.mjs";
+import { summarizeVisitors } from "./visitors.mjs";
 import { cloudflareAnalytics } from "./cf-analytics.mjs";
 
 const CERTS_TTL_MS = 60 * 60 * 1000;
@@ -78,13 +79,15 @@ export async function handleAdmin(request, env, respond, fetchImpl = fetch) {
   const since = new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10);
   const tomorrow = daysFromNow(1);
   const week = new Date(Date.now() - 6 * 86400e3).toISOString().slice(0, 10);
-  const [reports, pulse, sweep, reportsThrough, usage30, usage7] = await Promise.all([
+  const [reports, pulse, sweep, reportsThrough, usage30, usage7, visitors30, visitors7] = await Promise.all([
     summarizeReports(env, since, tomorrow).catch(() => null),
     summarizePulse(env, since, tomorrow).catch(() => null),
     env.HN_STATE_DATA?.get("curate:state", { type: "json" }).catch(() => null),
     env.HN_STATE_DATA?.get("curate:reports-through").catch(() => null),
     summarizeUsage(env, since).catch(() => null),
     summarizeUsage(env, week).catch(() => null),
+    summarizeVisitors(env, since).catch(() => null),
+    summarizeVisitors(env, week).catch(() => null),
   ]);
   return respond({
     ok: true,
@@ -92,7 +95,10 @@ export async function handleAdmin(request, env, respond, fetchImpl = fetch) {
     windowDays: 30,
     reports,
     pulse,
-    usage: { days30: usage30, days7: usage7 },
+    usage: {
+      days30: usage30 && { ...usage30, visitors: visitors30 },
+      days7: usage7 && { ...usage7, visitors: visitors7 },
+    },
     sweep: sweep && {
       phase: sweep.phase,
       cursor: sweep.cursor,

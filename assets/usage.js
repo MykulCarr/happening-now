@@ -1,5 +1,9 @@
 /* Anonymous usage counters.
  *
+ * The Worker also links one visitor's batches for a single day, through a
+ * hash of IP + browser with a salt destroyed daily (visitors.mjs), to get
+ * journeys, visit length and unique visitors. Nothing for that is stored here.
+ *
  * Counts which pages, tabs and controls get used, how people move between
  * them, which source a clicked headline came from (its website, never the
  * article), and roughly how long a page stays on screen (a range like
@@ -32,9 +36,11 @@
   const HOST = /^(?=.{1,100}$)([a-z0-9-]+\.)+[a-z]{2,}$/;
 
   const queue = [];
+  let unsentSecs = 0;   // on-screen time not yet reported, summed into visit length
   function flush() {
     if (!queue.length) return;
-    const body = JSON.stringify({ e: queue.splice(0, 40) });
+    const body = JSON.stringify({ e: queue.splice(0, 40), s: Math.round(unsentSecs) });
+    unsentSecs = 0;
     try { navigator.sendBeacon(`${window.App.API_ORIGIN}/v1/usage`, body); } catch {}
     if (queue.length) flush();
   }
@@ -53,6 +59,7 @@
     if (shownAt == null) return;
     const secs = (performance.now() - shownAt) / 1000;
     shownAt = null;
+    unsentSecs += secs;
     add("time", page, BUCKETS.find(([max]) => secs < max)[1]);
   }
   document.addEventListener("visibilitychange", () => {

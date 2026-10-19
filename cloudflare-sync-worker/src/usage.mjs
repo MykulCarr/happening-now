@@ -7,9 +7,9 @@
 //   (day, kind, a, b) -> n
 //
 // and nothing else: no IP, no User-Agent, no time finer than the day, no
-// visitor or session ID. So the table can say "news -> weather happened 40
-// times on Tuesday" but never "this person went news -> weather -> stocks".
-// That gap is the point; don't add an ID to close it.
+// visitor ID. Journeys, visit length and unique visitors come from the
+// separate visitors table (visitors.mjs), linked by a hash that only lives
+// for one day; this table stays pure counts.
 //
 // Kinds, and what `a` / `b` hold:
 //   nav     a = where they were, b = where they went ("start" = arrived)
@@ -21,6 +21,8 @@
 // Same guard rails as reports.mjs: our origins only, text/plain (no CORS
 // preflight), allow-listed values only, a daily cap, 90-day deletion.
 // Schema: schema/reports.sql (same D1 database).
+
+import { visitorId, visitStatement } from "./visitors.mjs";
 
 const PAGES = ["news", "weather", "stocks", "settings", "sources", "privacy", "terms", "feedback", "other"];
 
@@ -68,8 +70,8 @@ function validEvent(e) {
   return false;     // "country" is added server-side only
 }
 
-// Returns the list of [kind, a, b] to count, or null if nothing in it is
-// countable. Unknown events are dropped one by one rather than failing the
+// Returns { events: [[kind, a, b], ...], secs } or null if nothing in it is
+// countable. `secs` is on-screen time since the last batch (for visit length). Unknown events are dropped one by one rather than failing the
 // batch, so a control added to the page before this list doesn't take the
 // rest of that visit's counts with it.
 export function parseUsage(text) {
@@ -79,7 +81,7 @@ export function parseUsage(text) {
   const events = body?.e;
   if (!Array.isArray(events) || !events.length || events.length > MAX_BATCH) return null;
   const good = events.filter(validEvent).map((e) => e.map(String));
-  return good.length ? good : null;
+  return good.length ? { events: good, secs: Number(body.s) || 0 } : null;
 }
 
 export async function handleUsage(request, env, allowedOrigins, respond) {
@@ -88,8 +90,10 @@ export async function handleUsage(request, env, allowedOrigins, respond) {
   if (!origin || !allowedOrigins.includes(origin)) return respond({ ok: false, error: "Forbidden" }, 403);
   if (!env.HN_REPORTS) return respond({ ok: false, error: "Unavailable" }, 503);
 
-  const events = parseUsage(await request.text());
-  if (!events) return respond({ ok: false, error: "Invalid" }, 400);
+  const parsed = parseUsage(await request.text());
+  if (!parsed) return respond({ ok: false, error: "Invalid" }, 400);
+  const { events, secs } = parsed;
+  const steps = events.slice();   // before the country rows are added
 
   // Country comes from Cloudflare's own lookup, never from the page, and is
   // counted once per arrival rather than per event.
@@ -103,7 +107,10 @@ export async function handleUsage(request, env, allowedOrigins, respond) {
     if (n < DAILY_CAP) {
       const upsert = env.HN_REPORTS.prepare(
         "INSERT INTO usage (day, kind, a, b, n) VALUES (?, ?, ?, ?, 1) ON CONFLICT (day, kind, a, b) DO UPDATE SET n = n + 1");
-      await env.HN_REPORTS.batch(events.map(([k, a, b]) => upsert.bind(day, k, a, b)));
+      const statements = events.map(([k, a, b]) => upsert.bind(day, k, a, b));
+      const vid = await visitorId(request, env.HN_REPORTS, day);
+      if (vid) statements.push(visitStatement(env.HN_REPORTS, day, vid, steps, secs));
+      await env.HN_REPORTS.batch(statements);
     }
   } catch {
     return respond({ ok: false, error: "Could not save" }, 500);

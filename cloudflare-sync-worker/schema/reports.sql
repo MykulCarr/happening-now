@@ -33,3 +33,22 @@ CREATE TABLE IF NOT EXISTS usage (
   n     INTEGER NOT NULL,
   PRIMARY KEY (day, kind, a, b)
 );
+
+-- Daily visitor hash (src/visitors.mjs). `salts` holds one random salt for
+-- today only; yesterday's is deleted as soon as today's is made, so past
+-- vids can never be recomputed or tied to an IP.
+CREATE TABLE IF NOT EXISTS salts (
+  day   TEXT PRIMARY KEY,     -- YYYY-MM-DD, UTC
+  salt  TEXT NOT NULL
+);
+
+-- One row per visitor per UTC day. vid is a hash that means nothing once its
+-- day's salt is gone. No IP, no User-Agent, no time of day.
+CREATE TABLE IF NOT EXISTS visitors (
+  day     TEXT NOT NULL,
+  vid     TEXT NOT NULL,
+  path    TEXT NOT NULL,      -- "news>news:international>weather", capped
+  pages   INTEGER NOT NULL,   -- page and tab steps
+  seconds INTEGER NOT NULL,   -- total time on screen
+  PRIMARY KEY (day, vid)
+);
