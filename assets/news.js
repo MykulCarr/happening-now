@@ -784,6 +784,7 @@
       newsGrid.setAttribute("aria-busy", "false");
       inFlight = false;
       newsGrid.style.removeProperty("min-height");
+      document.documentElement.style.removeProperty("--newsGridReserve");   // no cards: drop the hold, don't remember this height
       return;
     }
 
@@ -851,6 +852,20 @@
 
     inFlight = false;
     newsGrid.style.removeProperty("min-height");
+    releaseFirstLoadHold();
+  }
+
+  // index.html holds the grid at last visit's height until the first render;
+  // drop that hold now and remember the real height for next time.
+  function releaseFirstLoadHold() {
+    const root = document.documentElement;
+    if (!root.style.getPropertyValue("--newsGridReserve")) return;
+    root.style.removeProperty("--newsGridReserve");
+    try {
+      const all = JSON.parse(localStorage.getItem("hn_layout_news_v1") || "{}");
+      all[innerWidth < 720 ? "narrow" : "wide"] = Math.round(newsGrid.getBoundingClientRect().height);
+      localStorage.setItem("hn_layout_news_v1", JSON.stringify(all));
+    } catch {}
   }
 
   // (tickers removed) top headline tickers were intentionally removed per user request

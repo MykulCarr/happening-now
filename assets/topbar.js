@@ -307,4 +307,23 @@
   } catch {}
   // ── End first-run welcome ──────────────────────────────────────────────────
 
+  // Pinned strips (.pageSticky) sit right under the fixed top bar. Its height
+  // changes with width, and it moves down when the location-override banner
+  // shows, so track its bottom edge rather than hard-coding a number.
+  (function trackTopbarEdge() {
+    const bar = document.getElementById("topbar");
+    if (!bar || !document.querySelector(".pageSticky")) return;
+    const root = document.documentElement;
+    // Only write on change: the observer below watches this same style
+    // attribute (the override banner sets its height there), so an
+    // unconditional write would loop.
+    const set = () => {
+      const v = `${Math.round(bar.getBoundingClientRect().bottom)}px`;
+      if (root.style.getPropertyValue("--stickyTop") !== v) root.style.setProperty("--stickyTop", v);
+    };
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(bar);
+    new MutationObserver(set).observe(root, { attributes: true, attributeFilter: ["data-override-active", "style"] });
+  })();
+
 })();

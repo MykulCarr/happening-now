@@ -2907,10 +2907,16 @@ details.chip>.alertChipBody a {
 .grid2 > [data-section="watchlist"] { min-height: var(--reserve-watchlist, 0); }
 .grid2 > [data-section="news"] { min-height: var(--reserve-news, 0); }
 
-/* News grid sizes to content — no min-height reservation. Cold loads will
-   show some layout shift as cards mount; the user preferred flex-to-content
-   over CLS prevention. The --newsGridReserve var is still computed by the
-   inline script in index.html but no rule consumes it. */
+/* News grid: held at --newsGridReserve (index.html's head) only until the
+   first render finishes, then news.js drops it so the grid sizes to content.
+   An earlier version held it permanently, which left gaps; that's why the
+   hold is released rather than kept. */
+#newsGrid { min-height: var(--newsGridReserve, 0); }
+
+/* Headlines fade in rather than pop when they replace the skeletons. */
+#newsGrid .rssItem { animation: hnFadeIn .2s ease-out both; }
+@keyframes hnFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #newsGrid .rssItem { animation: none; } }
 
 #weatherCurrent {
   min-height: 0;
@@ -3229,10 +3235,28 @@ details.chip>.alertChipBody a {
 .tickerScopeBar {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
+
+/* News and Weather: the ticker (and News's category buttons) stay pinned just
+   under the fixed top bar. --stickyTop is the top bar's bottom edge, kept
+   current by topbar.js (it moves when the location-override banner shows).
+   The box-shadow + clip-path pair paints the frosted band edge to edge
+   without widening the layout. */
+.pageSticky {
+  position: sticky;
+  top: var(--stickyTop, 78px);
+  z-index: 900;
+  padding-top: 6px;
+  background: color-mix(in srgb, var(--bg) 95%, transparent);
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 95%, transparent);
+  clip-path: inset(0 -100vmax);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+.pageSticky > :last-child { margin-bottom: 6px; }
 
 .tickerScopeBtn {
   font-size: 10px;
@@ -3259,12 +3283,21 @@ details.chip>.alertChipBody a {
   border-color: rgba(6, 98, 132, .5);
 }
 
-/* On phones the bar is always several rows, so right-aligning leaves a ragged
-   left edge against the page's left-aligned content. Align left and give the
-   tabs a finger-sized hit area. */
+/* On phones the categories are one swipeable row rather than four wrapped
+   ones: pinned, four rows would take a quarter of the screen. Centred when
+   they fit; `safe` keeps the first button reachable when they don't. Tabs
+   get a finger-sized hit area. */
 @media (max-width:720px) {
-  .tickerScopeBar { justify-content: flex-start; }
-  .tickerScopeBtn { padding: 7px 8px; }
+  .tickerScopeBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    justify-content: safe center;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tickerScopeBar::-webkit-scrollbar { display: none; }
+  .tickerScopeBtn { flex: none; padding: 7px 8px; }
 }
 
 .skeleton {

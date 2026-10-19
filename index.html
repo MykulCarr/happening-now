@@ -104,12 +104,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
   <script>
-    // Reserve approximate news-grid height before first paint to prevent CLS.
-    // news.js builds N cards each containing M rows of skeleton (height 88px in
-    // styles.css) + padding/header. Match here so the grid doesn't grow when
-    // cards mount. Number of widgets read from user config, fallback to default 9.
+    // Hold the news grid's height before first paint so cards mounting don't
+    // push the footer around. Prefers the real height from the last visit at
+    // this screen size (hn_layout_news_v1, saved by news.js); otherwise an
+    // estimate: N cards of M skeleton rows (88px in styles.css) + header and
+    // padding. news.js releases the hold after the first render, so the loaded
+    // page still sizes to its content.
     (function reserveNewsGridHeight(){
       try {
+        const size = innerWidth < 720 ? "narrow" : "wide";
+        const last = (JSON.parse(localStorage.getItem("hn_layout_news_v1") || "{}"))[size];
+        if (last > 0) { document.documentElement.style.setProperty("--newsGridReserve", last + "px"); return; }
         const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
         const widgets = Array.isArray(cfg.widgets) ? cfg.widgets : null;
         const count = widgets ? widgets.length : 9;
@@ -142,6 +147,8 @@
         <button id="refreshBtn" class="btn" type="button">Refresh</button>
       </div>
     </section>
+    <!-- Pinned under the top bar while scrolling (.pageSticky in styles.css). -->
+    <div class="pageSticky">
     <section id="criticalNewsBar" class="criticalNewsBar" aria-label="Critical world and US headlines">
       <span class="criticalTickerEmpty">Loading headlines...</span>
     </section>
@@ -150,6 +157,7 @@
       <button class="tickerScopeBtn" data-scope="regional" type="button">REGIONAL</button>
       <button class="tickerScopeBtn active" data-scope="national" type="button">NATIONAL</button>
       <button class="tickerScopeBtn" data-scope="international" type="button">INTERNATIONAL</button>
+    </div>
     </div>
     <section id="newsGrid" class="grid"></section>
     <details class="pageIntroDetails">
