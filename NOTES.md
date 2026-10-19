@@ -626,3 +626,30 @@ on, just from the other direction.
   falls back to "index pts" — add a `TILE_UNITS` line for new commodities.
 - Everything deployed. Next: units on other non-market prices if wanted
   (watchlist already uses `$`).
+
+## 2026-10-18/19 — Analytics, smoother pages, and a shared analytics project
+
+All deployed to production and pushed.
+
+- **Anonymous usage counts** (`assets/usage.js` → `/v1/usage`, `usage.mjs`):
+  page/tab moves, button taps, source hostname of clicked headlines, time on
+  screen as ranges, countries. Counts only, no ID.
+- **Daily visitor hash** (`visitors.mjs`, owner's decision): unique visitors,
+  journeys and visit length, linked for one UTC day only via a random salt in
+  D1 that is deleted daily. Privacy policy rewritten to say so.
+- **/admin**: Usage view (Visitors / Movement / Sources / Buttons / Time on
+  page / Countries) and a Cloudflare view (Web Analytics + zone traffic via
+  GraphQL in one request, `CF_ANALYTICS_TOKEN` secret). Views live in
+  `assets/admin-analytics.js`; desktop layout is a two-column panel grid.
+- **No more jumping**: Stocks and News hold space until first render, then
+  release (CLS 0.15–0.24 → ~0). News/Weather ticker and category bar pinned
+  under the top bar; categories centred, one swipeable row on phones.
+- Housekeeping: stale TODOs closed; the old feedburner Reuters URL now serves
+  flipso.com spam (already swapped out).
+- **New project `site-analytics`** (private GitHub repo) generalises this for
+  all ~10 sites; it holds a frozen copy of the analytics code and a handoff in
+  its NOTES.md. happening-now keeps its own copy until that is proven.
+
+**Pick up next:** watch /admin → Usage → Visitors fill in over a few days, and
+check that Cloudflare's "layout jumping" score drops from 0.13. Then work in
+the site-analytics workspace (site list + collector address first).
