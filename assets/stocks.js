@@ -1969,6 +1969,25 @@
     }
   }
 
+  // stocks.html holds the board and first-row cards at last visit's height
+  // while data loads. Once they've rendered: let them size to content again,
+  // and remember that size (per narrow/wide screen) for the next visit.
+  function releaseLayoutHold() {
+    const root = document.documentElement;
+    if (!root.style.getPropertyValue("--reserve-indices")) return;
+    for (const key of ["indices", "watchlist", "news"]) root.style.removeProperty(`--reserve-${key}`);
+    try {
+      const size = innerWidth < 700 ? "narrow" : "wide";
+      const all = JSON.parse(localStorage.getItem("hn_layout_stocks_v1") || "{}");
+      all[size] = {};
+      for (const key of ["indices", "watchlist", "news"]) {
+        const h = Math.round(document.querySelector(`[data-section="${key}"]`)?.getBoundingClientRect().height || 0);
+        if (h) all[size][key] = h;
+      }
+      localStorage.setItem("hn_layout_stocks_v1", JSON.stringify(all));
+    } catch {}
+  }
+
   // ===== INIT =====
   function init() {
     console.log("Init called");
@@ -1981,7 +2000,7 @@
     
     attachEventListeners();
     console.log("Event listeners attached");
-    refresh(); // async, but we don't need to await
+    refresh().catch(() => {}).finally(releaseLayoutHold); // release even if a section failed
     console.log("Initial refresh called");
     
     // Auto-refresh main data every 60 seconds

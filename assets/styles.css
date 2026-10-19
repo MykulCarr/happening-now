@@ -2901,6 +2901,12 @@ details.chip>.alertChipBody a {
   align-items: center;
 }
 
+/* Stocks: space held for the board and first row of cards while they load
+   (set in stocks.html's head, released by stocks.js after the first render). */
+[data-section="indices"] { min-height: var(--reserve-indices, 0); }
+.grid2 > [data-section="watchlist"] { min-height: var(--reserve-watchlist, 0); }
+.grid2 > [data-section="news"] { min-height: var(--reserve-news, 0); }
+
 /* News grid sizes to content — no min-height reservation. Cold loads will
    show some layout shift as cards mount; the user preferred flex-to-content
    over CLS prevention. The --newsGridReserve var is still computed by the

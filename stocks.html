@@ -88,14 +88,28 @@
   <meta name="apple-mobile-web-app-title" content="HAPPENING NOW" />
   <script>
     // Mark hidden sections on <html> before paint so CSS can hide them
-    // without a flash. Missing keys default to visible.
+    // without a flash. Missing keys take the defaults from DEFAULT_CONFIG in
+    // common.js (calendar and diagnostic start off). Without them a first
+    // visit showed both cards and then hid them: the page's worst layout shift.
     (function applySectionVisibility(){
       try {
         const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
-        const v = cfg.sectionVisibility?.stocks || {};
+        const v = { calendar: false, diagnostic: false, ...(cfg.sectionVisibility?.stocks || {}) };
         const html = document.documentElement;
         for (const [key, on] of Object.entries(v)) {
           if (on === false) html.setAttribute(`data-hide-stocks-${key}`, "1");
+        }
+      } catch {}
+      // Hold the board and the first row of cards at the height they had last
+      // time at this screen size (typical heights on a first visit) until their
+      // data arrives, so loading doesn't shove the page down. stocks.js
+      // releases the hold after the first render and remembers the new size.
+      try {
+        const size = innerWidth < 700 ? "narrow" : "wide";
+        const last = (JSON.parse(localStorage.getItem("hn_layout_stocks_v1") || "{}")[size]) || {};
+        const typical = size === "narrow" ? { indices: 263, watchlist: 640, news: 720 } : { indices: 194, watchlist: 690, news: 690 };
+        for (const key of ["indices", "watchlist", "news"]) {
+          document.documentElement.style.setProperty(`--reserve-${key}`, `${last[key] || typical[key]}px`);
         }
       } catch {}
     })();
