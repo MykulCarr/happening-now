@@ -31,7 +31,7 @@
     };
     const friendly = (k) => FRIENDLY[k] || k;
     function referrerName(k) {
-      if (k === "(none)") return "Direct, bookmark or app";
+      if (k === "(none)") return "Direct / app";
       const h = k.replace(/^www\./, "");
       if (h === location.hostname.replace(/^beta\./, "")) return "Within the site";
       if (/cloudflareaccess\.com$/.test(h)) return "Admin login";
@@ -58,7 +58,11 @@
       for (const r of rows) m.set(key(r), (m.get(key(r)) || 0) + r.n);
       return [...m.entries()].sort((x, y) => y[1] - x[1]);
     }
-    const section = (title, body, note = "") => body ? `<h3 class="adSection">${esc(title)}</h3>${note ? `<p class="adSmall">${esc(note)}</p>` : ""}${body}` : "";
+    // Each section is a panel; a tab's panels sit in a grid that is one column
+    // on a phone and two on a desktop. `wide` spans the full row.
+    const section = (title, body, note = "", wide = false) => body ? `<section class="adPanel${wide ? " adSpan" : ""}">
+      ${title ? `<h3 class="adSection">${esc(title)}</h3>` : ""}${note ? `<p class="adSmall">${esc(note)}</p>` : ""}${body}</section>` : "";
+    const grid = (html) => `<div class="adGrid">${html}</div>`;
     const stat = (label, value, sub = "") => `<div class="adStat"><span class="adStatNum">${esc(value)}</span><span class="adSmall">${esc(label)}</span>${sub ? `<span class="adStatSub">${esc(sub)}</span>` : ""}</div>`;
     const chips = (view, key, options) => `<div class="adChips" role="group">${options.map(([k, l]) =>
       `<button type="button" class="npChip${k === state[view][key] ? " active" : ""}" data-an="${view}" data-an-key="${key}" data-an-val="${k}">${esc(l)}</button>`).join("")}</div>`;
@@ -73,7 +77,7 @@
       const wd = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString([], { weekday: "short", timeZone: "UTC" });
       const label = (iso) => days.length <= 8 ? wd(iso) : iso.slice(8);
       const every = days.length <= 8 ? 1 : 5;
-      return `<h3 class="adSection">${esc(title)}</h3>
+      return section(title, `
         <div class="adCols" role="img" aria-label="${esc(title)}: ${days.map((d) => `${d.day} ${d.n}`).join(", ")}">
           ${days.map((d, i) => `<div class="adCol" tabindex="0" title="${esc(d.day)}: ${fmtN(d.n)}">
             <span class="adColTip">${esc(d.day.slice(5))} · ${fmtN(d.n)}</span>
@@ -81,7 +85,7 @@
             <span class="adColArea"><span class="adColBar" style="height:${Math.max(2, Math.round((d.n / max) * 100))}%"></span></span>
             <span class="adColLabel">${i % every === 0 || days.length <= 8 ? esc(label(d.day)) : ""}</span>
           </div>`).join("")}
-        </div>`;
+        </div>`, "", true);
     }
 
     // ── Usage view ──
@@ -122,25 +126,25 @@
           + section("Most common moves", moves.length ? `<div class="adList">${moves.slice(0, 25).map((m) => row(
               `<span class="adName">${esc(placeName(m.a))} → ${esc(placeName(m.b))}</span><span class="adCount adCountEnd">${fmtN(m.n)}</span>`,
               `<p class="adSmall">${esc(m.a)} → ${esc(m.b)}</p>`)).join("")}</div>` : "",
-            "Single steps only: nobody is followed, so these never join up into journeys.");
+            "Single steps only: nobody is followed, so these never join up into journeys.", true);
       } else if (st.tab === "sources") {
         const sources = totals(u.source, (r) => r.a);
-        body = sources.length ? `<p class="adSmall">The website of each headline opened, never the article. Tap one to see where on the site it was clicked.</p>
-          <div class="adList">${sources.slice(0, 40).map(([site, n]) => row(
+        body = sources.length ? section("Sources opened", `<div class="adList">${sources.slice(0, 40).map(([site, n]) => row(
             `<span class="adName">${esc(site)}</span><span class="adCount adCountEnd">${fmtN(n)}</span>`,
-            bars(totals(u.source.filter((r) => r.a === site), (r) => r.b), (p) => `from ${placeName(p)}`))).join("")}</div>` : empty("No headlines opened yet.");
+            bars(totals(u.source.filter((r) => r.a === site), (r) => r.b), (p) => `from ${placeName(p)}`))).join("")}</div>`,
+          "The website of each headline opened, never the article. Tap one to see where on the site it was clicked.", true) : empty("No headlines opened yet.");
       } else if (st.tab === "controls") {
         const pages = totals(u.tap, (r) => r.a);
         body = pages.length ? pages.map(([page]) => section(capital(page),
           bars(totals(u.tap.filter((r) => r.a === page), (r) => r.b), (b) => b.replace(/-/g, " "), 30))).join("") : empty("No buttons used yet.");
       } else if (st.tab === "time") {
-        body = timeView(u.time || []);
+        body = section("", timeView(u.time || []), "", true);
       } else {
         body = section("Visits by country", bars(totals(u.country, (r) => r.a), countryName, 30), "From Cloudflare's lookup of each visit's connection; the IP address itself is never stored.");
       }
       return `${head}
         ${u.capped.length ? `<p class="hint adBad">Daily cap hit on ${esc(u.capped.join(", "))}: some counts were dropped.</p>` : ""}
-        ${nArrivals || u.source.length ? `${strip}${tabs}${body}` : empty("Nothing counted yet.")}`;
+        ${nArrivals || u.source.length ? `${strip}${tabs}${grid(body)}` : empty("Nothing counted yet.")}`;
     }
 
     // ── Cloudflare view ──
@@ -155,6 +159,7 @@
     function rumBars(title, part, label = friendly) {
       if (!part) return "";
       if (part.error) return section(title, errLine(part));
+      if (!part.data.length) return "";
       return section(title, bars(part.data.map((r) => [r.k, r.views]), label));
     }
     // Core Web Vitals at the 75th percentile, graded by Google's thresholds.
@@ -201,20 +206,20 @@
       } else if (st.tab === "tech") {
         body = rumBars("Device", c.devices) + rumBars("Browser", c.browsers) + rumBars("Operating system", c.os);
       } else if (st.tab === "speed") {
-        body = vitals(c.vitals);
+        body = section("Page speed", vitals(c.vitals), "", true);
       } else {
-        body = c.traffic?.error ? errLine(c.traffic) : !t ? "" : `<p class="adSmall">Every request Cloudflare served for the whole domain, bots and FlightTrack included, so it runs far higher than visits.</p>
-          <div class="adStats">
+        body = c.traffic?.error ? section("All traffic", errLine(c.traffic), "", true) : !t ? "" :
+          section("All traffic", `<div class="adStats">
             ${stat("Requests", fmtN(t.requests))}
             ${stat("Served from cache", t.requests ? `${Math.round((t.cached / t.requests) * 100)}%` : "–")}
             ${stat("Data served", fmtBytes(t.bytes))}
             ${stat("Threats blocked", fmtN(t.threats))}
-          </div>
-          ${dayChart(t.uniquesByDay.map((d) => ({ day: d.day, n: d.requests })), "Requests per day")}
-          ${section("Response codes", bars(t.statuses.map((x) => [x.k, x.n])))}
-          ${section("Requests by country", bars(t.countries.map((x) => [x.k, x.n]), countryName))}`;
+          </div>`, "Every request Cloudflare served for the whole domain, bots and FlightTrack included, so it runs far higher than visits.", true)
+          + dayChart(t.uniquesByDay.map((d) => ({ day: d.day, n: d.requests })), "Requests per day")
+          + section("Response codes", bars(t.statuses.map((x) => [x.k, x.n])))
+          + section("Requests by country", bars(t.countries.map((x) => [x.k, x.n]), countryName));
       }
-      return `${head}${strip}${tabs}${body}`;
+      return `${head}${strip}${tabs}${grid(body)}`;
     }
 
     // Chips inside either view. Returns true when it handled the click.

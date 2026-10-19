@@ -1,5 +1,5 @@
 /* /admin page (assets/admin.js). Tiles up top, one detail view below. */
-.adPage { display: grid; gap: 14px; }
+.adPage { display: grid; gap: 14px; max-width: 1200px; margin: 0 auto; }
 
 .adHead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 8px; }
 .adHead h1 { margin: 0; font-size: 26px; }
@@ -7,7 +7,7 @@
 .adIconBtn { min-width: 44px; min-height: 44px; padding: 0; font-size: 18px; }
 
 /* Two across on a phone, more on wider screens: the whole picture on one screen. */
-.adTiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.adTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 .adTile {
   display: grid; gap: 2px; justify-items: start; text-align: left;
   padding: 12px; min-height: 92px;
@@ -53,6 +53,7 @@
 .adBad { color: #ff8a80; }
 
 .adBar { display: grid; grid-template-columns: 84px 1fr 3ch; align-items: center; gap: 10px; min-height: 28px; max-width: 640px; }
+.adPanel .adBar { max-width: none; }
 .adBarTrack { height: 10px; border-radius: 999px; background: var(--panel2); overflow: hidden; }
 .adBarFill { display: block; height: 100%; background: var(--accent); }
 .adBarNum { text-align: right; font-variant-numeric: tabular-nums; }
@@ -62,15 +63,21 @@
 .adBarPct { min-width: 3.5ch; text-align: right; font-size: 12px; color: var(--muted); }
 .adCountEnd { margin-left: auto; }
 .adBarWide > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adSection { margin: 12px 0 4px; font-size: 14px; }
-.adStats { margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.adSection { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* A tab's sections: one column on a phone, two side by side on a desktop. */
+.adGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin-top: 4px; }
+.adPanel { min-width: 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: color-mix(in srgb, var(--panel) 60%, transparent); }
+.adPanel > .adSmall { margin: -4px 0 8px; }
+.adSpan { grid-column: 1 / -1; }
+.adStats { margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
 .adStat { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); min-width: 0; }
 .adStatNum { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .adStatSub { font-size: 12px; font-weight: 700; }
 
 /* Column chart (visits per day). One series in the accent colour; values
    appear on hover/focus, and the peak is labelled. */
-.adCols { display: flex; align-items: stretch; gap: 2px; height: 140px; padding-top: 18px; max-width: 640px; }
+.adCols { display: flex; align-items: stretch; gap: 2px; height: 180px; padding-top: 18px; }
 .adCol { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; outline: none; }
 .adColArea { flex: 1; display: flex; align-items: flex-end; }
 .adColBar { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }

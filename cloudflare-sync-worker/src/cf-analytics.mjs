@@ -34,7 +34,9 @@ export async function cloudflareAnalytics(env, days, fetchImpl = fetch) {
   if (!env.CF_ANALYTICS_TOKEN) return { error: "CF_ANALYTICS_TOKEN is not set on this Worker." };
   const acc = env.CF_ACCOUNT_ID, zone = env.CF_ZONE_ID;
   const until = new Date();
-  const since = new Date(until - days * 86400e3);
+  // From midnight UTC, so "7 days" is today plus the six before it, not eight
+  // partial dates.
+  const since = new Date(Date.UTC(until.getUTCFullYear(), until.getUTCMonth(), until.getUTCDate() - (days - 1)));
   // Headless Chrome is our own testing (and scrapers), not readers: it was
   // ~15% of a week's "visits" the first time this ran.
   const rumFilter = `{AND:[{datetime_geq:"${since.toISOString()}"},{datetime_leq:"${until.toISOString()}"},{requestHost:"${SITE_HOST}"},{userAgentBrowser_neq:"ChromeHeadless"}]}`;
