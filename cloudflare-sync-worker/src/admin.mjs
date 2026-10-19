@@ -12,6 +12,7 @@
 // was minted for; it can't be used to make one.
 import { summarizeReports, summarizePulse, daysFromNow } from "./reports.mjs";
 import { summarizeUsage } from "./usage.mjs";
+import { cloudflareAnalytics } from "./cf-analytics.mjs";
 
 const CERTS_TTL_MS = 60 * 60 * 1000;
 let certCache = { at: 0, team: "", keys: [] };
@@ -64,6 +65,12 @@ export async function handleAdmin(request, env, respond, fetchImpl = fetch) {
   if (!who) return respond({ ok: false, error: "Not signed in" }, 401);
 
   const url = new URL(request.url);
+  // Its own route: Cloudflare's API is slower and rate-limited, so it is only
+  // asked when that view is opened, not on every /admin load.
+  if (url.pathname === "/v1/admin/cloudflare") {
+    const days = url.searchParams.get("days") === "30" ? 30 : 7;
+    return respond({ ok: true, cloudflare: await cloudflareAnalytics(env, days, fetchImpl) }, 200);
+  }
   if (url.pathname !== "/v1/admin/summary") return respond({ ok: false, error: "Not found" }, 404);
 
   // Everything here is best-effort and independent: one broken source must

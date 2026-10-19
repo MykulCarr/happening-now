@@ -22,7 +22,11 @@
     // Empty = every admin request refused. Not secrets: the team domain is
     // public and the AUD tag only names which Access app a token is for.
     "ACCESS_TEAM_DOMAIN": "happening-now.cloudflareaccess.com",
-    "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556"
+    "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556",
+    // Which account/zone src/cf-analytics.mjs reads for /admin. Not secrets;
+    // the token that can read them is CF_ANALYTICS_TOKEN (wrangler secret put).
+    "CF_ACCOUNT_ID": "3949da63d9ab140c1997f85b14086013",
+    "CF_ZONE_ID": "1dd0d6cb06d99918f57df5f04c1e4bff"
   },
 
   // Daily sweep of both curated feed lists (places + topic tabs). Each firing
@@ -82,7 +86,9 @@
       "vars": {
         "ALLOWED_ORIGINS": "https://beta.happening-now.net",
         "ACCESS_TEAM_DOMAIN": "happening-now.cloudflareaccess.com",
-        "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556"
+        "ACCESS_AUD": "94469c23a6af7fc93dde10c85c677740c6c327909b35c337be2163053005a556",
+        "CF_ACCOUNT_ID": "3949da63d9ab140c1997f85b14086013",
+        "CF_ZONE_ID": "1dd0d6cb06d99918f57df5f04c1e4bff"
       },
       "kv_namespaces": [
         { "binding": "HN_STATE_DATA", "id": "f4ae09f8969e47f58a29100e31ee65a8" }

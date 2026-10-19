@@ -1,6 +1,6 @@
 /* /admin: three summary tiles that fit one screen; tapping a tile opens its
  * detail view below. Rows in a detail view are one line each and expand on
- * tap. The open view lives in the URL hash (#reports, #pulse, #usage, #sweep) so
+ * tap. The open view lives in the URL hash (#reports, #pulse, #usage, #cloudflare, #sweep) so
  * refresh and Back keep your place. Read-only.
  *
  * Data comes from /v1/admin/summary, which needs a Cloudflare Access login.
@@ -11,11 +11,13 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => window.App.escapeHtml(String(s ?? ""));
-  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", usage: "How the site is used", sweep: "Feed sweep" };
+  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", usage: "How the site is used", cloudflare: "Cloudflare analytics", sweep: "Feed sweep" };
   let data = null;
   let names = null;          // rss URL -> source name, from the three catalogs
   let reasonFilter = "all";
   let usageDays = "days7";
+  let cfDays = 7;
+  const cf = {};             // days -> response from /v1/admin/cloudflare, once it has arrived
 
   async function loadNames() {
     if (names) return;
@@ -129,6 +131,78 @@
       ${section("Buttons and controls", bars(totals(u.tap, (r) => `${r.a}|${r.b}`), (k) => k.replace("|", " · "), 30))}`;
   }
 
+  // ── Cloudflare (Web Analytics + zone traffic, via /v1/admin/cloudflare) ──
+  const fmtN = (n) => Number(n || 0).toLocaleString();
+  const fmtBytes = (b) => { const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0; b = Number(b || 0); while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; } return `${b.toFixed(i ? 1 : 0)} ${u[i]}`; };
+  // One request per window, shared by whoever asks while it is in flight.
+  const cfPending = {};
+  function loadCf(days) {
+    cfPending[days] ||= fetch(`/v1/admin/cloudflare?days=${days}`, { credentials: "same-origin", cache: "no-store" })
+      .then(async (res) => (res.ok ? (await res.json()).cloudflare : { error: `HTTP ${res.status}` }))
+      .catch((e) => ({ error: e.message }))
+      .then((c) => (cf[days] = c));
+    return cfPending[days];
+  }
+  const stat = (label, value) => `<div class="adStat"><span class="adStatNum">${esc(value)}</span><span class="adSmall">${esc(label)}</span></div>`;
+  const errLine = (part) => `<p class="hint adBad">Cloudflare said: ${esc(part.error)}</p>`;
+  function rumBars(title, part, label = (k) => k) {
+    if (!part) return "";
+    if (part.error) return `<h3 class="adSection">${esc(title)}</h3>${errLine(part)}`;
+    if (!part.data.length) return "";
+    const max = part.data[0].views;
+    return `<h3 class="adSection">${esc(title)}</h3>${part.data.map((r) => wideBar(label(r.k), r.views, max)).join("")}`;
+  }
+  // Core Web Vitals at the 75th percentile, graded by Google's thresholds.
+  function vitals(part) {
+    if (!part) return "";
+    if (part.error) return `<h3 class="adSection">Page speed</h3>${errLine(part)}`;
+    const q = part.data?.quantiles;
+    if (!q) return "";
+    const grade = (v, good, poor) => v == null ? "" : v <= good ? "good" : v <= poor ? "needs work" : "poor";
+    const ms = (us) => us == null ? "–" : `${Math.round(us / 1000)} ms`;   // Cloudflare reports these in microseconds
+    return `<h3 class="adSection">Page speed (75% of loads are this fast or faster)</h3>
+      <div class="adStats">
+        ${stat(`Largest paint · ${grade(q.largestContentfulPaintP75 / 1000, 2500, 4000)}`, ms(q.largestContentfulPaintP75))}
+        ${stat(`Tap response · ${grade(q.interactionToNextPaintP75 / 1000, 200, 500)}`, ms(q.interactionToNextPaintP75))}
+        ${stat(`Layout shift · ${grade(q.cumulativeLayoutShiftP75, 0.1, 0.25)}`, q.cumulativeLayoutShiftP75 == null ? "–" : Number(q.cumulativeLayoutShiftP75).toFixed(2))}
+      </div>`;
+  }
+  function viewCloudflare() {
+    const chips = `<div class="adChips">${[[7, "7 days"], [30, "30 days"]].map(([k, l]) =>
+      `<button type="button" class="npChip${k === cfDays ? " active" : ""}" data-cf-days="${k}">${l}</button>`).join("")}</div>`;
+    const c = cf[cfDays];
+    if (!c) {
+      const wanted = cfDays;
+      loadCf(wanted).then(() => currentView() === "cloudflare" && cfDays === wanted && show("cloudflare"));
+      return `${chips}<p class="hint">Asking Cloudflare…</p>`;
+    }
+    if (c.error) return `${chips}${errLine(c)}`;
+    const days = c.byDay?.data || [];
+    const visits = days.reduce((s, d) => s + d.visits, 0), views = days.reduce((s, d) => s + d.views, 0);
+    const t = c.traffic?.data;
+    const maxDay = Math.max(0, ...days.map((d) => d.visits));
+    return `${chips}
+      <div class="adStats">${stat("Visits", fmtN(visits))}${stat("Page views", fmtN(views))}</div>
+      ${c.byDay?.error ? errLine(c.byDay) : days.length ? `<h3 class="adSection">Visits per day</h3>${days.map((d) => wideBar(d.day.slice(5), d.visits, maxDay)).join("")}` : ""}
+      ${rumBars("Top pages", c.pages)}
+      ${rumBars("Where visitors came from", c.referrers, (k) => k === "(none)" ? "Direct / app" : k)}
+      ${rumBars("Countries", c.countries, countryName)}
+      ${rumBars("Devices", c.devices)}
+      ${rumBars("Browsers", c.browsers)}
+      ${rumBars("Operating systems", c.os)}
+      ${vitals(c.vitals)}
+      <h3 class="adSection">All traffic, bots included</h3>
+      <p class="adSmall">Every request Cloudflare served for the whole domain, FlightTrack included, so it runs far higher than visits.</p>
+      ${c.traffic?.error ? errLine(c.traffic) : t ? `<div class="adStats">
+        ${stat("Requests", fmtN(t.requests))}
+        ${stat("Served from cache", t.requests ? `${Math.round((t.cached / t.requests) * 100)}%` : "–")}
+        ${stat("Data served", fmtBytes(t.bytes))}
+        ${stat("Threats blocked", fmtN(t.threats))}
+      </div>
+      ${t.statuses.length ? `<h3 class="adSection">Response codes</h3>${t.statuses.map((x) => wideBar(x.k, x.n, t.statuses[0].n)).join("")}` : ""}
+      ${t.countries.length ? `<h3 class="adSection">Requests by country</h3>${t.countries.map((x) => wideBar(countryName(x.k), x.n, t.countries[0].n)).join("")}` : ""}` : ""}`;
+  }
+
   function viewSweep() {
     const s = data?.sweep;
     if (!s) return `<p class="hint">No sweep state yet: the daily check hasn't run since the last digest.</p>`;
@@ -145,7 +219,7 @@
       <p class="adSmall adGap">Reports last emailed through ${esc(data.reportsThrough || "never")}. The digest goes out when a round finishes.</p>`;
   }
 
-  const RENDER = { reports: viewReports, pulse: viewPulse, usage: viewUsage, sweep: viewSweep };
+  const RENDER = { reports: viewReports, pulse: viewPulse, usage: viewUsage, cloudflare: viewCloudflare, sweep: viewSweep };
 
   function show(view) {
     const open = RENDER[view] && data ? view : "";
@@ -169,6 +243,8 @@
   $("adClose").addEventListener("click", () => { history.pushState(null, "", location.pathname); show(""); });
   window.addEventListener("popstate", () => show(currentView()));
   $("adDetailBody").addEventListener("click", (e) => {
+    const cfChip = e.target.closest("[data-cf-days]");
+    if (cfChip) { cfDays = Number(cfChip.dataset.cfDays); show("cloudflare"); return; }
     const days = e.target.closest("[data-usage-days]");
     if (days) { usageDays = days.dataset.usageDays; show("usage"); return; }
     const chip = e.target.closest("[data-reason]");
@@ -187,6 +263,12 @@
       $("adSignedIn").textContent = `${data.signedInAs || "admin"} · ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
       renderTiles();
       show(currentView());
+      loadCf(7).then((c) => {
+        const d = c?.byDay?.data;
+        $("tCf").textContent = c?.error || c?.byDay?.error ? "!" : fmtN(d.reduce((s, x) => s + x.visits, 0));
+        $("tCfSub").textContent = c?.error || c?.byDay?.error ? "couldn't read" : "visits";
+        if (currentView() === "cloudflare") show("cloudflare");
+      });
     } catch (e) {
       $("adSignedIn").textContent = e.message;
     }
