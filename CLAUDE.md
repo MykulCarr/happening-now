@@ -221,6 +221,12 @@ hashed, never stored. **The line now: links last one UTC day.** Never keep a
 salt longer, never derive it from a fixed secret (that would make old vids
 recomputable), never add a cookie or any ID that survives the day.
 `npm run test:visitors` runs the real schema on node:sqlite.
+
+This design is being generalised for all of the owner's sites in the
+separate **site-analytics** project (`C:\TEMP\Projects\site-analytics`),
+which holds a frozen copy of these files as its reference. This site keeps
+its own copy until that project is proven; switching over will arrive as a
+TODO line here. Don't edit site-analytics from this repo.
 Stock symbols are deliberately not sent. The only state kept is
 `hn_usage_place` in sessionStorage (where this tab was). Off for GPC/DNT,
 `navigator.webdriver` and localhost (dev pages call the production Worker).
