@@ -489,7 +489,9 @@ Rules that matter:
   catalog's `_meta.excluded` lists what was rejected and why (BBC: US paywall
   since June 2025; CS Monitor: 5-article meter) — check it before "adding
   back" a big name. A clearly-labelled, off-by-default "free articles each
-  month" tier was floated and not decided; do **not** build anything that
+  month" tier was floated and **declined on 2026-10-21** — readers would hit
+  the meter within days and the ⚑ "paywalled" reports would fill up with it.
+  Don't re-propose it without a reader asking. Do **not** build anything that
   circumvents a meter (archive links, full-text fetching).
 - **Peek numbers are measured, never typed in.** That's the honesty of it.
   Don't add hand-written "posts daily" claims to the catalog.

@@ -4,7 +4,7 @@ Read by the Projects Dashboard's sync and used to rank what to work on next.
 Only the `key: value` lines below are parsed; prose around them is ignored, so
 write freely.
 
-updated: 2026-10-19
+updated: 2026-10-21
 health: ok
 next: Check /admin Usage > Visitors and the Cloudflare layout-shift score after a few days of real traffic
 blocked:

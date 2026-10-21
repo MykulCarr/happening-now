@@ -653,3 +653,19 @@ All deployed to production and pushed.
 **Pick up next:** watch /admin → Usage → Visitors fill in over a few days, and
 check that Cloudflare's "layout jumping" score drops from 0.13. Then work in
 the site-analytics workspace (site list + collector address first).
+
+## 2026-10-21 — Cleared the last two to-dos
+
+No code changes.
+
+- **Analytics to-do closed**: it was already built (usage counts, daily visitor
+  hash, /admin panels, privacy policy). Per-visitor *setup* (which sources and
+  settings someone picked) is deliberately not sent, because a whole setup is
+  close to a fingerprint. Open a new to-do if "which sources are popular" is
+  ever wanted.
+- **"Free articles each month" group declined**: metered outlets (BBC, CS
+  Monitor) stay out. Readers would hit the meter within days and flood the ⚑
+  "paywalled" reports. Recorded in CLAUDE.md so it isn't re-proposed.
+
+**Pick up next:** same as before — check /admin → Usage → Visitors and the
+Cloudflare layout-shift score after a few days of real traffic.
