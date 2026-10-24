@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "news-pages",
+  "name": "happening-now",
   "compatibility_date": "2026-04-10",
   "observability": {
     "enabled": true
