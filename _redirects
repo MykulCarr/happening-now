@@ -17,3 +17,7 @@
 /feedback.html    /feedback  301
 /admin.html       /admin     301
 /widget.html     /widget    301
+
+# AstroLab moved to its own site in May 2026
+/AstroLab.html    https://astrolaboratory.net/  301
+/AstroLab         https://astrolaboratory.net/  301
