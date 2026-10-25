@@ -26,3 +26,5 @@ node_modules/
 .env*
 !.env.example
 TODO.md
+YOUR-TURN.md
+backups/
