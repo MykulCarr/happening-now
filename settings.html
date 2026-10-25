@@ -113,11 +113,11 @@
     <!-- Settings Tabs -->
     <div class="settingsTabsWrap">
       <div class="settingsTabs" role="tablist" aria-label="Settings sections">
-        <button class="settingsTab active" data-tab="news" role="tab" aria-selected="true">News</button>
-        <button class="settingsTab" data-tab="weather" role="tab" aria-selected="false">Weather</button>
-        <button class="settingsTab" data-tab="stocks" role="tab" aria-selected="false">Stocks</button>
-        <button class="settingsTab" data-tab="general" role="tab" aria-selected="false">General</button>
-        <button class="settingsTab" data-tab="system" role="tab" aria-selected="false">System</button>
+        <button class="settingsTab active" data-tab="news" data-analytics-tab="news" role="tab" aria-selected="true">News</button>
+        <button class="settingsTab" data-tab="weather" data-analytics-tab="weather" role="tab" aria-selected="false">Weather</button>
+        <button class="settingsTab" data-tab="stocks" data-analytics-tab="stocks" role="tab" aria-selected="false">Stocks</button>
+        <button class="settingsTab" data-tab="general" data-analytics-tab="general" role="tab" aria-selected="false">General</button>
+        <button class="settingsTab" data-tab="system" data-analytics-tab="system" role="tab" aria-selected="false">System</button>
       </div>
 
 
@@ -836,7 +836,7 @@
   </div>
 
   <script defer src="assets/common.js"></script>
-  <script defer src="assets/usage.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="settings"></script>
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/topbar.js"></script>
   <script defer src="assets/infobar.js"></script>

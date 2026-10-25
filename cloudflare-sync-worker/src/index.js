@@ -5,7 +5,6 @@ import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
 import { handleReport, handlePulse } from "./reports.mjs";
 import { handleAdmin } from "./admin.mjs";
-import { handleUsage } from "./usage.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
 
@@ -490,11 +489,6 @@ export default {
     // Behind Cloudflare Access AND its own token check; see admin.mjs.
     if (url.pathname.startsWith("/v1/admin/")) {
       return handleAdmin(request, env, (body, status) => jsonResponse(body, status, request, env));
-    }
-
-    // Anonymous page/tab/control/source counters; see usage.mjs.
-    if (url.pathname === "/v1/usage") {
-      return handleUsage(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
     }
 
     if (url.pathname === "/v1/pulse") {

@@ -984,6 +984,7 @@
       btn.className = "tickerScopeBtn";
       btn.dataset.scope = t.id;
       btn.dataset.topic = "1";
+      btn.dataset.analyticsTab = t.id;
       btn.textContent = t.label;
       tickerScopeBar.appendChild(btn);
     }

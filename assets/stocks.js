@@ -739,7 +739,7 @@
             [["all", "All"], ...present.map(g => [g.group, g.tabLabel])]
               .map(([key, tabLabel]) => {
                 const on = key === activeMarketGroup;
-                return `<button class="tabPill${on ? " active" : ""}" type="button" data-market-group="${escapeHtml(key)}" aria-pressed="${on}">${escapeHtml(tabLabel)}</button>`;
+                return `<button class="tabPill${on ? " active" : ""}" type="button" data-market-group="${escapeHtml(key)}" data-analytics-tab="${escapeHtml(key)}" aria-pressed="${on}">${escapeHtml(tabLabel)}</button>`;
               })
               .join("")
           }</div>`

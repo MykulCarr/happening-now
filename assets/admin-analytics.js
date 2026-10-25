@@ -1,6 +1,7 @@
-/* /admin: the two analytics views — "Usage" (our own anonymous counters,
- * /v1/usage) and "Cloudflare" (Web Analytics + zone traffic,
- * /v1/admin/cloudflare). admin.js owns the page; this file only renders.
+/* /admin: the Cloudflare analytics view (Web Analytics + zone traffic,
+ * /v1/admin/cloudflare). Our own usage counts moved to site-analytics
+ * (analytics.happening-now.net/admin). admin.js owns the page; this file
+ * only renders.
  *
  * Exposes window.HNAdminAnalytics.create(ctx), where ctx gives back the
  * shared bits: esc, row, getData, rerender(view), currentView.
@@ -9,7 +10,7 @@
   "use strict";
 
   function create({ esc, row, getData, rerender, currentView }) {
-    const state = { usage: { days: "days7", tab: "visitors" }, cloudflare: { days: 7, tab: "visitors" } };
+    const state = { cloudflare: { days: 7, tab: "visitors" } };
     const cf = {};          // days -> response, once it has arrived
     const cfPending = {};   // days -> the one in-flight request
 
@@ -21,9 +22,6 @@
       if (cc === "XX" || cc === "(none)") return "Unknown";
       try { return regionNames?.of(cc) || cc; } catch { return cc; }
     }
-    const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-    // "news:science" -> "News › science"
-    const placeName = (p) => p === "start" ? "Arrived" : p.split(":").map((x, i) => (i ? x : capital(x))).join(" › ");
     const FRIENDLY = {
       ChromeMobile: "Chrome (phone)", ChromeDerivative: "Chrome-based", MobileSafari: "Safari (iPhone/iPad)",
       SamsungInternet: "Samsung Internet", FirefoxMobile: "Firefox (phone)", MacOSX: "macOS", iOS: "iOS",
@@ -53,11 +51,6 @@
       const top = pairs.slice(0, limit), max = top[0]?.[1] || 0;
       return top.map(([k, n]) => bar(label(k), n, max, total)).join("");
     }
-    function totals(rows, key) {
-      const m = new Map();
-      for (const r of rows) m.set(key(r), (m.get(key(r)) || 0) + r.n);
-      return [...m.entries()].sort((x, y) => y[1] - x[1]);
-    }
     // Each section is a panel; a tab's panels sit in a grid that is one column
     // on a phone and two on a desktop. `wide` spans the full row.
     const section = (title, body, note = "", wide = false) => body ? `<section class="adPanel${wide ? " adSpan" : ""}">
@@ -86,88 +79,6 @@
             <span class="adColLabel">${i % every === 0 || days.length <= 8 ? esc(label(d.day)) : ""}</span>
           </div>`).join("")}
         </div>`, "", true);
-    }
-
-    // ── Usage view ──
-    const TIME_ORDER = ["0-10s", "10-30s", "30-60s", "1-3m", "3-10m", "10m+"];
-    const TIME_LABEL = { "0-10s": "Under 10 sec", "10-30s": "10–30 sec", "30-60s": "30–60 sec", "1-3m": "1–3 min", "3-10m": "3–10 min", "10m+": "Over 10 min" };
-    function timeView(rows) {
-      if (!rows.length) return empty("No time-on-page counts yet.");
-      const pages = totals(rows, (r) => r.a);
-      return `<p class="adSmall">Each time a page is on screen counts once, until it leaves the screen. "Typical" is the middle look: half were shorter, half longer.</p>
-        <div class="adList">${pages.map(([page, n]) => {
-          const by = TIME_ORDER.map((b) => [b, rows.filter((r) => r.a === page && r.b === b).reduce((s, r) => s + r.n, 0)]);
-          let seen = 0, typical = TIME_ORDER[0];
-          for (const [b, c] of by) { seen += c; if (seen >= n / 2) { typical = b; break; } }
-          const max = Math.max(...by.map(([, c]) => c));
-          return row(`<span class="adName">${esc(capital(page))}</span><span class="adTag">typical ${esc(TIME_LABEL[typical])}</span><span class="adCount adCountEnd">${fmtN(n)}</span>`,
-            by.map(([b, c]) => bar(TIME_LABEL[b], c, max, n)).join(""));
-        }).join("")}</div>`;
-    }
-    // Journeys and visit length, from the daily visitor hash (visitors.mjs).
-    const LENGTH_ORDER = ["0-10s", "10-60s", "1-3m", "3-10m", "10-30m", "30m+"];
-    const LENGTH_LABEL = { "0-10s": "Under 10 sec", "10-60s": "10–60 sec", "1-3m": "1–3 min", "3-10m": "3–10 min", "10-30m": "10–30 min", "30m+": "Over 30 min" };
-    function typicalLength(v) {
-      let seen = 0;
-      for (const b of LENGTH_ORDER) { seen += v.lengths.find((x) => x.b === b)?.n || 0; if (seen >= v.visitors / 2) return LENGTH_LABEL[b]; }
-      return "–";
-    }
-    function visitorsView(v) {
-      if (!v || !v.visitors) return section("", empty("No visitor data yet: it started with this release."), "", true);
-      const max = Math.max(...v.lengths.map((x) => x.n));
-      return dayChart(v.byDay.map((d) => ({ day: d.day, n: d.n })), "Unique visitors per day")
-        + section("How long visits last", LENGTH_ORDER.map((b) => bar(LENGTH_LABEL[b], v.lengths.find((x) => x.b === b)?.n || 0, max, v.visitors)).join(""),
-            "Time the site was actually on screen, added up across a visit.")
-        + section("Most common journeys", v.paths.length ? `<div class="adList">${v.paths.map((p) => row(
-            `<span class="adName">${esc(p.path.split(">").map(placeName).join(" → "))}</span><span class="adCount adCountEnd">${fmtN(p.n)}</span>`,
-            `<p class="adSmall">${esc(p.path.split(">").length)} steps · ${esc(p.path)}</p>`)).join("")}</div>` : "",
-            "A visit is one visitor's steps within a single day. Visitors can't be followed from one day to the next.");
-    }
-
-    function viewUsage() {
-      const st = state.usage;
-      const u = getData()?.usage?.[st.days];
-      const head = chips("usage", "days", [["days7", "7 days"], ["days30", "30 days"]]);
-      if (!u) return `${head}<p class="hint adBad">Couldn't read usage.</p>`;
-      const arrivals = u.nav.filter((x) => x.a === "start");
-      const moves = u.nav.filter((x) => x.a !== "start");
-      const nArrivals = arrivals.reduce((s, x) => s + x.n, 0);
-      const v = u.visitors;
-      const strip = `<div class="adStats">
-        ${stat("Unique visitors", v ? fmtN(v.visitors) : "–", "counted per day")}
-        ${stat("Pages per visitor", v?.visitors ? (v.pages / v.visitors).toFixed(1) : "–")}
-        ${stat("Typical visit", v?.visitors ? typicalLength(v) : "–")}
-        ${stat("Headlines opened", fmtN(u.source.reduce((s, x) => s + x.n, 0)))}
-      </div>`;
-      const tabs = chips("usage", "tab", [["visitors", "Visitors"], ["moves", "Movement"], ["sources", "Sources"], ["controls", "Buttons"], ["time", "Time on page"], ["where", "Countries"]]);
-      let body = "";
-      if (st.tab === "visitors") {
-        body = visitorsView(v);
-      } else if (st.tab === "moves") {
-        body = section("Where visits start", bars(totals(arrivals, (r) => r.b), placeName))
-          + section("Pages and tabs opened", bars(totals(u.nav, (r) => r.b), placeName, 20))
-          + section("Most common moves", moves.length ? `<div class="adList">${moves.slice(0, 25).map((m) => row(
-              `<span class="adName">${esc(placeName(m.a))} → ${esc(placeName(m.b))}</span><span class="adCount adCountEnd">${fmtN(m.n)}</span>`,
-              `<p class="adSmall">${esc(m.a)} → ${esc(m.b)}</p>`)).join("")}</div>` : "",
-            "Single steps only: nobody is followed, so these never join up into journeys.", true);
-      } else if (st.tab === "sources") {
-        const sources = totals(u.source, (r) => r.a);
-        body = sources.length ? section("Sources opened", `<div class="adList">${sources.slice(0, 40).map(([site, n]) => row(
-            `<span class="adName">${esc(site)}</span><span class="adCount adCountEnd">${fmtN(n)}</span>`,
-            bars(totals(u.source.filter((r) => r.a === site), (r) => r.b), (p) => `from ${placeName(p)}`))).join("")}</div>`,
-          "The website of each headline opened, never the article. Tap one to see where on the site it was clicked.", true) : empty("No headlines opened yet.");
-      } else if (st.tab === "controls") {
-        const pages = totals(u.tap, (r) => r.a);
-        body = pages.length ? pages.map(([page]) => section(capital(page),
-          bars(totals(u.tap.filter((r) => r.a === page), (r) => r.b), (b) => b.replace(/-/g, " "), 30))).join("") : empty("No buttons used yet.");
-      } else if (st.tab === "time") {
-        body = section("", timeView(u.time || []), "", true);
-      } else {
-        body = section("Visits by country", bars(totals(u.country, (r) => r.a), countryName, 30), "From Cloudflare's lookup of each visit's connection; the IP address itself is never stored.");
-      }
-      return `${head}
-        ${u.capped.length ? `<p class="hint adBad">Daily cap hit on ${esc(u.capped.join(", "))}: some counts were dropped.</p>` : ""}
-        ${nArrivals || u.source.length ? `${strip}${tabs}${grid(body)}` : empty("Nothing counted yet.")}`;
     }
 
     // ── Cloudflare view ──
@@ -255,11 +166,8 @@
       return true;
     }
 
-    // Tiles: usage from the summary we already have; Cloudflare fetched in the background.
+    // Tile: Cloudflare, fetched in the background.
     function fillTiles($) {
-      const u = getData()?.usage?.days7;
-      $("tUsage").textContent = u ? fmtN(u.visitors?.visitors ?? u.nav.filter((x) => x.a === "start").reduce((t, x) => t + x.n, 0)) : "!";
-      $("tUsageSub").textContent = !u ? "couldn't read" : u.country[0] ? `top: ${countryName(u.country[0].a)}` : "none yet";
       loadCf(7).then((c) => {
         const bad = c?.error || c?.byDay?.error;
         $("tCf").textContent = bad ? "!" : fmtN(c.byDay.data.reduce((s, x) => s + x.visits, 0));
@@ -268,7 +176,7 @@
       });
     }
 
-    return { viewUsage, viewCloudflare, onClick, fillTiles };
+    return { viewCloudflare, onClick, fillTiles };
   }
 
   window.HNAdminAnalytics = { create };

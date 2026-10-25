@@ -143,8 +143,8 @@
         <div class="sub" id="statusLine">—</div>
       </div>
       <div class="pageHeadActions">
-        <button id="manageSourcesBtn" class="btn" type="button" aria-label="Manage news sources">📰 Sources</button>
-        <button id="refreshBtn" class="btn" type="button">Refresh</button>
+        <button id="manageSourcesBtn" class="btn" data-analytics="sources" type="button" aria-label="Manage news sources">📰 Sources</button>
+        <button id="refreshBtn" class="btn" data-analytics="refresh" type="button">Refresh</button>
       </div>
     </section>
     <!-- Pinned under the top bar while scrolling (.pageSticky in styles.css). -->
@@ -153,10 +153,10 @@
       <span class="criticalTickerEmpty">Loading headlines...</span>
     </section>
     <div class="tickerScopeBar" id="tickerScopeBar" role="group" aria-label="News content scope">
-      <button class="tickerScopeBtn" data-scope="local" type="button">LOCAL</button>
-      <button class="tickerScopeBtn" data-scope="regional" type="button">REGIONAL</button>
-      <button class="tickerScopeBtn active" data-scope="national" type="button">NATIONAL</button>
-      <button class="tickerScopeBtn" data-scope="international" type="button">INTERNATIONAL</button>
+      <button class="tickerScopeBtn" data-scope="local" data-analytics-tab="local" type="button">LOCAL</button>
+      <button class="tickerScopeBtn" data-scope="regional" data-analytics-tab="regional" type="button">REGIONAL</button>
+      <button class="tickerScopeBtn active" data-scope="national" data-analytics-tab="national" type="button">NATIONAL</button>
+      <button class="tickerScopeBtn" data-scope="international" data-analytics-tab="international" type="button">INTERNATIONAL</button>
     </div>
     </div>
     <section id="newsGrid" class="grid"></section>
@@ -173,7 +173,7 @@
   </footer>
 
   <script defer src="assets/common.js"></script>
-  <script defer src="assets/usage.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="news"></script>
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/topbar.js"></script>
   <script defer src="assets/infobar.js"></script>

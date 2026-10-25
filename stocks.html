@@ -125,7 +125,7 @@
       </div>
       <div class="pageHeadActions">
         <div class="sub" id="stocksSub"><a class="subLink" href="settings.html#stocks">EDIT - WATCHLIST & MARKET INDICES</a></div>
-        <button id="stocksRefreshBtn" class="btn" type="button">Refresh</button>
+        <button id="stocksRefreshBtn" class="btn" data-analytics="refresh" type="button">Refresh</button>
       </div>
     </section>
 
@@ -138,7 +138,7 @@
           <h2>Watchlist</h2>
           <div class="stocksCardHeadActions">
             <span id="lastUpdated" class="lastUpdated stocksLastUpdated"></span>
-            <select id="stocksSort" class="select stocksSortSelect" aria-label="Sort watchlist">
+            <select id="stocksSort" data-analytics="sort" class="select stocksSortSelect" aria-label="Sort watchlist">
               <option value="pinned">Pinned first (A–Z)</option>
               <option value="az">A–Z</option>
               <option value="symbol">Symbol</option>
@@ -156,8 +156,8 @@
           <div class="stocksCardHeadActions">
             <span class="stocksScopeLabel">SCOPE:</span>
             <div class="tabsRow" id="newsTabs">
-              <button class="tabPill" data-news-mode="watchlist" type="button">Watchlist</button>
-              <button class="tabPill" data-news-mode="major" type="button">Major Headlines</button>
+              <button class="tabPill" data-news-mode="watchlist" data-analytics="news-watchlist" type="button">Watchlist</button>
+              <button class="tabPill" data-news-mode="major" data-analytics="news-major" type="button">Major Headlines</button>
               <button id="stocksNewsRetryBtn" class="btn" type="button">Refresh</button>
             </div>
 
@@ -221,7 +221,7 @@
   </footer>
 
   <script defer src="assets/common.js"></script>
-  <script defer src="assets/usage.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="stocks"></script>
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/common-stocks.js"></script>
   <script defer src="assets/topbar.js"></script>

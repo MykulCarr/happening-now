@@ -22,33 +22,6 @@ CREATE TABLE IF NOT EXISTS pulse (
 );
 CREATE INDEX IF NOT EXISTS pulse_day ON pulse (day);
 
--- Anonymous usage counters (src/usage.mjs). One row per day per thing that
--- happened, holding only a count: no IP, no User-Agent, no visitor or session
--- ID, nothing finer than the day.
-CREATE TABLE IF NOT EXISTS usage (
-  day   TEXT NOT NULL,        -- YYYY-MM-DD, UTC
-  kind  TEXT NOT NULL,        -- nav | tap | source | country
-  a     TEXT NOT NULL,        -- see src/usage.mjs for what a and b hold per kind
-  b     TEXT NOT NULL,
-  n     INTEGER NOT NULL,
-  PRIMARY KEY (day, kind, a, b)
-);
-
--- Daily visitor hash (src/visitors.mjs). `salts` holds one random salt for
--- today only; yesterday's is deleted as soon as today's is made, so past
--- vids can never be recomputed or tied to an IP.
-CREATE TABLE IF NOT EXISTS salts (
-  day   TEXT PRIMARY KEY,     -- YYYY-MM-DD, UTC
-  salt  TEXT NOT NULL
-);
-
--- One row per visitor per UTC day. vid is a hash that means nothing once its
--- day's salt is gone. No IP, no User-Agent, no time of day.
-CREATE TABLE IF NOT EXISTS visitors (
-  day     TEXT NOT NULL,
-  vid     TEXT NOT NULL,
-  path    TEXT NOT NULL,      -- "news>news:international>weather", capped
-  pages   INTEGER NOT NULL,   -- page and tab steps
-  seconds INTEGER NOT NULL,   -- total time on screen
-  PRIMARY KEY (day, vid)
-);
+-- The usage / salts / visitors tables that used to follow here were retired
+-- on 2026-10-25 when usage counting moved to site-analytics
+-- (analytics.happening-now.net). History is in backups/ on OEMMEO.

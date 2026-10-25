@@ -1,6 +1,6 @@
 /* /admin: three summary tiles that fit one screen; tapping a tile opens its
  * detail view below. Rows in a detail view are one line each and expand on
- * tap. The open view lives in the URL hash (#reports, #pulse, #usage, #cloudflare, #sweep) so
+ * tap. The open view lives in the URL hash (#reports, #pulse, #cloudflare, #sweep) so
  * refresh and Back keep your place. Read-only.
  *
  * Data comes from /v1/admin/summary, which needs a Cloudflare Access login.
@@ -11,7 +11,7 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => window.App.escapeHtml(String(s ?? ""));
-  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", usage: "How the site is used", cloudflare: "Cloudflare analytics", sweep: "Feed sweep" };
+  const VIEWS = { reports: "Reader reports · last 30 days", pulse: "Is it useful? · last 30 days", cloudflare: "Cloudflare analytics", sweep: "Feed sweep" };
   let data = null;
   let names = null;          // rss URL -> source name, from the three catalogs
   let reasonFilter = "all";
@@ -95,11 +95,11 @@
       <p class="adSmall adGap">Reports last emailed through ${esc(data.reportsThrough || "never")}. The digest goes out when a round finishes.</p>`;
   }
 
-  // Usage and Cloudflare live in admin-analytics.js.
+  // Cloudflare lives in admin-analytics.js; usage is on analytics.happening-now.net.
   const analytics = window.HNAdminAnalytics.create({
     esc, row, getData: () => data, rerender: (v) => show(v), currentView: () => currentView(),
   });
-  const RENDER = { reports: viewReports, pulse: viewPulse, usage: analytics.viewUsage, cloudflare: analytics.viewCloudflare, sweep: viewSweep };
+  const RENDER = { reports: viewReports, pulse: viewPulse, cloudflare: analytics.viewCloudflare, sweep: viewSweep };
 
   function show(view) {
     const open = RENDER[view] && data ? view : "";

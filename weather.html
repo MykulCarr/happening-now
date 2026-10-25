@@ -112,7 +112,7 @@
         <div class="sub" id="weatherSub">—</div>
       </div>
       <div class="pageHeadActions">
-        <button id="weatherRefreshBtn" class="btn" type="button">Refresh</button>
+        <button id="weatherRefreshBtn" class="btn" data-analytics="refresh" type="button">Refresh</button>
       </div>
     </section>
     <!-- Top alerts ticker -->
@@ -145,9 +145,9 @@
           <div class="cardHead weatherCardHeadInline">
             <h2 id="forecastTitle" class="weatherHeadTitleGrow">7 Day Forecast</h2>
             <div class="tabsRow" id="forecastTabs">
-              <button class="tabPill active" data-forecast-days="3" type="button">3 Days</button>
-              <button class="tabPill" data-forecast-days="7" type="button">7 Days</button>
-              <button class="tabPill" data-forecast-days="14" type="button">14 Days</button>
+              <button class="tabPill active" data-forecast-days="3" data-analytics="days-3" type="button">3 Days</button>
+              <button class="tabPill" data-forecast-days="7" data-analytics="days-7" type="button">7 Days</button>
+              <button class="tabPill" data-forecast-days="14" data-analytics="days-14" type="button">14 Days</button>
             </div>
           </div>
           <div class="cardBody">
@@ -162,17 +162,17 @@
         <div class="card" data-section="radar">
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Weather Map</h2>
-            <button id="mapRecenterBtn" class="btn" type="button" title="Recenter map on my location" aria-label="Recenter map on my location">📍</button>
-            <button id="mapRingsBtn" class="btn" type="button" title="Distance rings" aria-label="Distance rings" aria-pressed="true">◎</button>
-            <button id="radarOpenBtn" class="btn" type="button">NOAA Radar</button>
-            <select id="mapTypeSelect" class="input weatherMapTypeSelect" aria-label="Select weather map layer">
+            <button id="mapRecenterBtn" class="btn" data-analytics="recenter" type="button" title="Recenter map on my location" aria-label="Recenter map on my location">📍</button>
+            <button id="mapRingsBtn" class="btn" data-analytics="rings" type="button" title="Distance rings" aria-label="Distance rings" aria-pressed="true">◎</button>
+            <button id="radarOpenBtn" class="btn" data-analytics="radar-open" type="button">NOAA Radar</button>
+            <select id="mapTypeSelect" data-analytics="layer" class="input weatherMapTypeSelect" aria-label="Select weather map layer">
               <option value="radar" selected>Radar</option>
               <option value="wind">Wind</option>
               <option value="temp">Temperature</option>
               <option value="clouds">Clouds</option>
               <option value="air">Air Quality</option>
             </select>
-            <button id="mapLegendBtn" class="btn" type="button" title="Show map legend">📋</button>
+            <button id="mapLegendBtn" class="btn" data-analytics="legend" type="button" title="Show map legend">📋</button>
           </div>
           <div class="cardBody">
             <!-- Ships gated on purpose: the Windy iframe hands a third party the
@@ -187,7 +187,7 @@
                   Loading it shares the spot the map is centred on (your exact position if you set your
                   location by GPS, otherwise your town) and your IP address with them.
                 </p>
-                <button id="weatherMapLoadBtn" class="btn weatherMapLoadBtn" type="button">Load map</button>
+                <button id="weatherMapLoadBtn" data-analytics="radar-load" class="btn weatherMapLoadBtn" type="button">Load map</button>
                 <label class="weatherMapConsentRemember">
                   <input type="checkbox" id="weatherMapRemember"> Always load without asking
                 </label>
@@ -219,9 +219,9 @@
           <div class="cardHead weatherCardHeadInline">
             <h2 class="weatherHeadTitleGrow">Alerts</h2>
             <div class="tabsRow" id="alertsTabs">
-              <button class="tabPill active" data-scope="local" type="button">Local</button>
-              <button class="tabPill" data-scope="national" type="button">National</button>
-              <button class="tabPill" data-scope="both" type="button">Both</button>
+              <button class="tabPill active" data-scope="local" data-analytics="alerts-local" type="button">Local</button>
+              <button class="tabPill" data-scope="national" data-analytics="alerts-national" type="button">National</button>
+              <button class="tabPill" data-scope="both" data-analytics="alerts-both" type="button">Both</button>
             </div>
           </div>
           <div class="cardBody weatherAlertsBody">
@@ -237,7 +237,7 @@
             <div id="weatherNews" class="stack">Loading…</div>
             <div class="weatherNewsActions">
               <button id="weatherNewsRetryBtn" class="btn" type="button">Retry now</button>
-              <button id="weatherNewsMoreBtn" class="btn" type="button">More Weather News</button>
+              <button id="weatherNewsMoreBtn" class="btn" data-analytics="news-more" type="button">More Weather News</button>
             </div>
           </div>
         </div>
@@ -273,7 +273,7 @@
   </div>
 
   <script defer src="assets/common.js"></script>
-  <script defer src="assets/usage.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="weather"></script>
   <script defer src="assets/common-weather.js"></script>
   <script defer src="assets/topbar.js"></script>
   <script defer src="assets/infobar.js"></script>

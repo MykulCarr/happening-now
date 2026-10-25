@@ -202,39 +202,31 @@ free-text box, and don't add a second browser write without the same audit.
 `npm run test:reports` forces every branch against a stand-in D1; run the
 real SQL with `wrangler d1 execute hn-reports --remote` after touching it.
 
-**Anonymous usage counts (2026-10-18).** `assets/usage.js` (on every public
-page) batches what was used, sent by `sendBeacon` to `/v1/usage`
-(`cloudflare-sync-worker/src/usage.mjs`, `usage` table): page/tab moves as
-`from → to` pairs, named controls, the **hostname** of a clicked headline
-(never the article), the visitor's country from `request.cf`, once per
-arrival, and time on screen per page as a **range** (`TIME_BUCKETS`, e.g.
-`1-3m`), sent each time the page leaves the screen — never exact seconds. Each event only increments a `(day, kind, a, b)` counter — no ID,
-IP, UA or time.
+**Anonymous usage counts — now site-analytics (switched 2026-10-25).** Every
+public page loads `https://analytics.happening-now.net/analytics.js` with
+`data-site="happening-now"` and a `data-page` name (`news`, `weather`, ...;
+without it the homepage would count as `home`). That collector is the
+owner's separate **site-analytics** project, generalised from this site's
+old `usage.js` / `usage.mjs` / `visitors.mjs` (counters plus a one-UTC-day
+visitor hash). It is not ours to edit from here; its numbers are on
+`analytics.happening-now.net/admin` behind Access. What it counts is
+**declared in our markup**, so nothing is counted that isn't labelled:
 
-**Journeys, visit length and unique visitors (2026-10-19, owner's decision)**
-come from a *daily visitor hash* in `src/visitors.mjs`: SHA-256 of a random
-per-UTC-day salt + IP + User-Agent, first 16 hex. The salt lives in the D1
-`salts` table and yesterday's is **deleted** as soon as today's exists, so a
-past vid can never be recomputed or tied to an IP. One `visitors` row per vid
-per day: path (capped 400 chars), steps, on-screen seconds. IP and UA are
-hashed, never stored. **The line now: links last one UTC day.** Never keep a
-salt longer, never derive it from a fixed secret (that would make old vids
-recomputable), never add a cookie or any ID that survives the day.
-`npm run test:visitors` runs the real schema on node:sqlite.
+- `data-analytics-tab="x"` on a tab → a move to `page:x` (ticker scopes and
+  topic tabs in `news.js`, market groups in `stocks.js`, Settings tabs);
+- `data-analytics="x"` on a button → a tap; on a `<select>` it sends
+  `x-<value>` (`layer-...`, `sort-...`);
+- any outbound link → its hostname only.
 
-This design is being generalised for all of the owner's sites in the
-separate **site-analytics** project (`C:\TEMP\Projects\site-analytics`),
-which holds a frozen copy of these files as its reference. This site keeps
-its own copy until that project is proven; switching over will arrive as a
-TODO line here. Don't edit site-analytics from this repo.
-Stock symbols are deliberately not sent. The only state kept is
-`hn_usage_place` in sessionStorage (where this tab was). Off for GPC/DNT,
-`navigator.webdriver` and localhost (dev pages call the production Worker).
-Control names live in two lists that must agree: `TAPS` in usage.js and
-`TAPS` in usage.mjs; an unknown one is dropped by itself, not the batch.
-Shown on /admin (`assets/admin-analytics.js`, which also renders the
-Cloudflare view from `/v1/admin/cloudflare` — one GraphQL request per view,
-since parallel queries exhausted the API's rate budget). `npm run test:usage`.
+Names must be tokens (`a-z0-9-`, ≤24 chars, letter first) or they are
+silently skipped. Dropped in the switch: the Settings watchlist add/remove
+count (it came from `hn:config-saved`, which the collector can't hear). The
+old history was exported to `backups/` (git-ignored, OEMMEO only) before the
+`usage`/`visitors`/`salts` tables were retired; the tables are still in D1,
+empty of salt. `/admin` keeps only the Cloudflare view
+(`assets/admin-analytics.js`, one GraphQL request per view, since parallel
+queries exhausted the API's rate budget). CSP allows the collector in
+`script-src` and `connect-src`. Off for GPC/DNT, webdriver and localhost.
 
 Keep it that way. Two rules follow from the audit:
 
@@ -794,6 +786,13 @@ Needs `npm install` once (esbuild). It stages, minifies, `wrangler deploy`s, pin
 IndexNow and archives URLs to the Wayback Machine. To inspect what would ship
 without deploying, run `scripts/stage-public-assets.ps1` alone. Rollback procedure:
 `docs/rollback-runbook.md`.
+
+## YOUR-TURN.md (git-ignored)
+
+Steps only Mike can do (sign-ins, Search Console checks, decisions) live in
+`YOUR-TURN.md`, which is git-ignored. Add a line whenever you need him; cross
+one off (`[x]`) only after checking it's really done, not on his word alone.
+Project work stays in `TODO.md`.
 
 ## Dashboard sync
 
