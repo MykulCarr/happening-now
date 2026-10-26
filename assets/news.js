@@ -960,6 +960,7 @@
     // that still reads it (back-compat across deploys).
     saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
     geoCache = null;
+    scrollGridToTop();
     renderCriticalTicker(true);
     render(true);
     // Local/Regional need a saved location to be useful. Prompt the
@@ -968,6 +969,17 @@
       window.App?.openWelcomeIfNeeded?.();
     }
   });
+
+  // The category buttons are pinned (.pageSticky), so they can be tapped from
+  // halfway down the old list. Bring the new category in from its first story
+  // rather than leaving the reader mid-page. Only scrolls up: a reader who
+  // hasn't scrolled past the start of the grid is left where they are.
+  function scrollGridToTop() {
+    const band = document.querySelector(".pageSticky");
+    if (!band) return;
+    const offset = newsGrid.getBoundingClientRect().top - band.getBoundingClientRect().bottom;
+    if (offset < 0) window.scrollTo({ top: window.scrollY + offset, behavior: "instant" });
+  }
 
   // Append a tab for each topic the user has enabled. Runs after the static
   // four so the geographic tabs keep their familiar position, and re-syncs the
