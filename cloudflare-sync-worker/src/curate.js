@@ -17,8 +17,9 @@
 //            and 2026-08-14) found 40/41 and 15/16 "dead" feeds were fine
 //            again within the hour. So instead of emailing straight off the
 //            scan, the flagged feeds sit for at least a day and get re-probed
-//            in their own BATCH-sized pass. Only what's still dead on the
-//            second look reaches the report. If the scan found nothing, this
+//            in their own BATCH-sized pass — twice (VERIFY_ROUNDS), a day
+//            apart. Only what's still dead on the third look reaches the
+//            report. If the scan found nothing, this
 //            phase is skipped and the "all healthy" email goes out immediately.
 //
 //            The re-probe goes through /v1/rss/raw rather than straight at the
@@ -57,6 +58,9 @@ const TOPICS_URL = "https://happening-now.net/data/topic-sources.json";
 const NEWS_URL = "https://happening-now.net/data/news-sources.json";
 const BATCH = 40;              // + 2 subrequests for the two catalog files
 const TIMEOUT_MS = 15000;
+// Site-path re-checks after the scan, one cron firing (a day) apart. With the
+// scan itself, a feed must fail three times on three days to be emailed.
+const VERIFY_ROUNDS = 2;
 
 // Returns "" when the feed is healthy, or a short reason why it isn't.
 //
@@ -212,7 +216,7 @@ function buildReport(findings, total, reports, pulse) {
           <th align="left" style="padding:6px 10px;background:#f3f4f6">Source</th>
           <th align="left" style="padding:6px 10px;background:#f3f4f6">Problem</th>
           <th align="left" style="padding:6px 10px;background:#f3f4f6">Feed</th></tr>${rows}</table>
-      <p>Each of these failed on two separate days, at least a day apart — most one-day platform
+      <p>Each of these failed on three separate days, at least a day apart — most short platform
       hiccups are already filtered out. Still worth a quick eyeball before acting, since a
       multi-day outage can happen too.</p>
       <p>"Problem" is what a browser would hit, not just an item count: a feed whose XML won't
@@ -270,12 +274,24 @@ async function runVerifyPhase(env, state) {
 
   const confirmed = dedupeByRss([...(state.confirmed || []), ...stillDead]);
   const next = start + slice.length;
+  // State saved before rounds existed has no `round`; treat it as the first.
+  const round = state.round || 1;
 
   if (next < state.findings.length) {
     await env.HN_STATE_DATA.put(STATE_KEY, JSON.stringify({
-      phase: "verify", cursor: next, findings: state.findings, confirmed, checked: state.checked,
+      phase: "verify", round, cursor: next, findings: state.findings, confirmed, checked: state.checked,
     }));
-    return { verifying: `${next}/${state.findings.length}`, confirmedSoFar: confirmed.length };
+    return { verifying: `${next}/${state.findings.length}`, round, confirmedSoFar: confirmed.length };
+  }
+
+  // Survivors of this round become the next round's list, re-checked on a
+  // later firing. One site-path look still let multi-day WAF blips through
+  // (all three rows of the 2026-10-29 digest rendered fine that same day).
+  if (confirmed.length && round < VERIFY_ROUNDS) {
+    await env.HN_STATE_DATA.put(STATE_KEY, JSON.stringify({
+      phase: "verify", round: round + 1, cursor: 0, findings: confirmed, confirmed: [], checked: state.checked,
+    }));
+    return { verified: round, pendingNextRound: confirmed.length };
   }
 
   return sendDigest(env, confirmed, state.checked);
