@@ -2520,10 +2520,16 @@
         },
         "entries": [
           {
-            "name": "Patch Buffalo",
-            "rss": "https://patch.com/feeds/new-york/buffalo",
-            "site": "https://patch.com/new-york/buffalo",
+            "name": "Buffalo Rising",
+            "rss": "https://www.buffalorising.com/feed/",
+            "site": "https://www.buffalorising.com",
             "type": "community"
+          },
+          {
+            "name": "Investigative Post",
+            "rss": "https://www.investigativepost.org/feed/",
+            "site": "https://www.investigativepost.org",
+            "type": "paper"
           },
           {
             "name": "WIVB Buffalo (CBS 4)",
@@ -2890,9 +2896,9 @@
             "type": "paper"
           },
           {
-            "name": "StateImpact Pennsylvania",
-            "rss": "https://stateimpact.npr.org/pennsylvania/feed/",
-            "site": "https://stateimpact.npr.org/pennsylvania",
+            "name": "Spotlight PA",
+            "rss": "https://www.spotlightpa.org/feeds/full.xml",
+            "site": "https://www.spotlightpa.org",
             "type": "paper"
           },
           {
