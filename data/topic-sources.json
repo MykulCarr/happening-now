@@ -112,7 +112,7 @@
         },
         {
           "name": "ESA Space News",
-          "rss": "https://www.esa.int/rssfeed/Our_Activities/Space_News",
+          "rss": "https://www.esa.int/rssfeed/TopNews",
           "site": "https://www.esa.int",
           "type": "paper"
         },
@@ -536,9 +536,9 @@
       "emoji": "🎧",
       "entries": [
         {
-          "name": "BrooklynVegan",
-          "rss": "https://www.brooklynvegan.com/feed/",
-          "site": "https://www.brooklynvegan.com",
+          "name": "NME",
+          "rss": "https://www.nme.com/news/music/feed",
+          "site": "https://www.nme.com",
           "type": "paper"
         },
         {

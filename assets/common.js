@@ -109,7 +109,9 @@
   // already a full name or doesn't match any known abbreviation.
   function expandStateName(stateAbbrOrName) {
     if (!stateAbbrOrName) return "";
-    const upper = String(stateAbbrOrName).toUpperCase();
+    // Through abbreviateState first, so the geocoder's "US-MI" form expands
+    // too — it used to fall through and the heading read "US-MI News".
+    const upper = abbreviateState(stateAbbrOrName).toUpperCase();
     if (upper.length === 2) {
       for (const [name, abbr] of Object.entries(STATE_ABBREVIATIONS)) {
         if (abbr === upper) return name;

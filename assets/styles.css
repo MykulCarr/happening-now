@@ -1945,31 +1945,51 @@ header#topbar>.infoBar .infoBarRight {
     right: 0;
   }
 
+  /* Phone page header: title with its status line tucked underneath on the
+     left, compact buttons in one row on the right. It used to put the status
+     beside the title in a sliver of a column (wrapping to three or four tiny
+     lines) while the buttons stacked — three ragged columns in a row. */
   .pageHead {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
   }
 
-  /* Stack the two .sub lines in a column to the right of the h1, fitting within h1 height */
   .pageHead>div:first-child {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
-    gap: 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    flex: 1;
+    min-width: 0; /* lets a long title wrap instead of pushing the buttons off-screen */
   }
 
   .pageHead>div:first-child h1 {
-    grid-column: 1;
-    grid-row: 1 / span 2;
+    font-size: 21px;
+    line-height: 1.15;
+    text-wrap: balance;
   }
 
   .pageHead>div:first-child .sub {
-    grid-column: 2;
-    font-size: 10px;
-    line-height: 1.25;
+    font-size: 11px;
+    line-height: 1.3;
   }
+
+  .pageHeadActions {
+    flex-wrap: nowrap;
+    flex: none;
+    gap: 6px;
+  }
+
+  /* Still a 40px-tall finger target, just narrower than the desktop pill. */
+  .pageHeadActions .btn {
+    padding: 0 13px;
+    min-height: 40px;
+    font-size: 12.5px;
+  }
+
+  .pageHeadActions .btn .btnIcon { display: none; }
 
   /* Responsive topbar adjustments for small mobile */
   .hn-topbar .hn-inner {
@@ -2917,6 +2937,19 @@ details.chip>.alertChipBody a {
 #newsGrid .rssItem { animation: hnFadeIn .2s ease-out both; }
 @keyframes hnFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #newsGrid .rssItem { animation: none; } }
+
+/* Swiping between categories (news-swipe.js): the new category slides in
+   from the side it was pulled from. Short, and only a nudge of distance, so
+   it reads as direction rather than as a page transition. */
+/* A sideways swipe here means "change category", so the browser's own
+   swipe-to-go-back must stand down on this page — without this a swipe right
+   left the site altogether (caught in testing). :has() scopes it to the news
+   page, the only one with #newsGrid. */
+html:has(#newsGrid) { overscroll-behavior-x: none; }
+#newsGrid.swipeFromRight { animation: hnSwipeIn .22s ease-out; --swipeFrom: 32px; }
+#newsGrid.swipeFromLeft { animation: hnSwipeIn .22s ease-out; --swipeFrom: -32px; }
+@keyframes hnSwipeIn { from { opacity: 0; transform: translateX(var(--swipeFrom)); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #newsGrid.swipeFromRight, #newsGrid.swipeFromLeft { animation: none; } }
 
 #weatherCurrent {
   min-height: 0;
