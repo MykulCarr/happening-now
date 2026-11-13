@@ -64,10 +64,7 @@
     const at = tabs.findIndex(b => b.classList.contains("active"));
     if (tabs.length < 2 || at < 0) return;
     const next = tabs[(at + step + tabs.length) % tabs.length]; // the modulo is the infinite loop
-    next.click();
-
-    // Keep the newly active tab visible in the (sideways-scrolling) tab row.
-    bar.scrollTo({ left: next.offsetLeft - (bar.clientWidth - next.offsetWidth) / 2, behavior: "smooth" });
+    next.click(); // news.js also scrolls the tab row to keep the new tab in view
 
     // Slide the new category in from the side the finger pulled it from.
     grid.classList.remove("swipeFromRight", "swipeFromLeft");

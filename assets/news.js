@@ -874,10 +874,23 @@
   window.App.clearRssCache();
 
   // Initialize scope button active state from saved config
-  function syncScopeButtons(scope) {
+  function syncScopeButtons(scope, glide = false) {
+    let active = null;
     document.querySelectorAll(".tickerScopeBtn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.scope === scope);
+      const on = btn.dataset.scope === scope;
+      btn.classList.toggle("active", on);
+      if (on) active = btn;
     });
+    // On a phone the tabs are one sideways-scrolling row, so the active one
+    // can be off-screen — most obviously on load, when the page reopens on a
+    // category far along the row. Centre it. Done here because every route to
+    // a new category (load, tap, swipe, topic tabs arriving) passes through.
+    if (active && tickerScopeBar?.contains(active)) {
+      tickerScopeBar.scrollTo({
+        left: active.offsetLeft - (tickerScopeBar.clientWidth - active.offsetWidth) / 2,
+        behavior: glide ? "smooth" : "instant", // glide on a tap or swipe, jump on load
+      });
+    }
     syncEditSourcesLink(scope);
     updatePageHeading(scope);
   }
@@ -955,7 +968,7 @@
     const scope = btn.dataset.scope;
     if (!scope || scope === currentScope) return;
     currentScope = scope;
-    syncScopeButtons(scope);
+    syncScopeButtons(scope, true);
     // Persist as newsScope; keep newsTickerScope in sync for any older code
     // that still reads it (back-compat across deploys).
     saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
