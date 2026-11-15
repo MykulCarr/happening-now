@@ -55,5 +55,19 @@
     return NATIONAL;
   }
 
+  // The news page's own tabs, in its order: the four geographic ones, then
+  // whichever topics the reader switched on. [{ id, label }]
+  async function getNewsCategories() {
+    const topics = await App.getEnabledTopics().catch(() => []);
+    return [
+      { id: "local", label: "LOCAL" },
+      { id: "regional", label: "REGIONAL" },
+      { id: "national", label: "NATIONAL" },
+      { id: "international", label: "INTERNATIONAL" },
+      ...topics.map((t) => ({ id: t.id, label: t.label })),
+    ];
+  }
+
   App.getTopFeedsForScope = getTopFeedsForScope;
+  App.getNewsCategories = getNewsCategories;
 })();

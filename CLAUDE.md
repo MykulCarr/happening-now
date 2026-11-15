@@ -27,6 +27,14 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   which only appears with `?send=hnwidget|hnwidgetdebug` (the app adds it).
   That link carries lat/lon to an app on the same phone, never to a server.
   `docs/android-widget-mockup/` is the design it was built from
+- `assets/widget-link.js` — pairs this browser with the widget app and shows
+  the "Update phone widget" bar when settings differ from what the widget
+  was last sent. Pairing (`hn_widget_link_v1`: link scheme, the app's private
+  code, a fingerprint of what was sent) lives outside `cfg` for the same
+  reason as `hn_sync_prefs_v1`: it is per-browser and must never travel in a
+  settings export. An unpaired browser does nothing, so ordinary visitors
+  never see any of it. `App.getNewsCategories` (top-feeds.js) is the one list
+  of news tabs both this and the Today view use
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
 - `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
   one Yahoo v8 chart reader both it and the watchlist use

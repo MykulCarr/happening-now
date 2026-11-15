@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   '/feedback.html',
   '/assets/common.js',
   '/assets/top-feeds.js',
+  '/assets/widget-link.js',
   '/assets/news.js',
   '/assets/news-swipe.js',
   '/assets/weather.js',

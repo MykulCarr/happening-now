@@ -46,7 +46,7 @@ class SetupActivity : Activity() {
 
         // The scheme tells the page which build to send back to (beta or real).
         button("1 · Get my settings from happening-now.net") {
-            startActivity(Site.intent(this, "${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}"))
+            startActivity(Site.intent(this, "${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}&k=${Store.pairingCode(this)}"))
         }
         note("Opens the Today page. Tap “Send to phone widget” there. Do it again whenever you change your location, categories or watchlist on the site.", 13f, R.color.muted)
 
@@ -90,17 +90,26 @@ class SetupActivity : Activity() {
             Toast.makeText(this, "Couldn't read those settings.", Toast.LENGTH_LONG).show()
             return
         }
-        // Ask first: any app or web page can open this link, so a link alone
-        // must never silently replace what the widget shows.
+        fun apply() {
+            Store.saveConfig(this, config)
+            Widgets.updateAll(this)
+            RefreshJob.schedule(this)
+            showStatus()
+        }
+        // A link carrying our pairing code came from the site we paired with:
+        // apply it and step out of the way, back to wherever the tap was made.
+        if (intent.data?.getQueryParameter("k") == Store.pairingCode(this)) {
+            apply()
+            Toast.makeText(this, "Widget updated", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        // Anything else: ask first. Any app or web page can open this link, so
+        // a link alone must never silently replace what the widget shows.
         AlertDialog.Builder(this)
             .setTitle("Use these settings?")
             .setMessage(describe(config))
-            .setPositiveButton("Use them") { _, _ ->
-                Store.saveConfig(this, config)
-                Widgets.updateAll(this)
-                RefreshJob.schedule(this)
-                showStatus()
-            }
+            .setPositiveButton("Use them") { _, _ -> apply() }
             .setNegativeButton("Cancel", null)
             .show()
     }

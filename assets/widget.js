@@ -88,18 +88,8 @@
   }
 
   // ---- headlines ----------------------------------------------------------
-  // The categories are the news page's own tabs, in its order: the four
-  // geographic ones, then whichever topics the reader switched on.
-  async function categories() {
-    const topics = await App.getEnabledTopics().catch(() => []);
-    return [
-      { id: "local", label: "LOCAL" },
-      { id: "regional", label: "REGIONAL" },
-      { id: "national", label: "NATIONAL" },
-      { id: "international", label: "INTERNATIONAL" },
-      ...topics.map((t) => ({ id: t.id, label: t.label })),
-    ];
-  }
+  // The categories are the news page's own tabs (top-feeds.js).
+  const categories = () => App.getNewsCategories();
 
   // The category shown is the news page's remembered one (cfg.newsScope), and
   // picking one here saves it there, so "More news" opens the site on the
@@ -258,50 +248,10 @@
   }
 
   // ---- hand settings to the Android widget app ----------------------------
-  // The widget app (android-widget/) opens this page with ?send=<its link
-  // scheme>. Only then is there a button, and it links straight back into the
-  // app with the reader's settings packed into the link itself: phone to
-  // phone, nothing sent to any server. The app asks before using them.
-  const SEND_SCHEMES = ["hnwidget", "hnwidgetdebug"]; // the real build and the beta build
-  const sendScheme = SEND_SCHEMES.includes(params.get("send")) ? params.get("send") : "";
-
-  async function sendLink() {
-    const cfg = App.cfg;
-    const loc = await location_();
-    const state = loc?.state ? App.abbreviateState(loc.state).toUpperCase().replace(/^US-/, "") : ""; // GPS lookups say "US-MI"
-    const place = loc?.city ? `${loc.city}${state ? `, ${state}` : ""}` : "";
-    const getGeo = async () => (loc?.city ? { city: loc.city, state: loc.state || "" } : null);
-
-    // Each category goes over with its outlets already chosen, so the app
-    // needs none of the site's picking logic. Local and regional say where.
-    const cats = [];
-    for (const c of await categories()) {
-      const feeds = await App.getTopFeedsForScope(c.id, getGeo);
-      let label = c.label;
-      if (c.id === "local" && place) label += ` · ${place.toUpperCase()}`;
-      if (c.id === "regional" && loc?.state) label += ` · ${(App.expandStateName(loc.state) || loc.state).toUpperCase()}`;
-      cats.push({
-        id: c.id,
-        label,
-        feeds: feeds.map((f) => ({
-          name: (f.name || new URL(f.rss).hostname.replace(/^www\./, "")).replace(/\s*\(.*\)$/, ""), // drop "(Lansing/Jackson, CBS)"
-          rss: f.rss,
-        })),
-      });
-    }
-    const settings = {
-      place, cats,
-      cat: savedScope(),
-      tempUnit: cfg.weatherTempUnit || "fahrenheit",
-      symbols: (cfg.stocks || []).map((s) => String(s.symbol || s).split(":").pop().toUpperCase()),
-    };
-    if (loc && Number.isFinite(+loc.lat) && Number.isFinite(+loc.lon)) { settings.lat = +loc.lat; settings.lon = +loc.lon; }
-
-    // URL-safe base64 of the UTF-8 JSON, so it survives being a link.
-    const bytes = new TextEncoder().encode(JSON.stringify(settings));
-    const packed = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    return `intent://setup?d=${packed}#Intent;scheme=${sendScheme};end`;
-  }
+  // The widget app opens this page with ?send=... to pair (widget-link.js
+  // does the pairing and builds the link). Only then is there a button here;
+  // afterwards the site's "Update phone widget" bar takes over.
+  const showSend = params.has("send") && Boolean(App.widgetLink?.paired());
 
   const sendCard = () => `
     <section class="wCard">
@@ -314,11 +264,11 @@
     if (!root.querySelector("[data-part]")) {
       root.innerHTML = `
         <header class="wTop"><span class="wTopTitle">Today</span><span class="wMeta"></span></header>
-        ${sendScheme ? sendCard() : ""}
+        ${showSend ? sendCard() : ""}
         ${Object.keys(PARTS).map((k) => `<section class="wCard" data-part="${k}"><div class="wEmpty">Loading…</div></section>`).join("")}`;
-      if (sendScheme) sendLink().then((href) => {
+      if (showSend) App.widgetLink.build().then((built) => {
         const a = root.querySelector(".wSend");
-        a.href = href;
+        App.widgetLink.attach(a, built);
         a.removeAttribute("aria-disabled");
         a.textContent = "Send to phone widget";
       }).catch((e) => { console.warn("[widget] send", e); root.querySelector(".wSend").textContent = "Couldn't prepare settings. Reload to retry."; });

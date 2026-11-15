@@ -26,11 +26,22 @@ real one. A release build needs a git-ignored `keystore.properties`
 
 ## How settings get in
 
-The app can't read the website's saved settings, so: app → "Get my settings"
-opens `/widget?w=all&send=<scheme>` → the page's "Send to phone widget" button
-links back as `<scheme>://setup?d=<base64 JSON>` → the app asks, then saves.
-Nothing goes through a server. The link is untrusted input (any app can open
-it): `Store.sanitize` copies only known fields, https feeds only, with caps.
+The app cannot read the website's saved settings, so the site hands them over
+in a link (`<scheme>://setup?k=<code>&d=<base64 JSON>`); nothing goes through
+a server.
+
+1. **Pair once:** the app's "Get my settings" opens
+   `/widget?w=all&send=<scheme>&k=<code>`, where `<code>` is this install's
+   private pairing code. The site remembers it (`assets/widget-link.js`).
+2. **Send:** the page's "Send to phone widget" button links back with the
+   settings. A link carrying the right code is applied at once; any other
+   link is untrusted (any app can open it), so the app asks first. Either
+   way `Store.sanitize` copies only known fields, https feeds only, with caps.
+3. **Later changes:** when the site's settings differ from what was last
+   sent, it shows an "Update phone widget" bar. One tap.
+
+Site pages always open in the installed PWA (`Site.kt`), never the default
+browser: the settings live in Chrome's storage.
 
 ## Files
 
@@ -39,4 +50,5 @@ it): `Store.sanitize` copies only known fields, https feeds only, with caps.
 - `RefreshJob.kt` — background refresh through the job scheduler
 - `Render.kt` — draws each size from the cache (never touches the network)
 - `Widgets.kt` — the widget classes and the ‹ › / refresh taps
-- `SetupActivity.kt` — the one screen
+- `Site.kt` — opens site pages in the installed PWA
+- `SetupActivity.kt` — the one screen; receives settings links

@@ -7188,3 +7188,21 @@ body.stockLookupModalOpen {
   }
 }
 button, select, .btn, a.btn { touch-action: manipulation; }
+
+/* "Update phone widget" bar — appears only on a phone paired with the Android
+   widget app, when its settings are out of date (assets/widget-link.js) */
+.widgetLinkBar {
+  position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 9999; max-width: 520px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px;
+  border-radius: 14px; background: #0c3142; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .25); box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+  font-size: .9rem;
+}
+.widgetLinkBar span { flex: 1; }
+.widgetLinkBar a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px;
+  border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600;
+  text-decoration: none; white-space: nowrap;
+}
+.widgetLinkBar button { min-width: 40px; min-height: 40px; border: 0; background: transparent; color: #fff; font-size: 1rem; cursor: pointer; }

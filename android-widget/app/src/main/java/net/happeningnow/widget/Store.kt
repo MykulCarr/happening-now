@@ -22,6 +22,19 @@ object Store {
         {"name":"DW","rss":"https://rss.dw.com/rdf/rss-en-all"},
         {"name":"The Guardian","rss":"https://www.theguardian.com/world/rss"}]}]}"""
 
+    /**
+     * This install's private pairing code, made once. The site remembers it
+     * and puts it in every settings link, which is how we tell our own links
+     * (applied straight away) from anyone else's (asked about first).
+     */
+    fun pairingCode(c: Context): String {
+        prefs(c).getString("code", null)?.let { return it }
+        val bytes = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+        val code = bytes.joinToString("") { "%02x".format(it) }
+        prefs(c).edit().putString("code", code).commit()
+        return code
+    }
+
     fun isSetUp(c: Context) = prefs(c).contains("config")
 
     fun config(c: Context) = JSONObject(prefs(c).getString("config", null) ?: DEFAULT_CONFIG)
