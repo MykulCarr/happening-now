@@ -62,6 +62,13 @@ object Store {
     fun status(c: Context): String? =
         prefs(c).getString("status", null)?.takeIf { System.currentTimeMillis() - prefs(c).getLong("statusAt", 0) < 2 * 60 * 1000L }
 
+    // ---- watchlist folded or open ---------------------------------------------
+    fun watchCollapsed(c: Context) = prefs(c).getBoolean("watchCollapsed", false)
+
+    fun toggleWatch(c: Context) {
+        prefs(c).edit().putBoolean("watchCollapsed", !watchCollapsed(c)).commit()
+    }
+
     fun isSetUp(c: Context) = prefs(c).contains("config")
 
     fun config(c: Context) = JSONObject(prefs(c).getString("config", null) ?: DEFAULT_CONFIG)

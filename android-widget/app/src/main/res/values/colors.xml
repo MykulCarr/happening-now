@@ -12,6 +12,7 @@
     <color name="text">#DE000000</color>
     <color name="muted">#A3000000</color>
     <color name="faint">#70000000</color>
+    <color name="brand">#166534</color>
     <color name="accent">#B6510C</color>
     <color name="up">#15803D</color>
     <color name="down">#B91C1C</color>

@@ -13,45 +13,66 @@
     android:paddingTop="10dp"
     android:paddingBottom="4dp">
 
-    <!-- Clock row: time on the left, date on the right. The time is a smaller
-         size stretched sideways, so it reads wide and low. -->
+    <!-- Top row, laid out like the site's header: the time, the site's name
+         (the one thing here that opens the website), the date. The time is a
+         smaller size stretched sideways, so it reads wide and low. -->
     <LinearLayout
         android:id="@+id/clock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:baselineAligned="true"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="8dp"
         android:paddingBottom="6dp">
 
-        <TextClock
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:format12Hour="h:mm"
-            android:format24Hour="H:mm"
-            android:includeFontPadding="false"
-            android:textColor="@color/text"
-            android:textScaleX="1.32"
-            android:textSize="44sp"
-            android:textStyle="bold" />
+            android:baselineAligned="true"
+            android:orientation="horizontal">
 
-        <TextClock
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:format12Hour="a"
-            android:format24Hour=""
-            android:paddingStart="8dp"
-            android:textColor="@color/muted"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="h:mm"
+                android:format24Hour="H:mm"
+                android:includeFontPadding="false"
+                android:textColor="@color/text"
+                android:textScaleX="1.32"
+                android:textSize="44sp"
+                android:textStyle="bold" />
 
-        <TextClock
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="a"
+                android:format24Hour=""
+                android:paddingStart="6dp"
+                android:textColor="@color/muted"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/brand"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:contentDescription="Happening Now. Opens the website."
+            android:gravity="center"
+            android:lineSpacingMultiplier="0.9"
+            android:paddingVertical="4dp"
+            android:text="HAPPENING\nNOW!"
+            android:textColor="@color/brand"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:format12Hour="EEE, MMM d"
             android:format24Hour="EEE, MMM d"
-            android:gravity="end"
             android:textColor="@color/text"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -221,15 +242,45 @@
         android:paddingHorizontal="12dp"
         android:paddingVertical="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Header: tap to fold the list down to one line (and back), which
+             hands the space to the news panel. Folded, `watch_summary` shows
+             each symbol's move; open, it is empty. -->
+        <LinearLayout
+            android:id="@+id/watch_head"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:letterSpacing="0.08"
-            android:paddingBottom="2dp"
-            android:text="WATCHLIST"
-            android:textColor="@color/accent"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:minHeight="28dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.08"
+                android:text="WATCHLIST"
+                android:textColor="@color/accent"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/watch_summary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:textColor="@color/text"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/watch_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:textColor="@color/muted"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/quotes"

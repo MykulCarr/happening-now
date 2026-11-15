@@ -12,6 +12,7 @@
     <color name="text">#F2FFFFFF</color>
     <color name="muted">#B8FFFFFF</color>
     <color name="faint">#80FFFFFF</color>
+    <color name="brand">#4ADE80</color>
     <color name="accent">#EE9020</color>
     <color name="up">#4ADE80</color>
     <color name="down">#F87171</color>

@@ -9,43 +9,66 @@
     android:paddingHorizontal="14dp"
     android:paddingVertical="10dp">
 
+    <!-- Top row, laid out like the site's header: the time, the site's name
+         (the one thing here that opens the website), the date. The time is a
+         smaller size stretched sideways, so it reads wide and low. -->
     <LinearLayout
         android:id="@+id/clock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:baselineAligned="true"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="6dp"
-        android:paddingBottom="4dp">
+        android:paddingBottom="6dp">
 
-        <TextClock
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:format12Hour="h:mm"
-            android:format24Hour="H:mm"
-            android:includeFontPadding="false"
-            android:textColor="@color/text"
-            android:textScaleX="1.32"
-            android:textSize="23sp"
-            android:textStyle="bold" />
+            android:baselineAligned="true"
+            android:orientation="horizontal">
 
-        <TextClock
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:format12Hour="a"
-            android:format24Hour=""
-            android:paddingStart="6dp"
-            android:textColor="@color/muted"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="h:mm"
+                android:format24Hour="H:mm"
+                android:includeFontPadding="false"
+                android:textColor="@color/text"
+                android:textScaleX="1.32"
+                android:textSize="23sp"
+                android:textStyle="bold" />
 
-        <TextClock
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="a"
+                android:format24Hour=""
+                android:paddingStart="6dp"
+                android:textColor="@color/muted"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/brand"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:contentDescription="Happening Now. Opens the website."
+            android:gravity="center"
+            android:lineSpacingMultiplier="0.9"
+            android:paddingVertical="4dp"
+            android:text="HAPPENING\nNOW!"
+            android:textColor="@color/brand"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:format12Hour="EEE, MMM d"
             android:format24Hour="EEE, MMM d"
-            android:gravity="end"
             android:textColor="@color/text"
             android:textSize="14sp"
             android:textStyle="bold" />

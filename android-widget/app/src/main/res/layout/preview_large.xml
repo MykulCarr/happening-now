@@ -4,7 +4,8 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="true" android:orientation="horizontal" android:paddingHorizontal="6dp" android:paddingBottom="4dp">
         <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content" android:format12Hour="h:mm" android:format24Hour="H:mm" android:includeFontPadding="false" android:textColor="@color/text" android:textScaleX="1.32" android:textSize="40sp" android:textStyle="bold" />
         <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content" android:format12Hour="a" android:format24Hour="" android:paddingStart="6dp" android:textColor="@color/muted" android:textSize="14sp" android:textStyle="bold" />
-        <TextClock android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:format12Hour="EEE, MMM d" android:format24Hour="EEE, MMM d" android:gravity="end" android:textColor="@color/text" android:textSize="16sp" android:textStyle="bold" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="HAPPENING NOW!" android:textColor="@color/brand" android:textSize="10sp" android:textStyle="bold" />
+        <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content" android:format12Hour="EEE, MMM d" android:format24Hour="EEE, MMM d" android:textColor="@color/text" android:textSize="16sp" android:textStyle="bold" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bar_bg" android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="12dp" android:paddingVertical="8dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">

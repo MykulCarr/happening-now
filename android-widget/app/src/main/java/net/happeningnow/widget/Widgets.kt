@@ -11,6 +11,7 @@ import android.os.Bundle
 const val ACTION_PREV = "net.happeningnow.widget.PREV"
 const val ACTION_NEXT = "net.happeningnow.widget.NEXT"
 const val ACTION_REFRESH = "net.happeningnow.widget.REFRESH"
+const val ACTION_WATCH = "net.happeningnow.widget.WATCH"
 
 /**
  * The three widget sizes are the same widget with different layouts, so all
@@ -37,6 +38,10 @@ abstract class BaseWidget : AppWidgetProvider() {
                 Store.stepCategory(c, if (intent.action == ACTION_NEXT) 1 else -1)
                 Widgets.updateAll(c) // pre-cached headlines appear at once
                 if (RefreshJob.nearbyNewsIsStale(c)) RefreshJob.schedule(c, full = false) // top up the pre-cache
+            }
+            ACTION_WATCH -> {
+                Store.toggleWatch(c) // fold or unfold the watchlist
+                Widgets.updateAll(c)
             }
             ACTION_REFRESH -> {
                 // Acknowledge the tap at once, and be straight about being offline.

@@ -5,6 +5,9 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
@@ -39,6 +42,25 @@ object Render {
 
     private fun openSetup(c: Context) =
         PendingIntent.getActivity(c, 0, Intent(c, SetupActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), FLAGS)
+
+    // What a tap does, in full:
+    //   HAPPENING NOW!          opens the website
+    //   weather panel           opens the weather page
+    //   a neighbouring category, or an arrow    switches category
+    //   a headline              opens the article
+    //   watchlist header        folds / unfolds the watchlist
+    //   a watchlist row         opens the stocks page
+    //   gear                    widget settings (the only way in)
+    //   refresh arrow           refresh
+    //   everything else         nothing, on purpose (see noop)
+
+    /**
+     * A tap that does nothing, set on the widget's background. Without it some
+     * launchers treat a tap on any part of a widget that has no action of its
+     * own as "open the app", which sent stray taps to the settings screen.
+     */
+    private fun noop(c: Context) =
+        PendingIntent.getBroadcast(c, 0, Intent(c, LargeWidget::class.java).setAction("net.happeningnow.widget.NOOP"), FLAGS)
 
     private fun action(c: Context, action: String) =
         PendingIntent.getBroadcast(c, 0, Intent(c, LargeWidget::class.java).setAction(action), FLAGS)
@@ -140,7 +162,8 @@ object Render {
     private fun medium(c: Context): RemoteViews {
         val v = RemoteViews(c.packageName, R.layout.widget_medium)
         weather(c, v, R.id.weather)
-        v.setOnClickPendingIntent(R.id.clock, open(c, "${Fetch.SITE}/widget?w=all"))
+        v.setOnClickPendingIntent(R.id.root, noop(c))
+        v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
 
         val category = Store.currentCategory(c)
         val top = Store.news(c, category.optString("id"))?.optJSONArray("items")?.optJSONObject(0)
@@ -161,7 +184,8 @@ object Render {
         val v = RemoteViews(c.packageName, R.layout.widget_large)
         val cache = Store.cache(c)
         weather(c, v, R.id.weather)
-        v.setOnClickPendingIntent(R.id.clock, open(c, "${Fetch.SITE}/widget?w=all"))
+        v.setOnClickPendingIntent(R.id.root, noop(c))
+        v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
 
         // Category switcher
         val categories = Store.categories(c)
@@ -179,18 +203,20 @@ object Render {
         v.setTextViewText(R.id.catpos, category.optString("label").substringAfter(" · ", "${index + 1} of $n"))
         for (id in intArrayOf(R.id.prev, R.id.cat_m1, R.id.cat_m2)) v.setOnClickPendingIntent(id, action(c, ACTION_PREV))
         for (id in intArrayOf(R.id.next, R.id.cat_p1, R.id.cat_p2)) v.setOnClickPendingIntent(id, action(c, ACTION_NEXT))
-        v.setOnClickPendingIntent(R.id.cat, open(c, "${Fetch.SITE}/"))
 
         // How many rows fit depends on how tall the widget was dragged. Heights
         // are in dp; 0 means the launcher didn't say, so assume a full page.
         val height = AppWidgetManager.getInstance(c).getAppWidgetOptions(widgetId)
             .getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
         val quotes = cache.optJSONArray("quotes")
-        val quoteRows = minOf(quotes?.length() ?: 0, when { height == 0 || height >= 520 -> 5; height >= 400 -> 3; else -> 0 })
+        // How many watchlist rows the height allows; none shown while it is folded.
+        val fitRows = minOf(quotes?.length() ?: 0, when { height == 0 || height >= 520 -> 5; height >= 400 -> 3; else -> 0 })
+        val collapsed = Store.watchCollapsed(c)
+        val quoteRows = if (collapsed) 0 else fitRows
         // Everything that isn't a headline (clock, weather, switcher, footer,
         // padding) is about 250dp, plus the watchlist; a two-line headline
         // needs about 58dp.
-        val fixedHeight = 250 + if (quoteRows > 0) 36 + quoteRows * 24 else 0
+        val fixedHeight = 250 + when { fitRows == 0 -> 0; collapsed -> 44; else -> 36 + quoteRows * 24 }
         val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 58).coerceIn(1, 10)
 
         // Headlines. When they all fit, each row has weight 1 and they spread
@@ -218,7 +244,25 @@ object Render {
 
         // Watchlist
         v.removeAllViews(R.id.quotes)
-        v.setViewVisibility(R.id.watch, if (quoteRows > 0) View.VISIBLE else View.GONE)
+        v.setViewVisibility(R.id.watch, if (fitRows > 0) View.VISIBLE else View.GONE)
+        v.setViewVisibility(R.id.quotes, if (collapsed) View.GONE else View.VISIBLE)
+        v.setTextViewText(R.id.watch_toggle, if (collapsed) "▸" else "▾")
+        v.setContentDescription(R.id.watch_head, if (collapsed) "Watchlist, folded. Tap to open." else "Watchlist. Tap to fold.")
+        v.setOnClickPendingIntent(R.id.watch_head, action(c, ACTION_WATCH))
+        // Folded, the header line carries each symbol's move in its colour.
+        val summary = SpannableStringBuilder()
+        if (collapsed) for (k in 0 until (quotes?.length() ?: 0)) {
+            val q = quotes!!.getJSONObject(k)
+            val pct = q.optDouble("pct")
+            val flat = Math.abs(pct) < 0.005
+            if (k > 0) summary.append("    ")
+            summary.append(q.optString("sym")).append(" ")
+            val from = summary.length
+            summary.append((if (flat) "" else if (pct > 0) "▲" else "▼") + String.format(Locale.US, "%.2f%%", Math.abs(pct)))
+            summary.setSpan(ForegroundColorSpan(c.getColor(if (flat) R.color.muted else if (pct > 0) R.color.up else R.color.down)),
+                from, summary.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        v.setTextViewText(R.id.watch_summary, summary)
         for (k in 0 until quoteRows) {
             val q = quotes!!.getJSONObject(k)
             val pct = q.optDouble("pct")
@@ -230,7 +274,7 @@ object Render {
             row.setTextColor(R.id.move, c.getColor(if (flat) R.color.muted else if (pct > 0) R.color.up else R.color.down))
             v.addView(R.id.quotes, row)
         }
-        v.setOnClickPendingIntent(R.id.watch, open(c, "${Fetch.SITE}/stocks"))
+        v.setOnClickPendingIntent(R.id.quotes, open(c, "${Fetch.SITE}/stocks")) // the rows; the header folds
 
         // Footer
         val updatedAt = cache.optLong("updatedAt")
