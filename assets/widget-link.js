@@ -42,7 +42,11 @@
 
     const cats = [];
     for (const c of await App.getNewsCategories()) {
-      const feeds = await App.getTopFeedsForScope(c.id, getGeo);
+      // Every source the news page shows for this category (up to 8); the
+      // ticker's short list only if that is somehow empty, so a category never
+      // arrives with nothing to fetch.
+      let feeds = (await App.getCategorySources(c.id, cfg, getGeo)).widgets.slice(0, 8);
+      if (!feeds.length) feeds = await App.getTopFeedsForScope(c.id, getGeo);
       let label = c.label; // local and regional say where they cover
       if (c.id === "local" && place) label += ` · ${place.toUpperCase()}`;
       if (c.id === "regional" && loc?.state) label += ` · ${(App.expandStateName(loc.state) || loc.state).toUpperCase()}`;
@@ -50,7 +54,8 @@
         id: c.id,
         label,
         feeds: feeds.map((f) => ({
-          name: (f.name || new URL(f.rss).hostname.replace(/^www\./, "")).replace(/\s*\(.*\)$/, ""), // drop "(Lansing/Jackson, CBS)"
+          // "NPR - National" and "WLNS 6 (Lansing/Jackson, CBS)" are both just the outlet.
+          name: (f.name || new URL(f.rss).hostname.replace(/^www\./, "")).split(" - ")[0].replace(/\s*\(.*\)$/, ""),
           rss: f.rss,
         })),
       });

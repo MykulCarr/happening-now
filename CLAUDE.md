@@ -31,7 +31,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   and `version.json` live in `assets/widget-app/`, written there by
   `scripts/release-widget.ps1` and committed on purpose (a deploy from a fresh
   clone must ship the same file; the signing key is not in the repo). The
-  service worker skips that folder
+  service worker skips that folder. **Not launched yet:** both are listed in
+  `$unreleased` in `scripts/stage-public-assets.ps1`, so `deploy-prod` strips
+  them and `deploy-beta` (which passes `-IncludeUnreleased`) keeps them. To
+  launch: empty that list, add `/android` to `sitemap.xml`, and link the page
+  from the app section of `privacy.html`
 - `assets/widget-link.js` — pairs this browser with the widget app and shows
   the "Update phone widget" bar when settings differ from what the widget
   was last sent. Pairing (`hn_widget_link_v1`: link scheme, the app's private

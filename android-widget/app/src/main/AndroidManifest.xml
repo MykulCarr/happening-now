@@ -39,6 +39,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Invisible: opens the link of a tapped row in the scrolling list. -->
+        <activity
+            android:name=".OpenActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <receiver android:name=".LargeWidget" android:exported="true" android:label="Today (full page)">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_large_info" />

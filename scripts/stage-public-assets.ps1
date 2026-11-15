@@ -1,3 +1,8 @@
+# -IncludeUnreleased: also stage the things listed in $unreleased below.
+# deploy-beta passes it; deploy-prod never does. That is the whole launch
+# switch: to launch something, take it out of $unreleased.
+param([switch]$IncludeUnreleased)
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -45,6 +50,18 @@ foreach ($dir in $publicDirs) {
   $srcDir = Join-Path $repoRoot $dir
   if (Test-Path $srcDir) {
     Copy-Item -Path $srcDir -Destination $target -Recurse -Force
+  }
+}
+
+# Built and committed, but not public until launched: the Android widget's
+# download page and the app file itself. Production deploys strip them; beta
+# keeps them so they can be tried. When launching, empty this list, and add
+# /android to sitemap.xml and a link to it in privacy.html's app section.
+$unreleased = @("android.html", "assets/widget-app")
+if (-not $IncludeUnreleased) {
+  foreach ($item in $unreleased) {
+    $path = Join-Path $target $item
+    if (Test-Path $path) { Remove-Item -Recurse -Force $path }
   }
 }
 

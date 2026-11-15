@@ -42,6 +42,7 @@ class RefreshJob : JobService() {
 
     companion object {
         private const val STALE_MS = 20 * 60 * 1000L
+        private const val FAR_STALE_MS = 3 * 60 * 60 * 1000L
 
         fun schedule(c: Context, full: Boolean = true) {
             val extras = PersistableBundle().apply { putInt("full", if (full) 1 else 0) }
@@ -107,8 +108,13 @@ class RefreshJob : JobService() {
 
             // 2. Pre-cache the rest, nearest first, one category at a time.
             val metered = c.getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered
-            for (category in fetchOrder(c, reach = if (metered) 1 else Int.MAX_VALUE).drop(1)) {
-                if (isStale(c, category.optString("id"))) fetchNews(category)
+            // The two neighbours keep the 20-minute rule; categories further away
+            // (unmetered networks only) are refreshed every three hours. With up
+            // to eight sources each, doing them all every half hour would be a
+            // lot of requests for headlines nobody is looking at.
+            fetchOrder(c, reach = if (metered) 1 else Int.MAX_VALUE).drop(1).forEachIndexed { k, category ->
+                val age = System.currentTimeMillis() - (Store.news(c, category.optString("id"))?.optLong("at") ?: 0)
+                if (age > if (k < 2) STALE_MS else FAR_STALE_MS) fetchNews(category)
             }
         }
     }

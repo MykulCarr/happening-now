@@ -277,7 +277,17 @@
     </section>`;
 
   // Android visitors who have not paired a widget yet get a pointer to it.
-  const offerApp = /Android/i.test(navigator.userAgent) && !App.widgetLink?.paired();
+  // Only where the app is published (the version file exists): production
+  // holds it back until launch, and the link must not lead to a 404.
+  let offerApp = false;
+  if (/Android/i.test(navigator.userAgent) && !App.widgetLink?.paired()) {
+    fetch("/assets/widget-app/version.json").then((r) => {
+      if (!r.ok) return;
+      offerApp = true;
+      root.querySelector("[data-part]")?.parentElement.insertAdjacentHTML("beforeend",
+        `<a class="wMeta wAppLink" href="/android" target="_top">Put this on your home screen: get the Android widget →</a>`);
+    }).catch(() => {});
+  }
 
   async function renderAll() {
     const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
@@ -285,8 +295,7 @@
       root.innerHTML = `
         <header class="wTop"><span class="wTopTitle">Today</span><span class="wMeta"></span></header>
         ${showSend ? sendCard() : ""}
-        ${Object.keys(PARTS).map((k) => `<section class="wCard" data-part="${k}"><div class="wEmpty">Loading…</div></section>`).join("")}
-        ${offerApp ? `<a class="wMeta wAppLink" href="/android" target="_top">Put this on your home screen: get the Android widget →</a>` : ""}`;
+        ${Object.keys(PARTS).map((k) => `<section class="wCard" data-part="${k}"><div class="wEmpty">Loading…</div></section>`).join("")}`;
       if (showSend) App.widgetLink.build().then((built) => {
         const a = root.querySelector(".wSend");
         App.widgetLink.attach(a, built);

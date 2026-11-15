@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
@@ -110,6 +111,29 @@ object Render {
         v.setOnClickPendingIntent(tapTarget, if (place.isEmpty()) openSetup(c) else open(c, "${Fetch.SITE}/weather"))
     }
 
+    /**
+     * Fill a scrolling list with headlines (Android 12+). Rows of a scrolling
+     * list share one tap action and each only supplies its link, so the
+     * shared action is OpenActivity, which opens whatever link it is handed.
+     */
+    private fun fillList(c: Context, v: RemoteViews, listId: Int, items: org.json.JSONArray, prefix: String) {
+        if (Build.VERSION.SDK_INT < 31) return
+        val rows = RemoteViews.RemoteCollectionItems.Builder().setHasStableIds(true).setViewTypeCount(1)
+        for (k in 0 until items.length()) {
+            val item = items.getJSONObject(k)
+            val url = item.optString("url")
+            val row = RemoteViews(c.packageName, R.layout.row_headline_list)
+            row.setTextViewText(R.id.meta, prefix + sourceAndAge(item))
+            row.setTextViewText(R.id.title, item.optString("title"))
+            row.setOnClickFillInIntent(R.id.row, Intent().setData(Uri.parse(url)))
+            rows.addItem(url.hashCode().toLong(), row) // a stable id keeps the scroll position across refreshes
+        }
+        v.setRemoteAdapter(listId, rows.build())
+        v.setPendingIntentTemplate(listId, PendingIntent.getActivity(
+            c, 1, Intent(c, OpenActivity::class.java),
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)) // mutable: each row fills in its link
+    }
+
     // ---- the three sizes ----------------------------------------------------
     private fun small(c: Context) = RemoteViews(c.packageName, R.layout.widget_small).also { weather(c, it, R.id.root) }
 
@@ -123,6 +147,13 @@ object Render {
         v.setTextViewText(R.id.meta, category.optString("label") + if (top != null) " · ${sourceAndAge(top)}" else "")
         v.setTextViewText(R.id.title, top?.optString("title") ?: "Loading headlines…")
         v.setOnClickPendingIntent(R.id.story, open(c, top?.optString("url") ?: Fetch.SITE))
+
+        // Android 12+: scroll through the category's stories instead of one.
+        val items = Store.news(c, category.optString("id"))?.optJSONArray("items")
+        val scroll = Build.VERSION.SDK_INT >= 31 && items != null && items.length() > 1
+        v.setViewVisibility(R.id.story, if (scroll) View.GONE else View.VISIBLE)
+        v.setViewVisibility(R.id.story_list, if (scroll) View.VISIBLE else View.GONE)
+        if (scroll) fillList(c, v, R.id.story_list, items!!, prefix = category.optString("label").substringBefore(" · ") + " · ")
         return v
     }
 
@@ -162,10 +193,17 @@ object Render {
         val fixedHeight = 250 + if (quoteRows > 0) 36 + quoteRows * 24 else 0
         val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 58).coerceIn(1, 10)
 
-        // Headlines: each row has weight 1, so they spread evenly down the space.
+        // Headlines. When they all fit, each row has weight 1 and they spread
+        // evenly down the space. When there are more than fit, Android 12+
+        // gets a scrolling list; older phones show as many as fit.
         v.removeAllViews(R.id.headlines)
         val items = Store.news(c, category.optString("id"))?.optJSONArray("items")
-        if (items == null || items.length() == 0) {
+        val scroll = Build.VERSION.SDK_INT >= 31 && items != null && items.length() > headlineRows
+        v.setViewVisibility(R.id.headlines, if (scroll) View.GONE else View.VISIBLE)
+        v.setViewVisibility(R.id.headlines_list, if (scroll) View.VISIBLE else View.GONE)
+        if (scroll) {
+            fillList(c, v, R.id.headlines_list, items!!, prefix = "")
+        } else if (items == null || items.length() == 0) {
             val row = RemoteViews(c.packageName, R.layout.row_headline)
             row.setTextViewText(R.id.title, "Loading headlines…")
             v.addView(R.id.headlines, row)

@@ -23,6 +23,11 @@ import kotlin.concurrent.thread
 object Fetch {
     const val SITE = "https://happening-now.net"
 
+    // A category's list is the newest PER_SOURCE stories from each of its
+    // sources, newest first, capped: enough to scroll, not endless.
+    private const val PER_SOURCE = 4
+    private const val MAX_HEADLINES = 30
+
     private fun get(url: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 8000
@@ -90,7 +95,7 @@ object Fetch {
         }.forEach { it.join() }
 
         val out = JSONArray()
-        all.distinctBy { it.getString("title") }.sortedByDescending { it.getLong("t") }.take(12).forEach { out.put(it) }
+        all.distinctBy { it.getString("title") }.sortedByDescending { it.getLong("t") }.take(MAX_HEADLINES).forEach { out.put(it) }
         return out
     }
 
@@ -114,7 +119,7 @@ object Fetch {
     }
 
     private fun parseFeed(xml: String, source: String): List<JSONObject> =
-        ITEM.findAll(xml).take(12).mapNotNull { m ->
+        ITEM.findAll(xml).take(8).mapNotNull { m ->
             val block = m.value
             val title = tag(block, "title")?.let(::clean).orEmpty()
             val link = tag(block, "link")?.let(::clean)?.takeIf { it.startsWith("http") }
@@ -122,7 +127,7 @@ object Fetch {
             val date = tag(block, "pubDate") ?: tag(block, "updated") ?: tag(block, "published") ?: tag(block, "dc:date")
             if (title.isEmpty() || !link.startsWith("http")) null
             else JSONObject().put("source", source).put("title", title).put("url", link).put("t", parseDate(date))
-        }.toList()
+        }.toList().sortedByDescending { it.getLong("t") }.take(PER_SOURCE)
 
     /** Feed dates come in two families (RFC 822 and ISO 8601); 0 when unreadable. */
     private fun parseDate(raw: String?): Long {

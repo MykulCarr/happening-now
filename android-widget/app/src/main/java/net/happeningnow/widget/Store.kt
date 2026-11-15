@@ -80,7 +80,7 @@ object Store {
             val rc = rawCats.optJSONObject(i) ?: continue
             val feeds = JSONArray()
             val rawFeeds = rc.optJSONArray("feeds") ?: continue
-            for (k in 0 until minOf(rawFeeds.length(), 6)) {
+            for (k in 0 until minOf(rawFeeds.length(), 8)) {
                 val rf = rawFeeds.optJSONObject(k) ?: continue
                 val rss = rf.optString("rss")
                 if (rss.startsWith("https://") && rss.length < 500) {

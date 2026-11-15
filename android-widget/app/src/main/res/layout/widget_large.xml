@@ -195,6 +195,19 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingTop="4dp" />
+
+        <!-- Android 12+: the same headlines as a scrolling list, when there
+             are more than fit. Render.kt shows this or the one above. -->
+        <ListView
+            android:id="@+id/headlines_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:divider="@null"
+            android:fadingEdgeLength="18dp"
+            android:requiresFadingEdge="vertical"
+            android:scrollbars="none"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Watchlist panel -->

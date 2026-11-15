@@ -331,73 +331,14 @@
   // - local / regional: synthesize a Google News search widget from the user's
   //   geocoded city/state. If no ZIP, returns []; the caller renders a hint.
   async function getWidgetsForScope(scope, sourceCfg, { quiet = false } = {}) {
-    if (await window.App?.isTopicScope?.(scope)) {
-      const entries = await window.App.getTopicEntries(scope);
-      return { widgets: entries.slice(0, 8), reason: entries.length ? "" : "no-sources" };
-    }
-    if (scope === "local" || scope === "regional") {
-      // If the user has curated sources for this scope, use them directly —
-      // no Google News guesswork. This is the fast path on every visit
-      // after the first scope selection.
-      const savedKey = scope === "local" ? "localSources" : "regionalSources";
-      const skipKey = scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped";
-      const saved = Array.isArray(sourceCfg?.[savedKey]) ? sourceCfg[savedKey] : [];
-      if (saved.length > 0) {
-        return { widgets: saved.slice(0, 8), reason: "" };
-      }
-
-      const geo = await getGeoForScope();
-      if (!geo) return { widgets: [], reason: "no-geo" };
-
-      // No saved sources and the user hasn't opted to skip the picker → open it.
-      // The picker will save selections (or set the skip flag) and the
-      // onSaved callback re-runs render so the page picks up the new sources.
-      // (`quiet` is the pre-loader looking ahead at a tab nobody has opened.)
-      if (!quiet && !sourceCfg?.[skipKey]) {
-        window.App?.openSourcePicker?.(scope, () => render(true));
-      }
-
-      // Auto-fallback widgets when no curated picks exist: pull from
-      // data/local-stations.json (real station/paper RSS). Replaces the old
-      // synthesized Google/Bing search widgets, which return nothing from
-      // the worker IP range. For local: city stations + statewide; for
-      // regional: only statewide. Returns [] (no-sources) if we don't
-      // cover this state.
-      try {
-        const stations = (typeof window.App?.getStationsForGeo === "function")
-          ? await window.App.getStationsForGeo(geo, scope)
-          : [];
-        if (stations.length > 0) {
-          return {
-            widgets: stations.slice(0, 8).map(s => ({
-              name: s.name,
-              rss: s.rss,
-              site: s.site || "",
-              headlinesCount: 6
-            })),
-            reason: ""
-          };
-        }
-      } catch { /* fall through */ }
-      // Truly nothing for this geo — return empty so the page surfaces the
-      // picker hint instead of a wall of empty cards.
-      return { widgets: [], reason: "no-coverage" };
-    }
-
-    const all = Array.isArray(sourceCfg?.widgets) ? sourceCfg.widgets : [];
-    const filtered = all.filter(w => {
-      // normalizeConfig assigns scopes on save (canonical defaults by RSS
-      // URL or ["national"] for unrecognized custom feeds), so this fallback
-      // is just a safety net for in-memory cfgs that bypass normalize.
-      const tags = Array.isArray(w?.scopes) && w.scopes.length
-        ? w.scopes
-        : ["national"];
-      return tags.includes(scope);
-    });
-    return {
-      widgets: filtered,
-      reason: filtered.length === 0 ? "no-match" : ""
-    };
+    // Which sources is App.getCategorySources (top-feeds.js), shared with the
+    // Android widget link. This page adds the one thing that has a side
+    // effect: with nothing saved and the picker never dismissed, open it. Its
+    // onSaved re-renders so the page picks up the new sources. `quiet` is the
+    // pre-loader looking ahead at a tab nobody has opened.
+    const result = await window.App.getCategorySources(scope, sourceCfg, getGeoForScope);
+    if (result.offerPicker && !quiet) window.App?.openSourcePicker?.(scope, () => render(true));
+    return result;
   }
 
   function dedupeTickerItems(items) {

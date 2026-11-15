@@ -68,6 +68,48 @@
     ];
   }
 
+  // The sources a category's news grid shows (up to 8): a topic's curated
+  // entries, the reader's own local/regional picks (or the curated stations
+  // for their area), or their national/international list.
+  // Returns { widgets, reason, offerPicker } and has no side effects: the news
+  // page decides whether to open the source picker; the widget link only reads.
+  async function getCategorySources(scope, cfg, getGeo) {
+    if (await App.isTopicScope(scope)) {
+      const entries = await App.getTopicEntries(scope);
+      return { widgets: entries.slice(0, 8), reason: entries.length ? "" : "no-sources" };
+    }
+    if (scope === "local" || scope === "regional") {
+      const saved = cfg?.[scope === "local" ? "localSources" : "regionalSources"];
+      if (Array.isArray(saved) && saved.length) return { widgets: saved.slice(0, 8), reason: "" };
+
+      const geo = await getGeo();
+      if (!geo) return { widgets: [], reason: "no-geo" };
+      // Nothing saved, and the picker was never dismissed: worth offering it.
+      const offerPicker = !cfg?.[scope === "local" ? "localSourcesSkipped" : "regionalSourcesSkipped"];
+      // Until they pick, fall back to data/local-stations.json: city stations
+      // plus statewide for local, statewide only for regional.
+      try {
+        const stations = await App.getStationsForGeo(geo, scope);
+        if (stations.length) {
+          return {
+            widgets: stations.slice(0, 8).map((s) => ({ name: s.name, rss: s.rss, site: s.site || "", headlinesCount: 6 })),
+            reason: "",
+            offerPicker,
+          };
+        }
+      } catch { /* fall through */ }
+      // Nothing for this place: empty, so the page shows the picker hint
+      // instead of a wall of empty cards.
+      return { widgets: [], reason: "no-coverage", offerPicker };
+    }
+    // National / international: the reader's list, by each source's scope tag
+    // (normalizeConfig assigns the tags; ["national"] is only a safety net).
+    const all = Array.isArray(cfg?.widgets) ? cfg.widgets : [];
+    const filtered = all.filter((w) => (Array.isArray(w?.scopes) && w.scopes.length ? w.scopes : ["national"]).includes(scope));
+    return { widgets: filtered, reason: filtered.length ? "" : "no-match" };
+  }
+
   App.getTopFeedsForScope = getTopFeedsForScope;
+  App.getCategorySources = getCategorySources;
   App.getNewsCategories = getNewsCategories;
 })();

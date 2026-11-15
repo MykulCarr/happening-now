@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
 # 1. Same staging and minification as production, so beta tests what would ship.
-& (Join-Path $PSScriptRoot "stage-public-assets.ps1")
+& (Join-Path $PSScriptRoot "stage-public-assets.ps1") -IncludeUnreleased   # beta shows what production holds back
 
 # 2. The beta API first: the site Worker's service binding points at it.
 Push-Location (Join-Path $repoRoot "cloudflare-sync-worker")
