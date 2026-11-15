@@ -77,6 +77,22 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Shown only while there is an active weather warning for the saved place. -->
+    <TextView
+        android:id="@+id/alert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/alert_bg"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:textColor="@color/text"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
     <include layout="@layout/part_weather" />
 
     <LinearLayout
@@ -117,6 +133,11 @@
         android:divider="@null"
         android:fadingEdgeLength="18dp"
         android:requiresFadingEdge="vertical"
-        android:scrollbars="none"
+        android:fadeScrollbars="false"
+        android:paddingEnd="8dp"
+        android:scrollbarSize="3dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbarThumbVertical="@drawable/scroll_thumb"
+        android:scrollbars="vertical"
         android:visibility="gone" />
 </LinearLayout>

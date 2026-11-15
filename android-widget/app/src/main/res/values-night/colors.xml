@@ -4,6 +4,8 @@
      category strip's edge fades need it as an opaque colour. -->
 <resources>
     <color name="card">#0C3142</color>
+    <color name="card_clear">#B80C3142</color>
+    <color name="alert_bg">#47F87171</color>
     <color name="card_edge">#1FFFFFFF</color>
     <color name="inset">#0FFFFFFF</color>
     <color name="pill">#14FFFFFF</color>

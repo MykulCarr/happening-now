@@ -49,6 +49,8 @@ object Render {
     //   the time                opens the phone's clock app
     //   the date                opens the phone's calendar app
     //   weather panel           opens the weather page
+    //   the arrow on it         folds / unfolds the forecast
+    //   a weather warning       opens the weather page
     //   a neighbouring category, or an arrow    switches category
     //   a headline              opens the article
     //   watchlist header        folds / unfolds the watchlist
@@ -162,6 +164,7 @@ object Render {
             val url = item.optString("url")
             val row = RemoteViews(c.packageName, R.layout.row_headline_list)
             row.setTextViewText(R.id.meta, prefix + sourceAndAge(item))
+            row.setTextViewText(R.id.index, "${k + 1}/${items.length()}") // the reader's place in the list
             row.setTextViewText(R.id.title, item.optString("title"))
             row.setOnClickFillInIntent(R.id.row, Intent().setData(Uri.parse(url)))
             rows.addItem(url.hashCode().toLong(), row) // a stable id keeps the scroll position across refreshes
@@ -172,12 +175,30 @@ object Render {
             PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)) // mutable: each row fills in its link
     }
 
+    /** The warning banner above the weather panel; hidden when there is no active alert. */
+    private fun alertBanner(c: Context, v: RemoteViews) {
+        val alert = Store.cache(c).optString("alert")
+        v.setViewVisibility(R.id.alert, if (alert.isEmpty()) View.GONE else View.VISIBLE)
+        v.setTextViewText(R.id.alert, "⚠ $alert")
+        v.setOnClickPendingIntent(R.id.alert, open(c, "${Fetch.SITE}/weather"))
+    }
+
+    /** The "see-through background" option. The strip's edge fades are an opaque
+     *  colour that only matches a solid card, so they step aside with it. */
+    private fun background(c: Context, v: RemoteViews) {
+        val clear = Store.flag(c, "clearBg")
+        v.setInt(R.id.root, "setBackgroundResource", if (clear) R.drawable.widget_bg_clear else R.drawable.widget_bg)
+        for (id in intArrayOf(R.id.fade_l, R.id.fade_r)) v.setViewVisibility(id, if (clear) View.INVISIBLE else View.VISIBLE)
+    }
+
     // ---- the three sizes ----------------------------------------------------
-    private fun small(c: Context) = RemoteViews(c.packageName, R.layout.widget_small).also { weather(c, it, R.id.root) }
+    private fun small(c: Context) = RemoteViews(c.packageName, R.layout.widget_small).also { weather(c, it, R.id.root); background(c, it) }
 
     private fun medium(c: Context): RemoteViews {
         val v = RemoteViews(c.packageName, R.layout.widget_medium)
         weather(c, v, R.id.weather)
+        alertBanner(c, v)
+        background(c, v)
         v.setOnClickPendingIntent(R.id.root, noop(c))
         v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
         v.setOnClickPendingIntent(R.id.time, openClock(c))
@@ -202,10 +223,39 @@ object Render {
         val v = RemoteViews(c.packageName, R.layout.widget_large)
         val cache = Store.cache(c)
         weather(c, v, R.id.weather)
+        alertBanner(c, v)
+        background(c, v)
         v.setOnClickPendingIntent(R.id.root, noop(c))
         v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
         v.setOnClickPendingIntent(R.id.time, openClock(c))
         v.setOnClickPendingIntent(R.id.date, openCalendar(c))
+
+        // Forecast: folded away by default; the arrow on the weather panel opens it.
+        val forecast = cache.optJSONObject("weather")
+        val hours = forecast?.optJSONArray("hours")
+        val days = forecast?.optJSONArray("days")
+        val canForecast = hours != null && hours.length() > 0
+        val forecastOpen = canForecast && Store.flag(c, "forecastOpen")
+        v.setViewVisibility(R.id.wx_toggle, if (canForecast) View.VISIBLE else View.GONE)
+        v.setTextViewText(R.id.wx_toggle, if (forecastOpen) "▴" else "▾")
+        v.setOnClickPendingIntent(R.id.wx_toggle, action(c, ACTION_FORECAST))
+        v.setViewVisibility(R.id.forecast, if (forecastOpen) View.VISIBLE else View.GONE)
+        v.removeAllViews(R.id.hours)
+        v.removeAllViews(R.id.days)
+        if (forecastOpen) {
+            fun cell(top: String, code: Int, day: Boolean, bottom: String) =
+                RemoteViews(c.packageName, R.layout.cell_forecast).apply {
+                    setTextViewText(R.id.cell_top, top)
+                    setImageViewResource(R.id.cell_icon, icon(code, day))
+                    setTextViewText(R.id.cell_bottom, bottom)
+                }
+            for (k in 0 until hours!!.length()) hours.getJSONObject(k).let {
+                v.addView(R.id.hours, cell(it.optString("t"), it.optInt("code"), it.optBoolean("day", true), deg(it.optDouble("temp"))))
+            }
+            for (k in 0 until (days?.length() ?: 0)) days!!.getJSONObject(k).let {
+                v.addView(R.id.days, cell(it.optString("name"), it.optInt("code"), true, "${deg(it.optDouble("hi"))} / ${deg(it.optDouble("lo"))}"))
+            }
+        }
 
         // Category switcher
         val categories = Store.categories(c)
@@ -220,7 +270,13 @@ object Render {
         v.setTextViewText(R.id.cat_p1, if (n >= 2) short(1) else "")
         v.setTextViewText(R.id.cat_m2, if (n >= 5) short(-2) else "") // fewer than five would repeat names
         v.setTextViewText(R.id.cat_p2, if (n >= 5) short(2) else "")
-        v.setTextViewText(R.id.catpos, category.optString("label").substringAfter(" · ", "${index + 1} of $n"))
+        // Under the strip: where local/regional news is from, how many stories
+        // this category holds, and which category of how many this is.
+        val where = category.optString("label").substringAfter(" · ", "")
+        val count = Store.news(c, category.optString("id"))?.optJSONArray("items")?.length() ?: 0
+        val stories = if (count > 0) "$count ${if (count == 1) "story" else "stories"}" else ""
+        v.setTextViewText(R.id.catpos, listOf(where, stories, if (where.isEmpty()) "${index + 1} of $n" else "")
+            .filter { it.isNotEmpty() }.joinToString(" · "))
         for (id in intArrayOf(R.id.prev, R.id.cat_m1, R.id.cat_m2)) v.setOnClickPendingIntent(id, action(c, ACTION_PREV))
         for (id in intArrayOf(R.id.next, R.id.cat_p1, R.id.cat_p2)) v.setOnClickPendingIntent(id, action(c, ACTION_NEXT))
 
@@ -230,13 +286,14 @@ object Render {
             .getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
         val quotes = cache.optJSONArray("quotes")
         // How many watchlist rows the height allows; none shown while it is folded.
-        val fitRows = minOf(quotes?.length() ?: 0, when { height == 0 || height >= 520 -> 5; height >= 400 -> 3; else -> 0 })
+        val fitRows = if (Store.flag(c, "hideWatch")) 0
+            else minOf(quotes?.length() ?: 0, when { height == 0 || height >= 520 -> 5; height >= 400 -> 3; else -> 0 })
         val collapsed = Store.watchCollapsed(c)
         val quoteRows = if (collapsed) 0 else fitRows
         // Everything that isn't a headline (clock, weather, switcher, footer,
         // padding) is about 250dp, plus the watchlist; a two-line headline
         // needs about 58dp.
-        val fixedHeight = 250 + when { fitRows == 0 -> 0; collapsed -> 44; else -> 36 + quoteRows * 24 }
+        val fixedHeight = 250 + (if (forecastOpen) 150 else 0) + when { fitRows == 0 -> 0; collapsed -> 44; else -> 36 + quoteRows * 24 }
         val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 58).coerceIn(1, 10)
 
         // Headlines. When they all fit, each row has weight 1 and they spread

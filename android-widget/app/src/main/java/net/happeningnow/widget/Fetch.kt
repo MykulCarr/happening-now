@@ -49,19 +49,64 @@ object Fetch {
     /** { temp, code, hi, lo } for the saved location, or null if none is set. */
     fun weather(cfg: JSONObject): JSONObject? {
         if (!cfg.has("lat")) return null
+        // Seven hourly slots (now + six) and six days (today + five).
         val d = JSONObject(get(
             "https://api.open-meteo.com/v1/forecast?latitude=${cfg.getDouble("lat")}&longitude=${cfg.getDouble("lon")}" +
-                "&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min" +
-                "&forecast_days=1&temperature_unit=${cfg.optString("tempUnit", "fahrenheit")}&timezone=auto"))
+                "&current=temperature_2m,weather_code,is_day" +
+                "&hourly=temperature_2m,weather_code,is_day&forecast_hours=7" +
+                "&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=6" +
+                "&temperature_unit=${cfg.optString("tempUnit", "fahrenheit")}&timezone=auto"))
         val now = d.getJSONObject("current")
         val day = d.getJSONObject("daily")
-        return JSONObject()
+        val out = JSONObject()
             .put("temp", now.getDouble("temperature_2m"))
             .put("code", now.getInt("weather_code"))
             .put("day", now.optInt("is_day", 1) == 1)
             .put("at", System.currentTimeMillis())
             .put("hi", day.getJSONArray("temperature_2m_max").getDouble(0))
             .put("lo", day.getJSONArray("temperature_2m_min").getDouble(0))
+
+        // The forecast is a nicety: if its part of the answer is missing or
+        // odd, the current conditions above still stand.
+        runCatching {
+            val hourly = d.getJSONObject("hourly")
+            val hours = JSONArray()
+            for (i in 1 until minOf(7, hourly.getJSONArray("time").length())) {
+                val hour = hourly.getJSONArray("time").getString(i).substring(11, 13).toInt() // "2026-11-15T16:00", local time
+                hours.put(JSONObject()
+                    .put("t", "${if (hour % 12 == 0) 12 else hour % 12}${if (hour < 12) "a" else "p"}")
+                    .put("temp", hourly.getJSONArray("temperature_2m").getDouble(i))
+                    .put("code", hourly.getJSONArray("weather_code").getInt(i))
+                    .put("day", hourly.getJSONArray("is_day").getInt(i) == 1))
+            }
+            val days = JSONArray()
+            for (i in 1 until minOf(6, day.getJSONArray("time").length())) {
+                days.put(JSONObject()
+                    .put("name", java.time.LocalDate.parse(day.getJSONArray("time").getString(i)).dayOfWeek
+                        .getDisplayName(java.time.format.TextStyle.SHORT, Locale.US))
+                    .put("code", day.getJSONArray("weather_code").getInt(i))
+                    .put("hi", day.getJSONArray("temperature_2m_max").getDouble(i))
+                    .put("lo", day.getJSONArray("temperature_2m_min").getDouble(i)))
+            }
+            out.put("hours", hours).put("days", days)
+        }
+        return out
+    }
+
+    /**
+     * The most severe active weather alert for the saved place, as its name
+     * ("Winter Storm Warning"), or "" when there is none. From the US National
+     * Weather Service, the site's source for alerts too. It only covers the US:
+     * elsewhere it answers with an error, which callers treat as "no news".
+     */
+    fun alert(cfg: JSONObject): String {
+        if (!cfg.has("lat")) return ""
+        val point = String.format(Locale.US, "%.4f,%.4f", cfg.getDouble("lat"), cfg.getDouble("lon"))
+        val features = JSONObject(get("https://api.weather.gov/alerts/active?point=$point")).optJSONArray("features") ?: return ""
+        val order = listOf("Extreme", "Severe", "Moderate", "Minor")
+        return (0 until features.length()).map { features.getJSONObject(it).getJSONObject("properties") }
+            .minByOrNull { order.indexOf(it.optString("severity")).let { rank -> if (rank < 0) order.size else rank } }
+            ?.optString("event").orEmpty()
     }
 
     /** What the site currently offers for download: { versionCode, versionName }. */

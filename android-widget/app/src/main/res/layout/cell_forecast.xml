@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One slot of the forecast: an hour ("4p", icon, 39°) or a day ("Mon",
+     icon, 44° / 31°). Equal weights, so six hours or five days fill the row. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/cell_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/muted"
+        android:textSize="11sp" />
+
+    <ImageView
+        android:id="@+id/cell_icon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginVertical="2dp"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/cell_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textColor="@color/text"
+        android:textSize="12sp" />
+</LinearLayout>

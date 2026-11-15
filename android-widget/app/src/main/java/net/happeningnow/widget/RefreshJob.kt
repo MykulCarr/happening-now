@@ -58,7 +58,8 @@ class RefreshJob : JobService() {
             System.currentTimeMillis() - (Store.news(c, categoryId)?.optLong("at") ?: 0) > STALE_MS
 
         /** True when the category on screen, or one beside it, needs fetching. */
-        fun nearbyNewsIsStale(c: Context) = fetchOrder(c, reach = 1).any { isStale(c, it.optString("id")) }
+        fun nearbyNewsIsStale(c: Context) =
+            fetchOrder(c, reach = if (Store.flag(c, "saveData")) 0 else 1).any { isStale(c, it.optString("id")) }
 
         /** The category on screen first, then outwards on both sides, `reach` steps each way. */
         private fun fetchOrder(c: Context, reach: Int): List<JSONObject> {
@@ -92,7 +93,9 @@ class RefreshJob : JobService() {
             if (full) {
                 val weather = runCatching { Fetch.weather(cfg) }.getOrNull()
                 val quotes = runCatching { Fetch.quotes(cfg.getJSONArray("symbols")) }.getOrNull()
+                val alert = runCatching { Fetch.alert(cfg) }.getOrNull() // null: couldn't ask, keep what we had
                 Store.updateCache(c) { cache ->
+                    if (alert != null) cache.put("alert", alert)
                     if (weather != null) cache.put("weather", weather)
                     if (quotes != null) cache.put("quotes", quotes)
                     cache.put("updatedAt", now)
@@ -112,7 +115,9 @@ class RefreshJob : JobService() {
             // (unmetered networks only) are refreshed every three hours. With up
             // to eight sources each, doing them all every half hour would be a
             // lot of requests for headlines nobody is looking at.
-            fetchOrder(c, reach = if (metered) 1 else Int.MAX_VALUE).drop(1).forEachIndexed { k, category ->
+            // The "save data" option fetches nothing beyond the category on screen.
+            val reach = when { Store.flag(c, "saveData") -> 0; metered -> 1; else -> Int.MAX_VALUE }
+            fetchOrder(c, reach).drop(1).forEachIndexed { k, category ->
                 val age = System.currentTimeMillis() - (Store.news(c, category.optString("id"))?.optLong("at") ?: 0)
                 if (age > if (k < 2) STALE_MS else FAR_STALE_MS) fetchNews(category)
             }

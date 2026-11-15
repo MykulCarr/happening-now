@@ -52,6 +52,19 @@ class SetupActivity : Activity() {
         column.button("Small: time and weather") { pin(SmallWidget::class.java) }
         column.note("Or long-press your home screen, choose Widgets, and find this app. Any widget can be resized afterwards.")
 
+        // Each takes effect at once, and applies to every widget from this app.
+        column.heading("Options")
+        fun option(label: String, key: String) =
+            column.check(label, Store.flag(this, key)).setOnCheckedChangeListener { _, on ->
+                Store.setFlag(this, key, on)
+                Widgets.updateAll(this)
+            }
+        option("Hide the watchlist", "hideWatch")
+        option("See-through background", "clearBg")
+        option("Refresh every hour instead of every half hour", "hourly")
+        option("Save data: only fetch the news category on screen", "saveData")
+        column.note("The watchlist and the forecast also fold away on the widget itself: tap the small arrow beside each.")
+
         column.show()
         showStatus()
         receive(intent)

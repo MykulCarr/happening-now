@@ -12,6 +12,7 @@ const val ACTION_PREV = "net.happeningnow.widget.PREV"
 const val ACTION_NEXT = "net.happeningnow.widget.NEXT"
 const val ACTION_REFRESH = "net.happeningnow.widget.REFRESH"
 const val ACTION_WATCH = "net.happeningnow.widget.WATCH"
+const val ACTION_FORECAST = "net.happeningnow.widget.FORECAST"
 
 /**
  * The three widget sizes are the same widget with different layouts, so all
@@ -24,7 +25,9 @@ abstract class BaseWidget : AppWidgetProvider() {
     // have straight away, and fetch fresh data in the background.
     override fun onUpdate(c: Context, mgr: AppWidgetManager, ids: IntArray) {
         ids.forEach { mgr.updateAppWidget(it, Render.build(c, javaClass, it)) }
-        RefreshJob.schedule(c)
+        // The "refresh hourly" option: every other half-hourly wake-up only redraws.
+        val recent = System.currentTimeMillis() - Store.cache(c).optLong("updatedAt") < 55 * 60 * 1000L
+        if (!(Store.flag(c, "hourly") && recent)) RefreshJob.schedule(c)
     }
 
     // Resized: the large widget fits a different number of rows.
@@ -38,6 +41,10 @@ abstract class BaseWidget : AppWidgetProvider() {
                 Store.stepCategory(c, if (intent.action == ACTION_NEXT) 1 else -1)
                 Widgets.updateAll(c) // pre-cached headlines appear at once
                 if (RefreshJob.nearbyNewsIsStale(c)) RefreshJob.schedule(c, full = false) // top up the pre-cache
+            }
+            ACTION_FORECAST -> {
+                Store.setFlag(c, "forecastOpen", !Store.flag(c, "forecastOpen")) // fold or unfold the forecast
+                Widgets.updateAll(c)
             }
             ACTION_WATCH -> {
                 Store.toggleWatch(c) // fold or unfold the watchlist

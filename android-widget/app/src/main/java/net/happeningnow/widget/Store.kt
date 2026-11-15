@@ -69,6 +69,15 @@ object Store {
         prefs(c).edit().putBoolean("watchCollapsed", !watchCollapsed(c)).commit()
     }
 
+    // ---- on/off switches -------------------------------------------------------
+    // forecastOpen (the weather panel's arrow) and the Options on the main
+    // screen: hideWatch, clearBg, hourly, saveData. All default to off.
+    fun flag(c: Context, key: String) = prefs(c).getBoolean(key, false)
+
+    fun setFlag(c: Context, key: String, on: Boolean) {
+        prefs(c).edit().putBoolean(key, on).commit()
+    }
+
     fun isSetUp(c: Context) = prefs(c).contains("config")
 
     fun config(c: Context) = JSONObject(prefs(c).getString("config", null) ?: DEFAULT_CONFIG)

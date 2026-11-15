@@ -68,4 +68,16 @@
             android:textColor="@color/muted"
             android:textSize="13sp" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/wx_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:contentDescription="Show or hide the forecast"
+        android:gravity="center"
+        android:paddingStart="14dp"
+        android:paddingEnd="2dp"
+        android:textColor="@color/muted"
+        android:textSize="14sp"
+        android:visibility="gone" />
 </LinearLayout>
