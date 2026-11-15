@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.view.ViewGroup
@@ -47,7 +46,7 @@ class SetupActivity : Activity() {
 
         // The scheme tells the page which build to send back to (beta or real).
         button("1 · Get my settings from happening-now.net") {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}")))
+            startActivity(Site.intent(this, "${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}"))
         }
         note("Opens the Today page. Tap “Send to phone widget” there. Do it again whenever you change your location, categories or watchlist on the site.", 13f, R.color.muted)
 

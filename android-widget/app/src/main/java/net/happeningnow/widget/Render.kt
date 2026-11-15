@@ -30,7 +30,9 @@ object Render {
     // Site links open in the installed Happening Now app when there is one.
     private fun open(c: Context, url: String): PendingIntent {
         val safe = if (url.startsWith("https://") || url.startsWith("http://")) url else Fetch.SITE
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safe)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Our own pages go to the installed site app; articles to the default browser.
+        val intent = if (safe.startsWith(Fetch.SITE)) Site.intent(c, safe)
+            else Intent(Intent.ACTION_VIEW, Uri.parse(safe)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return PendingIntent.getActivity(c, 0, intent, FLAGS)
     }
 
