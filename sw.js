@@ -76,6 +76,9 @@ self.addEventListener('fetch', (event) => {
   // serve them offline with no login.
   const path = new URL(event.request.url).pathname;
   if (path === '/admin' || path === '/admin.html' || path.startsWith('/v1/admin/')) return;
+  // Nor the widget app download: an offline copy of an installer is no use,
+  // and a stale version.json would hide an update.
+  if (path.startsWith('/assets/widget-app/')) return;
 
   event.respondWith(
     fetch(event.request)

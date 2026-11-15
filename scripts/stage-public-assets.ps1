@@ -22,6 +22,7 @@ $publicFiles = @(
   "feedback.html",
   "admin.html",
   "widget.html",
+  "android.html",
   "robots.txt",
   "sitemap.xml",
   "manifest.json",

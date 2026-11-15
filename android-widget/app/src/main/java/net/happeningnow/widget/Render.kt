@@ -177,9 +177,12 @@ object Render {
 
         // Footer
         val updatedAt = cache.optLong("updatedAt")
-        v.setTextViewText(R.id.updated,
-            if (updatedAt > 0) "News and stocks updated ${SimpleDateFormat("h:mm a", Locale.US).format(Date(updatedAt))}"
-            else "Not updated yet")
+        val newer = Store.updateAvailable(c)
+        v.setTextViewText(R.id.updated, when {
+            newer != null -> "Version $newer is available · tap ⚙"
+            updatedAt > 0 -> "News and stocks updated ${SimpleDateFormat("h:mm a", Locale.US).format(Date(updatedAt))}"
+            else -> "Not updated yet"
+        })
         v.setOnClickPendingIntent(R.id.refresh, action(c, ACTION_REFRESH))
         v.setOnClickPendingIntent(R.id.settings, openSetup(c))
         return v

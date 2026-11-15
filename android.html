@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
+       so GA4 runs cookieless: no cookies, no device id, no banner needed. See
+       privacy.html. Keep this INLINE and in <head> — Google's tag detection
+       scans the HTML source, so loading it from an external .js file makes the
+       property report "tag not installed" even though hits are being sent. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});
+    gtag('js', new Date());
+    gtag('config','G-XL3C28KRQX');
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XL3C28KRQX"></script>
+  <meta name="description" content="Get the Happening Now home-screen widget for Android: time, weather, headlines by category and your watchlist at a glance. No ads, no account, no tracking." />
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+  <!-- Perf hints: warm up TLS to the third-party origins our JS hits
+       so DNS + handshake happens in parallel with HTML parse. -->
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://api.zippopotam.us" crossorigin>
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+  <link rel="canonical" href="https://happening-now.net/android" />
+  <meta property="og:site_name" content="HAPPENING NOW" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Happening Now! - Android Widget" />
+  <meta property="og:description" content="Get the Happening Now home-screen widget for Android: time, weather, headlines by category and your watchlist at a glance. No ads, no account, no tracking." />
+  <meta property="og:url" content="https://happening-now.net/android" />
+  <meta property="og:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:title" content="Happening Now! - Android Widget" />
+  <meta name="twitter:description" content="Get the Happening Now home-screen widget for Android: time, weather, headlines by category and your watchlist at a glance. No ads, no account, no tracking." />
+  <title>Happening Now! - Android Widget</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Happening Now! - Android Widget",
+      "url": "https://happening-now.net/android",
+      "description": "The Happening Now home-screen widget for Android",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "HAPPENING NOW",
+        "url": "https://happening-now.net/"
+      },
+      "inLanguage": "en"
+    }
+  </script>
+  <style>html,body{background:#0c3142;margin:0}</style>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#0c3142";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>Android Widget</h1>
+        <div class="sub">A home-screen widget for your phone<span id="appVersion"></span></div>
+      </div>
+    </section>
+
+    <section class="card legalCard">
+      <h2>What it is</h2>
+      <p class="hint">A small Android app whose only job is to put Happening Now on your home screen: the time, your weather, headlines for each of your news categories, and your stock watchlist. It comes in three sizes, from a full page down to a 2&times;2 clock-and-weather square. Tapping anything opens the site.</p>
+      <p class="hint">No ads, no account and no tracking. It shows the same free-to-read sources as the site.</p>
+
+      <p><a class="btn" href="/assets/widget-app/happening-now-widget.apk" download data-analytics="widget-download">Download the widget app</a></p>
+      <p class="hint">Android 9 or newer. About 100 KB. There is no iPhone version: iOS does not allow apps to be installed this way.</p>
+
+      <h2 class="legalSectionTitle">Installing it</h2>
+      <p class="hint">The app comes straight from this site, not from the Play Store, so Android asks a couple of extra questions the first time. Open this page <strong>in Chrome on your phone</strong>, then:</p>
+      <ol class="hint">
+        <li>Tap <strong>Download the widget app</strong>. If Chrome warns about the file type, choose <strong>Download anyway</strong>.</li>
+        <li>Open the downloaded file. Android will ask whether Chrome may install apps: tap <strong>Settings</strong>, switch on <strong>Allow from this source</strong>, and go back.</li>
+        <li>Tap <strong>Install</strong>, then <strong>Open</strong>.</li>
+        <li>In the app, tap <strong>1 &middot; Get my settings</strong>. The Today page opens with a <strong>Send to phone widget</strong> button. Tap it.</li>
+        <li>Back in the app, tap <strong>2 &middot; Add the full-page Today widget</strong> (or one of the smaller ones).</li>
+      </ol>
+      <p class="hint">Use the site in Chrome, or as the installed Happening Now app, before step 4. That is where your location, news categories and watchlist are kept, and the widget shows what it is given from there.</p>
+
+      <h2 class="legalSectionTitle">Keeping it in step with the site</h2>
+      <p class="hint">The widget cannot read the site's settings by itself. After the first send, whenever you change your location, topics or watchlist on this phone, the site shows an <strong>Update phone widget</strong> bar. One tap brings the widget up to date.</p>
+
+      <h2 class="legalSectionTitle">Updates</h2>
+      <p class="hint">Because it is not from a store, the app cannot update itself. Once a day it checks this site for a newer version and, when there is one, says so on the widget. Come back to this page and download again; installing over the old copy keeps your settings.</p>
+
+      <h2 class="legalSectionTitle">Privacy</h2>
+      <p class="hint">The app has no account, no ads and no analytics. It asks for one permission: internet access. Your settings travel from the site to the app inside a link on your own phone and are never uploaded. To draw the widget it fetches the same things the site does: your forecast from Open-Meteo using your saved location, and headlines and stock quotes through this site's own server. The <a href="/privacy">privacy policy</a> has the details.</p>
+
+      <h2 class="legalSectionTitle">Good to know</h2>
+      <p class="hint">Android only lets home-screen widgets refresh about every half hour; the refresh arrow on the widget fetches at once. Widgets cannot detect swipes, so you move between news categories by tapping a name or an arrow. The app is open source, in the same <a href="https://github.com/MykulCarr/happening-now/tree/main/android-widget" rel="noopener">repository</a> as this site.</p>
+    </section>
+  </main>
+
+  <script>
+    // Show the version on offer, from the same file the app checks.
+    fetch("/assets/widget-app/version.json").then((r) => r.json()).then((v) => {
+      document.getElementById("appVersion").textContent = " \u00B7 version " + v.versionName;
+    }).catch(() => {});
+  </script>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW legal</p>
+    <p class="footerLinks"><a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
+  </footer>
+
+  <script defer src="assets/common.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="android"></script>
+  <script defer src="assets/topbar.js"></script>
+  <script defer src="assets/infobar.js"></script>
+</body>
+</html>

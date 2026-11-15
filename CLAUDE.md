@@ -27,6 +27,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   which only appears with `?send=hnwidget|hnwidgetdebug` (the app adds it).
   That link carries lat/lon to an app on the same phone, never to a server.
   `docs/android-widget-mockup/` is the design it was built from
+- `android.html` (`/android`) — the widget app's download page. The signed APK
+  and `version.json` live in `assets/widget-app/`, written there by
+  `scripts/release-widget.ps1` and committed on purpose (a deploy from a fresh
+  clone must ship the same file; the signing key is not in the repo). The
+  service worker skips that folder
 - `assets/widget-link.js` — pairs this browser with the widget app and shows
   the "Update phone widget" bar when settings differ from what the widget
   was last sent. Pairing (`hn_widget_link_v1`: link scheme, the app's private

@@ -44,6 +44,13 @@ class SetupActivity : Activity() {
         note(getString(R.string.app_name), 24f, R.color.text)
         status = note("", 15f, R.color.muted)
 
+        // Installed from the site rather than a store, so updating is a
+        // download: the page it opens has the newest version.
+        Store.updateAvailable(this)?.let { version ->
+            button("Download version $version") { startActivity(Site.intent(this, "${Fetch.SITE}/android")) }
+            note("A newer version of this app is on the site. Installing it over this one keeps your settings.", 13f, R.color.muted)
+        }
+
         // The scheme tells the page which build to send back to (beta or real).
         button("1 · Get my settings from happening-now.net") {
             startActivity(Site.intent(this, "${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}&k=${Store.pairingCode(this)}"))

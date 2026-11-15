@@ -21,8 +21,24 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 The **debug build is the beta**: app id `net.happeningnow.widget.debug`, name
 "HN Widget (beta)", link scheme `hnwidgetdebug`, so it installs beside the
-real one. A release build needs a git-ignored `keystore.properties`
-(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`); see app/build.gradle.kts.
+real one. ## Releasing
+
+The app is distributed from the site (`/android`), not a store.
+
+1. Raise `versionCode` and `versionName` in `app/build.gradle.kts`.
+2. `pwsh -File scripts/release-widget.ps1` builds the signed, shrunk APK and
+   writes it and `version.json` into `assets/widget-app/`.
+3. Install it on a real phone and check a widget draws (R8 shrinking can
+   break things a debug build never shows).
+4. Commit, then deploy-beta and deploy-prod.
+
+Installed copies read `version.json` once a day and offer the download when
+its `versionCode` is higher than their own.
+
+Signing needs `keystore.properties` here (git-ignored: `storeFile`,
+`storePassword`, `keyAlias`, `keyPassword`) and the key file it points to,
+`~/.android-keys/happening-now-widget.jks`. **Neither is in git. Lose the key
+and no installed copy can ever be updated**, only uninstalled and replaced.
 
 ## How settings get in
 

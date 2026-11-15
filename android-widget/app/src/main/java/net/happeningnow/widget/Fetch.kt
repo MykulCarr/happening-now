@@ -54,6 +54,9 @@ object Fetch {
             .put("lo", day.getJSONArray("temperature_2m_min").getDouble(0))
     }
 
+    /** What the site currently offers for download: { versionCode, versionName }. */
+    fun latestVersion() = JSONObject(get("$SITE/assets/widget-app/version.json"))
+
     /** [{ sym, price, pct }] in watchlist order; symbols with no quote are skipped. */
     fun quotes(symbols: JSONArray): JSONArray {
         val out = JSONArray()

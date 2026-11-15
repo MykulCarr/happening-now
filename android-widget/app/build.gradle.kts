@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "net.happeningnow.widget"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -44,7 +44,10 @@ android {
             manifestPlaceholders["scheme"] = "hnwidgetdebug"
         }
         release {
-            isMinifyEnabled = false
+            // R8 strips unused code (mostly the Kotlin library): a smaller
+            // download. Classes named in the manifest are kept automatically.
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
             resValue("string", "app_name", "Happening Now Widget")
             resValue("string", "scheme", "hnwidget")
             manifestPlaceholders["scheme"] = "hnwidget"

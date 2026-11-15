@@ -98,6 +98,12 @@ class RefreshJob : JobService() {
             }
             Widgets.updateAll(c)
 
+            // Once a day, see whether the site has a newer version of this app.
+            if (full && now - Store.latestCheckedAt(c) > 24 * 60 * 60 * 1000L) runCatching {
+                val latest = Fetch.latestVersion()
+                Store.setLatest(c, latest.getLong("versionCode"), latest.optString("versionName"))
+            }
+
             // 2. Pre-cache the rest, nearest first, one category at a time.
             val metered = c.getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered
             for (category in fetchOrder(c, reach = if (metered) 1 else Int.MAX_VALUE).drop(1)) {

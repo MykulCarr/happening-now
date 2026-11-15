@@ -35,6 +35,22 @@ object Store {
         return code
     }
 
+    // ---- updates -------------------------------------------------------------
+    // The app is installed from the site, not a store, so nothing updates it
+    // for us: RefreshJob asks the site once a day what the newest version is.
+    fun latestCheckedAt(c: Context) = prefs(c).getLong("latestAt", 0)
+
+    fun setLatest(c: Context, code: Long, name: String) {
+        prefs(c).edit().putLong("latestCode", code).putString("latestName", name)
+            .putLong("latestAt", System.currentTimeMillis()).commit()
+    }
+
+    /** The newer version's name when the site offers one, else null. */
+    fun updateAvailable(c: Context): String? {
+        val installed = c.packageManager.getPackageInfo(c.packageName, 0).longVersionCode
+        return if (prefs(c).getLong("latestCode", 0) > installed) prefs(c).getString("latestName", "") else null
+    }
+
     fun isSetUp(c: Context) = prefs(c).contains("config")
 
     fun config(c: Context) = JSONObject(prefs(c).getString("config", null) ?: DEFAULT_CONFIG)
