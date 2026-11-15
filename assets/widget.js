@@ -30,6 +30,10 @@
   // One location lookup per load, shared by the weather card and local news.
   let locationPromise = null;
   const location_ = () => (locationPromise ||= App.resolvePreferredLocation({ cfg: App.cfg, autoDetect: false }).catch(() => null));
+  const getGeo = async () => {
+    const loc = await location_();
+    return loc?.city ? { city: loc.city, state: loc.state || "" } : null;
+  };
 
   // ---- weather ------------------------------------------------------------
   // Compact: place on the left, icon + temperature + today's forecast on the
@@ -99,10 +103,6 @@
   async function headlines(count, scope, withChips) {
     const cats = await categories();
     if (!cats.some((c) => c.id === scope)) scope = "national";
-    const getGeo = async () => {
-      const loc = await location_();
-      return loc?.city ? { city: loc.city, state: loc.state || "" } : null;
-    };
     const feeds = await App.getTopFeedsForScope(scope, getGeo);
     const lists = await Promise.all(feeds.map((f) => App.fetchNewsItems(f.rss, count).catch(() => [])));
 
@@ -236,9 +236,26 @@
     el.classList.remove("wBusy");
     if (key === "news") {
       centerActiveChip(el);
+      preloadNeighbours();
       if (slideFrom) el.querySelector(".wList")?.classList.add(slideFrom);
       slideFrom = "";
     }
+  }
+
+  // Fetch the categories either side into the 5-minute feed cache, so the
+  // next swipe or tap shows its headlines without a wait. Skipped when the
+  // reader has asked the browser to save data.
+  async function preloadNeighbours() {
+    if (navigator.connection?.saveData) return;
+    try {
+      const cats = await categories();
+      const at = cats.findIndex((c) => c.id === savedScope());
+      if (at < 0 || cats.length < 2) return;
+      for (const step of [1, -1]) {
+        const feeds = await App.getTopFeedsForScope(cats[(at + step + cats.length) % cats.length].id, getGeo);
+        await Promise.all(feeds.map((f) => App.fetchNewsItems(f.rss, 6).catch(() => {}))); // 6: the count headlines() asks for
+      }
+    } catch { /* a nicety; the card works without it */ }
   }
 
   // Keep the chosen chip in view, even when it's far along the row.

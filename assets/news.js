@@ -330,7 +330,7 @@
   //   so older saved configs keep rendering on those views.
   // - local / regional: synthesize a Google News search widget from the user's
   //   geocoded city/state. If no ZIP, returns []; the caller renders a hint.
-  async function getWidgetsForScope(scope, sourceCfg) {
+  async function getWidgetsForScope(scope, sourceCfg, { quiet = false } = {}) {
     if (await window.App?.isTopicScope?.(scope)) {
       const entries = await window.App.getTopicEntries(scope);
       return { widgets: entries.slice(0, 8), reason: entries.length ? "" : "no-sources" };
@@ -352,7 +352,8 @@
       // No saved sources and the user hasn't opted to skip the picker → open it.
       // The picker will save selections (or set the skip flag) and the
       // onSaved callback re-runs render so the page picks up the new sources.
-      if (!sourceCfg?.[skipKey]) {
+      // (`quiet` is the pre-loader looking ahead at a tab nobody has opened.)
+      if (!quiet && !sourceCfg?.[skipKey]) {
         window.App?.openSourcePicker?.(scope, () => render(true));
       }
 
@@ -685,7 +686,46 @@
     return container;
   }
 
-  async function render(force = false) {
+  // ---- pre-load the neighbouring categories --------------------------------
+  // Once a category has rendered, quietly fetch the feeds of the tabs either
+  // side of it into the feed cache, so a swipe or tap to a neighbour draws
+  // from memory instead of the network. It costs roughly one extra category
+  // of downloads per move, so it stays off when the reader has asked the
+  // browser to save data, on a 2G connection, or while the tab is hidden.
+  let preloadRun = 0;
+  function schedulePreload() {
+    const run = ++preloadRun;
+    const conn = navigator.connection;
+    if (conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType || "")) return;
+    setTimeout(async () => {
+      try {
+        const tabs = [...(tickerScopeBar?.querySelectorAll(".tickerScopeBtn") || [])].map(b => b.dataset.scope);
+        const at = tabs.indexOf(currentScope);
+        if (at < 0 || tabs.length < 2) return;
+        const neighbours = new Set([tabs[(at + 1) % tabs.length], tabs[(at - 1 + tabs.length) % tabs.length]]);
+        for (const scope of neighbours) {
+          const { widgets } = await getWidgetsForScope(scope, window.App?.cfg || cfg, { quiet: true });
+          const ticker = await window.App.getTopFeedsForScope(scope, getGeoForScope);
+          // The same (feed, count) pairs render() and the ticker will ask for,
+          // because the cache is keyed on both.
+          const wanted = [
+            ...widgets.slice(0, 15).map(w => [w.rss, w.headlinesCount || 6]),
+            ...ticker.map(f => [f.rss, 12]),
+          ];
+          for (let i = 0; i < wanted.length; i += 3) {          // three at a time: gentle on the connection
+            if (run !== preloadRun || document.hidden) return;  // the reader moved on
+            await Promise.all(wanted.slice(i, i + 3).map(([rss, count]) => fetchNewsItems(rss, count, true).catch(() => {})));
+          }
+        }
+      } catch { /* pre-loading is a nicety; the page works without it */ }
+    }, 1200);
+  }
+
+  // `force` runs even when another render is in flight (a tab switch must
+  // win). `fresh` skips the 5-minute feed cache. It defaults to `force`; only
+  // a category switch passes fresh:false, which is what makes moving between
+  // categories quick — every switch used to re-download every feed.
+  async function render(force = false, { fresh = force } = {}) {
     if (inFlight && !force) return;
     inFlight = true;
 
@@ -695,7 +735,7 @@
     }
 
     updateStatus("Loading news…");
-    renderCriticalTicker(force);
+    renderCriticalTicker(fresh);
     newsGrid.innerHTML = "";
     newsGrid.setAttribute("aria-busy", "true");
 
@@ -735,7 +775,7 @@
     await Promise.all(widgets.map(async (w, idx) => {
       const { card, list } = shells[idx];
       try {
-        const items = await fetchNewsItems(w.rss, w.headlinesCount || 6, !force);
+        const items = await fetchNewsItems(w.rss, w.headlinesCount || 6, !fresh);
 
         if (items.length === 0) {
           list.innerHTML = "";
@@ -791,6 +831,7 @@
     inFlight = false;
     newsGrid.style.removeProperty("min-height");
     releaseFirstLoadHold();
+    schedulePreload();
   }
 
   // index.html holds the grid at last visit's height until the first render;
@@ -912,8 +953,7 @@
     saveConfig({ ...window.App.cfg, newsScope: scope, newsTickerScope: scope });
     geoCache = null;
     scrollGridToTop();
-    renderCriticalTicker(true);
-    render(true);
+    render(true, { fresh: false }); // from the feed cache when it has this category; render() redraws the ticker too
     // Local/Regional need a saved location to be useful. Prompt the
     // first-run welcome if no cfg.zipCode or device coords are set.
     if (scope === "local" || scope === "regional") {

@@ -2950,6 +2950,22 @@ html:has(#newsGrid) { overscroll-behavior-x: none; }
 #newsGrid.swipeFromLeft { animation: hnSwipeIn .22s ease-out; --swipeFrom: -32px; }
 @keyframes hnSwipeIn { from { opacity: 0; transform: translateX(var(--swipeFrom)); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { #newsGrid.swipeFromRight, #newsGrid.swipeFromLeft { animation: none; } }
+/* The cards follow a sideways drag (news-swipe.js). pan-y tells the browser
+   vertical scrolling is its job and a sideways drag is ours, so a drag that
+   starts sideways doesn't also scroll the page. The tab row and ticker are
+   their own scrollers and keep scrolling sideways as before. */
+html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
+/* The name of the category being pulled in, at the edge it comes from. */
+.swipeHint {
+  position: fixed; top: 50%; z-index: 60; transform: translateY(-50%);
+  padding: 10px 14px; border-radius: 999px; pointer-events: none;
+  background: #0c3142; color: #fff; border: 1px solid rgba(255, 255, 255, .3);
+  font-size: .85rem; font-weight: 600; letter-spacing: .04em; white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+}
+.swipeHint[data-side="left"] { left: 10px; }
+.swipeHint[data-side="right"] { right: 10px; }
+.swipeHint.armed { background: var(--accent); border-color: var(--accent); }
 
 #weatherCurrent {
   min-height: 0;

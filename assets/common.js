@@ -1678,7 +1678,11 @@
               return { title, url: normalizeOutboundLink(link), pubDate, desc, image, imageTitle };
             }), proxyBase === RSS_PROXY_BASE ? "" : "Fallback news source in use", proxyBase !== RSS_PROXY_BASE);
 
-            if (useCache && result.length > 0) {
+            // Stored whether or not this call was allowed to *read* the cache:
+            // a forced-fresh download is the newest copy there is, and not
+            // keeping it meant the category a page opened on was the one
+            // category that was never cached.
+            if (result.length > 0) {
               setCached(cacheKey, result);
             }
 
@@ -1696,7 +1700,7 @@
       }
 
       const fallbackItems = await fetchGoogleNewsFallbackItems(rssUrl, limit, useCache);
-      if (useCache && fallbackItems.length > 0) {
+      if (fallbackItems.length > 0) {
         setCached(cacheKey, fallbackItems);
       }
       if (fallbackItems.length > 0) {
