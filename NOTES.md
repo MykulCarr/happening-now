@@ -669,3 +669,36 @@ No code changes.
 
 **Pick up next:** same as before — check /admin → Usage → Visitors and the
 Cloudflare layout-shift score after a few days of real traffic.
+
+## 2026-11-14 — Today view, and the Android widget design
+
+- **Today view shipped** at `/widget?w=all` (manifest shortcut "Today" replaced
+  "Weather widget"): compact weather, headlines with the news page's own
+  category chips (tap or swipe, wraps round), markets board + watchlist. The
+  chosen category is saved as `cfg.newsScope`, so it and the news page open on
+  the same tab. Cards load independently. Headlines are newest-first, not
+  interleaved (the Guardian world feed isn't in date order).
+- **`assets/top-feeds.js`**: the ticker's feed picker moved out of `news.js`
+  unchanged so the Today view shares it.
+- **Android home-screen widget: design agreed, nothing built.** A PWA can't put
+  a widget on the home screen, so it needs a small native app. Mock-up:
+  https://claude.ai/artifact/GKNDbwSbkvaPGWcswsFiey (source in
+  `docs/android-widget-mockup/`). Agreed look: stretched-wide clock top-centre
+  on every size; weather bar (date / "Jackson, MI" / conditions left, icon
+  middle, temp + hi/lo right); full-launcher-page widget with six headlines
+  spread evenly, ‹ › category buttons (widgets can't detect swipes), LOCAL and
+  REGIONAL labelled with their place, then a five-row watchlist (no indexes).
+  Proposed build, **awaiting Mike's OK**: `android-widget/` in this repo,
+  Kotlin + Jetpack Glance + WorkManager, widget-only app (no TWA), settings
+  handed over by a "Send to phone widget" button on the Today view, debug
+  build with its own app id, sideload over USB. Android Studio, SDK and adb
+  are already on OEMMEO.
+- **Swipe smoothness (open to-do):** every tab switch calls `render(true)`,
+  which bypasses the 5-minute feed cache — that's the slowness. Plan offered:
+  use the cache on switches, pre-load the two neighbouring categories, then
+  make the cards follow the finger with the next category's name at the edge.
+- Port 8080 on OEMMEO was held by a stray `python -m http.server` (PID 13936);
+  tested on 8091 with a web-security-off headless Chrome instead.
+
+**Pick up next:** get Mike's OK on the Android widget build; decide whether the
+Today view should get the mock-up's clock / weather bar / place names.

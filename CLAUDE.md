@@ -15,6 +15,14 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
 - `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
+- `widget.html` + `assets/widget.js` — standalone widget pages. `/widget?w=all`
+  is the **Today view** (weather, headlines by category, markets + watchlist);
+  `w=weather|headlines|markets|watchlist` are the single ones
+- `assets/top-feeds.js` — `App.getTopFeedsForScope`, the "top outlets for one
+  news category" picker shared by the news ticker and the Today view. One
+  definition on purpose; don't re-copy it into either caller
+- `docs/android-widget-mockup/` — the agreed design for the native Android
+  home-screen widget (not built yet; see NOTES.md 2026-11-14)
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
 - `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
   one Yahoo v8 chart reader both it and the watchlist use

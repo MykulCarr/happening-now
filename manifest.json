@@ -44,10 +44,10 @@
             "icons": []
         },
         {
-            "name": "Weather widget",
-            "short_name": "Weather widget",
-            "description": "Compact weather for a small window or home screen",
-            "url": "/widget?w=weather",
+            "name": "Today",
+            "short_name": "Today",
+            "description": "Weather, top headlines and markets at a glance",
+            "url": "/widget?w=all",
             "icons": []
         }
     ]

@@ -20,20 +20,6 @@
   const NEWS_CACHE_KEY = "jas_cache_news_v1";
   const NEWS_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
-  // Generic curated top-headline feeds for the critical ticker. We can't
-  // use per-query search RSS (Google News / Bing News / Yahoo News are all
-  // blocked at the Cloudflare Worker IP range), so the ticker pulls from a
-  // small set of high-volume outlet feeds that proxy fine. Items from
-  // multiple feeds are deduped and trimmed downstream.
-  const CRITICAL_NATIONAL_FEEDS = [
-    { rss: "https://feeds.npr.org/1001/rss.xml", scope: "national", label: "US" },
-    { rss: "https://www.cbsnews.com/latest/rss/main", scope: "national", label: "US" }  // was Reuters: metered paywall since Oct 2024
-  ];
-  const CRITICAL_INTERNATIONAL_FEEDS = [
-    { rss: "https://rss.dw.com/rdf/rss-en-all", scope: "international", label: "WORLD" },  // was BBC World: US paywall since 2025
-    { rss: "https://www.theguardian.com/world/rss", scope: "international", label: "WORLD" },
-    { rss: "https://www.aljazeera.com/xml/rss/all.xml", scope: "international", label: "WORLD" }
-  ];
 
   // Single state for the four scope tabs (LOCAL/REGIONAL/NATIONAL/INTERNATIONAL).
   // Drives both the critical ticker and the main news grid. Reads the old
@@ -332,59 +318,11 @@
     }
   }
 
-  // (No query-based news-search helper here. Google News, Bing News, and
-  // Yahoo News all block the worker IP range — see CRITICAL_*_FEEDS for
-  // the curated-outlet path. Local/regional fall back to data/local-
-  // stations.json when the user hasn't curated sources via the picker.)
+  // Which feeds the ticker reads for a category lives in assets/top-feeds.js
+  // (App.getTopFeedsForScope), shared with the Today view in widget.js.
 
   // The picker modal + Reddit discovery moved to common.js so both news.js
   // and settings.js can open it. Use window.App.openSourcePicker(scope, onSaved).
-
-  async function getTickerFeedsForScope(scope) {
-    if (scope === "national") return CRITICAL_NATIONAL_FEEDS;
-    if (scope === "international") return CRITICAL_INTERNATIONAL_FEEDS;
-
-    // Topic scopes (science, music, comics...) come straight from
-    // data/topic-sources.json — curated and verified, so there's no picker
-    // step and no geo to resolve.
-    if (await window.App?.isTopicScope?.(scope)) {
-      const entries = await window.App.getTopicEntries(scope);
-      const label = (await window.App.getAllTopics()).find(x => x.id === scope)?.label || scope.toUpperCase();
-      return entries.slice(0, 4).map(e => ({ rss: e.rss, scope, label }));
-    }
-
-    // local + regional: prefer the user's curated picker selection. The
-    // ticker only takes the top few so it doesn't fill up with one outlet.
-    // No saved picks → fall back to the national curated set so the bar is
-    // never empty (location-filtered news search is dead from the worker).
-    if (scope === "local" || scope === "regional") {
-      const liveCfg = window.App?.cfg || cfg;
-      const savedKey = scope === "local" ? "localSources" : "regionalSources";
-      const saved = Array.isArray(liveCfg?.[savedKey]) ? liveCfg[savedKey] : [];
-      if (saved.length > 0) {
-        const label = scope === "local" ? "LOCAL" : "REGIONAL";
-        return saved.slice(0, 3).map((s) => ({ rss: s.rss, scope, label }));
-      }
-      // No user picks yet — pull station data for the active geo if we have
-      // a covered state/city. data/local-stations.json (loaded via
-      // window.App.getStationsForGeo) gives real local feeds without
-      // touching search engines.
-      const geo = await getGeoForScope();
-      try {
-        const stations = (geo && typeof window.App?.getStationsForGeo === "function")
-          ? await window.App.getStationsForGeo(geo, scope)
-          : [];
-        if (stations.length > 0) {
-          const label = scope === "local"
-            ? (geo.city ? geo.city.toUpperCase() : "LOCAL")
-            : ((window.App?.expandStateName?.(geo.state) || geo.state || "").toUpperCase() || "REGIONAL");
-          return stations.slice(0, 3).map((s) => ({ rss: s.rss, scope, label }));
-        }
-      } catch { /* fall through */ }
-      return CRITICAL_NATIONAL_FEEDS;
-    }
-    return CRITICAL_NATIONAL_FEEDS;
-  }
 
   // Pick the news-grid widgets for the active scope.
   // - national / international: filter cfg.widgets by their `scopes` tag.
@@ -490,7 +428,7 @@
     criticalNewsBar.innerHTML = `<span class="criticalTickerEmpty">Loading headlines...</span>`;
 
     try {
-      const feeds = await getTickerFeedsForScope(currentScope);
+      const feeds = await window.App.getTopFeedsForScope(currentScope, getGeoForScope);
       if (myGen !== criticalTickerGen) return;
 
       const allItems = [];

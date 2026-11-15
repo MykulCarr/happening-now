@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
   '/settings.html',
   '/feedback.html',
   '/assets/common.js',
+  '/assets/top-feeds.js',
   '/assets/news.js',
   '/assets/news-swipe.js',
   '/assets/weather.js',
