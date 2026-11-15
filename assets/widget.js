@@ -268,7 +268,7 @@
   async function sendLink() {
     const cfg = App.cfg;
     const loc = await location_();
-    const state = loc?.state ? App.abbreviateState(loc.state).toUpperCase() : "";
+    const state = loc?.state ? App.abbreviateState(loc.state).toUpperCase().replace(/^US-/, "") : ""; // GPS lookups say "US-MI"
     const place = loc?.city ? `${loc.city}${state ? `, ${state}` : ""}` : "";
     const getGeo = async () => (loc?.city ? { city: loc.city, state: loc.state || "" } : null);
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Today, sized to fill a launcher page: clock, weather bar, a news
-     category with ‹ › to flip it, headlines spread evenly, then the watchlist.
+<!-- Today, sized to fill a launcher page. Three panels on one card, each a
+     slightly lighter inset so they read as separate sections of one widget:
+     weather, news (category switcher + headlines), watchlist.
      Headline and quote rows are added from code (Render.kt). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
@@ -8,18 +9,19 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="12dp"
-    android:paddingBottom="6dp">
+    android:paddingHorizontal="10dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="4dp">
 
-    <!-- Clock: a smaller size stretched sideways, so it reads wide and low. -->
+    <!-- Clock row: time on the left, date on the right. The time is a smaller
+         size stretched sideways, so it reads wide and low. -->
     <LinearLayout
         android:id="@+id/clock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:baselineAligned="true"
-        android:gravity="center_horizontal"
         android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
         android:paddingBottom="6dp">
 
         <TextClock
@@ -42,100 +44,117 @@
             android:textColor="@color/muted"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <TextClock
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:format12Hour="EEE, MMM d"
+            android:format24Hour="EEE, MMM d"
+            android:gravity="end"
+            android:textColor="@color/text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <include layout="@layout/part_weather" />
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
-        android:background="@color/card_edge" />
-
+    <!-- News panel. Takes all the spare height. -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/prev"
-            android:layout_width="48dp"
-            android:layout_height="36dp"
-            android:background="@drawable/pill_bg"
-            android:contentDescription="Previous category"
-            android:gravity="center"
-            android:text="‹"
-            android:textColor="@color/text"
-            android:textSize="22sp" />
-
-        <LinearLayout
-            android:id="@+id/catbox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/cat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:letterSpacing="0.08"
-                android:maxLines="1"
-                android:textColor="@color/accent"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/catpos"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/muted"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/next"
-            android:layout_width="48dp"
-            android:layout_height="36dp"
-            android:background="@drawable/pill_bg"
-            android:contentDescription="Next category"
-            android:gravity="center"
-            android:text="›"
-            android:textColor="@color/text"
-            android:textSize="22sp" />
-    </LinearLayout>
-
-    <!-- Takes all the spare height; each row inside has weight 1, which is
-         what spreads the headlines evenly down to the watchlist. -->
-    <LinearLayout
-        android:id="@+id/headlines"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:layout_weight="1"
+        android:background="@drawable/bar_bg"
         android:orientation="vertical"
-        android:paddingTop="4dp" />
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/prev"
+                android:layout_width="48dp"
+                android:layout_height="36dp"
+                android:background="@drawable/pill_bg"
+                android:contentDescription="Previous category"
+                android:gravity="center"
+                android:text="‹"
+                android:textColor="@color/text"
+                android:textSize="22sp" />
+
+            <LinearLayout
+                android:id="@+id/catbox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/cat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:letterSpacing="0.08"
+                    android:maxLines="1"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/catpos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/next"
+                android:layout_width="48dp"
+                android:layout_height="36dp"
+                android:background="@drawable/pill_bg"
+                android:contentDescription="Next category"
+                android:gravity="center"
+                android:text="›"
+                android:textColor="@color/text"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <!-- Each row inside has weight 1, which spreads the headlines evenly
+             from the switcher down to the bottom of the panel. -->
+        <LinearLayout
+            android:id="@+id/headlines"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <!-- Watchlist panel -->
     <LinearLayout
         android:id="@+id/watch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginVertical="6dp"
-            android:background="@color/card_edge" />
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bar_bg"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:letterSpacing="0.08"
+            android:paddingBottom="2dp"
             android:text="WATCHLIST"
-            android:textColor="@color/muted"
+            android:textColor="@color/accent"
             android:textSize="11sp"
             android:textStyle="bold" />
 
@@ -150,7 +169,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="8dp">
 
         <TextView
             android:id="@+id/updated"
@@ -163,7 +183,7 @@
         <TextView
             android:id="@+id/refresh"
             android:layout_width="44dp"
-            android:layout_height="32dp"
+            android:layout_height="30dp"
             android:contentDescription="Refresh now"
             android:gravity="center"
             android:text="↻"

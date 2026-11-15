@@ -81,7 +81,7 @@ object Render {
 
     /** Fill the place / conditions / temperature fields every layout has. */
     private fun weather(c: Context, v: RemoteViews, tapTarget: Int) {
-        val place = Store.config(c).optString("place")
+        val place = Store.config(c).optString("place").replace(", US-", ", ") // older links said "US-MI"
         val w = Store.cache(c).optJSONObject("weather")
         v.setTextViewText(R.id.place, place.ifEmpty { "Tap to set up" })
         v.setTextViewText(R.id.cond, if (w != null) describe(w.optInt("code")) else if (place.isEmpty()) "" else "Loading…")
@@ -129,8 +129,11 @@ object Render {
             .getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
         val quotes = cache.optJSONArray("quotes")
         val quoteRows = minOf(quotes?.length() ?: 0, when { height == 0 || height >= 520 -> 5; height >= 400 -> 3; else -> 0 })
-        val fixedHeight = 250 + if (quoteRows > 0) 30 + quoteRows * 22 else 0
-        val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 50).coerceIn(1, 6)
+        // Everything that isn't a headline (clock, weather, switcher, footer,
+        // padding) is about 250dp, plus the watchlist; a two-line headline
+        // needs about 58dp.
+        val fixedHeight = 250 + if (quoteRows > 0) 36 + quoteRows * 24 else 0
+        val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 58).coerceIn(1, 10)
 
         // Headlines: each row has weight 1, so they spread evenly down the space.
         v.removeAllViews(R.id.headlines)

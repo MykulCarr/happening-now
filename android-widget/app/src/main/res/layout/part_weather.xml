@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The weather bar shared by the large and medium widgets:
-     date / place / conditions on the left, icon in the middle, temperature
-     and high/low on the right. The date is a TextClock so it rolls over at
-     midnight without waiting for a refresh. -->
+<!-- The weather panel shared by the large and medium widgets: place and
+     conditions on the left; icon, temperature and high/low together on the
+     right. (The date lives up in the clock row.) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/weather"
     android:layout_width="match_parent"
@@ -11,21 +10,13 @@
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingHorizontal="12dp"
-    android:paddingVertical="6dp">
+    android:paddingVertical="8dp">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
-
-        <TextClock
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:format12Hour="EEE, MMM d"
-            android:format24Hour="EEE, MMM d"
-            android:textColor="@color/muted"
-            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/place"
@@ -43,7 +34,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/text"
+            android:textColor="@color/muted"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -51,13 +42,13 @@
         android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="8dp"
-        android:textSize="34sp" />
+        android:paddingStart="10dp"
+        android:paddingEnd="8dp"
+        android:textSize="30sp" />
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:gravity="end"
         android:orientation="vertical">
 

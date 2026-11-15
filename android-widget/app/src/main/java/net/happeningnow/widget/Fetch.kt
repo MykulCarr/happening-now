@@ -85,7 +85,7 @@ object Fetch {
         }.forEach { it.join() }
 
         val out = JSONArray()
-        all.distinctBy { it.getString("title") }.sortedByDescending { it.getLong("t") }.take(8).forEach { out.put(it) }
+        all.distinctBy { it.getString("title") }.sortedByDescending { it.getLong("t") }.take(12).forEach { out.put(it) }
         return out
     }
 
