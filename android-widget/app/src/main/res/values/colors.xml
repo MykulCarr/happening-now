@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The site's dark theme: navy card, white text, orange accent. -->
+<resources>
+    <color name="card">#0C3142</color>
+    <color name="card_edge">#1FFFFFFF</color>
+    <color name="inset">#0FFFFFFF</color>
+    <color name="pill">#14FFFFFF</color>
+    <color name="text">#F2FFFFFF</color>
+    <color name="muted">#B8FFFFFF</color>
+    <color name="accent">#EE9020</color>
+    <color name="up">#4ADE80</color>
+    <color name="down">#F87171</color>
+</resources>

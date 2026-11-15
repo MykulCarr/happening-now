@@ -21,8 +21,12 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `assets/top-feeds.js` — `App.getTopFeedsForScope`, the "top outlets for one
   news category" picker shared by the news ticker and the Today view. One
   definition on purpose; don't re-copy it into either caller
-- `docs/android-widget-mockup/` — the agreed design for the native Android
-  home-screen widget (not built yet; see NOTES.md 2026-11-14)
+- `android-widget/` — the native Android home-screen widget app (Kotlin, no
+  libraries; its own README). It reads the same public endpoints as the site
+  and gets its settings from the Today page's "Send to phone widget" button,
+  which only appears with `?send=hnwidget|hnwidgetdebug` (the app adds it).
+  That link carries lat/lon to an app on the same phone, never to a server.
+  `docs/android-widget-mockup/` is the design it was built from
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
 - `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
   one Yahoo v8 chart reader both it and the watchlist use

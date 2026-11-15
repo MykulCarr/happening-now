@@ -44,6 +44,14 @@
 /* A lone widget that can't load: centre the message in the window */
 .widget > .wMsg:only-child { margin: auto 0; }
 
+/* "Send to phone widget" — only shown when the widget app opened the page */
+.widget .wSend {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 48px; border-radius: 12px;
+  background: var(--accent); color: #fff; font-weight: 600; text-decoration: none;
+}
+.widget .wSend[aria-disabled="true"] { opacity: .6; pointer-events: none; }
+
 .wEmpty { color: var(--muted); font-size: .9rem; padding: 6px 0; }
 .wBusy .wList { opacity: .45; transition: opacity .15s; }
 .wSub { color: var(--muted); font-size: .8rem; }
