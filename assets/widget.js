@@ -281,12 +281,12 @@
   // holds it back until launch, and the link must not lead to a 404.
   let offerApp = false;
   if (/Android/i.test(navigator.userAgent) && !App.widgetLink?.paired()) {
-    fetch("/assets/widget-app/version.json").then((r) => {
-      if (!r.ok) return;
+    App.widgetLink.published().then((version) => {
+      if (!version) return;
       offerApp = true;
       root.querySelector("[data-part]")?.parentElement.insertAdjacentHTML("beforeend",
         `<a class="wMeta wAppLink" href="/android" target="_top">Put this on your home screen: get the Android widget →</a>`);
-    }).catch(() => {});
+    });
   }
 
   async function renderAll() {

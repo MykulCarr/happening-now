@@ -103,6 +103,9 @@
 
   async function check() {
     const built = await build().catch(() => null);
+    // Settings has its own always-there send button; keep its link current.
+    const settingsSend = document.getElementById("widgetAppSend");
+    if (built && settingsSend) attach(settingsSend, built, hideBar);
     if (!built || built.sig === read()?.sent) return hideBar();
     if (!bar) {
       bar = document.createElement("div");
@@ -121,5 +124,59 @@
     if (!query.has("send")) setTimeout(check, 1500);
   }
 
-  App.widgetLink = { paired: read, build, attach };
+  // Is the app published on this site? Resolves to its version info, or null.
+  // Production has no version file until the app is launched, which is what
+  // keeps every mention of the widget out of sight there until then.
+  let publishedOnce = null;
+  const published = () => (publishedOnce ||= fetch("/assets/widget-app/version.json")
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null));
+
+  // ---- Settings > System: the widget's own section -------------------------
+  // Shown only where the app is published. Unpaired, it points at the download
+  // page; paired, it also offers a send button for whenever you want one
+  // (the bar above only appears when something has changed).
+  const section = document.getElementById("widgetAppSection");
+  if (section) published().then(async (version) => {
+    if (!version) return;
+    section.style.display = "";
+    if (!read()) return;
+    document.getElementById("widgetAppStatus").textContent =
+      "This phone is paired with the widget app. When you change your location, news or watchlist, a bar offers to update the widget; you can also send your settings any time.";
+    document.getElementById("widgetAppGet").textContent = "About the widget";
+    const send = document.getElementById("widgetAppSend");
+    attach(send, await build(), hideBar);
+    send.style.display = "";
+  }).catch(() => {});
+
+  // ---- the one-time announcement --------------------------------------------
+  // Shown once per browser, on Android only (nobody else can install it), to
+  // people who have not paired a widget. Marked as seen the moment it shows,
+  // so it never follows anyone from page to page.
+  const ANNOUNCED = "hn_widget_announced_v1";
+  const seen = () => { try { return Boolean(localStorage.getItem(ANNOUNCED)); } catch { return true; } };
+  if (/Android/i.test(navigator.userAgent) && !read() && !query.has("send")
+      && !/^\/(android|widget)/.test(location.pathname) && !seen()) {
+    published().then((version) => {
+      if (!version) return;
+      setTimeout(() => {
+        if (seen() || document.querySelector(".widgetAnnounce")) return;
+        try { localStorage.setItem(ANNOUNCED, String(Date.now())); } catch { return; } // can't remember it: don't nag
+        const card = document.createElement("div");
+        card.className = "widgetAnnounce";
+        card.setAttribute("role", "dialog");
+        card.setAttribute("aria-label", "New: Android home-screen widget");
+        card.innerHTML = `
+          <strong>New: Happening Now on your home screen</strong>
+          <span>A free Android widget with the time, your weather, your headlines and your watchlist. No ads, no account. Version ${String(version.versionName).replace(/[^0-9.]/g, "")}.</span>
+          <div class="widgetAnnounceActions">
+            <a class="btn" href="/android" data-analytics="widget-announce">See the widget</a>
+            <button class="btn" type="button">Not now</button>
+          </div>`;
+        card.querySelector("button").onclick = () => card.remove();
+        document.body.appendChild(card);
+      }, 2500); // let the page settle first
+    });
+  }
+
+  App.widgetLink = { paired: read, build, attach, published };
 })();

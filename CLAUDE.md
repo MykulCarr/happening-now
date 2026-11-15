@@ -44,6 +44,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   settings export. An unpaired browser does nothing, so ordinary visitors
   never see any of it. `App.getNewsCategories` (top-feeds.js) is the one list
   of news tabs both this and the Today view use
+  It also drives the widget section in Settings > System and the one-time
+  "the widget is available" card (Android only, unpaired only, remembered in
+  `hn_widget_announced_v1`). All three ask `App.widgetLink.published()`, which
+  is null wherever `assets/widget-app/version.json` is absent, so none of it
+  shows on production before launch
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
 - `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
   one Yahoo v8 chart reader both it and the watchlist use

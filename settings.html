@@ -674,6 +674,22 @@
             </div>
           </div>
 
+          <!-- Android home-screen widget. Starts hidden: widget-link.js shows it
+               only where the app is published (its version file exists), so it
+               stays out of sight on production until the app is launched. -->
+          <div class="collapsibleSection" id="widgetAppSection" style="display:none">
+            <button class="collapsibleHeader expanded" data-section="android-widget">
+              Android Home-Screen Widget
+            </button>
+            <div class="collapsibleBody expanded">
+              <p class="hint" id="widgetAppStatus">Put the time, your weather, your headlines and your watchlist on your phone's home screen. Free, with no ads and no account.</p>
+              <div class="settingsActionRow">
+                <a class="btn" id="widgetAppGet" href="/android" data-analytics="widget-get">Get the widget</a>
+                <a class="btn" id="widgetAppSend" style="display:none" data-analytics="widget-send">Send my settings to the widget</a>
+              </div>
+            </div>
+          </div>
+
           <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="import-export">
               Import / Export (Backup)
