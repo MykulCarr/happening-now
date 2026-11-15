@@ -670,35 +670,51 @@ No code changes.
 **Pick up next:** same as before — check /admin → Usage → Visitors and the
 Cloudflare layout-shift score after a few days of real traffic.
 
-## 2026-11-14 — Today view, and the Android widget design
+## 2026-11-14/15 — Today view, Android widget app, smoother swipes
 
-- **Today view shipped** at `/widget?w=all` (manifest shortcut "Today" replaced
-  "Weather widget"): compact weather, headlines with the news page's own
-  category chips (tap or swipe, wraps round), markets board + watchlist. The
-  chosen category is saved as `cfg.newsScope`, so it and the news page open on
-  the same tab. Cards load independently. Headlines are newest-first, not
-  interleaved (the Guardian world feed isn't in date order).
-- **`assets/top-feeds.js`**: the ticker's feed picker moved out of `news.js`
-  unchanged so the Today view shares it.
-- **Android home-screen widget: design agreed, nothing built.** A PWA can't put
-  a widget on the home screen, so it needs a small native app. Mock-up:
-  https://claude.ai/artifact/GKNDbwSbkvaPGWcswsFiey (source in
-  `docs/android-widget-mockup/`). Agreed look: stretched-wide clock top-centre
-  on every size; weather bar (date / "Jackson, MI" / conditions left, icon
-  middle, temp + hi/lo right); full-launcher-page widget with six headlines
-  spread evenly, ‹ › category buttons (widgets can't detect swipes), LOCAL and
-  REGIONAL labelled with their place, then a five-row watchlist (no indexes).
-  Proposed build, **awaiting Mike's OK**: `android-widget/` in this repo,
-  Kotlin + Jetpack Glance + WorkManager, widget-only app (no TWA), settings
-  handed over by a "Send to phone widget" button on the Today view, debug
-  build with its own app id, sideload over USB. Android Studio, SDK and adb
-  are already on OEMMEO.
-- **Swipe smoothness (open to-do):** every tab switch calls `render(true)`,
-  which bypasses the 5-minute feed cache — that's the slowness. Plan offered:
-  use the cache on switches, pre-load the two neighbouring categories, then
-  make the cards follow the finger with the next category's name at the edge.
-- Port 8080 on OEMMEO was held by a stray `python -m http.server` (PID 13936);
-  tested on 8091 with a web-security-off headless Chrome instead.
+All live and pushed (last commit of the session is on main).
 
-**Pick up next:** get Mike's OK on the Android widget build; decide whether the
-Today view should get the mock-up's clock / weather bar / place names.
+- **Today view** at `/widget?w=all` (manifest shortcut "Today"): compact
+  weather, headlines with the news page's category chips (tap or swipe),
+  markets board + watchlist. The chosen category is `cfg.newsScope`, shared
+  with the news page. Headlines are newest-first, not interleaved.
+- **`assets/top-feeds.js`**: the ticker's per-category feed picker and the
+  list of news tabs, shared by news.js, the Today view and widget-link.js.
+- **Android widget app** (`android-widget/`, its own README): Kotlin, no
+  libraries (RemoteViews + TextClock + JobScheduler; Glance and WorkManager
+  were proposed, then dropped as unnecessary). Three sizes. Full-page layout:
+  clock left / date right, weather panel (icon beside the temperature), news
+  panel with a category strip (neighbours fade at the edges; widgets cannot
+  detect swipes, so taps), headlines spread evenly and counted by height,
+  watchlist panel, settings gear + refresh in the footer. Design source:
+  `docs/android-widget-mockup/`, canvas at
+  https://claude.ai/artifact/GKNDbwSbkvaPGWcswsFiey
+- **Pre-cache:** each refresh fetches the two neighbouring categories, and
+  every category on unmetered networks.
+- **Settings handoff:** the app cannot read site storage. It opens
+  `/widget?w=all&send=<scheme>&k=<code>`; `assets/widget-link.js` pairs
+  (`hn_widget_link_v1`) and from then on shows an "Update phone widget" bar
+  whenever settings differ from what was last sent. A link carrying the
+  pairing code is applied without asking; any other link asks first.
+- **Gotcha that bit:** Mike's phone defaults to **Firefox**, so the first
+  settings send came from a browser with no settings (site defaults, no
+  location). `Site.kt` now opens site pages in the installed WebAPK. His home
+  screen is **Smart Launcher**; the margin around widgets is the launcher's.
+- **Smoother swipes (to-do closed):** cards follow the finger with an edge
+  label naming the next category; switches read the 5-minute feed cache;
+  neighbours pre-load. Root causes found: `render(true)` both forced the
+  redraw and skipped the cache, and forced-fresh downloads were never cached
+  at all (`fetchRssItems` only stored when `useCache` was true).
+- **Environment:** the Bash tool fails on long inline scripts containing
+  apostrophes ("unexpected EOF"); write the script to a file and run it. Port
+  8080 was held by a stray `python -m http.server`; testing used 8091 with a
+  web-security-off headless Chrome.
+
+**Not done:** the medium and small widgets have not been seen on screen with
+real data; tapping the widget's category name opens the news page on its own
+last tab, not the widget's; the phone runs the debug ("beta") build and there
+is no release signing key yet; pairing on the phone was confirmed by Mike but
+not read back over USB.
+
+**Pick up next:** decide the store question (open to-do); if the widget is
+only for Mike, make a signed release build and back up the key.
