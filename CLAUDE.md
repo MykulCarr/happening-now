@@ -31,11 +31,10 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   and `version.json` live in `assets/widget-app/`, written there by
   `scripts/release-widget.ps1` and committed on purpose (a deploy from a fresh
   clone must ship the same file; the signing key is not in the repo). The
-  service worker skips that folder. **Not launched yet:** both are listed in
-  `$unreleased` in `scripts/stage-public-assets.ps1`, so `deploy-prod` strips
-  them and `deploy-beta` (which passes `-IncludeUnreleased`) keeps them. To
-  launch: empty that list, add `/android` to `sitemap.xml`, and link the page
-  from the app section of `privacy.html`
+  service worker skips that folder. Launched 2026-11-15. The holding
+  mechanism it used is still there for the next thing: anything listed in
+  `$unreleased` in `scripts/stage-public-assets.ps1` is stripped by
+  `deploy-prod` and kept by `deploy-beta` (which passes `-IncludeUnreleased`)
 - `assets/widget-link.js` — pairs this browser with the widget app and shows
   the "Update phone widget" bar when settings differ from what the widget
   was last sent. Pairing (`hn_widget_link_v1`: link scheme, the app's private
@@ -47,8 +46,8 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   It also drives the widget section in Settings > System and the one-time
   "the widget is available" card (Android only, unpaired only, remembered in
   `hn_widget_announced_v1`). All three ask `App.widgetLink.published()`, which
-  is null wherever `assets/widget-app/version.json` is absent, so none of it
-  shows on production before launch
+  is null wherever `assets/widget-app/version.json` is absent (how it all
+  stayed hidden on production before launch)
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint
 - `cloudflare-sync-worker/src/markets.js` — the cached board snapshot, and the
   one Yahoo v8 chart reader both it and the watchlist use

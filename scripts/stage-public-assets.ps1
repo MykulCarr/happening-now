@@ -53,11 +53,11 @@ foreach ($dir in $publicDirs) {
   }
 }
 
-# Built and committed, but not public until launched: the Android widget's
-# download page and the app file itself. Production deploys strip them; beta
-# keeps them so they can be tried. When launching, empty this list, and add
-# /android to sitemap.xml and a link to it in privacy.html's app section.
-$unreleased = @("android.html", "assets/widget-app")
+# Things that are built and committed but not public yet. Production deploys
+# strip whatever is listed here; beta (-IncludeUnreleased) keeps it, so it can
+# be tried first. Empty since the Android widget launched on 2026-11-15; the
+# next unreleased page or folder goes in this list.
+$unreleased = @()
 if (-not $IncludeUnreleased) {
   foreach ($item in $unreleased) {
     $path = Join-Path $target $item
