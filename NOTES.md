@@ -718,3 +718,43 @@ not read back over USB.
 
 **Pick up next:** decide the store question (open to-do); if the widget is
 only for Mike, make a signed release build and back up the key.
+
+## 2026-11-15 — Android widget launched at /android
+
+Version 1.0 (build 3) is public: happening-now.net/android, a signed 138 KB
+APK downloaded from the site, no store.
+
+- **Decision:** no Play Store. A direct download suits it, because anyone who
+  finds it is already a site user. Notifications were left out on purpose:
+  they need an always-on server and would end "collects nothing".
+- **Built before launch** (after a look at Chronus, the weather-widget apps
+  and Google's widget quality tiers): line weather icons, the site's light and
+  dark themes following the phone, picker previews, staleness shown honestly,
+  scrolling headlines from every source in a category (Android 12+; older
+  phones keep the fixed list), setup inside the app (`Catalog.kt`, from the
+  site's public `data/*.json`), site name in the top row, a deliberate tap
+  map, collapsible watchlist and forecast, a weather-alert banner, four
+  options, a contrast pass.
+- **Site side:** `/android` page, a section in Settings > System, a one-time
+  announcement card (Android, unpaired), an "Update phone widget" bar after
+  pairing. `$unreleased` in `stage-public-assets.ps1` is how it was held back
+  from production until launch; it is empty now and there for next time.
+- **Releasing:** bump `versionCode`, `pwsh -File scripts/release-widget.ps1`,
+  check on a phone, commit, deploy. Installed copies read `version.json` daily.
+- **Testing trick worth keeping:** `emulator -avd spike -no-window`, then
+  `adb -s emulator-5554` plus `uiautomator dump` to find and tap controls.
+  That is how in-app setup, the light theme and the two smaller sizes were
+  checked without taking over Mike's phone.
+- **Mistake to remember:** a deploy-prod that would have published the
+  held-back page was (rightly) blocked. The fix was the `$unreleased` gate,
+  not a retry.
+
+**Not verified:** the real download-and-install flow from Chrome on a phone
+(the app reached Mike's phone over USB); the alert banner drawn with a live
+alert; TalkBack and large-text; any phone other than a Pixel 8 Pro and the
+Android 16 emulator; sideloading in the four countries where Google's
+developer verification is already enforced.
+
+**Pick up next:** Mike backs up the signing key (YOUR-TURN). Then watch for
+the first real-world reports, and register as a verified Android developer
+before the 2027 worldwide rollout.
