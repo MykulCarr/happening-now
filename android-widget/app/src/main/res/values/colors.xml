@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The site's dark theme: navy card, white text, orange accent. -->
+<!-- The site's light theme: sage card, white panels, burnt-orange accent.
+     panel_solid is what `inset` looks like once laid over `card`; the
+     category strip's edge fades need it as an opaque colour. -->
 <resources>
-    <color name="card">#0C3142</color>
-    <color name="card_edge">#1FFFFFFF</color>
-    <color name="inset">#0FFFFFFF</color>
-    <color name="pill">#14FFFFFF</color>
-    <color name="text">#F2FFFFFF</color>
-    <color name="muted">#B8FFFFFF</color>
-    <color name="faint">#80FFFFFF</color>
-    <color name="accent">#EE9020</color>
-    <color name="up">#4ADE80</color>
-    <color name="down">#F87171</color>
+    <color name="card">#99B19C</color>
+    <color name="card_edge">#29000000</color>
+    <color name="inset">#A6FFFFFF</color>
+    <color name="pill">#8CFFFFFF</color>
+    <color name="panel_solid">#DBE4DC</color>
+    <color name="panel_clear">#00DBE4DC</color>
+    <color name="text">#DE000000</color>
+    <color name="muted">#A3000000</color>
+    <color name="faint">#70000000</color>
+    <color name="accent">#B6510C</color>
+    <color name="up">#15803D</color>
+    <color name="down">#B91C1C</color>
 </resources>

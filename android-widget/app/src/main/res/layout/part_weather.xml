@@ -38,13 +38,13 @@
             android:textSize="13sp" />
     </LinearLayout>
 
-    <TextView
+    <ImageView
         android:id="@+id/icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingStart="10dp"
-        android:paddingEnd="8dp"
-        android:textSize="30sp" />
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:importantForAccessibility="no" />
 
     <LinearLayout
         android:layout_width="wrap_content"

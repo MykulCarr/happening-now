@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- app_name and scheme come from app/build.gradle.kts (they differ per build). -->
+<resources>
+    <string name="desc_large">Time, weather, headlines for each of your news categories, and your watchlist. Sized for a whole page.</string>
+    <string name="desc_medium">Time, weather and the newest story.</string>
+    <string name="desc_small">Time and weather.</string>
+</resources>

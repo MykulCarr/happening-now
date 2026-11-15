@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Lies over one end of the category strip so the names fade into the panel. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient android:angle="0" android:startColor="#001B3D4D" android:endColor="#FF1B3D4D" />
+    <gradient android:angle="0" android:startColor="@color/panel_clear" android:endColor="@color/panel_solid" />
 </shape>

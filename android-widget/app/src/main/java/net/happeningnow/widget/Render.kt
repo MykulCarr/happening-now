@@ -72,11 +72,25 @@ object Render {
         else -> ""
     }
 
-    private fun icon(code: Int) = when (code) {
-        0, 1 -> "☀️"; 2 -> "⛅"; 3, 45, 48 -> "☁️"
-        in 51..55, in 80..82 -> "🌦️"
-        in 61..65 -> "🌧️"; in 71..75 -> "❄️"; 95 -> "⛈️"
-        else -> "🌤️"
+    private fun icon(code: Int, day: Boolean) = when (code) {
+        0, 1 -> if (day) R.drawable.ic_clear else R.drawable.ic_clear_night
+        2 -> if (day) R.drawable.ic_partly else R.drawable.ic_partly_night
+        3 -> R.drawable.ic_cloud
+        45, 48 -> R.drawable.ic_fog
+        in 51..55 -> R.drawable.ic_drizzle
+        in 61..65, in 80..82 -> R.drawable.ic_rain
+        in 71..75 -> R.drawable.ic_snow
+        95 -> R.drawable.ic_storm
+        else -> if (day) R.drawable.ic_partly else R.drawable.ic_partly_night
+    }
+
+    // Anything older than this is called out as old rather than shown as current.
+    private const val STALE_MS = 2 * 60 * 60 * 1000L
+
+    /** "6:10 AM" today, "Sat 6:10 AM" otherwise. */
+    private fun stamp(time: Long): String {
+        val sameDay = SimpleDateFormat("yyyyMMdd", Locale.US).let { it.format(Date(time)) == it.format(Date()) }
+        return SimpleDateFormat(if (sameDay) "h:mm a" else "EEE h:mm a", Locale.US).format(Date(time))
     }
 
     /** Fill the place / conditions / temperature fields every layout has. */
@@ -84,8 +98,13 @@ object Render {
         val place = Store.config(c).optString("place").replace(", US-", ", ") // older links said "US-MI"
         val w = Store.cache(c).optJSONObject("weather")
         v.setTextViewText(R.id.place, place.ifEmpty { "Tap to set up" })
-        v.setTextViewText(R.id.cond, if (w != null) describe(w.optInt("code")) else if (place.isEmpty()) "" else "Loading…")
-        v.setTextViewText(R.id.icon, if (w != null) icon(w.optInt("code")) else "")
+        val fetched = w?.optLong("at") ?: 0
+        v.setTextViewText(R.id.cond, when {
+            w == null -> if (place.isEmpty()) "" else "Loading…"
+            fetched > 0 && System.currentTimeMillis() - fetched > STALE_MS -> "${describe(w.optInt("code"))} · as of ${stamp(fetched)}"
+            else -> describe(w.optInt("code"))
+        })
+        v.setImageViewResource(R.id.icon, if (w != null) icon(w.optInt("code"), w.optBoolean("day", true)) else 0)
         v.setTextViewText(R.id.temp, if (w != null) deg(w.optDouble("temp")) else "--")
         v.setTextViewText(R.id.hilo, if (w != null) "${deg(w.optDouble("hi"))} / ${deg(w.optDouble("lo"))}" else "")
         v.setOnClickPendingIntent(tapTarget, if (place.isEmpty()) openSetup(c) else open(c, "${Fetch.SITE}/weather"))
@@ -178,11 +197,16 @@ object Render {
         // Footer
         val updatedAt = cache.optLong("updatedAt")
         val newer = Store.updateAvailable(c)
+        val status = Store.status(c)
+        val stale = updatedAt > 0 && System.currentTimeMillis() - updatedAt > STALE_MS
         v.setTextViewText(R.id.updated, when {
+            status != null -> status
             newer != null -> "Version $newer is available · tap ⚙"
-            updatedAt > 0 -> "News and stocks updated ${SimpleDateFormat("h:mm a", Locale.US).format(Date(updatedAt))}"
+            stale -> "Out of date · last updated ${stamp(updatedAt)} · tap ↻"
+            updatedAt > 0 -> "News and stocks updated ${stamp(updatedAt)}"
             else -> "Not updated yet"
         })
+        v.setTextColor(R.id.updated, c.getColor(if (stale && status == null) R.color.down else R.color.muted))
         v.setOnClickPendingIntent(R.id.refresh, action(c, ACTION_REFRESH))
         v.setOnClickPendingIntent(R.id.settings, openSetup(c))
         return v

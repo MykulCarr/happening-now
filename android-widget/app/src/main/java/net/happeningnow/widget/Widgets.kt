@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 
 const val ACTION_PREV = "net.happeningnow.widget.PREV"
@@ -37,7 +38,13 @@ abstract class BaseWidget : AppWidgetProvider() {
                 Widgets.updateAll(c) // pre-cached headlines appear at once
                 if (RefreshJob.nearbyNewsIsStale(c)) RefreshJob.schedule(c, full = false) // top up the pre-cache
             }
-            ACTION_REFRESH -> RefreshJob.schedule(c)
+            ACTION_REFRESH -> {
+                // Acknowledge the tap at once, and be straight about being offline.
+                val online = c.getSystemService(ConnectivityManager::class.java).activeNetwork != null
+                Store.setStatus(c, if (online) "Updating…" else "No connection. Will update when back online.")
+                Widgets.updateAll(c)
+                RefreshJob.schedule(c)
+            }
             else -> super.onReceive(c, intent)
         }
     }

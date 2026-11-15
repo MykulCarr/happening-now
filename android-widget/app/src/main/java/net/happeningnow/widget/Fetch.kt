@@ -43,13 +43,15 @@ object Fetch {
         if (!cfg.has("lat")) return null
         val d = JSONObject(get(
             "https://api.open-meteo.com/v1/forecast?latitude=${cfg.getDouble("lat")}&longitude=${cfg.getDouble("lon")}" +
-                "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min" +
+                "&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min" +
                 "&forecast_days=1&temperature_unit=${cfg.optString("tempUnit", "fahrenheit")}&timezone=auto"))
         val now = d.getJSONObject("current")
         val day = d.getJSONObject("daily")
         return JSONObject()
             .put("temp", now.getDouble("temperature_2m"))
             .put("code", now.getInt("weather_code"))
+            .put("day", now.optInt("is_day", 1) == 1)
+            .put("at", System.currentTimeMillis())
             .put("hi", day.getJSONArray("temperature_2m_max").getDouble(0))
             .put("lo", day.getJSONArray("temperature_2m_min").getDouble(0))
     }

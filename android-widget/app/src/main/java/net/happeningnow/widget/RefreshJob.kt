@@ -31,6 +31,7 @@ class RefreshJob : JobService() {
         thread {
             try { refresh(this, full = params.extras.getInt("full") == 1) }
             catch (e: Exception) { Log.w("HNWidget", "refresh failed", e) }
+            Store.setStatus(this, null)
             Widgets.updateAll(this)
             jobFinished(params, false)
         }

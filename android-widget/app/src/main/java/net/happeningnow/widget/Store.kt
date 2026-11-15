@@ -51,6 +51,17 @@ object Store {
         return if (prefs(c).getLong("latestCode", 0) > installed) prefs(c).getString("latestName", "") else null
     }
 
+    // ---- refresh status ------------------------------------------------------
+    // Set when the refresh button is tapped, cleared when the refresh ends, so
+    // a tap is always acknowledged. Ignored after two minutes in case the
+    // refresh was killed before it could clear it.
+    fun setStatus(c: Context, text: String?) {
+        prefs(c).edit().putString("status", text).putLong("statusAt", System.currentTimeMillis()).commit()
+    }
+
+    fun status(c: Context): String? =
+        prefs(c).getString("status", null)?.takeIf { System.currentTimeMillis() - prefs(c).getLong("statusAt", 0) < 2 * 60 * 1000L }
+
     fun isSetUp(c: Context) = prefs(c).contains("config")
 
     fun config(c: Context) = JSONObject(prefs(c).getString("config", null) ?: DEFAULT_CONFIG)

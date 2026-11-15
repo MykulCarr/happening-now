@@ -66,11 +66,11 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <TextView
+        <ImageView
             android:id="@+id/icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="24sp" />
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:importantForAccessibility="no" />
     </LinearLayout>
 
     <LinearLayout
