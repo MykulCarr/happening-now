@@ -241,6 +241,16 @@
             android:textSize="11sp" />
 
         <TextView
+            android:id="@+id/settings"
+            android:layout_width="44dp"
+            android:layout_height="30dp"
+            android:contentDescription="Widget settings"
+            android:gravity="center"
+            android:text="⚙"
+            android:textColor="@color/muted"
+            android:textSize="16sp" />
+
+        <TextView
             android:id="@+id/refresh"
             android:layout_width="44dp"
             android:layout_height="30dp"

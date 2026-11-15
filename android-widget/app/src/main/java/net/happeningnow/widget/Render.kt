@@ -181,6 +181,7 @@ object Render {
             if (updatedAt > 0) "News and stocks updated ${SimpleDateFormat("h:mm a", Locale.US).format(Date(updatedAt))}"
             else "Not updated yet")
         v.setOnClickPendingIntent(R.id.refresh, action(c, ACTION_REFRESH))
+        v.setOnClickPendingIntent(R.id.settings, openSetup(c))
         return v
     }
 }

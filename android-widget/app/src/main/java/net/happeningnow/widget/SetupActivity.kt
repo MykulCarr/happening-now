@@ -50,6 +50,11 @@ class SetupActivity : Activity() {
         }
         note("Opens the Today page. Tap “Send to phone widget” there. Do it again whenever you change your location, categories or watchlist on the site.", 13f, R.color.muted)
 
+        // The widget only mirrors the site: the watchlist, categories and
+        // location are changed there, then sent again with button 1.
+        button("Change my settings on the site") { startActivity(Site.intent(this, "${Fetch.SITE}/settings")) }
+        note("The widget shows what this phone's copy of the site has. Change it there, then tap button 1 again to send it over.", 13f, R.color.muted)
+
         button("2 · Add the full-page Today widget") { pin(LargeWidget::class.java) }
         button("Add the medium widget (time, weather, top story)") { pin(MediumWidget::class.java) }
         button("Add the small widget (time and weather)") { pin(SmallWidget::class.java) }
