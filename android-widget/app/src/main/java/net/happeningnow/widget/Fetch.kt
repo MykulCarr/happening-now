@@ -41,6 +41,9 @@ object Fetch {
         }
     }
 
+    /** A plain GET, for Catalog's reads of the site's catalogs and the geocoders. */
+    fun getText(url: String) = get(url)
+
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
 
     /** { temp, code, hi, lo } for the saved location, or null if none is set. */

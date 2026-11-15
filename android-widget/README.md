@@ -61,10 +61,18 @@ browser: the settings live in Chrome's storage.
 
 ## Files
 
-- `Store.kt` — saved settings, cached data, current category
+- `Store.kt` — saved settings, cached data, current category, small flags
 - `Fetch.kt` — Open-Meteo, `/v1/rss/raw`, `/v1/stocks/quotes`; tolerant feed parsing
-- `RefreshJob.kt` — background refresh through the job scheduler
-- `Render.kt` — draws each size from the cache (never touches the network)
-- `Widgets.kt` — the widget classes and the ‹ › / refresh taps
+- `RefreshJob.kt` — background refresh and pre-caching, through the job scheduler
+- `Render.kt` — draws each size from the cache (never touches the network); the tap map
+- `Widgets.kt` — the widget classes and what the taps do
 - `Site.kt` — opens site pages in the installed PWA
-- `SetupActivity.kt` — the one screen; receives settings links
+- `OpenActivity.kt` — invisible; opens the link of a tapped row in the scrolling list
+- `SetupActivity.kt` — the main screen; receives settings links
+- `ManualSetupActivity.kt` + `Catalog.kt` — "Set up here": settings chosen in the
+  app, built from the site's public catalogs (`data/*.json`)
+- `Ui.kt` — the plain column both screens are made of
+
+Testing without a phone: `emulator -avd <name> -no-window`, then `adb -s
+emulator-5554 install` and `uiautomator dump` to find and tap controls. That
+is how in-app setup and the light theme were first checked.

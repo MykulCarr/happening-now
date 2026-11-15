@@ -108,6 +108,7 @@ object Store {
         }
 
         val out = JSONObject().put("cats", cats).put("symbols", symbols)
+            .put("source", if (raw.optString("source") == "app") "app" else "site")
             .put("place", text(raw, "place")).put("cat", text(raw, "cat"))
             .put("tempUnit", if (raw.optString("tempUnit") == "celsius") "celsius" else "fahrenheit")
         val lat = raw.optDouble("lat"); val lon = raw.optDouble("lon")

@@ -23,7 +23,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        android:theme="@style/AppTheme">
 
         <!-- The only screen. It also receives the settings link the Today
              page sends back (the scheme differs for the beta build).
@@ -45,6 +45,9 @@
                 <data android:host="setup" android:scheme="${scheme}" />
             </intent-filter>
         </activity>
+
+        <!-- "Set up here": town, topics and watchlist chosen in the app. -->
+        <activity android:name=".ManualSetupActivity" android:exported="false" />
 
         <!-- Invisible: opens the link of a tapped row in the scrolling list. -->
         <activity

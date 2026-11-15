@@ -7,67 +7,52 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.util.Base64
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONObject
 
 /**
- * The app's one screen. Two jobs:
- *  1. Fetch your settings: opens the Today page, whose "Send to phone widget"
- *     button links back here with the settings packed into the link.
+ * The app's main screen, reached from its icon or the widget's gear. Three jobs:
+ *  1. Choose what the widget shows: here in the app (ManualSetupActivity), or
+ *     by bringing settings over from happening-now.net.
  *  2. Put a widget on the home screen.
+ *  3. Receive the settings link the site sends back.
  *
- * The settings travel phone-to-phone inside that link — no server sees them.
+ * Site settings travel phone-to-phone inside that link; no server sees them.
  */
 class SetupActivity : Activity() {
     private lateinit var status: TextView
 
     override fun onCreate(saved: Bundle?) {
         super.onCreate(saved)
-        val pad = (20 * resources.displayMetrics.density).toInt()
-        val column = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(pad, pad * 2, pad, pad)
-            setBackgroundColor(getColor(R.color.card))
-        }
-        fun note(s: String, size: Float, color: Int) = TextView(this).apply {
-            text = s; textSize = size; setTextColor(getColor(color)); setPadding(0, 0, 0, pad)
-        }.also { column.addView(it) }
-        fun button(label: String, onTap: () -> Unit) = Button(this).apply {
-            text = label; isAllCaps = false; setOnClickListener { onTap() }
-        }.also { column.addView(it, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
-
-        note(getString(R.string.app_name), 24f, R.color.text)
-        status = note("", 15f, R.color.muted)
+        val column = Column(this)
+        column.title(getString(R.string.app_name))
+        status = column.note("", 15f)
 
         // Installed from the site rather than a store, so updating is a
         // download: the page it opens has the newest version.
         Store.updateAvailable(this)?.let { version ->
-            button("Download version $version") { startActivity(Site.intent(this, "${Fetch.SITE}/android")) }
-            note("A newer version of this app is on the site. Installing it over this one keeps your settings.", 13f, R.color.muted)
+            column.button("Download version $version") { startActivity(Site.intent(this, "${Fetch.SITE}/android")) }
+            column.note("A newer version of this app is on the site. Installing it over this one keeps your settings.")
         }
+
+        column.heading("What the widget shows")
+        column.button("Set up here") { startActivity(Intent(this, ManualSetupActivity::class.java)) }
+        column.note("Choose your town, news topics and watchlist in this app. No website needed.")
 
         // The scheme tells the page which build to send back to (beta or real).
-        button("1 · Get my settings from happening-now.net") {
+        column.button("Use my happening-now.net settings") {
             startActivity(Site.intent(this, "${Fetch.SITE}/widget?w=all&send=${getString(R.string.scheme)}&k=${Store.pairingCode(this)}"))
         }
-        note("Opens the Today page. Tap “Send to phone widget” there. Do it again whenever you change your location, categories or watchlist on the site.", 13f, R.color.muted)
+        column.note("Already use the site on this phone? This opens it: tap “Send to phone widget” there. Afterwards the site offers to update the widget whenever you change something.")
 
-        // The widget only mirrors the site: the watchlist, categories and
-        // location are changed there, then sent again with button 1.
-        button("Change my settings on the site") { startActivity(Site.intent(this, "${Fetch.SITE}/settings")) }
-        note("The widget shows what this phone's copy of the site has. Change it there, then tap button 1 again to send it over.", 13f, R.color.muted)
+        column.heading("Add a widget")
+        column.button("Full page: time, weather, news, watchlist") { pin(LargeWidget::class.java) }
+        column.button("Medium: time, weather, top stories") { pin(MediumWidget::class.java) }
+        column.button("Small: time and weather") { pin(SmallWidget::class.java) }
+        column.note("Or long-press your home screen, choose Widgets, and find this app. Any widget can be resized afterwards.")
 
-        button("2 · Add the full-page Today widget") { pin(LargeWidget::class.java) }
-        button("Add the medium widget (time, weather, top story)") { pin(MediumWidget::class.java) }
-        button("Add the small widget (time and weather)") { pin(SmallWidget::class.java) }
-        note("Or long-press your home screen, choose Widgets, and find this app. Any widget can be resized afterwards.", 13f, R.color.muted)
-
-        setContentView(ScrollView(this).apply { addView(column); setBackgroundColor(getColor(R.color.card)) })
+        column.show()
         showStatus()
         receive(intent)
     }
@@ -80,14 +65,17 @@ class SetupActivity : Activity() {
 
     private fun showStatus() {
         val cfg = Store.config(this)
-        status.text = if (!Store.isSetUp(this)) "Not set up yet. Until then the widget shows national headlines and no weather."
-        else "Using: ${describe(cfg)}"
+        status.text = when {
+            !Store.isSetUp(this) -> "Not set up yet. Until then the widget shows national headlines and no weather."
+            cfg.optString("source") == "app" -> "Set up in this app: ${describe(cfg)}"
+            else -> "Using your happening-now.net settings: ${describe(cfg)}"
+        }
     }
 
     private fun describe(cfg: JSONObject) =
         "${cfg.optString("place").ifEmpty { "no location" }} · ${cfg.getJSONArray("cats").length()} news categories · ${cfg.getJSONArray("symbols").length()} stocks"
 
-    /** A settings link looks like scheme://setup?d=<base64 of the settings JSON>. */
+    /** A settings link looks like scheme://setup?k=<pairing code>&d=<base64 of the settings JSON>. */
     private fun receive(intent: Intent) {
         val packed = intent.data?.takeIf { intent.action == Intent.ACTION_VIEW }?.getQueryParameter("d") ?: return
         val config = try {
