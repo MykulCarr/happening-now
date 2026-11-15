@@ -13,6 +13,10 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="https" />
         </intent>
+        <!-- ...and which app is the phone's clock, for a tap on the time. -->
+        <intent>
+            <action android:name="android.intent.action.SHOW_ALARMS" />
+        </intent>
     </queries>
 
     <application
@@ -22,11 +26,14 @@
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
         <!-- The only screen. It also receives the settings link the Today
-             page sends back (the scheme differs for the beta build). -->
+             page sends back (the scheme differs for the beta build).
+             noHistory: it closes the moment you leave it. Left open in the
+             background, it was what Back landed on after reading an article. -->
         <activity
             android:name=".SetupActivity"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

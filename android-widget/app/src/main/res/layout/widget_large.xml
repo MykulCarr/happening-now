@@ -27,9 +27,11 @@
         android:paddingBottom="6dp">
 
         <LinearLayout
+            android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:baselineAligned="true"
+            android:contentDescription="Opens the clock app"
             android:orientation="horizontal">
 
             <TextClock
@@ -69,6 +71,7 @@
             android:textStyle="bold" />
 
         <TextClock
+            android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:format12Hour="EEE, MMM d"

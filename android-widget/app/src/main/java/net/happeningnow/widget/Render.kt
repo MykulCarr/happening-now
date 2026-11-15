@@ -9,6 +9,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.os.Build
+import android.provider.AlarmClock
 import android.view.View
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
@@ -45,6 +46,8 @@ object Render {
 
     // What a tap does, in full:
     //   HAPPENING NOW!          opens the website
+    //   the time                opens the phone's clock app
+    //   the date                opens the phone's calendar app
     //   weather panel           opens the weather page
     //   a neighbouring category, or an arrow    switches category
     //   a headline              opens the article
@@ -61,6 +64,19 @@ object Render {
      */
     private fun noop(c: Context) =
         PendingIntent.getBroadcast(c, 0, Intent(c, LargeWidget::class.java).setAction("net.happeningnow.widget.NOOP"), FLAGS)
+
+    // The phone's own clock app: found by asking who shows alarms, then opened
+    // the way its icon would open it (asking for the alarm screen directly
+    // needs a permission; this does not).
+    private fun openClock(c: Context): PendingIntent {
+        val clockApp = c.packageManager.resolveActivity(Intent(AlarmClock.ACTION_SHOW_ALARMS), 0)?.activityInfo?.packageName
+        val intent = clockApp?.let { c.packageManager.getLaunchIntentForPackage(it) } ?: Intent(AlarmClock.ACTION_SHOW_ALARMS)
+        return PendingIntent.getActivity(c, 2, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), FLAGS)
+    }
+
+    // Whichever app the phone uses as its calendar.
+    private fun openCalendar(c: Context) = PendingIntent.getActivity(c, 3,
+        Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), FLAGS)
 
     private fun action(c: Context, action: String) =
         PendingIntent.getBroadcast(c, 0, Intent(c, LargeWidget::class.java).setAction(action), FLAGS)
@@ -164,6 +180,8 @@ object Render {
         weather(c, v, R.id.weather)
         v.setOnClickPendingIntent(R.id.root, noop(c))
         v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
+        v.setOnClickPendingIntent(R.id.time, openClock(c))
+        v.setOnClickPendingIntent(R.id.date, openCalendar(c))
 
         val category = Store.currentCategory(c)
         val top = Store.news(c, category.optString("id"))?.optJSONArray("items")?.optJSONObject(0)
@@ -186,6 +204,8 @@ object Render {
         weather(c, v, R.id.weather)
         v.setOnClickPendingIntent(R.id.root, noop(c))
         v.setOnClickPendingIntent(R.id.brand, open(c, "${Fetch.SITE}/"))
+        v.setOnClickPendingIntent(R.id.time, openClock(c))
+        v.setOnClickPendingIntent(R.id.date, openCalendar(c))
 
         // Category switcher
         val categories = Store.categories(c)
