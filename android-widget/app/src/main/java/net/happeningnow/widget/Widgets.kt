@@ -34,8 +34,8 @@ abstract class BaseWidget : AppWidgetProvider() {
         when (intent.action) {
             ACTION_PREV, ACTION_NEXT -> {
                 Store.stepCategory(c, if (intent.action == ACTION_NEXT) 1 else -1)
-                Widgets.updateAll(c) // show cached headlines (or "Loading") at once
-                if (RefreshJob.currentNewsIsStale(c)) RefreshJob.schedule(c, Store.currentCategory(c).optString("id"))
+                Widgets.updateAll(c) // pre-cached headlines appear at once
+                if (RefreshJob.nearbyNewsIsStale(c)) RefreshJob.schedule(c, full = false) // top up the pre-cache
             }
             ACTION_REFRESH -> RefreshJob.schedule(c)
             else -> super.onReceive(c, intent)

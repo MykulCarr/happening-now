@@ -117,11 +117,19 @@ object Render {
         val categories = Store.categories(c)
         val index = Store.categoryIndex(c)
         val category = categories[index]
-        v.setTextViewText(R.id.cat, category.optString("label"))
-        v.setTextViewText(R.id.catpos, "${index + 1} of ${categories.size}")
-        v.setOnClickPendingIntent(R.id.prev, action(c, ACTION_PREV))
-        v.setOnClickPendingIntent(R.id.next, action(c, ACTION_NEXT))
-        v.setOnClickPendingIntent(R.id.catbox, open(c, "${Fetch.SITE}/"))
+        // Labels arrive as "LOCAL · JACKSON, MI": the strip shows the short
+        // name, and the place goes on the line underneath.
+        val n = categories.size
+        fun short(step: Int) = categories[(index + step + n * 2) % n].optString("label").substringBefore(" · ")
+        v.setTextViewText(R.id.cat, short(0))
+        v.setTextViewText(R.id.cat_m1, if (n >= 2) short(-1) else "")
+        v.setTextViewText(R.id.cat_p1, if (n >= 2) short(1) else "")
+        v.setTextViewText(R.id.cat_m2, if (n >= 5) short(-2) else "") // fewer than five would repeat names
+        v.setTextViewText(R.id.cat_p2, if (n >= 5) short(2) else "")
+        v.setTextViewText(R.id.catpos, category.optString("label").substringAfter(" · ", "${index + 1} of $n"))
+        for (id in intArrayOf(R.id.prev, R.id.cat_m1, R.id.cat_m2)) v.setOnClickPendingIntent(id, action(c, ACTION_PREV))
+        for (id in intArrayOf(R.id.next, R.id.cat_p1, R.id.cat_p2)) v.setOnClickPendingIntent(id, action(c, ACTION_NEXT))
+        v.setOnClickPendingIntent(R.id.cat, open(c, "${Fetch.SITE}/"))
 
         // How many rows fit depends on how tall the widget was dragged. Heights
         // are in dp; 0 means the launcher didn't say, so assume a full page.

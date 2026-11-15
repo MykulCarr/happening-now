@@ -70,61 +70,121 @@
         android:paddingHorizontal="12dp"
         android:paddingVertical="8dp">
 
-        <LinearLayout
+        <!-- Category strip: the current category in the middle, its neighbours
+             either side, the next ones out fading into the panel edges. A
+             widget cannot detect swipes, so you tap a neighbour or the
+             chevrons to move. -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/prev"
-                android:layout_width="48dp"
-                android:layout_height="36dp"
-                android:background="@drawable/pill_bg"
-                android:contentDescription="Previous category"
-                android:gravity="center"
-                android:text="‹"
-                android:textColor="@color/text"
-                android:textSize="22sp" />
+            android:layout_height="36dp">
 
             <LinearLayout
-                android:id="@+id/catbox"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/cat_m2"
+                    android:layout_height="match_parent"
+                    android:maxLines="1"
+                    android:paddingHorizontal="9dp"
+                    android:textSize="12sp"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:ellipsize="start"
+                    android:gravity="end|center_vertical"
+                    android:textColor="@color/faint" />
+
+                <TextView
+                    android:id="@+id/cat_m1"
+                    android:layout_height="match_parent"
+                    android:maxLines="1"
+                    android:paddingHorizontal="9dp"
+                    android:textSize="12sp"
+                    android:layout_width="wrap_content"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/muted" />
 
                 <TextView
                     android:id="@+id/cat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:letterSpacing="0.08"
+                    android:layout_height="match_parent"
                     android:maxLines="1"
+                    android:paddingHorizontal="9dp"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:gravity="center_vertical"
+                    android:letterSpacing="0.06"
                     android:textColor="@color/accent"
-                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/catpos"
+                    android:id="@+id/cat_p1"
+                    android:layout_height="match_parent"
+                    android:maxLines="1"
+                    android:paddingHorizontal="9dp"
+                    android:textSize="12sp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:gravity="center_vertical"
+                    android:textColor="@color/muted" />
+
+                <TextView
+                    android:id="@+id/cat_p2"
+                    android:layout_height="match_parent"
+                    android:maxLines="1"
+                    android:paddingHorizontal="9dp"
+                    android:textSize="12sp"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="start|center_vertical"
+                    android:textColor="@color/faint" />
+
             </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:background="@drawable/fade_left" />
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/fade_right" />
+
+            <TextView
+                android:id="@+id/prev"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:contentDescription="Previous category"
+                android:gravity="start|center_vertical"
+                android:text="‹"
+                android:textColor="@color/text"
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/next"
-                android:layout_width="48dp"
-                android:layout_height="36dp"
-                android:background="@drawable/pill_bg"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
                 android:contentDescription="Next category"
-                android:gravity="center"
+                android:gravity="end|center_vertical"
                 android:text="›"
                 android:textColor="@color/text"
-                android:textSize="22sp" />
-        </LinearLayout>
+                android:textSize="24sp" />
+        </FrameLayout>
+
+        <!-- Where Local / Regional cover, or "3 of 14" for the rest -->
+        <TextView
+            android:id="@+id/catpos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:maxLines="1"
+            android:textColor="@color/muted"
+            android:textSize="11sp" />
 
         <!-- Each row inside has weight 1, which spreads the headlines evenly
              from the switcher down to the bottom of the panel. -->

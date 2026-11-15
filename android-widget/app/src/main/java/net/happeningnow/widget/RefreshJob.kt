@@ -6,8 +6,10 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.net.ConnectivityManager
 import android.os.PersistableBundle
 import android.util.Log
+import org.json.JSONObject
 import kotlin.concurrent.thread
 
 /**
@@ -15,14 +17,19 @@ import kotlin.concurrent.thread
  * Android's job scheduler so it waits for a network connection and is allowed
  * the time slow feeds need (a widget's own update callback is not).
  *
- * Two kinds: a full refresh (weather, watchlist, current category) and a
- * category-only one, used when you flip to a category not fetched recently.
+ * Headlines are pre-cached beyond the category on screen so flipping is
+ * instant: the two neighbours always, and on Wi-Fi every category. On mobile
+ * data it stops at the neighbours — fourteen categories every half hour
+ * would be real data use.
+ *
+ * Two kinds of run: "full" (weather + watchlist + headlines, every 30 min or
+ * on the refresh button) and news-only (after a flip, to top up the cache).
  */
 class RefreshJob : JobService() {
 
     override fun onStartJob(params: JobParameters): Boolean {
         thread {
-            try { refresh(this, params.extras.getString("cat")) }
+            try { refresh(this, full = params.extras.getInt("full") == 1) }
             catch (e: Exception) { Log.w("HNWidget", "refresh failed", e) }
             Widgets.updateAll(this)
             jobFinished(params, false)
@@ -35,42 +42,66 @@ class RefreshJob : JobService() {
     companion object {
         private const val STALE_MS = 20 * 60 * 1000L
 
-        fun schedule(c: Context, onlyCategory: String? = null) {
-            val extras = PersistableBundle()
-            if (onlyCategory != null) extras.putString("cat", onlyCategory)
+        fun schedule(c: Context, full: Boolean = true) {
+            val extras = PersistableBundle().apply { putInt("full", if (full) 1 else 0) }
             // Fixed ids: scheduling again replaces a pending job rather than queueing another.
-            val job = JobInfo.Builder(if (onlyCategory == null) 1 else 2, ComponentName(c, RefreshJob::class.java))
+            val job = JobInfo.Builder(if (full) 1 else 2, ComponentName(c, RefreshJob::class.java))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setExtras(extras)
                 .build()
             c.getSystemService(JobScheduler::class.java).schedule(job)
         }
 
-        /** True when the showing category has no headlines newer than 20 minutes. */
-        fun currentNewsIsStale(c: Context): Boolean {
-            val at = Store.news(c, Store.currentCategory(c).optString("id"))?.optLong("at") ?: 0
-            return System.currentTimeMillis() - at > STALE_MS
+        private fun isStale(c: Context, categoryId: String) =
+            System.currentTimeMillis() - (Store.news(c, categoryId)?.optLong("at") ?: 0) > STALE_MS
+
+        /** True when the category on screen, or one beside it, needs fetching. */
+        fun nearbyNewsIsStale(c: Context) = fetchOrder(c, reach = 1).any { isStale(c, it.optString("id")) }
+
+        /** The category on screen first, then outwards on both sides, `reach` steps each way. */
+        private fun fetchOrder(c: Context, reach: Int): List<JSONObject> {
+            val cats = Store.categories(c)
+            val at = Store.categoryIndex(c)
+            val order = linkedSetOf(at)
+            for (d in 1..minOf(reach, cats.size / 2)) {
+                order += (at + d) % cats.size
+                order += (at - d + cats.size) % cats.size
+            }
+            return order.map { cats[it] }
         }
 
-        private fun refresh(c: Context, onlyCategory: String?) {
+        private fun refresh(c: Context, full: Boolean) {
             val cfg = Store.config(c)
-            val category = Store.categories(c).firstOrNull { it.optString("id") == onlyCategory } ?: Store.currentCategory(c)
-            val full = onlyCategory == null
+            val now = System.currentTimeMillis()
 
             // Each piece may fail on its own; a failure keeps the old cached value.
-            val news = runCatching { Fetch.headlines(category) }.getOrNull()
-            val weather = if (full) runCatching { Fetch.weather(cfg) }.getOrNull() else null
-            val quotes = if (full) runCatching { Fetch.quotes(cfg.getJSONArray("symbols")) }.getOrNull() else null
-
-            val now = System.currentTimeMillis()
-            Store.updateCache(c) { cache ->
-                if (news != null && news.length() > 0) {
-                    val all = cache.optJSONObject("news") ?: org.json.JSONObject().also { cache.put("news", it) }
-                    all.put(category.optString("id"), org.json.JSONObject().put("at", now).put("items", news))
+            fun fetchNews(category: JSONObject) {
+                val news = runCatching { Fetch.headlines(category) }.getOrNull() ?: return
+                if (news.length() == 0) return
+                Store.updateCache(c) { cache ->
+                    val all = cache.optJSONObject("news") ?: JSONObject().also { cache.put("news", it) }
+                    all.put(category.optString("id"), JSONObject().put("at", System.currentTimeMillis()).put("items", news))
                 }
-                if (weather != null) cache.put("weather", weather)
-                if (quotes != null) cache.put("quotes", quotes)
-                if (full && (news != null || weather != null || quotes != null)) cache.put("updatedAt", now)
+            }
+
+            // 1. What's on screen, shown as soon as it lands.
+            val current = Store.currentCategory(c)
+            if (full || isStale(c, current.optString("id"))) fetchNews(current)
+            if (full) {
+                val weather = runCatching { Fetch.weather(cfg) }.getOrNull()
+                val quotes = runCatching { Fetch.quotes(cfg.getJSONArray("symbols")) }.getOrNull()
+                Store.updateCache(c) { cache ->
+                    if (weather != null) cache.put("weather", weather)
+                    if (quotes != null) cache.put("quotes", quotes)
+                    cache.put("updatedAt", now)
+                }
+            }
+            Widgets.updateAll(c)
+
+            // 2. Pre-cache the rest, nearest first, one category at a time.
+            val metered = c.getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered
+            for (category in fetchOrder(c, reach = if (metered) 1 else Int.MAX_VALUE).drop(1)) {
+                if (isStale(c, category.optString("id"))) fetchNews(category)
             }
         }
     }
