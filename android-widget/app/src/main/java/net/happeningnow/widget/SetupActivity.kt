@@ -60,6 +60,7 @@ class SetupActivity : Activity() {
                 Widgets.updateAll(this)
             }
         option("Open stories in my browser, not in the reader", "browserLinks")
+        option("News ticker on the 4×2 widget: show headlines one at a time, changing every 8 seconds", "ticker")
         option("Hide the watchlist", "hideWatch")
         option("See-through background", "clearBg")
         option("Refresh every hour instead of every half hour", "hourly")

@@ -211,9 +211,26 @@ object Render {
 
         // Android 12+: scroll through the category's stories instead of one.
         val items = Store.news(c, category.optString("id"))?.optJSONArray("items")
-        val scroll = Build.VERSION.SDK_INT >= 31 && items != null && items.length() > 1
-        v.setViewVisibility(R.id.story, if (scroll) View.GONE else View.VISIBLE)
+        // The ticker option: the newest ten, one at a time, instead of the list.
+        val ticker = Store.flag(c, "ticker") && items != null && items.length() > 1
+        val scroll = !ticker && Build.VERSION.SDK_INT >= 31 && items != null && items.length() > 1
+        v.setViewVisibility(R.id.story, if (scroll || ticker) View.GONE else View.VISIBLE)
         v.setViewVisibility(R.id.story_list, if (scroll) View.VISIBLE else View.GONE)
+        v.setViewVisibility(R.id.ticker, if (ticker) View.VISIBLE else View.GONE)
+        v.removeAllViews(R.id.ticker)
+        if (ticker) {
+            val count = minOf(items!!.length(), 10)
+            val label = category.optString("label").substringBefore(" · ")
+            for (k in 0 until count) {
+                val item = items.getJSONObject(k)
+                val row = RemoteViews(c.packageName, R.layout.row_ticker)
+                row.setTextViewText(R.id.meta, "$label · ${sourceAndAge(item)}")
+                row.setTextViewText(R.id.index, "${k + 1}/$count")
+                row.setTextViewText(R.id.title, item.optString("title"))
+                row.setOnClickPendingIntent(R.id.row, open(c, item.optString("url")))
+                v.addView(R.id.ticker, row)
+            }
+        }
         if (scroll) fillList(c, v, R.id.story_list, items!!, prefix = category.optString("label").substringBefore(" · ") + " · ")
         return v
     }

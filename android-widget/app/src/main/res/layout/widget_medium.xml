@@ -123,6 +123,21 @@
             android:textSize="13sp" />
     </LinearLayout>
 
+    <!-- The news ticker (an option in the app): the category's newest
+         headlines one at a time, each sliding in from the right every eight
+         seconds. A widget cannot scroll a line of text smoothly, but it can
+         flip between views by itself, and only does so while on screen. -->
+    <ViewFlipper
+        android:id="@+id/ticker"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:autoStart="true"
+        android:flipInterval="8000"
+        android:inAnimation="@anim/ticker_in"
+        android:outAnimation="@anim/ticker_out"
+        android:visibility="gone" />
+
     <!-- Android 12+: the same headlines as a scrolling list, when there
          are more than fit. Render.kt shows this or the one above. -->
     <ListView
