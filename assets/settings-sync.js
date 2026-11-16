@@ -8,7 +8,8 @@
 //
 //   • Chromium only. Firefox and Safari — which is every browser on iOS — have
 //     no showSaveFilePicker, so the UI falls back to pointing at the
-//     Export / Import JSON box instead of pretending to sync.
+//     backup file and transfer link (settings-backup.js) instead of
+//     pretending to sync.
 //   • Writing needs permission, and asking for permission needs a click. So a
 //     background save can only write if permission is already granted; when it
 //     isn't, the UI shows "Reconnect" rather than silently doing nothing.
@@ -157,7 +158,7 @@
   const FILE_TYPES = [{ description: "Settings JSON", accept: { "application/json": [".json"] } }];
 
   async function choose() {
-    if (!supported) throw new Error("This browser can't write to a file. Use Export JSON instead.");
+    if (!supported) throw new Error("This browser can't write to a file. Use Save backup file instead.");
     const picked = await window.showSaveFilePicker({
       suggestedName: SUGGESTED_NAME,
       types: FILE_TYPES,
@@ -169,7 +170,7 @@
 
   // Open: reconnect to a file that already holds settings. Never writes.
   async function openExisting() {
-    if (!supported) throw new Error("This browser can't open a file this way. Use Import JSON instead.");
+    if (!supported) throw new Error("This browser can't open a file this way. Use Load backup file instead.");
     const [picked] = await window.showOpenFilePicker({ types: FILE_TYPES, multiple: false });
     if (!picked) throw new Error("No file chosen.");
     const existing = await peekConfig(picked);
@@ -283,7 +284,7 @@
     const s = await state();
 
     if (!s.supported) {
-      setNote("This browser can't write directly to a file. Use Export / Import JSON above to back up by hand.", "muted");
+      setNote("This browser (Firefox and Safari are like this) can't keep a file up to date by itself. Use Save backup file above to back up, or a transfer link to move your settings to another browser.", "muted");
       [ui.choose, ui.open, ui.now, ui.restore, ui.stop].forEach(b => { if (b) b.disabled = true; });
       return;
     }

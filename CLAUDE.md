@@ -15,6 +15,14 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
 - `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
+- `assets/settings-backup.js` — backup and transfer for every browser: save a
+  dated backup file, load one back, or make a **transfer link** (settings
+  packed after the `#` of `/settings#import=...`). Firefox and Safari have no
+  way to write back to a picked file and Mozilla has said it will not add one,
+  so this is their route. **The first `<script>` in `settings.html`'s `<head>`
+  lifts the link's payload out of the address before the analytics tags run**;
+  a script can read the fragment even though servers never see it. Keep that
+  script first. What was last backed up lives in `hn_backup_v1`, outside `cfg`
 - `widget.html` + `assets/widget.js` — standalone widget pages. `/widget?w=all`
   is the **Today view** (weather, headlines by category, markets + watchlist);
   `w=weather|headlines|markets|watchlist` are the single ones
@@ -186,7 +194,8 @@ Two traps that both produce confident, wrong answers:
 - **Sync-to-file is Chromium-only by nature.** `assets/settings-sync.js` uses the
   File System Access API; Firefox and every browser on iOS have no
   `showSaveFilePicker`, and the UI is expected to say so and fall back to
-  Export/Import JSON. The file handle lives in IndexedDB, so clearing site data
+  the backup file and transfer link in `settings-backup.js` (the old Export/Import JSON
+  paste box is gone). The file handle lives in IndexedDB, so clearing site data
   loses it (the file survives, it just has to be re-picked). Writing needs a user
   gesture for permission, so background auto-sync only writes when permission is
   already `granted` — never call `requestPermission` from a background save. Its

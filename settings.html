@@ -5,6 +5,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
+  <!-- A transfer link (assets/settings-backup.js) carries settings after the
+       "#". Browsers never send that part to a server, but any script on the
+       page can read it from the address, analytics included. So it is taken
+       out here, first, before the analytics tags below exist. Keep this the
+       first script in <head>. -->
+  <script>
+    if (location.hash.indexOf("#import=") === 0) {
+      window.__hnImport = location.hash.slice(8);
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  </script>
+
   <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
        so GA4 runs cookieless: no cookies, no device id, no banner needed. See
        privacy.html. Keep this INLINE and in <head> — Google's tag detection
@@ -692,17 +704,33 @@
 
           <div class="collapsibleSection">
             <button class="collapsibleHeader expanded" data-section="import-export">
-              Import / Export (Backup)
+              Backup &amp; Transfer
             </button>
             <div class="collapsibleBody expanded">
+              <!-- Works in every browser (assets/settings-backup.js). -->
+              <div id="backupStatus" class="syncStatusPanel">Checking…</div>
               <div class="settingsActionRow">
-                <button id="exportBtn" class="btn btnSubtle" type="button">Export JSON</button>
-                <button id="importBtn" class="btn btnSubtle" type="button">Import JSON</button>
+                <button id="backupSaveBtn" class="btn btnSubtle" type="button" data-analytics="backup-save">Save backup file</button>
+                <button id="backupLoadBtn" class="btn btnSubtle" type="button" data-analytics="backup-load">Load backup file</button>
+                <input id="backupFile" type="file" accept=".json,application/json" hidden />
               </div>
-              <textarea id="jsonBox" class="textarea" rows="6"
-                placeholder="Paste config JSON here to import..."></textarea>
               <div class="hint hintMt8">
-                Export to create a backup file. Import to restore saved settings.
+                Saves your settings as a file in your downloads, and reads one back. Each save is a new dated file.
+              </div>
+
+              <div class="settingLabel" style="margin-top:16px">Move to another browser or device</div>
+              <div class="settingsActionRow">
+                <button id="transferMakeBtn" class="btn btnSubtle" type="button" data-analytics="transfer-make">Create transfer link</button>
+              </div>
+              <div id="transferBox" style="display:none">
+                <input id="transferLink" class="input" type="text" readonly aria-label="Transfer link" style="width:100%" />
+                <div class="settingsActionRow">
+                  <button id="transferCopyBtn" class="btn btnSubtle" type="button">Copy link</button>
+                  <button id="transferShareBtn" class="btn btnSubtle" type="button">Share…</button>
+                </div>
+              </div>
+              <div class="hint hintMt8">
+                Open the link in the other browser and it offers to load these settings there. The link contains your settings, including any saved location, so send it only to yourself. Nothing is uploaded.
               </div>
             </div>
           </div>
@@ -751,8 +779,8 @@
                 <strong>Use existing file…</strong> reconnects to one you already have and offers to load it — it
                 never overwrites. <strong>Stop syncing</strong> forgets the file; the file itself is kept.
                 <br />
-                Needs Chrome or Edge — Firefox and every browser on iOS can't write to a file, so use Export / Import
-                JSON there. Clearing all site data also forgets which file was chosen (the file itself is fine, just
+                Needs Chrome or Edge — Firefox and every browser on iOS can't write to a file, so use Save backup
+                file or a transfer link there. Clearing all site data also forgets which file was chosen (the file itself is fine, just
                 pick it again). A reset pauses syncing so it can't overwrite your backup.
               </div>
             </div>
@@ -765,8 +793,8 @@
             <div class="collapsibleBody expanded">
               <button id="resetBtn" class="resetButton" type="button">Reset All Settings to Defaults</button>
               <div class="hint hintMt12">
-                Resets all preferences to defaults — including news sources and stock watchlist. Use the Export JSON
-                option to back up your current configuration first if you may want to restore it later.
+                Resets all preferences to defaults — including news sources and stock watchlist. Use Save backup
+                file to back up your current configuration first if you may want to restore it later.
               </div>
             </div>
           </div>
@@ -860,6 +888,7 @@
   <script defer src="assets/news-picker.js"></script>
   <script defer src="assets/news-picker-local.js"></script>
   <script defer src="assets/settings.js?v=20261018"></script>
+  <script defer src="assets/settings-backup.js"></script>
   <script defer src="assets/top-feeds.js"></script>
   <script defer src="assets/widget-link.js"></script>
   <script defer src="assets/settings-sync.js"></script>

@@ -24,6 +24,7 @@ const ASSETS_TO_CACHE = [
   '/assets/report.css',
   '/assets/feedback.js',
   '/assets/settings-sync.js',
+  '/assets/settings-backup.js',
   '/assets/topbar.js',
   '/assets/infobar.js',
   '/assets/styles.css'

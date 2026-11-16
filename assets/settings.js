@@ -93,9 +93,6 @@
   const addInternationalSourceBtn = document.getElementById("addInternationalSourceBtn");
 
   // System
-  const exportBtn = document.getElementById("exportBtn");
-  const importBtn = document.getElementById("importBtn");
-  const jsonBox = document.getElementById("jsonBox");
   const resetBtn = document.getElementById("resetBtn");
 
   // Status pill beside the page title. type is one of
@@ -2061,29 +2058,8 @@
   addNationalSourceBtn?.addEventListener("click", () => openNewsPicker("national", addNationalSourceBtn));
   addInternationalSourceBtn?.addEventListener("click", () => openNewsPicker("international", addInternationalSourceBtn));
 
-  // Export config
-  exportBtn.addEventListener("click", () => {
-    pullFromUI();
-    jsonBox.value = JSON.stringify(window.App.normalizeConfig(cfg), null, 2);
-    setStatus("Exported to the box below", "default");
-  });
-
-  // Import config
-  importBtn.addEventListener("click", () => {
-    const raw = (jsonBox.value || "").trim();
-    if(!raw){
-      setStatus("Paste JSON first", "error");
-      return;
-    }
-    try{
-      const parsed = JSON.parse(raw);
-      cfg = window.App.normalizeConfig(parsed);
-      setStatus("Imported", "unsaved");
-      loadToUI();
-    }catch(e){
-      setStatus("Invalid JSON", "error");
-    }
-  });
+  // Backup files and transfer links live in assets/settings-backup.js. The old
+  // "Export JSON / Import JSON" paste box they replaced was removed 2026-11-15.
 
   // Reset to defaults
   resetBtn.addEventListener("click", () => {
