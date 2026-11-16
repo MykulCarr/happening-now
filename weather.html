@@ -207,7 +207,11 @@
               <!-- Distance rings drawn over the Windy frame (weather.js, drawMapRings).
                    pointer-events:none so the map underneath stays usable. -->
               <svg id="weatherMapRings" class="weatherMapRings" aria-hidden="true" hidden></svg>
-              <div id="weatherMapRingsNote" class="weatherMapRingsNote" hidden>Rings hidden while you move the map · tap 📍 to bring them back</div>
+              <!-- Reloads the map where it started. It is the only way to close
+                   Windy's own pop-up (the pointer a tap plants, and its "more"
+                   panel): that lives inside their frame, out of our reach, and
+                   on a phone it has no close button. Also brings the rings back. -->
+              <button id="weatherMapResetBtn" class="weatherMapResetBtn" type="button" data-analytics="map-reset" hidden>↺ Reset map</button>
             </div>
             <div class="weatherMapAttribution">
               U.S. National Weather Service Radar

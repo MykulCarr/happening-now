@@ -3008,13 +3008,17 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
 /* Takes the reader's first touch/scroll so the rings can hide before the map moves. */
 .weatherMapRingsShield { position: absolute; inset: 0; background: transparent; cursor: grab; touch-action: none; }  /* a pinch here must not zoom the page */
 .weatherMapRingsShield[hidden] { display: none; }
-.weatherMapRingsNote {
-  position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
-  max-width: calc(100% - 24px); padding: 6px 12px; border-radius: 999px;
-  background: rgba(0, 0, 0, .7); color: #fff; font-size: 12px; text-align: center;
-  pointer-events: none;
+/* Reset button on the map. Top-left under Windy's logo: the one corner its
+   own controls leave free (layer name and zoom are right, the timeline is
+   along the bottom). A real button, finger-sized. */
+.weatherMapResetBtn {
+  position: absolute; left: 8px; top: 52px; z-index: 2;
+  min-height: 40px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .35); background: rgba(0, 0, 0, .72); color: #fff;
+  font: 600 13px system-ui, sans-serif; cursor: pointer;
 }
-.weatherMapRingsNote[hidden] { display: none; }
+.weatherMapResetBtn:hover, .weatherMapResetBtn:focus-visible { background: rgba(0, 0, 0, .88); }
+.weatherMapResetBtn[hidden] { display: none; }
 #mapRingsBtn.isOn { border-color: var(--accent); color: var(--accent); }
 
 .weatherMapAttribution {

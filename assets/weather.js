@@ -2077,9 +2077,16 @@
   // 140 px, measured 139). So rings are exact while the map sits where we put
   // it. The moment the reader moves the map we can't follow, so the first
   // touch / drag / scroll on the map hides them (a transparent shield takes
-  // that one gesture, then steps aside); Recenter brings them back.
+  // that one gesture, then steps aside); the Reset button on the map, or
+  // Recenter in the header, brings them back.
   const mapRings = document.getElementById("weatherMapRings");
-  const mapRingsNote = document.getElementById("weatherMapRingsNote");
+  // On the map itself, once it has loaded. A tap inside Windy plants its
+  // pointer and a pop-up we cannot reach or close (cross-origin, and on a
+  // phone Windy offers no close button), so the way out is to load the map
+  // afresh: same place, same layer, pop-up gone, rings back. Unlike the pin
+  // in the card header it asks for no new GPS fix.
+  const mapResetBtn = document.getElementById("weatherMapResetBtn");
+  mapResetBtn?.addEventListener("click", () => updateMap(true));
   const mapRingsBtn = document.getElementById("mapRingsBtn");
   const RING_STEPS = [0.5, 1, 2, 3, 5, 10, 15, 25, 50, 100, 250];
 
@@ -2111,7 +2118,11 @@
     // stays put — the rings were invisible while reporting themselves shown.
     mapRings.toggleAttribute("hidden", !show);
     setShield(!!show);
-    if(mapRingsNote) mapRingsNote.hidden = !(on && loaded && ringsSuppressed);
+    if(mapResetBtn){
+      mapResetBtn.hidden = !loaded;
+      // Say why the rings went, where the reader is already looking.
+      mapResetBtn.textContent = on && ringsSuppressed ? "↺ Reset map · rings come back" : "↺ Reset map";
+    }
     if(!show) return;
 
     const w = weatherMapFrame.clientWidth, h = weatherMapFrame.clientHeight;
