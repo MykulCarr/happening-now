@@ -885,9 +885,10 @@
             const groupValue = groupMode === "type" ? String(meta.type || "Other") : String(meta.region || "Other");
             const last = grouped[grouped.length - 1];
             if(!last || last.value !== groupValue){
-              grouped.push({ value: groupValue, rows: [renderRow(entry, idx)] });
+              grouped.push({ value: groupValue, rows: [renderRow(entry, idx)], types: [meta.type] });
             }else{
               last.rows.push(renderRow(entry, idx));
+              if(!last.types.includes(meta.type)) last.types.push(meta.type);
             }
           });
 
@@ -901,6 +902,12 @@
                   <button type="button" class="marketGroupToggleBtn" data-group-mode="${groupMode}" data-group-value="${encodeURIComponent(group.value)}" data-group-visible="0">None</button>
                 </div>
               </div>
+              ${groupMode === "region" && group.types.length > 1 ? `<div class="marketTypeToggles">${group.types.map((type) => `
+                <span class="marketTypeToggle">
+                  <span class="marketTypeToggleName">${type}</span>
+                  <button type="button" class="marketGroupToggleBtn" data-group-mode="type" data-group-value="${encodeURIComponent(type)}" data-group-region="${encodeURIComponent(group.value)}" data-group-visible="1" aria-label="Show all ${type}">All</button>
+                  <button type="button" class="marketGroupToggleBtn" data-group-mode="type" data-group-value="${encodeURIComponent(type)}" data-group-region="${encodeURIComponent(group.value)}" data-group-visible="0" aria-label="Hide all ${type}">None</button>
+                </span>`).join("")}</div>` : ""}
               <div class="marketIndexGroupList">
                 ${group.rows.join("")}
               </div>
@@ -946,6 +953,9 @@
         const rawValue = String(btn.dataset.groupValue || "");
         const groupValue = decodeURIComponent(rawValue);
         const makeVisible = btn.dataset.groupVisible === "1";
+        // Set on the per-type buttons inside a region group, so "Global > FX"
+        // leaves a currency filed under another region alone.
+        const onlyRegion = btn.dataset.groupRegion ? decodeURIComponent(btn.dataset.groupRegion) : "";
         if(!(mode === "type" || mode === "region")) return;
 
         cfg.marketIndices = (cfg.marketIndices || []).map((entry) => {
@@ -954,6 +964,7 @@
             ? String(meta.type || "Other")
             : String(meta.region || "Other");
           if(value !== groupValue) return entry;
+          if(onlyRegion && String(meta.region || "Other") !== onlyRegion) return entry;
           return { ...entry, visible: makeVisible };
         });
 

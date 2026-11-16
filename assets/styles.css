@@ -6363,6 +6363,12 @@ body.stockLookupModalOpen {
   cursor: pointer;
 }
 
+/* All / None per market type, inside a region group that mixes types */
+.marketTypeToggles { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 2px 0 10px; }
+.marketTypeToggle { display: inline-flex; align-items: center; gap: 5px; }
+.marketTypeToggleName { font-size: 11px; font-weight: 700; color: var(--text); margin-right: 2px; }
+.marketTypeToggles .marketGroupToggleBtn { min-height: 32px; padding: 3px 11px; }
+
 .marketGroupToggleBtn:hover,
 .marketGroupToggleBtn:focus {
   color: var(--text);
