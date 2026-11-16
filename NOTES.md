@@ -758,3 +758,72 @@ developer verification is already enforced.
 **Pick up next:** Mike backs up the signing key (YOUR-TURN). Then watch for
 the first real-world reports, and register as a verified Android developer
 before the 2027 worldwide rollout.
+
+## 2026-11-15/16 — Backup and transfer live; sync code built; About page
+
+**Live in production**
+
+- **Backup & Transfer** (`assets/settings-backup.js`, Settings > System):
+  Save backup file, Load backup file, and a transfer link
+  (`/settings#import=...`, deflate + base64url, about 2,200 characters).
+  Works in every browser. The JSON paste box and its two buttons were removed.
+  Why: Firefox has no API for writing back to a picked file and Mozilla has
+  said it will not add one, so "Sync to a File" can never work there.
+- The first `<script>` in `settings.html` lifts `#import=` (and `#sync=`) out
+  of the address before the analytics tags run. Keep it first.
+
+**Built, tested, on beta, NOT in production ("ready to push")**
+
+- **Sync by sync code** (`assets/cloud-sync.js`, `cloudflare-sync-worker/src/sync.mjs`,
+  D1 table `sync`). End-to-end encrypted: the browser derives id, auth and an
+  AES-256-GCM key from a random 160-bit code; the Worker stores ciphertext
+  only. Everything is in `docs/cloud-sync.md`, including the privacy-policy
+  wording and the five launch steps. Beta has the table; production does not.
+- **About page** (`/about`) with "What's new" and a how-to for every feature,
+  linked from every footer.
+- **What's-new card** (`assets/whats-new.js`): replaces the widget-only
+  announcement. At most one card a day, newest first, none for a brand-new
+  visitor.
+- Reading width capped at 860px on the About and Android pages.
+
+**What a production deploy would do right now:** ship the About page, the
+footer links, the what's-new card (it would announce backup/transfer, and the
+widget on Android) and the `/v1/sync` route, which answers 503 because the
+production table does not exist. It would NOT ship the sync script, the
+Settings sync section or any sync wording: `assets/cloud-sync.js` is in
+`$unreleased`, and the staging step now also cuts HTML between
+`<!-- unreleased: path -->` markers.
+
+**How sync was tested** (nothing touched production): `npm run test:sync`
+(41 checks against a stand-in D1), the real SQL against a local D1, and two
+persistent Chrome profiles driven through a local `wrangler dev` Worker:
+start, join by link, join by typed code, change either side, tab switch (not
+sent), reset then restore, reset then keep, stop, delete, deleted elsewhere,
+server unreachable then recovered, unknown code, malformed code. The test rig
+is in the session scratchpad, not the repo.
+
+**Lessons**
+
+- A test rig that kills the browser loses storage not yet flushed, so a
+  "device" forgets it was syncing. Close with CDP `Browser.close`.
+- Persistent test profiles serve stale assets: `Network.setCacheDisabled`.
+- A page that calls `confirm()` hangs a CDP session that has `Page.enable`
+  but no dialog handler. That hang looked like an infinite reload loop.
+- Hiding unreleased text is not the same as not shipping it; cut it at
+  staging.
+- A production deploy that would have removed a feature (the JSON box) was
+  blocked until Mike said yes. Ask first for anything that takes something
+  away from live users.
+
+**Not verified:** sync, backup and transfer in real Firefox or Safari; sync
+across two real devices; the beta deployment itself (behind Access, so it
+could not be opened from here).
+
+**Open to-dos Mike added, not started:** a scrolling news ticker question;
+opening news items inside the widget; the weather map pop-up that cannot be
+closed and the missing recentre pin; a full site analysis after the rest.
+
+**Pick up next:** Mike reviews the privacy wording in `docs/cloud-sync.md`
+and tries sync on beta in Firefox and on his phone; then launch C (five
+steps) and deploy production. Then the weather-map bug, which is the only
+open item that is a defect rather than an idea.
