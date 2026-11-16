@@ -185,7 +185,7 @@
   async function markets(count) {
     const rows = await boardRows(count);
     if (!rows) throw new Notice(`Nothing to show. <a href="/settings#stocks" target="_top">Pick market tiles in Settings</a>.`);
-    return { title: "Markets", body: `<div class="wList">${rows}</div>`, href: "/markets", more: "Full board" };
+    return { title: "Markets", body: `<div class="wList">${rows}</div>`, href: "/markets", more: "All indices" };
   }
 
   async function watchlist(count) {
@@ -205,7 +205,7 @@
     }
     const block = (label, r) => `<div class="wSubhead">${label}</div><div class="wList">${r.value || `<div class="wEmpty">${
       r.status === "rejected" ? "Couldn't load." : label === "Watchlist" ? `None yet. <a href="/markets" target="_top">Add stocks</a>.` : "None picked."}</div>`}</div>`;
-    return { title: "Markets", body: block("Board", board) + block("Watchlist", watch), href: "/markets", more: "Markets page" };
+    return { title: "Markets", body: block("Indices", board) + block("Watchlist", watch), href: "/markets", more: "Markets page" };
   }
 
   // ---- rendering ----------------------------------------------------------
