@@ -28,7 +28,7 @@
     const navHtml =
       navLinkHtml('news', '/', 'NEWS') +
       navLinkHtml('weather', '/weather', 'WEATHER') +
-      navLinkHtml('stocks', '/stocks', 'STOCKS') +
+      navLinkHtml('stocks', '/markets', 'MARKETS') +
       '<a href="/settings" class="hn-nav-link hn-settings-link" title="Settings" aria-label="Settings">⚙️</a>' +
       '<button type="button" class="hn-nav-link hn-nav-action hn-location-nav-btn" aria-label="Change location"><span class="hn-nav-action-icon" aria-hidden="true">📍</span> LOCATION</button>';
     mount.innerHTML = `

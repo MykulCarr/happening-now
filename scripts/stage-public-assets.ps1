@@ -19,7 +19,7 @@ $publicFiles = @(
   "_redirects",
   "index.html",
   "weather.html",
-  "stocks.html",
+  "markets.html",
   "settings.html",
   "privacy.html",
   "terms.html",

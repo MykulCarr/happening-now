@@ -5,7 +5,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/weather.html',
-  '/stocks.html',
+  '/markets.html',
   '/settings.html',
   '/feedback.html',
   '/assets/common.js',

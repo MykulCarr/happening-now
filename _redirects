@@ -9,7 +9,11 @@
 
 /index.html       /          301
 /weather.html     /weather   301
-/stocks.html      /stocks    301
+/markets.html     /markets   301
+# The Markets page was "Stocks" until 2026-11-16. Old links, bookmarks and
+# the Android widget app (builds up to 3) still point at /stocks.
+/stocks.html      /markets   301
+/stocks           /markets   301
 /settings.html    /settings  301
 /privacy.html     /privacy   301
 /terms.html       /terms     301

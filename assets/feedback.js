@@ -64,7 +64,7 @@
 
   // ── "Tell us more" ──
   // Pre-select the part of the site the reader came from.
-  const AREA_BY_PATH = { "/": "News", "/weather": "Weather", "/stocks": "Stocks", "/settings": "Settings" };
+  const AREA_BY_PATH = { "/": "News", "/weather": "Weather", "/markets": "Markets", "/settings": "Settings" };
   try {
     const ref = new URL(document.referrer);
     if (ref.origin === location.origin && AREA_BY_PATH[ref.pathname]) $("fbArea").value = AREA_BY_PATH[ref.pathname];

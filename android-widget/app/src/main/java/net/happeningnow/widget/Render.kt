@@ -54,7 +54,7 @@ object Render {
     //   a neighbouring category, or an arrow    switches category
     //   a headline              opens the article
     //   watchlist header        folds / unfolds the watchlist
-    //   a watchlist row         opens the stocks page
+    //   a watchlist row         opens the Markets page
     //   gear                    widget settings (the only way in)
     //   refresh arrow           refresh
     //   everything else         nothing, on purpose (see noop)
@@ -351,7 +351,7 @@ object Render {
             row.setTextColor(R.id.move, c.getColor(if (flat) R.color.muted else if (pct > 0) R.color.up else R.color.down))
             v.addView(R.id.quotes, row)
         }
-        v.setOnClickPendingIntent(R.id.quotes, open(c, "${Fetch.SITE}/stocks")) // the rows; the header folds
+        v.setOnClickPendingIntent(R.id.quotes, open(c, "${Fetch.SITE}/markets")) // the rows; the header folds
 
         // Footer
         val updatedAt = cache.optLong("updatedAt")

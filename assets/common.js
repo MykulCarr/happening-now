@@ -1794,9 +1794,9 @@
         ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Weather</span>`
         : `<a class="btn btnMain" href="/weather">Weather</a>`}
 
-              ${active("stocks")
-        ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Stocks</span>`
-        : `<a class="btn btnMain" href="/stocks">Stocks</a>`}
+              ${active("markets")
+        ? `<span class="btn btnMain btnActive btnDisabled" aria-current="page">Markets</span>`
+        : `<a class="btn btnMain" href="/markets">Markets</a>`}
             </div>
 
             <div class="navSettings">
@@ -2026,7 +2026,8 @@
     const referrer = document.referrer;
     const currentOrigin = window.location.origin;
     if (!referrer || !referrer.startsWith(currentOrigin)) {
-      window.location.replace(cfg.startupPage + ".html");
+      // The setting still says "stocks" (saved configs hold it); the page is /markets.
+      window.location.replace(cfg.startupPage === "stocks" ? "/markets" : "/" + cfg.startupPage);
     }
   }
   if (document.readyState === "loading") {

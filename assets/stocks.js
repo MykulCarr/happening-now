@@ -713,7 +713,7 @@
       const tiles = [...indices, ...getCurrencyTiles(snapshot)];
 
       if(tiles.length === 0){
-        container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">No markets selected. Enable items in <a href="/settings">Settings</a>.</div>`;
+        container.innerHTML = `<h2 class="marketIndicesLabel">Board</h2><div class="hint">No markets selected. Enable items in <a href="/settings">Settings</a>.</div>`;
         return;
       }
 
@@ -753,10 +753,10 @@
         `).join("");
 
       container.dataset.activeGroup = activeMarketGroup;
-      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2>${tabsHtml}${sections}`;
+      container.innerHTML = `<h2 class="marketIndicesLabel">Board</h2>${tabsHtml}${sections}`;
     } catch (error) {
       console.error("Error rendering indices:", error);
-      container.innerHTML = `<h2 class="marketIndicesLabel">Markets</h2><div class="hint">Error loading markets</div>`;
+      container.innerHTML = `<h2 class="marketIndicesLabel">Board</h2><div class="hint">Error loading markets</div>`;
     }
   }
 

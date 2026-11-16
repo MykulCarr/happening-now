@@ -10,7 +10,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 
 ## Layout
 
-- `index.html`, `weather.html`, `stocks.html` — the three real pages
+- `index.html`, `weather.html`, `markets.html` — the three real pages. Markets was
+  "Stocks" until 2026-11-16: `/stocks` 301s to `/markets`, and only the page
+  name and URL changed. `assets/stocks.js`, the `stocks` config keys, the
+  Settings tab id and the analytics page name keep the old word on purpose
+  (saved settings and past counts depend on them)
 - `settings.html` — source picker / preferences; marked `noindex`, not in sitemap
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
 - `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page

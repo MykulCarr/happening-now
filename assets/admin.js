@@ -76,7 +76,7 @@
     return `<p class="hint">${plural(p.total, "answer")}</p>
       ${bar("Yes", p.useful.yes, p.total)}${bar("Somewhat", p.useful.somewhat, p.total)}${bar("Not really", p.useful.no, p.total)}
       <p class="adSmall adGap">Use most (people can pick more than one)</p>
-      ${bar("News", p.uses.news, p.total)}${bar("Weather", p.uses.weather, p.total)}${bar("Stocks", p.uses.stocks, p.total)}`;
+      ${bar("News", p.uses.news, p.total)}${bar("Weather", p.uses.weather, p.total)}${bar("Markets", p.uses.stocks, p.total)}`;
   }
 
   function viewSweep() {

@@ -152,7 +152,7 @@
   };
 
   // The board rows: the tiles you've switched on in Settings, in your order,
-  // read from the same cached snapshot the Stocks page uses.
+  // read from the same cached snapshot the Markets page uses.
   async function boardRows(count) {
     const res = await fetch(App.MARKETS_SNAPSHOT_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("snapshot " + res.status);
@@ -185,14 +185,14 @@
   async function markets(count) {
     const rows = await boardRows(count);
     if (!rows) throw new Notice(`Nothing to show. <a href="/settings#stocks" target="_top">Pick market tiles in Settings</a>.`);
-    return { title: "Markets", body: `<div class="wList">${rows}</div>`, href: "/stocks", more: "Full board" };
+    return { title: "Markets", body: `<div class="wList">${rows}</div>`, href: "/markets", more: "Full board" };
   }
 
   async function watchlist(count) {
-    if (!(App.cfg.stocks || []).length) throw new Notice(`No stocks yet. <a href="/stocks" target="_top">Add some on the Stocks page</a>.`);
+    if (!(App.cfg.stocks || []).length) throw new Notice(`No stocks yet. <a href="/markets" target="_top">Add some on the Markets page</a>.`);
     const rows = await watchlistRows(count);
     if (!rows) throw new Error("no quotes");
-    return { title: "Watchlist", body: `<div class="wList">${rows}</div>`, href: "/stocks", more: "Full stocks page" };
+    return { title: "Watchlist", body: `<div class="wList">${rows}</div>`, href: "/markets", more: "Full Markets page" };
   }
 
   // The Today view's stocks card: the board, then the watchlist, each under
@@ -204,8 +204,8 @@
       throw new Notice(`Nothing to show. <a href="/settings#stocks" target="_top">Pick market tiles in Settings</a>.`);
     }
     const block = (label, r) => `<div class="wSubhead">${label}</div><div class="wList">${r.value || `<div class="wEmpty">${
-      r.status === "rejected" ? "Couldn't load." : label === "Watchlist" ? `None yet. <a href="/stocks" target="_top">Add stocks</a>.` : "None picked."}</div>`}</div>`;
-    return { title: "Stocks", body: block("Markets", board) + block("Watchlist", watch), href: "/stocks", more: "Stocks page" };
+      r.status === "rejected" ? "Couldn't load." : label === "Watchlist" ? `None yet. <a href="/markets" target="_top">Add stocks</a>.` : "None picked."}</div>`}</div>`;
+    return { title: "Markets", body: block("Board", board) + block("Watchlist", watch), href: "/markets", more: "Markets page" };
   }
 
   // ---- rendering ----------------------------------------------------------
