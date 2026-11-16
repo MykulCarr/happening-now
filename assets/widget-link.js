@@ -148,35 +148,8 @@
     send.style.display = "";
   }).catch(() => {});
 
-  // ---- the one-time announcement --------------------------------------------
-  // Shown once per browser, on Android only (nobody else can install it), to
-  // people who have not paired a widget. Marked as seen the moment it shows,
-  // so it never follows anyone from page to page.
-  const ANNOUNCED = "hn_widget_announced_v1";
-  const seen = () => { try { return Boolean(localStorage.getItem(ANNOUNCED)); } catch { return true; } };
-  if (/Android/i.test(navigator.userAgent) && !read() && !query.has("send")
-      && !/^\/(android|widget)/.test(location.pathname) && !seen()) {
-    published().then((version) => {
-      if (!version) return;
-      setTimeout(() => {
-        if (seen() || document.querySelector(".widgetAnnounce")) return;
-        try { localStorage.setItem(ANNOUNCED, String(Date.now())); } catch { return; } // can't remember it: don't nag
-        const card = document.createElement("div");
-        card.className = "widgetAnnounce";
-        card.setAttribute("role", "dialog");
-        card.setAttribute("aria-label", "New: Android home-screen widget");
-        card.innerHTML = `
-          <strong>New: Happening Now on your home screen</strong>
-          <span>A free Android widget with the time, your weather, your headlines and your watchlist. No ads, no account. Version ${String(version.versionName).replace(/[^0-9.]/g, "")}.</span>
-          <div class="widgetAnnounceActions">
-            <a class="btn" href="/android" data-analytics="widget-announce">See the widget</a>
-            <button class="btn" type="button">Not now</button>
-          </div>`;
-        card.querySelector("button").onclick = () => card.remove();
-        document.body.appendChild(card);
-      }, 2500); // let the page settle first
-    });
-  }
+  // (The one-time "the widget is here" card now lives in assets/whats-new.js,
+  // which asks paired() and published() below.)
 
   App.widgetLink = { paired: read, build, attach, published };
 })();

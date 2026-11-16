@@ -4,6 +4,7 @@ import { getMarketSnapshot } from "./markets.js";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
 import { handleReport, handlePulse } from "./reports.mjs";
+import { handleSync } from "./sync.mjs";
 import { handleAdmin } from "./admin.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
 import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
@@ -489,6 +490,12 @@ export default {
     // Behind Cloudflare Access AND its own token check; see admin.mjs.
     if (url.pathname.startsWith("/v1/admin/")) {
       return handleAdmin(request, env, (body, status) => jsonResponse(body, status, request, env));
+    }
+
+    // Settings sync: stores a reader's settings, encrypted in their browser
+    // with a key this Worker never sees. See sync.mjs for what is kept.
+    if (url.pathname === "/v1/sync") {
+      return handleSync(request, env, getAllowedOrigins(env), (body, status) => jsonResponse(body, status, request, env));
     }
 
     if (url.pathname === "/v1/pulse") {

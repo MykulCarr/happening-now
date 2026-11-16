@@ -23,6 +23,20 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   lifts the link's payload out of the address before the analytics tags run**;
   a script can read the fragment even though servers never see it. Keep that
   script first. What was last backed up lives in `hn_backup_v1`, outside `cfg`
+- `assets/cloud-sync.js` + `cloudflare-sync-worker/src/sync.mjs` — settings
+  sync by sync code, end-to-end encrypted (the browser derives id, auth and an
+  AES key from the code; the Worker stores only ciphertext in the D1 `sync`
+  table). **Built and on beta, not launched**: `assets/cloud-sync.js` is in
+  `$unreleased`. Design, exactly what is stored, the privacy-policy wording
+  and the launch steps are in `docs/cloud-sync.md`; read it before touching
+  either file. `npm run test:sync` forces every Worker branch. When it
+  launches it is the **second** browser-to-us write and the "Privacy posture"
+  section below must say so in the same commit
+- `about.html` (`/about`) — what the site is, a dated "What's new" list and a
+  how-to for every feature; linked from every footer. `assets/whats-new.js`
+  is the matching one-time card (at most one a day, never to a brand-new
+  visitor, each item gated by a `when`). To announce something, add it to the
+  top of `ITEMS` there and to "What's new" on the About page
 - `widget.html` + `assets/widget.js` — standalone widget pages. `/widget?w=all`
   is the **Today view** (weather, headlines by category, markets + watchlist);
   `w=weather|headlines|markets|watchlist` are the single ones
@@ -42,7 +56,10 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   service worker skips that folder. Launched 2026-11-15. The holding
   mechanism it used is still there for the next thing: anything listed in
   `$unreleased` in `scripts/stage-public-assets.ps1` is stripped by
-  `deploy-prod` and kept by `deploy-beta` (which passes `-IncludeUnreleased`)
+  `deploy-prod` and kept by `deploy-beta` (which passes `-IncludeUnreleased`).
+  Stripping removes the file, every HTML line that mentions it, and every
+  HTML block between `<!-- unreleased: <path> -->` and `<!-- /unreleased -->`,
+  so a production page neither loads nor describes an unlaunched feature
 - `assets/widget-link.js` — pairs this browser with the widget app and shows
   the "Update phone widget" bar when settings differ from what the widget
   was last sent. Pairing (`hn_widget_link_v1`: link scheme, the app's private
@@ -51,9 +68,10 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   settings export. An unpaired browser does nothing, so ordinary visitors
   never see any of it. `App.getNewsCategories` (top-feeds.js) is the one list
   of news tabs both this and the Today view use
-  It also drives the widget section in Settings > System and the one-time
-  "the widget is available" card (Android only, unpaired only, remembered in
-  `hn_widget_announced_v1`). All three ask `App.widgetLink.published()`, which
+  It also drives the widget section in Settings > System. The one-time "the
+  widget is available" card moved to `assets/whats-new.js` (which still
+  honours the old `hn_widget_announced_v1` marker). Both ask
+  `App.widgetLink.published()`, which
   is null wherever `assets/widget-app/version.json` is absent (how it all
   stayed hidden on production before launch)
 - `cloudflare-sync-worker/src/index.js` — routing for every `/v1/*` endpoint

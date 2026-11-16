@@ -18,6 +18,7 @@
 /admin.html       /admin     301
 /widget.html     /widget    301
 /android.html    /android   301
+/about.html      /about     301
 
 # AstroLab moved to its own site in May 2026
 /AstroLab.html    https://astrolaboratory.net/  301

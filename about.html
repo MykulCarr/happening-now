@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
+       so GA4 runs cookieless: no cookies, no device id, no banner needed. See
+       privacy.html. Keep this INLINE and in <head> — Google's tag detection
+       scans the HTML source, so loading it from an external .js file makes the
+       property report "tag not installed" even though hits are being sent. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});
+    gtag('js', new Date());
+    gtag('config','G-XL3C28KRQX');
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XL3C28KRQX"></script>
+  <meta name="description" content="What Happening Now is and how to use it: news by category, weather, stocks, the Today view, the Android widget, and backing up or syncing your settings." />
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+  <!-- Perf hints: warm up TLS to the third-party origins our JS hits
+       so DNS + handshake happens in parallel with HTML parse. -->
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
+  <link rel="preconnect" href="https://api.zippopotam.us" crossorigin>
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+  <link rel="canonical" href="https://happening-now.net/about" />
+  <meta property="og:site_name" content="HAPPENING NOW" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Happening Now! - About and How to Use" />
+  <meta property="og:description" content="What Happening Now is and how to use it: news by category, weather, stocks, the Today view, the Android widget, and backing up or syncing your settings." />
+  <meta property="og:url" content="https://happening-now.net/about" />
+  <meta property="og:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://happening-now.net/assets/icons/og-image.svg" />
+  <meta name="twitter:title" content="Happening Now! - About and How to Use" />
+  <meta name="twitter:description" content="What Happening Now is and how to use it: news by category, weather, stocks, the Today view, the Android widget, and backing up or syncing your settings." />
+  <title>Happening Now! - About and How to Use</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Happening Now! - About and How to Use",
+      "url": "https://happening-now.net/about",
+      "description": "About HAPPENING NOW and how to use it",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "HAPPENING NOW",
+        "url": "https://happening-now.net/"
+      },
+      "inLanguage": "en"
+    }
+  </script>
+  <style>html,body{background:#0c3142;margin:0}</style>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    if (location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "manifest.json";
+      document.head.appendChild(manifestLink);
+    }
+
+    const themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    document.head.appendChild(themeMeta);
+
+    const lightSchemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+    const applyThemeColor = () => {
+      themeMeta.content = lightSchemeQuery && lightSchemeQuery.matches ? "#f8fafc" : "#0c3142";
+    };
+
+    applyThemeColor();
+    if (lightSchemeQuery) {
+      if (typeof lightSchemeQuery.addEventListener === "function") {
+        lightSchemeQuery.addEventListener("change", applyThemeColor);
+      } else if (typeof lightSchemeQuery.addListener === "function") {
+        lightSchemeQuery.addListener(applyThemeColor);
+      }
+    }
+  </script>
+</head>
+<body>
+  <header id="topbar"></header>
+
+  <main class="container">
+    <section class="pageHead">
+      <div>
+        <h1>About &amp; How to Use</h1>
+        <div class="sub">What Happening Now is, what is new, and how each part works</div>
+      </div>
+    </section>
+
+    <section class="card legalCard readable">
+      <h2>What it is</h2>
+      <p class="hint">Happening Now is a free dashboard for news, weather and markets. It gathers headlines straight from newsrooms that are free to read, shows your local forecast, and tracks the markets and stocks you choose. There is no account to create and no advertising. Your settings stay in your own browser unless you choose to back them up or sync them.</p>
+
+      <h2 class="legalSectionTitle" id="whats-new">What's new</h2>
+      <p class="hint"><strong>November 2026</strong></p>
+      <ul class="hint">
+        <!-- unreleased: assets/cloud-sync.js -->
+        <li><strong>Sync across devices.</strong> Turn on sync and your settings follow you to every browser and device, encrypted so only you can read them. <a href="#sync">How to use it</a>.</li>
+        <!-- /unreleased -->
+        <li><strong>Backup and transfer.</strong> Save your settings to a file, load them back, or carry them to another browser with a link. Works in every browser. <a href="#backup">How to use it</a>.</li>
+        <li><strong>Android home-screen widget.</strong> The time, your weather, your headlines and your watchlist on your phone's home screen. <a href="#widget">How to get it</a>.</li>
+        <li><strong>Today view.</strong> Weather, headlines and markets on one compact page. <a href="#today">How to use it</a>.</li>
+        <li><strong>Smoother news.</strong> Drag sideways to move between news categories; the next category is loaded ahead of time, so it appears at once.</li>
+      </ul>
+
+      <h2 class="legalSectionTitle" id="news">News</h2>
+      <p class="hint">The <a href="/">News</a> page shows the latest headlines from each of your sources, one card per source. Tap a headline to read the story on the publisher's own site.</p>
+      <ul class="hint">
+        <li><strong>Categories.</strong> The row of tabs switches between Local, Regional (your state), National, International and any topics you have added, such as Science or Sports. Tap a tab, or drag sideways anywhere on the page. As you drag, a label at the edge names the category you are moving to.</li>
+        <li><strong>Choosing sources.</strong> Tap <strong>Sources</strong> on the News page, or go to <a href="/settings">Settings</a> and open the News tab, to add, remove or reorder outlets and to pick topics. Tapping a source in the picker shows its latest headlines before you add it.</li>
+        <li><strong>Local and state news</strong> come from your saved location. Set it in Settings under Weather.</li>
+        <li><strong>The flag</strong> on each headline lets you tell us a story hit a paywall, would not load, was old, or was not news. It sends the story's link and your reason, and nothing about you.</li>
+      </ul>
+
+      <h2 class="legalSectionTitle" id="weather">Weather</h2>
+      <p class="hint">The <a href="/weather">Weather</a> page shows current conditions, an hour-by-hour forecast, a multi-day outlook and any active alerts for your location. Set your location by ZIP code, by city, or with your device's GPS in Settings under Weather. The radar map is loaded only when you ask for it, because it comes from another company's service.</p>
+
+      <h2 class="legalSectionTitle" id="stocks">Stocks</h2>
+      <p class="hint">The <a href="/stocks">Stocks</a> page has a markets board (indexes, commodities, crypto and currencies) and your own watchlist. Add a stock with the search box on that page. Choose which board tiles appear in Settings under Stocks.</p>
+
+      <h2 class="legalSectionTitle" id="today">Today view</h2>
+      <p class="hint">The <a href="/widget?w=all">Today view</a> puts your weather, the newest headlines for one category, the markets and your watchlist on a single compact page. Pick a category with the chips or by dragging sideways on the headlines. If you have installed the site as an app on Android, press and hold its icon and choose <strong>Today</strong> to open it directly.</p>
+
+      <h2 class="legalSectionTitle" id="install">Install it as an app</h2>
+      <p class="hint">Happening Now can be installed from your browser so it opens in its own window with its own icon. In <a href="/settings">Settings</a>, open the System tab and use <strong>Install App</strong>; in Chrome on a phone you can also use the browser menu and choose <strong>Add to Home screen</strong>.</p>
+
+      <h2 class="legalSectionTitle" id="widget">Android home-screen widget</h2>
+      <p class="hint">A small Android app puts Happening Now on your home screen in three sizes. It is free, has no ads and needs no account. The <a href="/android">Android widget page</a> has the download and step-by-step install instructions. Once it is installed you can set it up inside the app, or bring your settings over from this site; after that, the site offers an <strong>Update phone widget</strong> button whenever you change something.</p>
+
+      <h2 class="legalSectionTitle" id="settings">Settings</h2>
+      <p class="hint"><a href="/settings">Settings</a> has five tabs: News, Weather, Stocks, General and System. Changes are saved as you make them. They are kept in this browser only, so each browser and each device starts with its own, unless you use one of the options below.</p>
+
+      <h2 class="legalSectionTitle" id="backup">Back up or move your settings</h2>
+      <p class="hint">In <a href="/settings">Settings</a>, open the System tab and find <strong>Backup &amp; Transfer</strong>. It works in every browser.</p>
+      <ul class="hint">
+        <li><strong>Save backup file</strong> downloads your settings as a dated file. The line above the buttons tells you whether anything has changed since your last backup.</li>
+        <li><strong>Load backup file</strong> reads a backup back in. It shows what the file contains and asks before replacing anything.</li>
+        <li><strong>Create transfer link</strong> makes a link that carries your settings. Open it in another browser, or send it to your phone, and that browser offers to load them. The link contains your settings, including any saved location, so send it only to yourself.</li>
+        <li><strong>Sync to a File</strong> (Chrome and Edge only) keeps one file on your computer up to date automatically. Firefox and Safari cannot do this, so they use the three options above.</li>
+      </ul>
+      <p class="hint">None of these upload anything. A backup file and a transfer link stay with you.</p>
+
+      <!-- unreleased: assets/cloud-sync.js -->
+      <h2 class="legalSectionTitle" id="sync">Sync across devices</h2>
+      <p class="hint">Sync keeps your settings the same in every browser and device you connect, automatically. It is off unless you turn it on.</p>
+      <ol class="hint">
+        <li>In <a href="/settings">Settings</a>, open the System tab and find <strong>Sync Across Devices</strong>. Tap <strong>Start syncing</strong>. You are given a sync code of 32 letters and numbers.</li>
+        <li>In another browser or on another device, open the same place, tap <strong>I have a sync code</strong> and enter it. Or copy the sync link from the first browser and open it in the second.</li>
+        <li>That browser asks before replacing its settings with your synced ones. From then on a change made in one place appears in the others the next time a page is opened there.</li>
+      </ol>
+      <ul class="hint">
+        <li><strong>Private by design.</strong> Your settings are encrypted in your browser before they are sent, and the sync code is the key. We store only a scrambled copy that we cannot read.</li>
+        <li><strong>Treat the code like a password.</strong> Anyone who has it can read your settings. We cannot recover a lost code, but any browser that is still syncing can show it to you with <strong>Show my sync code</strong>.</li>
+        <li><strong>Newest change wins.</strong> Sync copies your whole settings; it does not merge two different sets.</li>
+        <li><strong>Stopping.</strong> <strong>Stop in this browser</strong> disconnects one browser and leaves the others syncing. <strong>Delete my synced copy</strong> removes it from our server and stops sync everywhere; settings stay in each browser. A synced copy unused for six months is deleted.</li>
+        <li><strong>After a reset.</strong> If you reset one browser's settings, sync pauses there and asks whether to send the reset settings to your other devices or bring your synced ones back.</li>
+      </ul>
+      <!-- /unreleased -->
+
+      <h2 class="legalSectionTitle" id="privacy">Privacy in brief</h2>
+      <p class="hint">No account, no advertising, and no profile of what you read. The <a href="/privacy">privacy policy</a> lists exactly what leaves your browser and why, and <a href="/sources">Data Sources</a> lists where the news, weather and market data come from.</p>
+
+      <h2 class="legalSectionTitle" id="contact">Questions and feedback</h2>
+      <p class="hint">The <a href="/feedback">Feedback</a> page has a one-question survey and an email address.</p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>HAPPENING NOW legal</p>
+    <p class="footerLinks"><a href="/about">About</a> • <a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
+  </footer>
+
+  <script defer src="assets/common.js"></script>
+  <script defer src="https://analytics.happening-now.net/analytics.js" data-site="happening-now" data-page="about"></script>
+  <script defer src="assets/topbar.js"></script>
+  <script defer src="assets/infobar.js"></script>
+</body>
+</html>

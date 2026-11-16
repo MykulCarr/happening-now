@@ -28,6 +28,7 @@ $publicFiles = @(
   "admin.html",
   "widget.html",
   "android.html",
+  "about.html",
   "robots.txt",
   "sitemap.xml",
   "manifest.json",
@@ -55,13 +56,32 @@ foreach ($dir in $publicDirs) {
 
 # Things that are built and committed but not public yet. Production deploys
 # strip whatever is listed here; beta (-IncludeUnreleased) keeps it, so it can
-# be tried first. Empty since the Android widget launched on 2026-11-15; the
-# next unreleased page or folder goes in this list.
-$unreleased = @()
+# be tried first. Stripping means three things, so that a production page
+# neither loads nor describes something that is not launched:
+#   1. the file or folder is removed;
+#   2. every block of staged HTML between
+#        <!-- unreleased: <the same path> -->  and  <!-- /unreleased -->
+#      is cut out, markers included;
+#   3. every remaining line of staged HTML that mentions the path is removed
+#      (its <script> tag).
+#
+#   assets/cloud-sync.js  settings sync by sync code. To launch: create the
+#                         table (cloudflare-sync-worker/schema/sync.sql) on
+#                         the production database, add the privacy-policy
+#                         section from docs/cloud-sync.md, then remove it here.
+$unreleased = @("assets/cloud-sync.js")
 if (-not $IncludeUnreleased) {
   foreach ($item in $unreleased) {
     $path = Join-Path $target $item
     if (Test-Path $path) { Remove-Item -Recurse -Force $path }
+    $block = "(?s)[ \t]*<!-- unreleased: " + [regex]::Escape($item) + " -->.*?<!-- /unreleased -->[ \t]*\r?\n?"
+    $mention = "(?m)^.*" + [regex]::Escape($item) + ".*\r?\n"
+    Get-ChildItem -Path $target -Filter *.html | ForEach-Object {
+      $html = [System.IO.File]::ReadAllText($_.FullName)
+      $kept = [regex]::Replace($html, $block, "")
+      $kept = [regex]::Replace($kept, $mention, "")
+      if ($kept -ne $html) { [System.IO.File]::WriteAllText($_.FullName, $kept) }
+    }
   }
 }
 

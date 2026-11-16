@@ -7240,3 +7240,7 @@ button, select, .btn, a.btn { touch-action: manipulation; }
 @keyframes widgetAnnounceIn { from { opacity: 0; transform: translateY(16px); } }
 @media (prefers-reduced-motion: reduce) { .widgetAnnounce { animation: none; } }
 
+/* Long-form pages (About, the Android widget page): keep lines a readable
+   length on wide screens instead of running the full width of the window. */
+.legalCard.readable { max-width: 860px; margin-inline: auto; }
+.legalCard.readable li { margin-bottom: 6px; }

@@ -6,15 +6,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <!-- A transfer link (assets/settings-backup.js) carries settings after the
-       "#". Browsers never send that part to a server, but any script on the
-       page can read it from the address, analytics included. So it is taken
-       out here, first, before the analytics tags below exist. Keep this the
-       first script in <head>. -->
+       "#", and a sync link (assets/cloud-sync.js) carries a sync code there.
+       Browsers never send that part to a server, but any script on the page
+       can read it from the address, analytics included. So both are taken out
+       here, first, before the analytics tags below exist. Keep this the first
+       script in <head>. -->
   <script>
-    if (location.hash.indexOf("#import=") === 0) {
-      window.__hnImport = location.hash.slice(8);
+    (function () {
+      var hash = location.hash;
+      if (hash.indexOf("#import=") === 0) window.__hnImport = hash.slice(8);
+      else if (hash.indexOf("#sync=") === 0) window.__hnSync = decodeURIComponent(hash.slice(6));
+      else return;
       history.replaceState(null, "", location.pathname + location.search);
-    }
+    })();
   </script>
 
   <!-- Google tag (gtag.js). Consent Mode is denied by default and never granted,
@@ -735,6 +739,74 @@
             </div>
           </div>
 
+          <!-- unreleased: assets/cloud-sync.js -->
+          <!-- Sync across devices. Starts hidden and the sync script shows it; the
+               script also shows or hides each [data-when] block for the
+               current state: off, on or paused. -->
+          <div class="collapsibleSection" id="cloudSyncSection" style="display:none">
+            <button class="collapsibleHeader expanded" data-section="cloud-sync">
+              Sync Across Devices
+            </button>
+            <div class="collapsibleBody expanded">
+              <div id="cloudSyncStatus" class="syncStatusPanel">Checking…</div>
+
+              <div class="settingsActionRow" data-when="off">
+                <button id="cloudSyncStartBtn" class="btn btnSubtle" type="button" data-analytics="sync-start">Start syncing</button>
+                <button id="cloudSyncHaveBtn" class="btn btnSubtle" type="button" data-analytics="sync-have-code">I have a sync code</button>
+              </div>
+              <div data-when="off">
+                <div id="cloudSyncEnter" style="display:none">
+                  <input id="cloudSyncCodeIn" class="input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                    aria-label="Sync code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" style="width:100%" />
+                  <div class="settingsActionRow">
+                    <button id="cloudSyncConnectBtn" class="btn btnSubtle" type="button">Connect this browser</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settingsActionRow" data-when="on">
+                <button id="cloudSyncShowBtn" class="btn btnSubtle" type="button">Show my sync code</button>
+                <button id="cloudSyncNowBtn" class="btn btnSubtle" type="button">Sync now</button>
+                <button id="cloudSyncStopBtn" class="btn btnSubtle" type="button">Stop in this browser</button>
+                <button id="cloudSyncDeleteBtn" class="btn btnSubtle" type="button">Delete my synced copy</button>
+              </div>
+              <div data-when="on">
+                <div id="cloudSyncReveal" style="display:none">
+                  <div class="settingLabel" style="margin-top:12px">Your sync code</div>
+                  <input id="cloudSyncCode" class="input" type="text" readonly aria-label="Your sync code"
+                    style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:0;padding-left:10px;padding-right:10px" />
+                  <div class="settingsActionRow">
+                    <button id="cloudSyncCopyCodeBtn" class="btn btnSubtle" type="button">Copy code</button>
+                  </div>
+                  <div class="settingLabel" style="margin-top:12px">Or a link that carries it</div>
+                  <input id="cloudSyncLink" class="input" type="text" readonly aria-label="Sync link" style="width:100%" />
+                  <div class="settingsActionRow">
+                    <button id="cloudSyncCopyLinkBtn" class="btn btnSubtle" type="button">Copy link</button>
+                  </div>
+                  <div class="hint hintMt8">
+                    In the other browser, open Settings, choose <strong>I have a sync code</strong> and enter the code, or simply open the link there.
+                  </div>
+                </div>
+              </div>
+
+              <div class="settingsActionRow" data-when="paused">
+                <button id="cloudSyncKeepBtn" class="btn btnSubtle" type="button">Send these settings to my devices</button>
+                <button id="cloudSyncRestoreBtn" class="btn btnSubtle" type="button">Bring back my synced settings</button>
+              </div>
+
+              <div class="hint hintMt8">
+                Keeps your settings the same in every browser and device you connect. They are encrypted in your
+                browser before they are sent, and your sync code is the key: we store only a scrambled copy that we
+                cannot read. Anyone who has your code can read your settings, so treat it like a password. We cannot
+                recover a lost code, though any browser that is still syncing can show it to you.
+                <br />
+                A synced copy that goes unused for six months is deleted. Which news tab and market group you are
+                viewing stay separate on each device.
+              </div>
+            </div>
+          </div>
+          <!-- /unreleased -->
+
           </div><!-- /.systemPanelCol -->
 
           <div class="collapsibleSection">
@@ -808,7 +880,7 @@
     <p>⚙️ All settings stored locally in your browser using localStorage • No server-side storage or tracking</p>
     <p class="pageFooterFinePrint">💡 Install as a PWA for the best experience • Changes take effect immediately • JSON
       export/import available for backup</p>
-    <p class="footerLinks"><a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a
+    <p class="footerLinks"><a href="/about">About</a> • <a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a
         href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
   </footer>
 
@@ -892,6 +964,8 @@
   <script defer src="assets/top-feeds.js"></script>
   <script defer src="assets/widget-link.js"></script>
   <script defer src="assets/settings-sync.js"></script>
+  <script defer src="assets/cloud-sync.js"></script>
+  <script defer src="assets/whats-new.js"></script>
 </body>
 
 </html>
