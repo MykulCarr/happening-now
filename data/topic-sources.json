@@ -341,6 +341,12 @@
           "type": "community"
         },
         {
+          "name": "How-To Geek",
+          "rss": "https://www.howtogeek.com/feed/",
+          "site": "https://www.howtogeek.com",
+          "type": "paper"
+        },
+        {
           "name": "Rest of World",
           "rss": "https://restofworld.org/feed/latest/",
           "site": "https://restofworld.org",
