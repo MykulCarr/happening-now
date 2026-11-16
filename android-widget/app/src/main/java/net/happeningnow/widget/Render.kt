@@ -51,7 +51,8 @@ object Render {
     //   weather panel           opens the weather page
     //   the arrow on it         folds / unfolds the forecast
     //   a weather warning       opens the weather page
-    //   a neighbouring category, or an arrow    switches category
+    //   a neighbouring category, an arrow, or
+    //   the left / right edge of the news panel switches category
     //   a headline              opens the article
     //   watchlist header        folds / unfolds the watchlist
     //   a watchlist row         opens the Markets page
@@ -277,8 +278,8 @@ object Render {
         val stories = if (count > 0) "$count ${if (count == 1) "story" else "stories"}" else ""
         v.setTextViewText(R.id.catpos, listOf(where, stories, if (where.isEmpty()) "${index + 1} of $n" else "")
             .filter { it.isNotEmpty() }.joinToString(" · "))
-        for (id in intArrayOf(R.id.prev, R.id.cat_m1, R.id.cat_m2)) v.setOnClickPendingIntent(id, action(c, ACTION_PREV))
-        for (id in intArrayOf(R.id.next, R.id.cat_p1, R.id.cat_p2)) v.setOnClickPendingIntent(id, action(c, ACTION_NEXT))
+        for (id in intArrayOf(R.id.prev, R.id.cat_m1, R.id.cat_m2, R.id.edge_prev)) v.setOnClickPendingIntent(id, action(c, ACTION_PREV))
+        for (id in intArrayOf(R.id.next, R.id.cat_p1, R.id.cat_p2, R.id.edge_next)) v.setOnClickPendingIntent(id, action(c, ACTION_NEXT))
 
         // How many rows fit depends on how tall the widget was dragged. Heights
         // are in dp; 0 means the launcher didn't say, so assume a full page.

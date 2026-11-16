@@ -130,13 +130,18 @@
             android:orientation="horizontal" />
     </LinearLayout>
 
-    <!-- News panel. Takes all the spare height. -->
-    <LinearLayout
+    <!-- News panel. Takes all the spare height. A frame, so the two edge
+         zones at the bottom of it can lie over the content. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:background="@drawable/bar_bg"
+        android:background="@drawable/bar_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingHorizontal="12dp"
         android:paddingVertical="8dp">
@@ -267,6 +272,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
+            android:paddingHorizontal="16dp"
             android:paddingTop="4dp" />
 
         <!-- Android 12+: the same headlines as a scrolling list, when there
@@ -280,13 +286,43 @@
             android:fadingEdgeLength="18dp"
             android:requiresFadingEdge="vertical"
             android:fadeScrollbars="false"
-            android:paddingEnd="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:scrollbarSize="3dp"
             android:scrollbarStyle="outsideOverlay"
             android:scrollbarThumbVertical="@drawable/scroll_thumb"
             android:scrollbars="vertical"
             android:visibility="gone" />
     </LinearLayout>
+
+        <!-- Edge zones: the whole left edge of the panel is "previous
+             category", the whole right edge "next". The nearest a widget
+             gets to a sideways swipe, which the launcher keeps for itself.
+             They start below the category strip, which has its own arrows. -->
+        <TextView
+            android:id="@+id/edge_prev"
+            android:layout_width="28dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_marginTop="44dp"
+            android:contentDescription="Previous category"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="@color/faint"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/edge_next"
+            android:layout_width="28dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_marginTop="44dp"
+            android:contentDescription="Next category"
+            android:gravity="center"
+            android:text="›"
+            android:textColor="@color/faint"
+            android:textSize="22sp" />
+    </FrameLayout>
 
     <!-- Watchlist panel -->
     <LinearLayout

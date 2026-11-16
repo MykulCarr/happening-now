@@ -21,8 +21,8 @@ android {
         applicationId = "net.happeningnow.widget"
         minSdk = 28
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "1.1"
     }
 
     signingConfigs {
