@@ -49,6 +49,16 @@
         <!-- "Set up here": town, topics and watchlist chosen in the app. -->
         <activity android:name=".ManualSetupActivity" android:exported="false" />
 
+        <!-- Reads a tapped story. Its own task, so closing it returns to the
+             home screen and not to the setup screen. Rotation is handled in
+             place: restarting would reload the page from the top. -->
+        <activity
+            android:name=".ReaderActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity="" />
+
         <!-- Invisible: opens the link of a tapped row in the scrolling list. -->
         <activity
             android:name=".OpenActivity"

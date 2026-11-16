@@ -35,10 +35,7 @@ object Render {
     // Site links open in the installed Happening Now app when there is one.
     private fun open(c: Context, url: String): PendingIntent {
         val safe = if (url.startsWith("https://") || url.startsWith("http://")) url else Fetch.SITE
-        // Our own pages go to the installed site app; articles to the default browser.
-        val intent = if (safe.startsWith(Fetch.SITE)) Site.intent(c, safe)
-            else Intent(Intent.ACTION_VIEW, Uri.parse(safe)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return PendingIntent.getActivity(c, 0, intent, FLAGS)
+        return PendingIntent.getActivity(c, 0, Site.open(c, safe), FLAGS)
     }
 
     private fun openSetup(c: Context) =
@@ -53,7 +50,8 @@ object Render {
     //   a weather warning       opens the weather page
     //   a neighbouring category, an arrow, or
     //   the left / right edge of the news panel switches category
-    //   a headline              opens the article
+    //   a headline              opens the article in the reader screen
+    //                           (or the browser, if that option is on)
     //   watchlist header        folds / unfolds the watchlist
     //   a watchlist row         opens the Markets page
     //   gear                    widget settings (the only way in)

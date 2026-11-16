@@ -20,4 +20,14 @@ object Site {
         if (target != null) intent.setPackage(target)
         return intent
     }
+
+    /**
+     * Where any link from the widget opens: our own pages in the site app, a
+     * story in the reader screen, or in the browser if that option is on.
+     */
+    fun open(c: Context, url: String): Intent = when {
+        url.startsWith(Fetch.SITE) -> intent(c, url)
+        Store.flag(c, "browserLinks") -> Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        else -> Intent(c, ReaderActivity::class.java).setData(Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
 }

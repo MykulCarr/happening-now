@@ -1,8 +1,6 @@
 package net.happeningnow.widget
 
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 
 /**
@@ -17,13 +15,7 @@ class OpenActivity : Activity() {
     override fun onCreate(saved: Bundle?) {
         super.onCreate(saved)
         val url = intent.dataString.orEmpty()
-        if (url.startsWith("https://") || url.startsWith("http://")) runCatching {
-            // Our own pages go to the installed site app; articles to the default browser.
-            startActivity(
-                if (url.startsWith(Fetch.SITE)) Site.intent(this, url)
-                else Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }
+        if (ReaderActivity.isWeb(url)) runCatching { startActivity(Site.open(this, url)) }
         finish()
     }
 }
