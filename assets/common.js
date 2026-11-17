@@ -394,7 +394,7 @@
   function normalizeConfig(cfg) {
     const out = { ...clone(DEFAULTS), ...(cfg || {}) };
 
-    out.theme = out.theme === "light" ? "light" : "dark";
+    out.theme = ["light", "middle"].includes(out.theme) ? out.theme : "dark";
     out.density = ["compact", "cozy", "comfortable"].includes(out.density) ? out.density : "comfortable";
     out.renderMode = ["smooth", "stable"].includes(String(out.renderMode || "").toLowerCase())
       ? String(out.renderMode).toLowerCase()
@@ -832,6 +832,8 @@
 
   function applyThemeDensity(cfg) {
     document.documentElement.setAttribute("data-theme", cfg.theme);
+    // Light and middle share the light-surface rules (styles.css: data-tone).
+    document.documentElement.setAttribute("data-tone", cfg.theme === "dark" ? "dark" : "light");
     document.documentElement.setAttribute("data-density", cfg.density);
     document.documentElement.setAttribute("data-render-mode", cfg.renderMode || "smooth");
     document.documentElement.setAttribute("data-font-size", "normal");

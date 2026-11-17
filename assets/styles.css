@@ -84,7 +84,10 @@ header#topbar {
   --site-h-margin: 32px;
 }
 
-[data-theme="light"] {
+/* The light-surface themes (light and middle) share everything below that is
+   keyed on data-tone; each theme's own colours follow it. common.js sets
+   data-tone="light" for both. */
+[data-tone="light"] {
   --bg: #99b19c;
   --panel: rgba(255, 255, 255, .55);
   --panel2: rgba(255, 255, 255, .72);
@@ -101,6 +104,34 @@ header#topbar {
   --accent2: var(--blue-bright);
   --shadow: 0 8px 32px rgba(0, 0, 0, .13), 0 2px 8px rgba(0, 0, 0, .08);
   --shadowHover: 0 12px 48px rgba(0, 0, 0, .18), 0 4px 12px rgba(0, 0, 0, .10);
+}
+
+/* Light: cool off-white page, white cards, the dark theme's navy as ink.
+   Contrast checked: --muted on white 6.0:1, --accent on white 5.1:1. */
+[data-theme="light"] {
+  --bg: #f2f4f6;
+  --panel: #ffffff;
+  --panel2: #f7f9fa;
+  --panelHover: #eef2f5;
+  --border: rgba(12, 49, 66, .15);
+  --text: #14232e;
+  --muted: #56636e;
+  --card-bg: #ffffff;
+  --shadow: 0 4px 16px rgba(12, 49, 66, .07), 0 1px 3px rgba(12, 49, 66, .06);
+  --shadowHover: 0 8px 28px rgba(12, 49, 66, .11), 0 2px 6px rgba(12, 49, 66, .08);
+}
+
+/* Middle: the sage the old light theme used, as solid surfaces on one even
+   background, with darker ink and muted text so it reads. */
+[data-theme="middle"] {
+  --bg: #a9bfab;
+  --panel: #dbe6db;
+  --panel2: #e3ece3;
+  --panelHover: #edf3ed;
+  --border: rgba(0, 0, 0, .14);
+  --text: #10201a;
+  --muted: #3d4f45;
+  --card-bg: #e3ece3;
 }
 
 [data-density="compact"] {
@@ -297,6 +328,9 @@ html[data-override-active] body {
   background: rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid var(--border);
 }
+/* A dark tint reads as a recess on the dark theme and as dirty grey on a
+   light one. */
+[data-tone="light"] .sourceCard .collapsibleHeader { background: var(--panel2); }
 
 /* Per-scope accent line at the top of each card (matches news scopes) */
 .sourceCard {
@@ -417,8 +451,10 @@ body {
   transition: background 0.3s ease;
 }
 
-/* Light theme: deeper sage base with richer, more varied gradient highlights */
-[data-theme="light"] body {
+/* Light-surface themes: sage base with gradient highlights (each theme
+   below softens it; the sticky header paints a flat --bg, so a strong glow
+   shows up as a darker band behind the page title and ticker). */
+[data-tone="light"] body {
   background:
     radial-gradient(1000px 700px at 15% 10%, rgba(16, 185, 129, .28), transparent 65%),
     radial-gradient(1000px 700px at 85% 15%, rgba(109, 40, 217, .12), transparent 55%),
@@ -426,30 +462,38 @@ body {
     var(--bg);
 }
 
-/* Light theme: topbar uses a frosted sage surface */
-[data-theme="light"] header#topbar {
+/* Light-surface themes: topbar uses a frosted sage surface */
+[data-tone="light"] header#topbar {
   background: linear-gradient(to bottom, rgba(190, 218, 194, .88), rgba(170, 200, 176, .65));
   border-bottom: 1px solid rgba(0, 60, 30, .16);
 }
 
+/* One even colour, no glow: the sticky title-and-ticker area paints a flat
+   --bg, so any glow on the page showed as a band behind it. */
+[data-theme="light"] body { background: var(--bg); }
+[data-theme="light"] header#topbar { background: #ffffff; border-bottom: 1px solid #dfe4e8; }
+
+[data-theme="middle"] body { background: var(--bg); }
+[data-theme="middle"] header#topbar { background: #c6d8c8; border-bottom: 1px solid rgba(0, 60, 30, .18); }
+
 /* Light theme: topbar internal separators */
-[data-theme="light"] .hn-brand,
-[data-theme="light"] .hn-time-section,
-[data-theme="light"] .hn-host-search {
+[data-tone="light"] .hn-brand,
+[data-tone="light"] .hn-time-section,
+[data-tone="light"] .hn-host-search {
   border-color: rgba(0, 0, 0, .12);
 }
 
 /* Light theme: card hover border */
-[data-theme="light"] .card:hover {
+[data-tone="light"] .card:hover {
   border-color: rgba(0, 0, 0, .24);
 }
 
 /* Light theme: scrollbar */
-[data-theme="light"] ::-webkit-scrollbar-thumb {
+[data-tone="light"] ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, .18);
 }
 
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+[data-tone="light"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, .28);
 }
 
@@ -1184,11 +1228,11 @@ header#topbar .pageHeadActions {
   color: #fcd34d;
 }
 
-[data-theme="light"] .alertsBar .alertItem.alertToneA {
+[data-tone="light"] .alertsBar .alertItem.alertToneA {
   color: #0f172a;
 }
 
-[data-theme="light"] .alertsBar .alertItem.alertToneB {
+[data-tone="light"] .alertsBar .alertItem.alertToneB {
   color: #9a3412;
 }
 
@@ -1313,9 +1357,16 @@ header#topbar .pageHeadActions {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="light"] .hn-topbar {
+[data-tone="light"] .hn-topbar {
   background: rgba(248, 250, 252, 0.94);
 }
+[data-theme="light"] .hn-topbar { background: rgba(255, 255, 255, .97); }
+[data-theme="middle"] .hn-topbar { background: rgba(198, 216, 200, .97); }
+
+/* The phone header's name is bright green, which suits the dark header and
+   all but vanished on a light one. */
+[data-theme="light"] .hn-brand, [data-theme="light"] .hn-title { color: #0c3142; }
+[data-theme="middle"] .hn-brand, [data-theme="middle"] .hn-title { color: #1e5a3a; }
 
 .hn-topbar .hn-inner {
   max-width: none;
@@ -2224,7 +2275,7 @@ header#topbar>.infoBar .infoBarRight {
     background: rgba(25, 18, 70, 0.98);
   }
 
-  [data-theme="light"] .hn-mobile-menu.open {
+  [data-tone="light"] .hn-mobile-menu.open {
     background: rgba(210, 235, 212, 0.98);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
@@ -2255,7 +2306,7 @@ header#topbar>.infoBar .infoBarRight {
     background: rgba(198, 111, 28, 0.15);
   }
 
-  [data-theme="light"] .hn-mobile-nav .hn-nav-link.active {
+  [data-tone="light"] .hn-mobile-nav .hn-nav-link.active {
     background: rgba(22, 128, 60, 0.15);
   }
 
@@ -2695,7 +2746,7 @@ header#topbar>.infoBar .infoBarRight {
   line-height: 1.5;
 }
 
-[data-theme="light"] .errorMessage {
+[data-tone="light"] .errorMessage {
   background: rgba(239, 68, 68, .1);
   border-color: rgba(239, 68, 68, .2);
 }
@@ -3283,6 +3334,16 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   border-color: rgba(198, 111, 28, .48);
 }
 
+/* The badge text above is pale for the dark ticker; on a light surface it
+   needs the dark end of each hue. */
+[data-tone="light"] .criticalNewsBar .criticalBadge.national,
+[data-tone="light"] .criticalNewsBar .criticalBadge.us { color: #1d4ed8; background: rgba(37, 99, 235, .10); }
+[data-tone="light"] .criticalNewsBar .criticalBadge.international,
+[data-tone="light"] .criticalNewsBar .criticalBadge.world { color: #92400e; background: rgba(217, 119, 6, .12); }
+[data-tone="light"] .criticalNewsBar .criticalBadge.local { color: #047857; background: rgba(16, 185, 129, .12); }
+[data-tone="light"] .criticalNewsBar .criticalBadge.regional { color: #9a3412; background: rgba(198, 111, 28, .12); }
+[data-tone="light"] .criticalNewsBar .criticalTickerSep { color: rgba(0, 0, 0, .3); }
+
 /* Wraps because the topic tabs make this row open-ended — four static scopes
    plus one per enabled topic. Without wrapping the overflow runs off the LEFT
    edge (the row is right-aligned), where it can't even be scrolled to. */
@@ -3335,6 +3396,11 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   background: rgba(6, 98, 132, .2);
   color: var(--accent);
   border-color: rgba(6, 98, 132, .5);
+}
+
+[data-tone="light"] .tickerScopeBtn.active {
+  background: rgba(182, 81, 12, .10);
+  border-color: rgba(182, 81, 12, .55);
 }
 
 /* On phones the categories are one swipeable row rather than four wrapped
@@ -3423,12 +3489,12 @@ select.input,
   color-scheme: dark;
 }
 
-[data-theme="light"] select.select,
-[data-theme="light"] select.input,
-[data-theme="light"] .selectInline,
-[data-theme="light"] .weatherMapTypeSelect,
-[data-theme="light"] .stocksSortSelect,
-[data-theme="light"] .timeWidgetSelect {
+[data-tone="light"] select.select,
+[data-tone="light"] select.input,
+[data-tone="light"] .selectInline,
+[data-tone="light"] .weatherMapTypeSelect,
+[data-tone="light"] .stocksSortSelect,
+[data-tone="light"] .timeWidgetSelect {
   color-scheme: light;
 }
 
@@ -3448,18 +3514,18 @@ select.input optgroup,
   color: var(--text);
 }
 
-[data-theme="light"] select.select option,
-[data-theme="light"] select.input option,
-[data-theme="light"] select.select optgroup,
-[data-theme="light"] select.input optgroup,
-[data-theme="light"] .selectInline option,
-[data-theme="light"] .selectInline optgroup,
-[data-theme="light"] .weatherMapTypeSelect option,
-[data-theme="light"] .weatherMapTypeSelect optgroup,
-[data-theme="light"] .stocksSortSelect option,
-[data-theme="light"] .stocksSortSelect optgroup,
-[data-theme="light"] .timeWidgetSelect option,
-[data-theme="light"] .timeWidgetSelect optgroup {
+[data-tone="light"] select.select option,
+[data-tone="light"] select.input option,
+[data-tone="light"] select.select optgroup,
+[data-tone="light"] select.input optgroup,
+[data-tone="light"] .selectInline option,
+[data-tone="light"] .selectInline optgroup,
+[data-tone="light"] .weatherMapTypeSelect option,
+[data-tone="light"] .weatherMapTypeSelect optgroup,
+[data-tone="light"] .stocksSortSelect option,
+[data-tone="light"] .stocksSortSelect optgroup,
+[data-tone="light"] .timeWidgetSelect option,
+[data-tone="light"] .timeWidgetSelect optgroup {
   background-color: #ffffff;
   color: rgba(0, 0, 0, .9);
 }
@@ -4823,28 +4889,28 @@ body.stockLookupModalOpen {
   background: rgba(148, 163, 184, .15);
 }
 
-[data-theme="light"] .indexSourceTag.isGoogle {
+[data-tone="light"] .indexSourceTag.isGoogle {
   color: #1d4ed8;
 }
 
-[data-theme="light"] .indexSourceTag.isReuters {
+[data-tone="light"] .indexSourceTag.isReuters {
   color: #047857;
 }
 
-[data-theme="light"] .indexSourceTag.isBloomberg {
+[data-tone="light"] .indexSourceTag.isBloomberg {
   color: #b45309;
 }
 
-[data-theme="light"] .indexSourceTag.isCoinDesk {
+[data-tone="light"] .indexSourceTag.isCoinDesk {
   color: #c2410c;
 }
 
-[data-theme="light"] .indexSourceTag.isCboe {
+[data-tone="light"] .indexSourceTag.isCboe {
   color: #6d28d9;
 }
 
-[data-theme="light"] .indexSourceTag.isWsj,
-[data-theme="light"] .indexSourceTag.isDirect {
+[data-tone="light"] .indexSourceTag.isWsj,
+[data-tone="light"] .indexSourceTag.isDirect {
   color: #475569;
 }
 
@@ -5417,7 +5483,7 @@ body.stockLookupModalOpen {
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="light"] #locationPickerModal>.modalContent {
+[data-tone="light"] #locationPickerModal>.modalContent {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.18);
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.1);

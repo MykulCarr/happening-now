@@ -134,5 +134,5 @@
 .wQMove.up { color: #4ade80; }
 .wQMove.down { color: #f87171; }
 .wQMove.flat { color: var(--muted); }
-[data-theme="light"] .wQMove.up { color: #15803d; }
-[data-theme="light"] .wQMove.down { color: #b91c1c; }
+[data-tone="light"] .wQMove.up { color: #15803d; }
+[data-tone="light"] .wQMove.down { color: #b91c1c; }
