@@ -767,7 +767,34 @@ Two things not to break:
   the last two minutes is answered from Cloudflare's edge cache. 120s is far too
   short to hide a dead feed, so it doesn't affect health sweeps — but to test
   whether a publisher is blocking Worker IPs *right now*, add a unique `_hn`
-  value to the target URL so the edge cache key differs.
+  value to the target URL so the edge cache key differs **and send
+  `nostale=1`**: for readers the Worker strips `_hn` (below), so only a
+  health-check request still carries it upstream.
+
+**Three things the proxy does for readers, not for health checks
+(2026-11-17).** All live in `rss-cache.mjs` and are forced by
+`npm run test:rss-cache`:
+
+- **One key per feed.** The browser adds `_hn=<time>` to most feed URLs.
+  The proxy used to key its stored last-good copy on that full address, so a
+  copy saved on one visit could never be found on the next: the fallback
+  above only ever worked for the few hosts in `NO_CACHE_BUST_HOSTS`. It now
+  keys on `withoutBuster(target)` and fetches that address upstream too, so
+  the 120s edge cache is shared between readers.
+- **Feeds only.** `mayPassThrough` refuses anything that is not an XML
+  document, except JSON from `query1/query2.finance.yahoo.com` (the Markets
+  page's quotes, charts, movers and symbol search). Before, the route fetched
+  any public web page for anyone, on the free-plan quota the site also runs
+  on. An empty but real feed still passes, so the sweep can name it. The
+  Cloudflare rate-limit rule on `/v1/rss/raw` is the other half.
+- **Trimmed.** `trimForReaders` sends the first 30 items and drops
+  `<content:encoded>` from any item that also has a `<description>`
+  (Axios: 1,092 KB to 179 KB). Health checks get the untouched feed.
+
+Tested against every catalog feed through a local `wrangler dev`, both as a
+health check and as a reader (`HN_PROXY="http://127.0.0.1:8787/v1/rss/raw?nostale=0&url="`,
+where `nostale=0` comes first and wins): no real feed refused, none broken by
+the trim.
 
 `npm run test:rss-cache` exercises the logic against a stubbed Cache API —
 including that a bot-wall page can never become the stored "good" copy, and

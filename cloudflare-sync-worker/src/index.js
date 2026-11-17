@@ -7,7 +7,7 @@ import { handleReport, handlePulse } from "./reports.mjs";
 import { handleSync } from "./sync.mjs";
 import { handleAdmin } from "./admin.mjs";
 import { fetchFeedUpstream } from "./upstream-headers.mjs";
-import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed } from "./rss-cache.mjs";
+import { looksLikeFeed, readLastGood, writeLastGood, staleAllowed, withoutBuster, mayPassThrough, trimForReaders } from "./rss-cache.mjs";
 
 function normalizeOrigin(value) {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -194,6 +194,12 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
 
   const cache = caches.default;
   const mayServeStale = staleAllowed(request.url);
+  // One address per feed for the stored copy and, for readers, the upstream
+  // fetch too, so the 120s edge cache is shared instead of missed every time.
+  // Health checks (nostale=1) still fetch exactly what they asked for: a
+  // unique _hn there is how to see what a publisher answers right now.
+  const feedKey = withoutBuster(parsed.target);
+  const fetchTarget = mayServeStale ? feedKey : parsed.target;
 
   // Falls back to the last good copy of this feed instead of a bare 502. See
   // rss-cache.mjs for why that replaced the third-party proxy that used to sit
@@ -202,7 +208,7 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
   // diagnose it precisely rather than seeing a blanket 502.
   const serveStaleOr = async (errorBody, status) => {
     if (mayServeStale) {
-      const stale = await readLastGood(cache, parsed.target);
+      const stale = await readLastGood(cache, feedKey);
       if (stale) {
         return rssResponse(await stale.text(), request, env, {
           cacheState: "stale",
@@ -215,7 +221,7 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
 
   let upstream;
   try {
-    upstream = await fetchFeedUpstream(parsed.target, {
+    upstream = await fetchFeedUpstream(fetchTarget, {
       cf: {
         cacheEverything: true,
         cacheTtl: 120,
@@ -229,24 +235,31 @@ async function fetchRssThroughProxy(request, env, url, ctx) {
     return serveStaleOr(`Target feed error: ${upstream.status}`, 502);
   }
 
-  const xmlText = upstream.text;
+  // Readers get the trimmed feed (rss-cache.mjs); health checks the real one.
+  const xmlText = mayServeStale && looksLikeFeed(upstream.text) ? trimForReaders(upstream.text) : upstream.text;
 
   // Refresh the good copy only when this really is a feed, so a bot-wall page
   // served with a 200 can never become what we fall back to. Deliberately not
   // awaited: storing it must not add latency to the reader's response.
   if (looksLikeFeed(xmlText)) {
-    const stored = writeLastGood(cache, parsed.target, xmlText);
+    const stored = writeLastGood(cache, feedKey, xmlText);
     if (ctx?.waitUntil) ctx.waitUntil(stored); else await stored;
   } else if (mayServeStale) {
     // Reachable but not serving a feed — prefer the last good copy if we have
     // one, otherwise fall through and hand the body over as-is.
-    const stale = await readLastGood(cache, parsed.target);
+    const stale = await readLastGood(cache, feedKey);
     if (stale) {
       return rssResponse(await stale.text(), request, env, {
         cacheState: "stale",
         storedAt: stale.headers.get("X-HN-Stored-At") || "",
       });
     }
+  }
+
+  // Not a feed and not Yahoo's JSON: a web page or a bot wall. Refuse it
+  // rather than relay it (see mayPassThrough in rss-cache.mjs).
+  if (!mayPassThrough(parsed.target, xmlText)) {
+    return jsonResponse({ ok: false, error: "Target is not a feed" }, 502, request, env);
   }
 
   return rssResponse(xmlText, request, env, { cacheState: "live" });

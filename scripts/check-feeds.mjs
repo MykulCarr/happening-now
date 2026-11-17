@@ -33,7 +33,10 @@ import { fileURLToPath } from "node:url";
 import { checkFeedText } from "../cloudflare-sync-worker/src/feed-health.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PROXY = "https://happening-now.net/v1/rss/raw?url=";
+// HN_PROXY points the sweep at another copy of the Worker, e.g. a local
+// `wrangler dev` (HN_PROXY=http://127.0.0.1:8787/v1/rss/raw?url=), to try a
+// proxy change against every catalog feed before it ships.
+const PROXY = process.env.HN_PROXY || "https://happening-now.net/v1/rss/raw?url=";
 // nostale=1 turns off the proxy's last-known-good fallback for this request.
 // Without it the sweep would be handed a cached copy of a feed that died days
 // ago and report it healthy — the same blind spot the curator User-Agent had.

@@ -74,6 +74,60 @@ export async function writeLastGood(cache, target, xmlText) {
 // send this, so the sweep always sees ground truth while readers get the cache.
 export const NO_STALE_PARAM = "nostale";
 
+// The browser appends `_hn=<timestamp>` to most feed URLs so its own HTTP
+// cache never answers (assets/common.js). Kept in the key, it made every
+// stored "last good copy" unfindable — each request asked for a different
+// address — and it defeated the edge cache upstream the same way. The
+// proxy uses this address, without the buster, for both. Plain string
+// surgery rather than URLSearchParams, which would re-encode the publisher's
+// other parameters.
+export function withoutBuster(target) {
+  return String(target)
+    .replace(/([?&])_hn=[^&#]*(&?)/, (_, sep, amp) => (amp ? sep : ""))
+    .replace(/[?&]$/, "");
+}
+
+// What the proxy will hand back: a feed (or any XML document, so the health
+// sweep still sees an empty feed for what it is), or JSON from the Yahoo
+// finance hosts the Markets page reads through here. Anything else — a web
+// page, a bot wall — is refused. Without this the route fetched any public
+// page for anyone, on the same free-plan request quota the site runs on.
+export const JSON_PASSTHROUGH_HOSTS = new Set(["query1.finance.yahoo.com", "query2.finance.yahoo.com"]);
+
+export function isXmlDocument(text) {
+  const head = String(text || "").replace(/^\uFEFF/, "").trimStart().slice(0, 1000);
+  if (/^<(!doctype\s+html|html)[\s>]/i.test(head)) return false;
+  // Feed tag near the top, not necessarily first: some feeds open with a
+  // comment or a stylesheet instruction.
+  return head.startsWith("<?xml") || /<(rss|feed|rdf:RDF)[\s>]/.test(head);
+}
+
+export function mayPassThrough(target, text) {
+  let host = "";
+  try { host = new URL(target).hostname.toLowerCase(); } catch { /* not a URL: not a Yahoo host */ }
+  return JSON_PASSTHROUGH_HOSTS.has(host) || isXmlDocument(text);
+}
+
+// What readers are sent: the first READER_MAX_ITEMS items, and no
+// <content:encoded> (the whole article, again) in any item that also has a
+// <description>, which is all the site reads for its 240-character summary,
+// its picture and a webcomic's caption. Axios alone was 1,068 KB raw and
+// 217 KB on the wire, 43% of the homepage; trimmed it is about 180 KB raw.
+// No page shows more than 30 items from one feed (the picker's peek counts
+// 30). Health checks (nostale=1) get the feed untouched, so they still judge
+// what the publisher actually serves. About a millisecond for a 1 MB feed.
+export const READER_MAX_ITEMS = 30;
+
+export function trimForReaders(text) {
+  let n = 0;
+  return String(text).replace(/<(item|entry)\b[\s\S]*?<\/\1>/g, (item) => {
+    if (++n > READER_MAX_ITEMS) return "";
+    return /<description[\s>]/.test(item)
+      ? item.replace(/<content:encoded>[\s\S]*?<\/content:encoded>/g, "")
+      : item;
+  });
+}
+
 export function staleAllowed(requestUrl) {
   try {
     return new URL(requestUrl).searchParams.get(NO_STALE_PARAM) !== "1";
