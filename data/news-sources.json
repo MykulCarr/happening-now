@@ -32,6 +32,7 @@
       "dead_or_unreachable": {
         "CNN": "rss.cnn.com parses but its newest item is from 2023",
         "AP": "no public RSS",
+        "Straight Arrow News": "discontinued service on 2026-11-06; its feed address now serves a farewell page — removed 2026-11-17",
         "PBS NewsHour, ESPN, NHK World, Japan Today, Rest of World, Global Voices, Hong Kong Free Press, Mail & Guardian, The Wire, Brazilian Report, RFE/RL, Inquirer.net, Asia Times, Yahoo Finance": "empty or 502 through the Worker proxy on 2026-10-18",
         "Taipei Times, Hindustan Times": "feeds carry no dates, so freshness can't be shown"
       }
@@ -48,7 +49,6 @@
     { "id": "abc", "scope": "national", "name": "ABC News", "rss": "https://feeds.abcnews.com/abcnews/topstories", "site": "https://abcnews.go.com", "kind": "commercial", "beats": ["general"], "blurb": "Network TV news. Top stories, a handful a day." },
     { "id": "newsnation", "scope": "national", "name": "NewsNation", "rss": "https://www.newsnationnow.com/feed/", "site": "https://www.newsnationnow.com", "kind": "commercial", "beats": ["general"], "blurb": "Cable news channel from Nexstar that pitches itself as fact-based and unbiased." },
     { "id": "upi", "scope": "national", "name": "UPI", "rss": "https://rss.upi.com/news/top_news.rss", "site": "https://www.upi.com", "kind": "wire", "beats": ["general"], "blurb": "United Press International, a century-old wire service. Plain, just-the-facts top stories." },
-    { "id": "san", "scope": "national", "name": "Straight Arrow News", "rss": "https://san.com/feed/", "site": "https://san.com", "kind": "commercial", "beats": ["general", "politics"], "blurb": "Newer digital outlet that says it reports 'unbiased, straight facts'." },
     { "id": "guardian-us", "scope": "national", "name": "The Guardian (US)", "rss": "https://www.theguardian.com/us-news/rss", "site": "https://www.theguardian.com/us-news", "kind": "commercial", "beats": ["general", "politics"], "blurb": "The British paper's US desk. Reader-funded, progressive editorial line, never paywalled." },
     { "id": "politico", "scope": "national", "name": "Politico", "rss": "https://rss.politico.com/politics-news.xml", "site": "https://www.politico.com", "kind": "commercial", "beats": ["politics"], "blurb": "Inside-Washington politics: campaigns, Congress, the White House." },
     { "id": "semafor", "scope": "national", "name": "Semafor", "rss": "https://www.semafor.com/rss.xml", "site": "https://www.semafor.com", "kind": "commercial", "beats": ["politics", "business"], "blurb": "Global news startup; each story separates the facts from the reporter's view. Quieter on weekends." },

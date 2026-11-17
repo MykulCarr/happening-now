@@ -23,7 +23,14 @@
 #
 # Adding a third-party endpoint means adding it here too, or it works locally
 # (python -m http.server sends no CSP) and is blocked in production only.
+#
+# Strict-Transport-Security (2026-11-17): browsers that have visited once
+# refuse plain http:// for a year, so nobody on the path can strip the
+# redirect to https. No includeSubDomains on purpose: it would bind every
+# subdomain too (flights. runs its own server through a tunnel), and once
+# sent it cannot be taken back until the year runs out.
 /*
+  Strict-Transport-Security: max-age=31536000
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
