@@ -3,7 +3,6 @@
   const App = window.App = window.App || {};
   const {
     RSS_PROXY_BASE,
-    STOCK_API_KEYS,
     STOCKS_PROXY_BASE,
     getCached,
     setCached,
@@ -21,20 +20,6 @@
       if(finnhubResult){
         setCached(cacheKey, finnhubResult);
         return finnhubResult;
-      }
-      if(STOCK_API_KEYS.alphaVantage){
-        const avResult = await fetchStockPriceFromAlphaVantage(baseSymbol);
-        if(avResult){
-          setCached(cacheKey, avResult);
-          return avResult;
-        }
-      }
-      if(STOCK_API_KEYS.iex){
-        const iexResult = await fetchStockPriceFromIex(baseSymbol);
-        if(iexResult){
-          setCached(cacheKey, iexResult);
-          return iexResult;
-        }
       }
       const tdResult = await fetchStockPriceFromTwelveData(baseSymbol);
       if(tdResult){
@@ -260,59 +245,6 @@
     }
   }
 
-  async function fetchStockPriceFromAlphaVantage(symbol){
-    try{
-      const res = await fetch(
-        `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${STOCK_API_KEYS.alphaVantage}`,
-        { cache: "no-store" }
-      );
-      if(res.ok){
-        const data = await res.json();
-        const quote = data["Global Quote"];
-        if(quote && quote["05. price"]){
-          return {
-            symbol,
-            price: parseFloat(quote["05. price"]),
-            change: parseFloat(quote["09. change"]) || 0,
-            changePercent: parseFloat(quote["10. change percent"]?.replace('%','')) || 0,
-            previousClose: parseFloat(quote["08. previous close"]),
-            timestamp: new Date().toISOString()
-          };
-        }
-      }
-    }catch{}
-    return null;
-  }
-
-  async function fetchStockPriceFromIex(symbol){
-    try{
-      if(!STOCK_API_KEYS.iex){
-        return null;
-      }
-      const res = await fetch(
-        `https://cloud.iexapis.com/stable/quote/${encodeURIComponent(symbol)}?token=${STOCK_API_KEYS.iex}&displayPercent=true`,
-        { cache: "no-store" }
-      );
-      if(res.ok){
-        const data = await res.json();
-        if(data.latestPrice){
-          return {
-            symbol,
-            price: data.latestPrice,
-            change: data.change || 0,
-            changePercent: data.changePercent || 0,
-            previousClose: data.previousClose,
-            open: data.open,
-            high: data.high,
-            low: data.low,
-            timestamp: new Date(data.latestUpdate).toISOString()
-          };
-        }
-      }
-    }catch{}
-    return null;
-  }
-
   async function fetchStockPriceFromTwelveData(symbol){
     try{
       const res = await fetch(
@@ -366,57 +298,6 @@
     { symbol: "V", name: "Visa Inc" }
   ];
 
-  const FMP_API_KEY = "demo";
-
-  function parsePercentLike(value){
-    if(value === null || value === undefined) return 0;
-    const cleaned = String(value).replace(/[()%+]/g, "").trim();
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function normalizeFmpMover(item){
-    const symbol = String(item?.symbol || "").trim();
-    if(!symbol) return null;
-
-    const price = Number(item?.price);
-    const change = Number(item?.change);
-    const changePercent = parsePercentLike(item?.changesPercentage ?? item?.changePercentage ?? item?.change_percent);
-
-    return {
-      symbol,
-      name: String(item?.name || symbol).trim() || symbol,
-      price: Number.isFinite(price) ? price : 0,
-      change: Number.isFinite(change) ? change : 0,
-      changePercent: Number.isFinite(changePercent) ? changePercent : 0
-    };
-  }
-
-  async function fetchFmpMovers(kind, limit){
-    try{
-      const route = String(kind || "").trim().toLowerCase();
-      if(!["gainers", "losers", "actives"].includes(route)) return null;
-
-      const url = `https://financialmodelingprep.com/api/v3/stock_market/${route}?apikey=${encodeURIComponent(FMP_API_KEY)}`;
-      const proxied = `${RSS_PROXY_BASE}${encodeURIComponent(url)}`;
-      const res = await fetch(proxied, { cache: "no-store" });
-      if(!res.ok) return null;
-
-      const data = await res.json();
-      if(!Array.isArray(data) || data.length === 0) return null;
-
-      const normalized = data
-        .map(normalizeFmpMover)
-        .filter(Boolean)
-        .filter(item => Number.isFinite(item.price) && item.price > 0)
-        .slice(0, Math.max(1, Number(limit) || 5));
-
-      return normalized.length > 0 ? normalized : null;
-    }catch(err){
-      console.warn(`FMP ${kind} fetch failed:`, err?.message || err);
-      return null;
-    }
-  }
 
   async function fetchYahooMovers(scrId, limit){
     try{
@@ -469,36 +350,9 @@
     if(cached) return cached;
 
     try {
-      if(STOCK_API_KEYS.alphaVantage) {
-        const url = `https://www.alphavantage.co/query?function=TOP_GAINERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if(res.ok) {
-          const data = await res.json();
-          if(data.top_gainers && Array.isArray(data.top_gainers)) {
-            const result = data.top_gainers.slice(0, 5).map(stock => ({
-              symbol: stock.ticker,
-              name: stock.symbol || stock.ticker,
-              price: parseFloat(stock.price) || 0,
-              change: parseFloat(stock.change_amount) || 0,
-              changePercent: parseFloat(stock.change_percentage?.replace('%', '')) || 0
-            }));
-            const payload = withMoverSource(result, "alpha-vantage");
-            setCached(cacheKey, payload);
-            return payload;
-          }
-        }
-      }
-
       const yahooGainers = await fetchYahooMovers("day_gainers", 5);
       if(yahooGainers && yahooGainers.length > 0){
         const payload = withMoverSource(yahooGainers, "yahoo");
-        setCached(cacheKey, payload);
-        return payload;
-      }
-
-      const fmpGainers = await fetchFmpMovers("gainers", 5);
-      if(fmpGainers && fmpGainers.length > 0){
-        const payload = withMoverSource(fmpGainers, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }
@@ -529,36 +383,9 @@
     if(cached) return cached;
 
     try {
-      if(STOCK_API_KEYS.alphaVantage) {
-        const url = `https://www.alphavantage.co/query?function=TOP_LOSERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if(res.ok) {
-          const data = await res.json();
-          if(data.top_losers && Array.isArray(data.top_losers)) {
-            const result = data.top_losers.slice(0, 5).map(stock => ({
-              symbol: stock.ticker,
-              name: stock.symbol || stock.ticker,
-              price: parseFloat(stock.price) || 0,
-              change: parseFloat(stock.change_amount) || 0,
-              changePercent: parseFloat(stock.change_percentage?.replace('%', '')) || 0
-            }));
-            const payload = withMoverSource(result, "alpha-vantage");
-            setCached(cacheKey, payload);
-            return payload;
-          }
-        }
-      }
-
       const yahooLosers = await fetchYahooMovers("day_losers", 5);
       if(yahooLosers && yahooLosers.length > 0){
         const payload = withMoverSource(yahooLosers, "yahoo");
-        setCached(cacheKey, payload);
-        return payload;
-      }
-
-      const fmpLosers = await fetchFmpMovers("losers", 5);
-      if(fmpLosers && fmpLosers.length > 0){
-        const payload = withMoverSource(fmpLosers, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }
@@ -590,51 +417,9 @@
 
     try {
       let allStocks = [];
-      if(STOCK_API_KEYS.alphaVantage) {
-        try {
-          const gainerUrl = `https://www.alphavantage.co/query?function=TOP_GAINERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
-          const gainerRes = await fetch(gainerUrl, { cache: "no-store" });
-          if(gainerRes.ok) {
-            const gainerData = await gainerRes.json();
-            if(gainerData.top_gainers) {
-              allStocks = allStocks.concat(gainerData.top_gainers.slice(0, 3));
-            }
-          }
-          const loserUrl = `https://www.alphavantage.co/query?function=TOP_LOSERS&apikey=${STOCK_API_KEYS.alphaVantage}`;
-          const loserRes = await fetch(loserUrl, { cache: "no-store" });
-          if(loserRes.ok) {
-            const loserData = await loserRes.json();
-            if(loserData.top_losers) {
-              allStocks = allStocks.concat(loserData.top_losers.slice(0, 3));
-            }
-          }
-          if(allStocks.length > 0) {
-            const result = allStocks.slice(0, 6).map(stock => ({
-              symbol: stock.ticker,
-              name: stock.symbol || stock.ticker,
-              price: parseFloat(stock.price) || 0,
-              change: parseFloat(stock.change_amount) || 0,
-              changePercent: parseFloat(stock.change_percentage?.replace('%', '')) || 0
-            }));
-            const payload = withMoverSource(result, "alpha-vantage");
-            setCached(cacheKey, payload);
-            return payload;
-          }
-        } catch(err) {
-          console.warn("Alpha Vantage movers failed, falling back:", err.message);
-        }
-      }
-
       const yahooActives = await fetchYahooMovers("most_actives", 6);
       if(yahooActives && yahooActives.length > 0){
         const payload = withMoverSource(yahooActives, "yahoo");
-        setCached(cacheKey, payload);
-        return payload;
-      }
-
-      const fmpActives = await fetchFmpMovers("actives", 6);
-      if(fmpActives && fmpActives.length > 0){
-        const payload = withMoverSource(fmpActives, "fmp");
         setCached(cacheKey, payload);
         return payload;
       }

@@ -352,11 +352,11 @@ rewrite every HTML response.
 
 Things that are **not** in the policy because nothing reaches them:
 `cdn.jsdelivr.net` was allowed for scripts and styles and is referenced
-nowhere. `www.alphavantage.co`, `cloud.iexapis.com`, `newsapi.org`,
-`gnews.io` and `mediastack.com` all appear in `assets/` but behind
-`if (KEY)` guards on keys that are empty strings, so they are never contacted
-— don't re-add them to the CSP without re-adding a key. Every stock and feed
-call that looks third-party goes through `/v1/rss/raw`, which is `'self'`.
+nowhere. The code for `www.alphavantage.co`, `cloud.iexapis.com`,
+`newsapi.org`, `gnews.io`, `mediastack.com` and FMP's "demo" key was removed
+on 2026-11-17: every key was empty (FMP's demo key answered 401), so none of
+it could run. Every stock and feed call that looks third-party goes through
+`/v1/rss/raw`, which is `'self'`.
 
 **`https://happening-now.net` is listed in `connect-src` even though it is
 `'self'` in production.** That is for previews: a staged build served from

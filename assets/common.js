@@ -56,13 +56,6 @@
   // every icon on the local dev server.
   const FAVICON_BASE = `${API_ORIGIN}/v1/favicon`;
 
-  // Optional direct-call fallbacks. Left empty on purpose; filling either one in
-  // publishes it, so prefer adding a Worker route instead.
-  const STOCK_API_KEYS = {
-    alphaVantage: "",
-    iex: ""
-  };
-
   // US State name to abbreviation mapping
   const STATE_ABBREVIATIONS = {
     "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
@@ -1237,7 +1230,18 @@
     return xmlText.replace(rootTag, fixedRoot);
   }
 
+  // Every request for SHARED_FEED_COUNT headlines or fewer shares one
+  // download per feed, and takes the first `limit` of it. Keyed by the exact
+  // count, the news ticker (12), a card (6) and the Today view (6) each
+  // downloaded the same feed separately: NPR three times on one page load.
+  const SHARED_FEED_COUNT = 12;
+
   async function fetchRssItems(rssUrl, limit = 10, useCache = true) {
+    const items = await downloadFeed(rssUrl, Math.max(limit, SHARED_FEED_COUNT), useCache);
+    return items.length > limit ? items.slice(0, limit) : items;
+  }
+
+  async function downloadFeed(rssUrl, limit, useCache) {
     const cacheKey = `rss:${rssUrl}:${limit}`;
 
     if (useCache) {
@@ -1245,7 +1249,9 @@
       if (cached) return cached;
     }
 
-    const inFlightKey = `${cacheKey}:${useCache ? "cache" : "nocache"}`;
+    // One download in flight per feed, whether or not the caller may read the
+    // cache: once the cache has missed, both kinds want the same fresh copy.
+    const inFlightKey = cacheKey;
     if (rssInFlight.has(inFlightKey)) {
       return rssInFlight.get(inFlightKey);
     }
@@ -2566,7 +2572,6 @@
     API_ORIGIN,
     RSS_PROXY_BASE,
     RSS_AGGREGATORS,
-    STOCK_API_KEYS,
     STOCKS_PROXY_BASE,
     MARKETS_SNAPSHOT_URL,
     MARKET_INDEX_DEFS: clone(MARKET_INDEX_DEFS),

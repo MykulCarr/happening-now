@@ -1519,9 +1519,7 @@
   }
 
   function sourceLabel(source){
-    if(source === "alpha-vantage") return "Source: Alpha Vantage";
     if(source === "yahoo") return "Source: Yahoo Movers";
-    if(source === "fmp") return "Source: Live Movers";
     if(source === "preset-list") return "Source: Preset List";
     return "Source: Unknown";
   }
