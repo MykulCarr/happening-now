@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Roomy headline rows: each headline on its own rounded tile. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/tile" />
+    <corners android:radius="10dp" />
+</shape>

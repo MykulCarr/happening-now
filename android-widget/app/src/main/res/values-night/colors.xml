@@ -18,4 +18,6 @@
     <color name="accent">#EE9020</color>
     <color name="up">#4ADE80</color>
     <color name="down">#F87171</color>
+    <color name="divider">#2EFFFFFF</color>
+    <color name="tile">#17FFFFFF</color>
 </resources>

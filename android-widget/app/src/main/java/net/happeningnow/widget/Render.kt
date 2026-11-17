@@ -161,7 +161,7 @@ object Render {
         for (k in 0 until items.length()) {
             val item = items.getJSONObject(k)
             val url = item.optString("url")
-            val row = RemoteViews(c.packageName, R.layout.row_headline_list)
+            val row = RemoteViews(c.packageName, if (Store.flag(c, "roomy")) R.layout.row_headline_list_roomy else R.layout.row_headline_list)
             row.setTextViewText(R.id.meta, prefix + sourceAndAge(item))
             row.setTextViewText(R.id.index, "${k + 1}/${items.length()}") // the reader's place in the list
             row.setTextViewText(R.id.title, item.optString("title"))
@@ -308,9 +308,11 @@ object Render {
         val quoteRows = if (collapsed) 0 else fitRows
         // Everything that isn't a headline (clock, weather, switcher, footer,
         // padding) is about 250dp, plus the watchlist; a two-line headline
-        // needs about 58dp.
+        // needs about 58dp, or 84dp as a roomy tile.
         val fixedHeight = 250 + (if (forecastOpen) 150 else 0) + when { fitRows == 0 -> 0; collapsed -> 44; else -> 36 + quoteRows * 24 }
-        val headlineRows = if (height == 0) 6 else ((height - fixedHeight) / 58).coerceIn(1, 10)
+        val roomy = Store.flag(c, "roomy")
+        val headlineRows = if (height == 0) (if (roomy) 4 else 6) else ((height - fixedHeight) / (if (roomy) 84 else 58)).coerceIn(1, 10)
+        val rowLayout = if (roomy) R.layout.row_headline_roomy else R.layout.row_headline
 
         // Headlines. When they all fit, each row has weight 1 and they spread
         // evenly down the space. When there are more than fit, Android 12+
@@ -323,12 +325,12 @@ object Render {
         if (scroll) {
             fillList(c, v, R.id.headlines_list, items!!, prefix = "")
         } else if (items == null || items.length() == 0) {
-            val row = RemoteViews(c.packageName, R.layout.row_headline)
+            val row = RemoteViews(c.packageName, rowLayout)
             row.setTextViewText(R.id.title, "Loading headlines…")
             v.addView(R.id.headlines, row)
         } else for (k in 0 until minOf(headlineRows, items.length())) {
             val item = items.getJSONObject(k)
-            val row = RemoteViews(c.packageName, R.layout.row_headline)
+            val row = RemoteViews(c.packageName, rowLayout)
             row.setTextViewText(R.id.meta, sourceAndAge(item))
             row.setTextViewText(R.id.title, item.optString("title"))
             row.setOnClickPendingIntent(R.id.row, open(c, item.optString("url")))
