@@ -120,7 +120,21 @@ for (const e of sources) {
 }
 
 if (!asJson) console.error(`Checking ${feeds.length} feeds…`);
-const results = await pool(feeds, check, CONCURRENCY);
+const firstPass = await pool(feeds, check, CONCURRENCY);
+// Recheck every failure one at a time, a few seconds apart, before calling it
+// dead. Checking six at a time throws false alarms ("fetch failed", 502s
+// from rate limits): on 2026-11-17, 15 of 18 reported dead were healthy on a
+// slow second look. A feed that fails both times is reported.
+const RECHECK_GAP_MS = 3000;
+const failures = firstPass.filter(r => !r.ok).length;
+if (!asJson && failures) console.error(`Rechecking ${failures} failures one at a time (about ${Math.ceil(failures * 4 / 60)} min)…`);
+const results = [];
+for (const r of firstPass) {
+  if (r.ok) { results.push(r); continue; }
+  await new Promise(done => setTimeout(done, RECHECK_GAP_MS));
+  const again = await check(r);
+  results.push(again.ok ? again : { ...again, error: `${again.error} (twice)` });
+}
 const dead = results.filter(r => !r.ok);
 const staleCutoff = Date.now() - STALE_DAYS * 86400e3;
 const stale = results.filter(r => r.ok && r.newestMs !== null && r.newestMs < staleCutoff);
