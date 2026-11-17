@@ -107,7 +107,7 @@
       try {
         const size = innerWidth < 700 ? "narrow" : "wide";
         const last = (JSON.parse(localStorage.getItem("hn_layout_stocks_v1") || "{}")[size]) || {};
-        const typical = size === "narrow" ? { indices: 263, watchlist: 640, news: 720 } : { indices: 194, watchlist: 690, news: 690 };
+        const typical = size === "narrow" ? { indices: 281, watchlist: 640, news: 720 } : { indices: 212, watchlist: 690, news: 690 };
         for (const key of ["indices", "watchlist", "news"]) {
           document.documentElement.style.setProperty(`--reserve-${key}`, `${last[key] || typical[key]}px`);
         }

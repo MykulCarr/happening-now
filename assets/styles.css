@@ -3154,6 +3154,7 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px; /* the whole label is the tap target, not just the 16px box */
   color: var(--muted);
   font-size: 12px;
   cursor: pointer;
@@ -3162,8 +3163,8 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
 }
 
 .weatherMapConsentRemember input {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   accent-color: var(--accent);
 }
 
@@ -4573,6 +4574,7 @@ body.stockLookupModalOpen {
   flex: 0 0 auto;
   font-size: 11px;
   padding: 5px 9px;
+  min-height: 40px; /* finger-sized; the text stays small so all five still fit */
 }
 
 /* Filtered to one group, the heading only repeats what the active tab says. */
