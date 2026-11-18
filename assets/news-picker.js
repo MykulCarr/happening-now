@@ -1,7 +1,7 @@
 /* The news source picker, for all four scopes.
  *
  * National / International browse data/news-sources.json. Local / State
- * browse the outlets we curate near the reader plus Reddit communities
+ * browse the outlets we curate near the reader
  * (assets/news-picker-local.js finds them). Either way a reader can "peek"
  * at any source before adding it: its latest real headlines, fetched live
  * through the same /v1/rss/raw path the news page uses, plus numbers measured
@@ -34,10 +34,10 @@
     "asia-pacific": "Asia-Pacific", americas: "Americas"
   };
   // Local / State filter chips, by source kind.
-  const GROUP_LABELS = { tv: "TV", paper: "Newspapers", community: "Community", radio: "Radio", reddit: "Reddit", search: "Search results" };
+  const GROUP_LABELS = { tv: "TV", paper: "Newspapers", community: "Community", radio: "Radio", search: "Search results" };
   const KIND_LABELS = {
     public: "Public or state-funded", nonprofit: "Nonprofit", commercial: "Commercial", wire: "Wire service",
-    tv: "Local TV", paper: "Newspaper", community: "Community news", radio: "Radio", reddit: "Reddit community", search: "Search result"
+    tv: "Local TV", paper: "Newspaper", community: "Community news", radio: "Radio", search: "Search result"
   };
   const TITLES = { national: "National sources", international: "International sources", local: "Local sources", regional: "State & regional sources" };
 
@@ -132,7 +132,7 @@
             <button type="button" class="btn npSkip">Use automatic picks</button>
           </div>`
         : `<p class="npLead">Every source here is free to read, with no paywall. Tap one to peek at what it's publishing right now.</p>`}
-        <input type="search" class="input npSearch" placeholder="${geoMode ? "Filter, or search a place or topic" : "Search by name or subject"}" aria-label="Search sources">
+        <input type="search" class="input npSearch" placeholder="${geoMode ? "Filter, or search a place" : "Search by name or subject"}" aria-label="Search sources">
         <div class="npChips" role="group" aria-label="Filter"></div>
         <div class="npStatus" aria-live="polite"></div>
         <div class="npList" role="list"><p class="npPeekNote">Loading sources…</p></div>
@@ -269,13 +269,13 @@
         }
         listEl.appendChild(box);
       }
-      // Local / State: a typed place or topic can search beyond this list.
+      // Local / State: a typed place can search beyond this list.
       const q = searchEl.value.trim();
       if (geoMode && q.length >= 3 && window.App.searchSources) {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "btn npSearchMore";
-        b.textContent = `Search places and Reddit for “${q}”`;
+        b.textContent = `Search places for “${q}”`;
         b.addEventListener("click", () => runSearch(q));
         listEl.appendChild(b);
       }
@@ -321,7 +321,7 @@
       try {
         const groups = await window.App.searchSources(q);
         const found = groups.flatMap((g) => g.items.map((it) => ({
-          name: it.name, rss: it.rss, site: it.site || (g.id === "reddit" ? "https://www.reddit.com" : ""),
+          name: it.name, rss: it.rss, site: it.site || "",
           kind: "search", blurb: it.detail || "", where: g.label,
         })));
         sources = [...found, ...sources.filter((s) => s.kind !== "search" && !found.some((f) => f.rss === s.rss))];

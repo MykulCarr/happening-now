@@ -15,8 +15,7 @@
         "site": "Public-facing landing page (used for the favicon and click-through)",
         "type": "tv | paper | community"
       },
-      "legacyShape": "An older form where a city's value was just an array of entries (no coords) is still tolerated by getStationsForGeo for backward compat — but new entries MUST include coords so they participate in the nearest-city fallback.",
-      "subreddits": "Array of subreddit names (without 'r/') curated as news-relevant community feeds. Personals / dating / NSFW subs excluded by editorial choice. The picker constructs https://www.reddit.com/r/<name>/.rss for each — verify with the worker proxy before adding."
+      "legacyShape": "An older form where a city's value was just an array of entries (no coords) is still tolerated by getStationsForGeo for backward compat — but new entries MUST include coords so they participate in the nearest-city fallback."
     },
     "howToAdd": [
       "1. Find a candidate RSS URL for the local outlet (TV station, paper, etc.).",
@@ -24,8 +23,7 @@
       "3. Add an entry under states.<XX>.<lowercase-city>.entries for hyperlocal, or states.<XX>._state.entries for statewide.",
       "4. When adding a NEW city or state block, include coords: { lat, lon } at the city/state level (decimal degrees, ~4 sig figs). City coords = city centroid; statewide coords = capital or geographic center. Without coords, the city won't appear in nearest-city fallback suggestions.",
       "5. Keep entries sorted alphabetically within each entries array.",
-      "6. Lookups are case-insensitive: getStationsForGeo({ city:'Jackson', state:'MI' }) finds states.MI.jackson.",
-      "7. Subreddits: add a `subreddits: [\"name1\", \"name2\"]` array alongside `entries`. Verify each via /r/<name>/.rss returns ≥1 entry through the proxy before committing."
+      "6. Lookups are case-insensitive: getStationsForGeo({ city:'Jackson', state:'MI' }) finds states.MI.jackson."
     ]
   },
   "states": {
@@ -42,9 +40,6 @@
             "site": "https://alaskabeacon.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "alaska"
         ]
       },
       "anchorage": {
@@ -59,9 +54,6 @@
             "site": "https://www.adn.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "anchorage"
         ]
       }
     },
@@ -78,9 +70,6 @@
             "site": "https://alabamareflector.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Alabama"
         ]
       },
       "birmingham": {
@@ -95,9 +84,6 @@
             "site": "https://www.cbs42.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Birmingham_AL"
         ]
       },
       "huntsville": {
@@ -112,9 +98,6 @@
             "site": "https://whnt.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "HuntsvilleAlabama"
         ]
       },
       "mobile": {
@@ -129,9 +112,6 @@
             "site": "https://www.wkrg.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "mobileAL"
         ]
       }
     },
@@ -148,9 +128,6 @@
             "site": "https://arkansasadvocate.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Arkansas"
         ]
       },
       "fayetteville": {
@@ -165,9 +142,6 @@
             "site": "https://www.nwahomepage.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "fayettevillear"
         ]
       },
       "little rock": {
@@ -182,9 +156,6 @@
             "site": "https://www.kark.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "LittleRock"
         ]
       }
     },
@@ -201,9 +172,6 @@
             "site": "https://azmirror.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "arizona"
         ]
       },
       "phoenix": {
@@ -218,9 +186,6 @@
             "site": "https://www.abc15.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "phoenix"
         ]
       },
       "tucson": {
@@ -235,9 +200,6 @@
             "site": "https://www.kgun9.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Tucson"
         ]
       }
     },
@@ -260,9 +222,6 @@
             "site": "https://capitolweekly.net",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "california"
         ]
       },
       "fresno": {
@@ -289,9 +248,6 @@
             "site": "https://patch.com/california/fresno",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "fresno"
         ]
       },
       "los angeles": {
@@ -336,10 +292,6 @@
             "site": "https://patch.com/california/los-angeles",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "LosAngeles",
-          "AskLosAngeles"
         ]
       },
       "nipomo": {
@@ -380,9 +332,6 @@
             "site": "https://patch.com/california/sacramento",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "Sacramento"
         ]
       },
       "san bernardino": {
@@ -403,9 +352,6 @@
             "site": "https://ktla.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "SanBernardino"
         ]
       },
       "san diego": {
@@ -438,9 +384,6 @@
             "site": "https://patch.com/california/san-diego",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "sandiego"
         ]
       },
       "san francisco": {
@@ -473,10 +416,6 @@
             "site": "https://sfstandard.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "sanfrancisco",
-          "bayarea"
         ]
       },
       "san luis obispo": {
@@ -523,9 +462,6 @@
             "site": "https://www.noozhawk.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "santamaria"
         ]
       },
       "victorville": {
@@ -540,9 +476,6 @@
             "site": "https://ktla.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "HighDesert"
         ]
       }
     },
@@ -559,9 +492,6 @@
             "site": "https://coloradonewsline.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Colorado"
         ]
       },
       "colorado springs": {
@@ -576,9 +506,6 @@
             "site": "https://krdo.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "ColoradoSprings"
         ]
       },
       "denver": {
@@ -605,9 +532,6 @@
             "site": "https://denverite.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Denver"
         ]
       }
     },
@@ -624,9 +548,6 @@
             "site": "https://ctmirror.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Connecticut"
         ]
       },
       "hartford": {
@@ -647,9 +568,6 @@
             "site": "https://www.wtnh.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Hartford"
         ]
       },
       "new haven": {
@@ -664,9 +582,6 @@
             "site": "https://www.wtnh.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "newhaven"
         ]
       }
     },
@@ -683,9 +598,6 @@
             "site": "https://www.dcnewsnow.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "washingtondc"
         ]
       }
     },
@@ -702,9 +614,6 @@
             "site": "https://spotlightdelaware.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Delaware"
         ]
       },
       "wilmington": {
@@ -735,9 +644,6 @@
             "site": "https://floridaphoenix.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "florida"
         ]
       },
       "miami": {
@@ -770,9 +676,6 @@
             "site": "https://www.nbcmiami.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Miami"
         ]
       },
       "tampa": {
@@ -799,9 +702,6 @@
             "site": "https://www.abcactionnews.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "tampa"
         ]
       },
       "orlando": {
@@ -828,9 +728,6 @@
             "site": "https://www.wftv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "orlando"
         ]
       },
       "jacksonville": {
@@ -857,9 +754,6 @@
             "site": "https://patch.com/florida/jacksonville",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "Jacksonville"
         ]
       },
       "tallahassee": {
@@ -880,9 +774,6 @@
             "site": "https://www.wtxl.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Tallahassee"
         ]
       }
     },
@@ -905,9 +796,6 @@
             "site": "https://saportareport.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Georgia"
         ]
       },
       "atlanta": {
@@ -934,9 +822,6 @@
             "site": "https://patch.com/georgia/atlanta",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "Atlanta"
         ]
       },
       "savannah": {
@@ -957,9 +842,6 @@
             "site": "https://www.wsav.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "savannah"
         ]
       }
     },
@@ -976,9 +858,6 @@
             "site": "https://www.civilbeat.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Hawaii"
         ]
       },
       "honolulu": {
@@ -993,9 +872,6 @@
             "site": "https://www.khon2.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Honolulu"
         ]
       }
     },
@@ -1012,9 +888,6 @@
             "site": "https://iowacapitaldispatch.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Iowa"
         ]
       },
       "davenport": {
@@ -1029,9 +902,6 @@
             "site": "https://www.ourquadcities.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "QuadCities"
         ]
       },
       "des moines": {
@@ -1046,9 +916,6 @@
             "site": "https://who13.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "desmoines"
         ]
       }
     },
@@ -1065,9 +932,6 @@
             "site": "https://idahocapitalsun.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Idaho"
         ]
       },
       "boise": {
@@ -1082,9 +946,6 @@
             "site": "https://www.kivitv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Boise"
         ]
       },
       "idaho falls": {
@@ -1099,9 +960,6 @@
             "site": "https://www.localnews8.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "IdahoFalls"
         ]
       }
     },
@@ -1124,9 +982,6 @@
             "site": "https://illinoisnewsroom.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "illinois"
         ]
       },
       "chicago": {
@@ -1177,9 +1032,6 @@
             "site": "https://wgntv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "chicago"
         ]
       }
     },
@@ -1196,9 +1048,6 @@
             "site": "https://indianacapitalchronicle.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Indiana"
         ]
       },
       "evansville": {
@@ -1213,9 +1062,6 @@
             "site": "https://www.tristatehomepage.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "evansville"
         ]
       },
       "fort wayne": {
@@ -1230,9 +1076,6 @@
             "site": "https://www.wane.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "fortwayne"
         ]
       },
       "indianapolis": {
@@ -1271,9 +1114,6 @@
             "site": "https://www.wrtv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "indianapolis"
         ]
       }
     },
@@ -1290,9 +1130,6 @@
             "site": "https://kansasreflector.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "kansas"
         ]
       },
       "topeka": {
@@ -1307,9 +1144,6 @@
             "site": "https://www.ksnt.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "topeka"
         ]
       },
       "wichita": {
@@ -1324,9 +1158,6 @@
             "site": "https://www.ksn.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "wichita"
         ]
       }
     },
@@ -1343,9 +1174,6 @@
             "site": "https://kentuckylantern.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Kentucky"
         ]
       },
       "lexington": {
@@ -1360,9 +1188,6 @@
             "site": "https://www.lex18.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "lexington"
         ]
       },
       "louisville": {
@@ -1383,9 +1208,6 @@
             "site": "https://wfpl.org",
             "type": "radio"
           }
-        ],
-        "subreddits": [
-          "Louisville"
         ]
       }
     },
@@ -1402,9 +1224,6 @@
             "site": "https://lailluminator.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Louisiana"
         ]
       },
       "baton rouge": {
@@ -1419,9 +1238,6 @@
             "site": "https://www.brproud.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "BatonRouge"
         ]
       },
       "new orleans": {
@@ -1442,9 +1258,6 @@
             "site": "https://wgno.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "NewOrleans"
         ]
       },
       "shreveport": {
@@ -1459,9 +1272,6 @@
             "site": "https://www.ktalnews.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Shreveport"
         ]
       }
     },
@@ -1496,9 +1306,6 @@
             "site": "https://www.wbur.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "massachusetts"
         ]
       },
       "boston": {
@@ -1531,9 +1338,6 @@
             "site": "https://whdh.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "boston"
         ]
       },
       "springfield": {
@@ -1548,9 +1352,6 @@
             "site": "https://www.wwlp.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "springfieldma"
         ]
       }
     },
@@ -1567,9 +1368,6 @@
             "site": "https://marylandmatters.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "maryland"
         ]
       },
       "baltimore": {
@@ -1590,9 +1388,6 @@
             "site": "https://www.wmar2news.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "baltimore"
         ]
       }
     },
@@ -1609,9 +1404,6 @@
             "site": "https://mainemorningstar.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Maine"
         ]
       },
       "bangor": {
@@ -1626,9 +1418,6 @@
             "site": "https://www.bangordailynews.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Bangor"
         ]
       },
       "portland": {
@@ -1643,9 +1432,6 @@
             "site": "https://www.pressherald.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "PortlandME"
         ]
       }
     },
@@ -1680,9 +1466,6 @@
             "site": "https://www.mlive.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Michigan"
         ]
       },
       "detroit": {
@@ -1709,9 +1492,6 @@
             "site": "https://www.wxyz.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Detroit"
         ]
       },
       "grand rapids": {
@@ -1738,9 +1518,6 @@
             "site": "https://www.woodtv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "grandrapids"
         ]
       },
       "jackson": {
@@ -1767,9 +1544,6 @@
             "site": "https://www.wlns.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "JacksonMI"
         ]
       },
       "lansing": {
@@ -1784,9 +1558,6 @@
             "site": "https://www.wlns.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "lansing"
         ]
       }
     },
@@ -1803,9 +1574,6 @@
             "site": "https://minnesotareformer.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "minnesota"
         ]
       },
       "duluth": {
@@ -1820,9 +1588,6 @@
             "site": "https://www.wdio.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "duluth"
         ]
       },
       "minneapolis": {
@@ -1849,9 +1614,6 @@
             "site": "https://www.minnpost.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Minneapolis"
         ]
       }
     },
@@ -1868,9 +1630,6 @@
             "site": "https://missouriindependent.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "missouri"
         ]
       },
       "columbia": {
@@ -1885,9 +1644,6 @@
             "site": "https://abc17news.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "columbiamo"
         ]
       },
       "kansas city": {
@@ -1902,9 +1658,6 @@
             "site": "https://www.kshb.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "kansascity"
         ]
       },
       "springfield": {
@@ -1919,9 +1672,6 @@
             "site": "https://www.ozarksfirst.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "springfieldMO"
         ]
       },
       "st. louis": {
@@ -1942,9 +1692,6 @@
             "site": "https://www.stltoday.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "StLouis"
         ]
       }
     },
@@ -1961,9 +1708,6 @@
             "site": "https://mississippitoday.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "mississippi"
         ]
       },
       "jackson": {
@@ -1978,9 +1722,6 @@
             "site": "https://www.wjtv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "JacksonMS"
         ]
       }
     },
@@ -1997,9 +1738,6 @@
             "site": "https://dailymontanan.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Montana"
         ]
       },
       "billings": {
@@ -2014,9 +1752,6 @@
             "site": "https://www.ktvq.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "billings"
         ]
       },
       "great falls": {
@@ -2031,9 +1766,6 @@
             "site": "https://www.krtv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "GreatFallsMT"
         ]
       },
       "missoula": {
@@ -2048,9 +1780,6 @@
             "site": "https://www.kpax.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "missoula"
         ]
       }
     },
@@ -2085,9 +1814,6 @@
             "site": "https://www.wunc.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "NorthCarolina"
         ]
       },
       "charlotte": {
@@ -2102,9 +1828,6 @@
             "site": "https://www.fox46.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Charlotte"
         ]
       },
       "raleigh": {
@@ -2125,9 +1848,6 @@
             "site": "https://abc11.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "raleigh"
         ]
       },
       "greensboro": {
@@ -2142,9 +1862,6 @@
             "site": "https://myfox8.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "gso"
         ]
       }
     },
@@ -2161,9 +1878,6 @@
             "site": "https://northdakotamonitor.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "NorthDakota"
         ]
       },
       "bismarck": {
@@ -2178,9 +1892,6 @@
             "site": "https://www.kxnet.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "bismarck"
         ]
       },
       "fargo": {
@@ -2195,9 +1906,6 @@
             "site": "https://www.inforum.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "fargo"
         ]
       }
     },
@@ -2214,9 +1922,6 @@
             "site": "https://nebraskaexaminer.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Nebraska"
         ]
       },
       "lincoln": {
@@ -2231,9 +1936,6 @@
             "site": "https://www.klkntv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "lincoln"
         ]
       },
       "omaha": {
@@ -2248,9 +1950,6 @@
             "site": "https://www.3newsnow.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Omaha"
         ]
       }
     },
@@ -2267,9 +1966,6 @@
             "site": "https://newhampshirebulletin.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "newhampshire"
         ]
       },
       "manchester": {
@@ -2312,9 +2008,6 @@
             "site": "https://www.nj.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "newjersey"
         ]
       },
       "jersey city": {
@@ -2329,9 +2022,6 @@
             "site": "https://patch.com/new-jersey/jersey-city",
             "type": "community"
           }
-        ],
-        "subreddits": [
-          "jerseycity"
         ]
       }
     },
@@ -2348,9 +2038,6 @@
             "site": "https://sourcenm.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "NewMexico"
         ]
       },
       "albuquerque": {
@@ -2365,9 +2052,6 @@
             "site": "https://www.krqe.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Albuquerque"
         ]
       },
       "las cruces": {
@@ -2382,9 +2066,6 @@
             "site": "https://www.ktsm.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "LasCruces"
         ]
       }
     },
@@ -2401,9 +2082,6 @@
             "site": "https://nevadacurrent.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Nevada"
         ]
       },
       "las vegas": {
@@ -2424,9 +2102,6 @@
             "site": "https://www.reviewjournal.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "vegas"
         ]
       },
       "reno": {
@@ -2441,9 +2116,6 @@
             "site": "https://thisisreno.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Reno"
         ]
       }
     },
@@ -2466,9 +2138,6 @@
             "site": "https://nypost.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "NewYork"
         ]
       },
       "new york": {
@@ -2507,10 +2176,6 @@
             "site": "https://www.nbcnewyork.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "nyc",
-          "AskNYC"
         ]
       },
       "buffalo": {
@@ -2543,9 +2208,6 @@
             "site": "https://www.wkbw.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Buffalo"
         ]
       },
       "rochester": {
@@ -2566,9 +2228,6 @@
             "site": "https://www.rochesterfirst.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Rochester"
         ]
       },
       "albany": {
@@ -2589,9 +2248,6 @@
             "site": "https://www.news10.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Albany"
         ]
       },
       "syracuse": {
@@ -2612,9 +2268,6 @@
             "site": "https://www.localsyr.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Syracuse"
         ]
       }
     },
@@ -2637,9 +2290,6 @@
             "site": "https://ohiocapitaljournal.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Ohio"
         ]
       },
       "cleveland": {
@@ -2672,9 +2322,6 @@
             "site": "https://fox8.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Cleveland"
         ]
       },
       "columbus": {
@@ -2689,9 +2336,6 @@
             "site": "https://www.nbc4i.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Columbus"
         ]
       },
       "cincinnati": {
@@ -2706,9 +2350,6 @@
             "site": "https://www.wcpo.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "cincinnati"
         ]
       },
       "toledo": {
@@ -2729,9 +2370,6 @@
             "site": "https://www.toledoblade.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "toledo"
         ]
       },
       "dayton": {
@@ -2752,9 +2390,6 @@
             "site": "https://www.whio.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Dayton"
         ]
       }
     },
@@ -2771,9 +2406,6 @@
             "site": "https://oklahomavoice.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "oklahoma"
         ]
       },
       "oklahoma city": {
@@ -2788,9 +2420,6 @@
             "site": "https://kfor.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "okc"
         ]
       },
       "tulsa": {
@@ -2805,9 +2434,6 @@
             "site": "https://www.kjrh.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "tulsa"
         ]
       }
     },
@@ -2830,9 +2456,6 @@
             "site": "https://www.oregonlive.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "oregon"
         ]
       },
       "portland": {
@@ -2853,9 +2476,6 @@
             "site": "https://www.oregonlive.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Portland"
         ]
       },
       "bend": {
@@ -2876,9 +2496,6 @@
             "site": "https://www.bendbulletin.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Bend"
         ]
       }
     },
@@ -2907,9 +2524,6 @@
             "site": "https://whyy.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Pennsylvania"
         ]
       },
       "philadelphia": {
@@ -2948,9 +2562,6 @@
             "site": "https://6abc.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "philadelphia"
         ]
       },
       "pittsburgh": {
@@ -2977,9 +2588,6 @@
             "site": "https://triblive.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "pittsburgh"
         ]
       },
       "allentown": {
@@ -2994,9 +2602,6 @@
             "site": "https://www.lehighvalleylive.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "LehighValley"
         ]
       },
       "harrisburg": {
@@ -3023,9 +2628,6 @@
             "site": "https://www.abc27.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Harrisburg"
         ]
       },
       "erie": {
@@ -3040,9 +2642,6 @@
             "site": "https://www.yourerie.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Erie"
         ]
       }
     },
@@ -3059,9 +2658,6 @@
             "site": "https://rhodeislandcurrent.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "RhodeIsland"
         ]
       },
       "providence": {
@@ -3082,9 +2678,6 @@
             "site": "https://www.wpri.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "providence"
         ]
       }
     },
@@ -3101,9 +2694,6 @@
             "site": "https://scdailygazette.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "SouthCarolina"
         ]
       },
       "charleston": {
@@ -3124,9 +2714,6 @@
             "site": "https://www.counton2.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Charleston"
         ]
       },
       "greenville": {
@@ -3141,9 +2728,6 @@
             "site": "https://www.wspa.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "greenville"
         ]
       },
       "myrtle beach": {
@@ -3158,9 +2742,6 @@
             "site": "https://www.wbtw.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "myrtlebeach"
         ]
       }
     },
@@ -3177,9 +2758,6 @@
             "site": "https://southdakotasearchlight.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "SouthDakota"
         ]
       },
       "sioux falls": {
@@ -3194,9 +2772,6 @@
             "site": "https://www.keloland.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "siouxfalls"
         ]
       }
     },
@@ -3213,9 +2788,6 @@
             "site": "https://tennesseelookout.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Tennessee"
         ]
       },
       "knoxville": {
@@ -3230,9 +2802,6 @@
             "site": "https://www.wate.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Knoxville"
         ]
       },
       "memphis": {
@@ -3247,9 +2816,6 @@
             "site": "https://wreg.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "memphis"
         ]
       },
       "nashville": {
@@ -3270,9 +2836,6 @@
             "site": "https://wpln.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "nashville"
         ]
       }
     },
@@ -3301,9 +2864,6 @@
             "site": "https://www.texastribune.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "texas"
         ]
       },
       "houston": {
@@ -3324,9 +2884,6 @@
             "site": "https://abc13.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "houston"
         ]
       },
       "san antonio": {
@@ -3341,9 +2898,6 @@
             "site": "https://sanantonioreport.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "sanantonio"
         ]
       },
       "dallas": {
@@ -3364,9 +2918,6 @@
             "site": "https://www.nbcdfw.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Dallas"
         ]
       },
       "austin": {
@@ -3387,9 +2938,6 @@
             "site": "https://www.texastribune.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Austin"
         ]
       },
       "el paso": {
@@ -3410,9 +2958,6 @@
             "site": "https://kvia.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "ElPaso"
         ]
       }
     },
@@ -3429,9 +2974,6 @@
             "site": "https://utahnewsdispatch.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Utah"
         ]
       },
       "salt lake city": {
@@ -3446,9 +2988,6 @@
             "site": "https://www.abc4.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "SaltLakeCity"
         ]
       }
     },
@@ -3471,9 +3010,6 @@
             "site": "https://virginiamercury.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Virginia"
         ]
       },
       "richmond": {
@@ -3500,9 +3036,6 @@
             "site": "https://www.wtvr.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "rva"
         ]
       },
       "norfolk": {
@@ -3529,9 +3062,6 @@
             "site": "https://www.wtkr.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "HamptonRoads"
         ]
       }
     },
@@ -3548,9 +3078,6 @@
             "site": "https://vtdigger.org",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "vermont"
         ]
       },
       "burlington": {
@@ -3565,9 +3092,6 @@
             "site": "https://www.sevendaysvt.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "burlington"
         ]
       }
     },
@@ -3590,9 +3114,6 @@
             "site": "https://washingtonstatestandard.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Washington"
         ]
       },
       "seattle": {
@@ -3613,9 +3134,6 @@
             "site": "https://www.thestranger.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Seattle"
         ]
       },
       "spokane": {
@@ -3630,9 +3148,6 @@
             "site": "https://www.spokesman.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Spokane"
         ]
       }
     },
@@ -3649,9 +3164,6 @@
             "site": "https://wisconsinexaminer.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "wisconsin"
         ]
       },
       "green bay": {
@@ -3672,9 +3184,6 @@
             "site": "https://www.wearegreenbay.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "greenbay"
         ]
       },
       "madison": {
@@ -3695,9 +3204,6 @@
             "site": "https://www.wkow.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "madisonwi"
         ]
       },
       "milwaukee": {
@@ -3718,9 +3224,6 @@
             "site": "https://www.tmj4.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "milwaukee"
         ]
       }
     },
@@ -3737,9 +3240,6 @@
             "site": "https://westvirginiawatch.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "WestVirginia"
         ]
       },
       "charleston": {
@@ -3754,9 +3254,6 @@
             "site": "https://www.wowktv.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "Charleston_WV"
         ]
       },
       "morgantown": {
@@ -3771,9 +3268,6 @@
             "site": "https://www.wboy.com",
             "type": "tv"
           }
-        ],
-        "subreddits": [
-          "morgantown"
         ]
       }
     },
@@ -3790,9 +3284,6 @@
             "site": "https://wyofile.com",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "wyoming"
         ]
       },
       "casper": {
@@ -3807,9 +3298,6 @@
             "site": "https://oilcity.news",
             "type": "paper"
           }
-        ],
-        "subreddits": [
-          "Casper"
         ]
       }
     }

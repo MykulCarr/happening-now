@@ -544,13 +544,13 @@ rare path rather than a per-load one.
 (common.js) is now a thin wrapper that hands `localSources`/`regionalSources`
 to `assets/news-picker.js`, with the data coming from
 `assets/news-picker-local.js` (curated outlets for the reader's city/state,
-the nearest covered places when theirs isn't, and Reddit via
-`discoverSourcesForScope`). Add/remove saves at once; there is no "Save
+and the nearest covered places when theirs isn't, located by
+`resolvePickerGeo`). Add/remove saves at once; there is no "Save
 selection" any more. "Add all suggested" reproduces what the old picker
 pre-ticked. **Closing with nothing saved sets `*SourcesSkipped`**, which is
 what the old Skip button did and is what stops the news page re-opening the
 picker on every visit. Up to 8 per scope (news.js shows the first 8). The
-place / Reddit keyword search (`source-search.js`) lives inside the picker
+place search (`source-search.js`) lives inside the picker
 now and is loaded on the news page too. Bing searches were dropped (that
 helper had returned nothing for months; Bing/Google/Yahoo news RSS block
 Worker IPs). Local feeds are NOT vetted for paywalls the way the national
@@ -612,51 +612,19 @@ Zero means skip it. Feed families that work: Nexstar (`/feed/`), Scripps
 Families that reliably fail through the proxy: Gannett (`/rss/`) and Gray
 (`/arcio/rss/`).
 
-### Reddit: use the `.rss` endpoints, never the JSON API
+### Reddit: gone (2026-11-18)
 
-Reddit's JSON API (`/subreddits/search.json`, `/api/subreddit_autocomplete_v2`)
-returns **403** to anonymous *and* Cloudflare-Worker-origin requests — that's why
-live discovery was ripped out in `fdbf508`. But the **`.rss` variants of the same
-searches are not blocked**: `https://www.reddit.com/subreddits/search.rss?q=<kw>`
-returns an Atom feed of matching subreddits, and that's what
-`assets/source-search.js` uses to do keyword discovery. Re-verify through the
-proxy before assuming it still holds; if it breaks, the symptom is an empty
-"Reddit communities" group, not an error.
-
-**Verifying subreddits: count `<entry>`, and go slow.** Two traps, both of which
-produced false "dead" verdicts on 2026-07-26:
-
-- Reddit serves **Atom**, so a checker counting only `<item>` reports every
-  subreddit as dead. Count `<(item|entry)` — and count *occurrences*, not lines:
-  `grep -c` returns 1 for an entire feed, because feeds arrive on one line.
-- Reddit **rate-limits** bulk checking. Probing 172 subs six-at-a-time returned
-  six spurious zeroes including `r/Ohio` and `r/Seattle`; every one returned 25
-  entries when retried serially a few seconds apart. Re-check any failure one at
-  a time before concluding it's dead.
-
-`scripts/check-feeds.mjs` counts both element types correctly — ad-hoc shell
-loops are where this goes wrong.
-
-**The result filter in `source-search.js` is load-bearing — don't loosen it.**
-These results land in a public-facing dashboard, and Reddit gives us nothing to
-lean on: the Atom output has no `over_18` marker and `include_over_18=off` is
-silently ignored on the `.rss` endpoint. So filtering is entirely ours. Three
-things about it that are easy to break:
-
-- It matches **name + title + sidebar description**. The description is the most
-  telling of the three; an early version ignored it and leaked.
-- It **splits camelCase before matching** (`DetroitButts` → `detroit butts`) so
-  every pattern can anchor on `\b`. This is what lets it block `DetroitButts`
-  while keeping **Butte MT**, `Cumberland`, `Dickinson ND` and `Assateague`. An
-  unanchored `butts?` blocked Butte — if you add a term, add the boundaries and
-  re-run the false-positive suite of real place names.
-- A result must also **earn relevance**: it names what was searched for, or it
-  reads like a news/civic outlet. That's what keeps r/Pizza and r/nba out of a
-  "detroit" search.
-
-Verified against live results for detroit / chicago / phoenix / ann arbor.
-False positives are the cheap error here — anything wrongly dropped is still
-addable by pasting its RSS URL.
+Reddit ended its RSS feeds on **2026-11-13** (announced in r/modnews on
+2026-09-30; the public data API closes by March 2027). Every `.rss` URL,
+including `subreddits/search.rss`, started answering 404/429/502 from Worker
+IPs *and* from home, so it was removed everywhere: the picker's Reddit group,
+the keyword search in `source-search.js` with its safety filter, the ~170
+curated `subreddits` lists in `local-stations.json` and two AI-tab feeds.
+`normalizeConfig` drops any saved `reddit.com` feed from Local / State, since
+it can only ever be an empty slot. Don't re-add Reddit without an official,
+keyless feed coming back; if it does, the old filter (camelCase splitting,
+anchored blocklist, relevance check, all of which fixed real leaks) is in git
+history before this date.
 
 ### Other things live under this zone — don't break them
 

@@ -526,10 +526,12 @@
         return {
           name: String(s?.name || "").trim() || "Source",
           rss,
-          site: String(s?.site || "").trim() || "https://www.reddit.com",
+          site: String(s?.site || "").trim(),
           headlinesCount: Math.max(1, Math.min(20, Number(s?.headlinesCount || 8)))
         };
-      }).filter(s => s.rss).slice(0, 8);
+      // Reddit ended its RSS feeds on 2026-11-13, so a saved r/ feed is a
+      // permanently empty slot; drop it rather than keep showing nothing.
+      }).filter(s => s.rss && !/^https?:\/\/(www\.|old\.)?reddit\.com\//i.test(s.rss)).slice(0, 8);
     }
     out.localSources = normalizeSourceList(out.localSources);
     out.regionalSources = normalizeSourceList(out.regionalSources);
@@ -1358,12 +1360,10 @@
   }
 
   // ──────────────────────────────────────────────────────────────────────
-  // Local/Regional source discovery (Reddit subreddit search) + picker modal
+  // Local/Regional source picker
   // ──────────────────────────────────────────────────────────────────────
   // Both news.js and settings.js call openSourcePicker(scope, onSaved) to
-  // launch the same modal. Reddit's subreddits/search.json reliably surfaces
-  // city-named subs (r/JacksonMI), state subs (r/Michigan), and topical subs
-  // for any US city — much better than guessing Google News query templates.
+  // launch the same modal.
 
   // ZIP -> { city, state, lat, lon } via zippopotam. Moved here from
   // common-weather.js (2026-10-18): this file called it by bare name in three
@@ -1726,10 +1726,9 @@
   // ──────────────────────────────────────────────────────────────────────
   // Local TV-station / paper RSS catalog (data/local-stations.json)
   // ──────────────────────────────────────────────────────────────────────
-  // Reddit alone doesn't deliver real local journalism; many users want
-  // their actual TV station / newspaper. We bundle a curated catalog and
-  // let the picker surface it alongside Reddit suggestions for whichever
-  // city the user is in. State-level entries (`_state`) are also returned
+  // Readers want their actual TV station / newspaper. We bundle a curated
+  // catalog and the picker surfaces it for whichever city the user is in.
+  // State-level entries (`_state`) are also returned
   // for the regional scope.
   let localStationsCache = null;
   let localStationsPromise = null;
@@ -1949,7 +1948,9 @@
     return candidates.slice(0, Math.max(0, limit));
   }
 
-  async function discoverSourcesForScope(scope) {
+  // Where the Local / State picker looks. It also offered Reddit communities
+  // for the place until Reddit ended its RSS feeds on 2026-11-13.
+  async function resolvePickerGeo() {
     const liveCfg = window.App?.cfg || cfg;
     // Honors GPS, saved device coords, OR ZIP — same resolver weather.js uses.
     let geo = null;
@@ -1967,60 +1968,10 @@
         try { geo = await geocodeZip(zip); } catch { }
       }
     }
-    if (!geo) return { results: [], geo: null };
-    // Normalize "Michigan"/"US-MI"/"mi" → "MI" so we can look up the
-    // bundled subreddit list with the JSON's two-letter keys.
+    if (!geo) return null;
+    // Normalize "Michigan"/"US-MI"/"mi" -> "MI" to match the JSON's keys.
     const stateAbbr = abbreviateState(geo.state).toUpperCase();
-    geo = { ...geo, state: stateAbbr };
-    const fullState = expandStateName(stateAbbr) || stateAbbr;
-
-    // Reddit's free /subreddits/search.json API now returns 403 to
-    // anonymous and worker-origin requests — discovery is dead. Replaced
-    // with a hand-curated, news-relevant subreddit list bundled in
-    // data/local-stations.json. For LOCAL, read the city's subreddits[]
-    // (+ the statewide ones as supplemental coverage). For REGIONAL, the
-    // statewide subreddits[] only.
-    const data = await loadLocalStations();
-    const stateBlock = data?.states?.[stateAbbr];
-    const stateSubs = stateBlock?._state?.subreddits || [];
-    const citySubs = scope === "local" && geo.city
-      ? (stateBlock?.[String(geo.city).toLowerCase()]?.subreddits || [])
-      : [];
-
-    const seen = new Set();
-    const merged = [];
-    const addSub = (name) => {
-      const key = String(name || "").trim();
-      if (!key || seen.has(key.toLowerCase())) return;
-      seen.add(key.toLowerCase());
-      merged.push({
-        displayName: key,
-        subscribers: 0,  // unknown without the API; picker shows "—"
-        description: "",
-        rss: `https://www.reddit.com/r/${key}/.rss`,
-        score: 0
-      });
-    };
-    // City subs first (more locally relevant), statewide second.
-    for (const s of citySubs) addSub(s);
-    for (const s of stateSubs) addSub(s);
-
-    return { results: merged.slice(0, 10), geo: { ...geo, fullState } };
-  }
-
-  function defaultPickedSubs(results, geo) {
-    const picks = new Set();
-    const cityL = (geo?.city || "").toLowerCase();
-    const fullL = (geo?.fullState || "").toLowerCase();
-    for (const r of results) {
-      const n = r.displayName.toLowerCase();
-      if (cityL && n.includes(cityL)) picks.add(r.displayName);
-      if (fullL && n === fullL.replace(/\s/g, "")) picks.add(r.displayName);
-    }
-    if (picks.size === 0) {
-      for (const r of results.slice(0, 2)) picks.add(r.displayName);
-    }
-    return picks;
+    return { ...geo, state: stateAbbr, fullState: expandStateName(stateAbbr) || stateAbbr };
   }
 
   // Local / State source picker. Replaced 2026-10-18: the old 500-line modal
@@ -2113,8 +2064,7 @@
     expandStateName,
     isSectionHidden,
     openSourcePicker,
-    discoverSourcesForScope,
-    defaultPickedSubs,
+    resolvePickerGeo,
     loadLocalStations,
     loadTopicSources,
     getAllTopics,

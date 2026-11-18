@@ -253,18 +253,6 @@
           "type": "community"
         },
         {
-          "name": "r/LocalLLaMA",
-          "rss": "https://www.reddit.com/r/LocalLLaMA/.rss",
-          "site": "https://www.reddit.com/r/LocalLLaMA/",
-          "type": "community"
-        },
-        {
-          "name": "r/vibecoding",
-          "rss": "https://www.reddit.com/r/vibecoding/.rss",
-          "site": "https://www.reddit.com/r/vibecoding/",
-          "type": "community"
-        },
-        {
           "name": "Simon Willison's Weblog",
           "rss": "https://simonwillison.net/atom/everything/",
           "site": "https://simonwillison.net",

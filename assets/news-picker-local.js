@@ -4,16 +4,14 @@
  *     { geo, whereHtml, sources: [...], nearby: [{ label, distanceMi, geo }] }
  *
  * Sources are the outlets curated in data/local-stations.json for the
- * reader's city (or state, for "regional") plus Reddit communities. The ones
- * the old picker pre-ticked — every curated outlet, and the Reddit subs that
- * name the city or state — are marked `suggested`, which drives the picker's
- * "Add all suggested" button.
+ * reader's city (or state, for "regional"). Every one is marked `suggested`,
+ * which drives the picker's "Add all suggested" button.
  *
  * `geoOverride` is a nearby city/state the reader tapped because we don't
- * cover theirs: outlets come from there, Reddit still from where they are.
+ * cover theirs: outlets come from there.
  *
- * Bing news searches were dropped here on 2026-10-18 (they were the old
- * picker's third group).
+ * Bing news searches were dropped on 2026-10-18 and Reddit communities on
+ * 2026-11-18 (Reddit ended its RSS feeds on 2026-11-13).
  */
 (function () {
   "use strict";
@@ -22,7 +20,7 @@
   const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
 
   async function load(scope, geoOverride) {
-    const { results = [], geo } = await App().discoverSourcesForScope(scope);
+    const geo = await App().resolvePickerGeo();
     if (!geo) return { geo: null };
 
     const g = geoOverride || geo;
@@ -45,18 +43,11 @@
       }));
     }
 
-    const picks = App().defaultPickedSubs(results, geo);
-    const sources = [
-      ...stations.map((s) => ({
-        name: s.name, rss: s.rss, site: s.site || "",
-        kind: ["tv", "paper", "community", "radio"].includes(s.type) ? s.type : "community",
-        blurb: host(s.site || s.rss), suggested: true,
-      })),
-      ...results.map((r) => ({
-        name: `r/${r.displayName}`, rss: r.rss, site: "https://www.reddit.com",
-        kind: "reddit", blurb: r.description || "", suggested: picks.has(r.displayName),
-      })),
-    ];
+    const sources = stations.map((s) => ({
+      name: s.name, rss: s.rss, site: s.site || "",
+      kind: ["tv", "paper", "community", "radio"].includes(s.type) ? s.type : "community",
+      blurb: host(s.site || s.rss), suggested: true,
+    }));
 
     const place = scope === "local"
       ? [geo.city, geo.state].filter(Boolean).join(", ")

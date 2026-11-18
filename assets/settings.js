@@ -879,7 +879,7 @@
   // ──────────────────────────────────────────────────────────────────
   // Same compact rows as National / International: favicon, name, up/down,
   // remove. "Browse sources" opens the shared picker (assets/news-picker.js
-  // via App.openSourcePicker), which also holds the place / Reddit search
+  // via App.openSourcePicker), which also holds the place search
   // that used to live in a box here. Rebuilt 2026-10-18; the old tile grid,
   // search box, "Clear all" and "Skip picker" checkbox went with it — an
   // empty list now simply means "automatic picks", which is what Skip did.

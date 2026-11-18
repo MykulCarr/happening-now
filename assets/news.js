@@ -321,7 +321,7 @@
   // Which feeds the ticker reads for a category lives in assets/top-feeds.js
   // (App.getTopFeedsForScope), shared with the Today view in widget.js.
 
-  // The picker modal + Reddit discovery moved to common.js so both news.js
+  // The picker modal moved to common.js so both news.js
   // and settings.js can open it. Use window.App.openSourcePicker(scope, onSaved).
 
   // Pick the news-grid widgets for the active scope.
@@ -691,7 +691,7 @@
         hint = `Set your location in <a class="subLink" href="settings.html#weather">SETTINGS</a> to see ${currentScope === "local" ? "what's happening near you" : "your state"}.`;
       } else if (reason === "no-coverage") {
         updateStatus(`No ${currentScope} sources for your area yet`, true);
-        hint = `We don't have built-in ${currentScope} sources for your area. <a class="subLink editSourcesLink" href="#" data-edit-scope="${currentScope}">Open the picker</a> to add Reddit communities, custom RSS feeds, or nearby cities we do cover.`;
+        hint = `We don't have built-in ${currentScope} sources for your area. <a class="subLink editSourcesLink" href="#" data-edit-scope="${currentScope}">Open the picker</a> to add custom RSS feeds or nearby cities we do cover.`;
       } else if (reason === "no-match") {
         updateStatus(`No sources tagged "${currentScope}"`, true);
         hint = `None of your configured sources are tagged for the ${currentScope.toUpperCase()} scope. Adjust their tags in <a class="subLink" href="settings.html#news">SETTINGS</a>.`;
