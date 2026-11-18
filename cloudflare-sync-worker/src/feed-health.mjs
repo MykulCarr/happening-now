@@ -8,9 +8,9 @@
 // ran broken for weeks (canarymedia.com, lwlies.com) precisely because every
 // curl-and-grep check called them healthy, including this project's own.
 //
-// The repairs below mirror the ones assets/common.js applies before parsing.
+// The repairs below mirror the ones assets/common-feeds.js applies before parsing.
 // They have to stay in step: anything the browser repairs must not be reported
-// as dead here, and anything the browser chokes on must be. common.js is a
+// as dead here, and anything the browser chokes on must be. common-feeds.js is a
 // browser IIFE with no exports, so this is a deliberate second copy rather than
 // a shared import — keep the two in sync when either changes.
 //
@@ -18,14 +18,14 @@
 // repo has no "type": "module", so a .js extension makes every run print a
 // module-type warning. Wrangler bundles either extension happily.
 
-// Prefixes assets/common.js injects when a feed uses them without declaring
+// Prefixes assets/common-feeds.js injects when a feed uses them without declaring
 // them. A prefix outside this list is a real parse failure, not a repairable one.
 const KNOWN_NAMESPACES = new Set([
   "media", "content", "dc", "atom", "sy", "slash", "wfw", "itunes", "georss",
 ]);
 
 // Leading blank lines before `<?xml` and anything after the closing root tag
-// both kill DOMParser; common.js trims them, so they are not failures.
+// both kill DOMParser; common-feeds.js trims them, so they are not failures.
 export function trimFeedEnvelope(text) {
   const trimmed = text.replace(/^[\s\uFEFF]+/, "");
   const close = trimmed.lastIndexOf("</rss>") >= 0 ? "</rss>"
@@ -61,7 +61,7 @@ export function feedProblem(text) {
 
   // Note there is deliberately no bare-ampersand rule here. A raw `&` is fatal
   // to DOMParser and it is the commonest publisher typo (KTLA 5's channel title
-  // blanked all of Los Angeles with one), but common.js now escapes it before
+  // blanked all of Los Angeles with one), but common-feeds.js now escapes it before
   // parsing — so it no longer costs anyone a headline, and reporting it would
   // be crying wolf about a feed the site renders perfectly well.
 

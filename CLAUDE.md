@@ -28,6 +28,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   `node scripts/css-compare.mjs` (dev server on 8091): it compares every
   element's computed style on all 12 pages, 3 themes, 5 widths against the
   last commit and must report no differences
+- `assets/common-feeds.js` — feed downloading and parsing (`fetchRssItems`,
+  `fetchNewsItems`, cooldowns, the feed repairs), split out of `common.js`
+  on 2026-11-17. Loaded right after `common.js` on the five pages that show
+  feeds (News, Weather, Markets, Settings, Today); the cache it uses stays in
+  `common.js` because stock quotes share it
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `assets/settings-backup.js` — backup and transfer for every browser: save a
   dated backup file, load one back, or make a **transfer link** (settings
@@ -682,11 +687,11 @@ hid three live breakages at once (canarymedia.com, lwlies.com, and ktla.com,
 whose channel title contains a bare `&` — that one blanked all of Los Angeles).
 `cloudflare-sync-worker/src/feed-health.mjs` is the single definition of a
 usable feed, shared by `check-feeds`, `curate-report` and the digest email so
-they can't disagree. It mirrors the repairs `assets/common.js` applies before
+they can't disagree. It mirrors the repairs `assets/common-feeds.js` applies before
 parsing — leading blank lines, junk after the closing root tag, bare
 ampersands, undeclared namespace prefixes — so anything the browser fixes is
 not reported, and anything it chokes on is. **Keep the two in step**;
-`common.js` is a browser IIFE with no exports, so the copy is deliberate.
+`common-feeds.js` is a browser IIFE with no exports, so the copy is deliberate.
 
 The digest email (`cloudflare-sync-worker/src/curate.js`) sweeps **both**
 catalogs. It used to check only `local-stations.json`, which is why five topic

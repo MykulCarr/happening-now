@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   '/settings',
   '/feedback',
   '/assets/common.js',
+  '/assets/common-feeds.js',
   '/assets/common-weather.js',
   '/assets/common-stocks.js',
   '/assets/top-feeds.js',
