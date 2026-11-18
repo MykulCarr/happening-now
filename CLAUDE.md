@@ -33,6 +33,19 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   on 2026-11-17. Loaded right after `common.js` on the five pages that show
   feeds (News, Weather, Markets, Settings, Today); the cache it uses stays in
   `common.js` because stock quotes share it
+- **Page scripts split by feature (2026-11-17).** `settings.js` +
+  `settings-install.js`, `settings-markets.js`, `settings-stock-lookup.js`;
+  `weather.js` + `weather-map.js`, `weather-alerts-ticker.js`; `stocks.js` +
+  `markets-movers.js`, `markets-news.js`. Each part is an IIFE loaded **just
+  before** its main script and shares state through one object,
+  `window.App.settingsPage` / `weatherPage` / `marketsPage` (called `S`): the
+  main script puts its helpers there, exposes changing variables through
+  getter/setter accessors (`S.cfg` on Settings, which replaces `cfg` on
+  every save; `S.lastGeo` on Weather; `S.newsMode` on Markets), and takes the
+  parts' functions back near its top. A part must never read `S.<thing>` at
+  load time (the main script has not run yet), only inside handlers and
+  functions. A new part goes in the page's HTML before the main script and
+  in `sw.js`
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `assets/settings-backup.js` — backup and transfer for every browser: save a
   dated backup file, load one back, or make a **transfer link** (settings
