@@ -90,7 +90,7 @@
     <section class="pageHead">
       <div>
         <h1>Privacy Policy</h1>
-        <div class="sub">Last updated: November 15, 2026</div>
+        <div class="sub">Last updated: November 18, 2026</div>
       </div>
     </section>
 
@@ -99,8 +99,12 @@
       <p class="hint">HAPPENING NOW is a personal dashboard that runs in your browser. We designed it to minimize data collection.</p>
 
       <h2 class="legalSectionTitle">Data Stored On Your Device</h2>
-      <p class="hint">The app stores your settings and lightweight cached content in browser localStorage so pages load faster and remember your preferences (theme, ZIP code, watchlist, widgets, and similar dashboard settings).</p>
+      <p class="hint">The app stores your settings and lightweight cached content in browser localStorage so pages load faster and remember your preferences (theme, ZIP code, watchlist, widgets, and similar dashboard settings). They stay there unless you turn on sync, described below.</p>
       <p class="hint">A backup file you save, or a transfer link you create, contains your settings and stays with you: neither is uploaded. A transfer link holds the settings in the part of the address that browsers do not send to any server, and the Settings page removes it from the address as soon as it opens.</p>
+
+      <h2 class="legalSectionTitle">Syncing Your Settings</h2>
+      <p class="hint">Sync is off unless you turn it on. If you do, your browser creates a sync code and uses it to encrypt your settings before sending them to us. We store only that encrypted copy. The code is the key and it stays on your devices: we never receive it, so we cannot read your synced settings, and neither can anyone who obtained our database. Alongside the encrypted copy we keep a random-looking identifier derived from your code, a counter, and the dates it was first and last saved. We do not record your IP address, your browser, or the time of day.</p>
+      <p class="hint">Anyone who has your sync code can read your settings, so treat it like a password. You can stop syncing in one browser, or delete your synced copy from our server, in Settings at any time. A synced copy that goes unused for 180 days is deleted automatically.</p>
 
       <h2 class="legalSectionTitle">Data Sent To Third Parties</h2>
       <p class="hint">When you use dashboard features, your browser requests data from third-party providers, including weather APIs, news feeds, market data providers, and NASA/public space-data services. Your IP address and request metadata may be visible to those providers as part of normal web requests.</p>
@@ -112,7 +116,7 @@
       <p class="hint">News requests and source icons pass through a Cloudflare Worker proxy on this domain. As well as solving cross-origin restrictions, this means publishers, market-data providers and the icon service see the proxy rather than you: the proxy sends its own request headers and does not forward your IP address or referring page to them.</p>
 
       <h2 class="legalSectionTitle">Reporting A Problem</h2>
-      <p class="hint">Each headline has a small ⚑ button for telling us a story hit a paywall, would not load, was old, was not news, or was hard to read. Along with the Feedback page's one-question survey, this is the only time the site sends us anything you chose to send. The anonymous usage counts described below are the only other thing your browser sends us. A report contains exactly three things: the feed the headline came from, the article's link, and the reason you picked. There is no free-text box, and it carries no cookie, account, or identifier. We store the report with the date (not the time), and we do not store your IP address or browser details with it. Like every request to this site, it passes through Cloudflare, which keeps short-lived operational logs. Reports are used only to find broken or paywalled sources, and are deleted after 90 days. Your browser remembers which stories you reported, so you are not asked twice; that list stays on your device and is not part of a settings export.</p>
+      <p class="hint">Each headline has a small ⚑ button for telling us a story hit a paywall, would not load, was old, was not news, or was hard to read. Along with the Feedback page's one-question survey and the encrypted settings copy if you turn on sync, this is the only time the site sends us anything you chose to send. The anonymous usage counts described below are the only other thing your browser sends us. A report contains exactly three things: the feed the headline came from, the article's link, and the reason you picked. There is no free-text box, and it carries no cookie, account, or identifier. We store the report with the date (not the time), and we do not store your IP address or browser details with it. Like every request to this site, it passes through Cloudflare, which keeps short-lived operational logs. Reports are used only to find broken or paywalled sources, and are deleted after 90 days. Your browser remembers which stories you reported, so you are not asked twice; that list stays on your device and is not part of a settings export.</p>
       <p class="hint">The <a href="/feedback">Feedback</a> page also asks "Is HAPPENING NOW useful to you?" If you answer, we receive only your choice (yes, somewhat or not really), which parts of the site you said you use, and the date, again with no identifier, IP address or browser details, kept for 90 days. Anything you write to us goes by email from your own mail app and never passes through our servers.</p>
 
       <h2 class="legalSectionTitle">Anonymous Usage Counts</h2>
@@ -135,7 +139,7 @@
       <p class="hint">The optional <a href="/android">Android widget app</a> has no account, no ads and no analytics, and requests only internet access. Your location, news categories and watchlist are either chosen in the app or reach it inside a link opened on your own phone; they are not uploaded to us. If you search for your town in the app, the ZIP code or name you type goes to Zippopotam or Open-Meteo to be looked up. To draw the widget it requests your forecast from Open-Meteo using that location, and headlines and stock quotes through this site's server, the same as the site itself. Once a day it reads a small file on this site to learn whether a newer version exists. As with any visit, those requests carry your IP address, and stock symbols appear in our server's request logs.</p>
 
       <h2 class="legalSectionTitle">Data Retention</h2>
-      <p class="hint">Locally stored settings and caches stay in your browser until they expire naturally or you clear site data/reset settings. Problem reports you send, and the anonymous usage counts, are kept for 90 days, then deleted.</p>
+      <p class="hint">Locally stored settings and caches stay in your browser until they expire naturally or you clear site data/reset settings. Problem reports you send, and the anonymous usage counts, are kept for 90 days, then deleted. A synced settings copy that goes unused for 180 days is deleted.</p>
 
       <h2 class="legalSectionTitle">Contact</h2>
       <p class="hint">For privacy questions, takedown requests, or corrections, contact: <a href="mailto:hn-station@protonmail.com">hn-station@protonmail.com</a>.</p>

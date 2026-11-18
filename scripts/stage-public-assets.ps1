@@ -65,11 +65,8 @@ foreach ($dir in $publicDirs) {
 #   3. every remaining line of staged HTML that mentions the path is removed
 #      (its <script> tag).
 #
-#   assets/cloud-sync.js  settings sync by sync code. To launch: create the
-#                         table (cloudflare-sync-worker/schema/sync.sql) on
-#                         the production database, add the privacy-policy
-#                         section from docs/cloud-sync.md, then remove it here.
-$unreleased = @("assets/cloud-sync.js")
+#   (nothing held back right now; settings sync launched 2026-11-18)
+$unreleased = @()
 if (-not $IncludeUnreleased) {
   foreach ($item in $unreleased) {
     $path = Join-Path $target $item

@@ -58,12 +58,11 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - `assets/cloud-sync.js` + `cloudflare-sync-worker/src/sync.mjs` — settings
   sync by sync code, end-to-end encrypted (the browser derives id, auth and an
   AES key from the code; the Worker stores only ciphertext in the D1 `sync`
-  table). **Built and on beta, not launched**: `assets/cloud-sync.js` is in
-  `$unreleased`. Design, exactly what is stored, the privacy-policy wording
-  and the launch steps are in `docs/cloud-sync.md`; read it before touching
-  either file. `npm run test:sync` forces every Worker branch. When it
-  launches it is the **second** browser-to-us write and the "Privacy posture"
-  section below must say so in the same commit
+  table). **Launched 2026-11-18** (privacy wording approved by Mike that
+  day). Design, exactly what is stored and the privacy-policy wording are in
+  `docs/cloud-sync.md`; read it before touching either file.
+  `npm run test:sync` forces every Worker branch. It is the **second**
+  browser-to-us write; see "Privacy posture" below
 - `about.html` (`/about`) — what the site is, a dated "What's new" list and a
   how-to for every feature; linked from every footer. `assets/whats-new.js`
   is the matching one-time card (at most one a day, never to a brand-new
@@ -272,8 +271,10 @@ Two traps that both produce confident, wrong answers:
 Audited 2026-08-27. The site collects **nothing** about visitors server-side: no
 cookies of its own, no accounts, and KV holds only the market snapshot,
 quote cache and feed-sweep state. Settings
-live in three `localStorage` keys and never leave the device — `settings-sync.js`
-writes to a file the user picked and has no network code at all.
+live in three `localStorage` keys and never leave the device unless the
+reader turns on sync (encrypted; see "The second write" below) —
+`settings-sync.js` writes to a file the user picked and has no network code
+at all.
 
 **The one exception (2026-10-18): "Report a problem."** The ⚑ on each
 headline (`assets/report.js`) POSTs `{ feed, article, reason }` to
@@ -293,6 +294,14 @@ the payload grows, the policy changes in the same commit. Don't add a
 free-text box, and don't add a second browser write without the same audit.
 `npm run test:reports` forces every branch against a stand-in D1; run the
 real SQL with `wrangler d1 execute hn-reports --remote` after touching it.
+
+**The second write (2026-11-18): settings sync**, off unless the reader turns
+it on (`assets/cloud-sync.js` → `/v1/sync`, `sync` table). The server gets
+only AES ciphertext plus an id derived from the sync code, a counter and the
+first/last saved dates — never the code, IP, User-Agent or time of day.
+Unused copies go after 180 days. `privacy.html` "Syncing Your Settings"
+describes exactly this; same rule — if the payload grows, the policy changes
+in the same commit.
 
 **Anonymous usage counts — now site-analytics (switched 2026-10-25).** Every
 public page loads `https://analytics.happening-now.net/analytics.js` with
@@ -900,6 +909,15 @@ Needs `npm install` once (esbuild). It stages, minifies, `wrangler deploy`s, pin
 IndexNow and archives URLs to the Wayback Machine. To inspect what would ship
 without deploying, run `scripts/stage-public-assets.ps1` alone. Rollback procedure:
 `docs/rollback-runbook.md`.
+
+## STATUS.md: rewrite it with every commit-worthy change
+
+Not just at "done for now". The dashboard marks it stale the moment a
+commit is newer than its `updated:` date, and sessions that ended without
+the wrap-up left it two days behind (2026-11-18). So whenever work here gets
+committed, rewrite `updated:`, `next:` and `blocked:` in the same commit.
+Don't auto-stamp the date with a git hook: a fresh date over a stale `next:`
+would hide the drift the dashboard is there to catch.
 
 ## YOUR-TURN.md (git-ignored)
 
