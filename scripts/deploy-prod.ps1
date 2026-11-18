@@ -3,6 +3,11 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
+# 0. Real data or nothing. Stops here if anything that ships is marked
+#    PLACEHOLDER-DATA or looks like made-up data (see the script's header).
+node (Join-Path $PSScriptRoot "check-real-data.mjs")
+if ($LASTEXITCODE -ne 0) { throw "Not deploying: made-up or placeholder data would ship (listed above)." }
+
 # 1. Stage and deploy the static Pages site
 & (Join-Path $PSScriptRoot "stage-public-assets.ps1")
 

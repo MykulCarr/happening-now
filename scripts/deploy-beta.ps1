@@ -11,6 +11,10 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
+# 0. Beta may carry a marked placeholder while something is being built, so
+#    this only reports. deploy-prod.ps1 runs the same check and refuses.
+node (Join-Path $PSScriptRoot "check-real-data.mjs") --warn
+
 # 1. Same staging and minification as production, so beta tests what would ship.
 & (Join-Path $PSScriptRoot "stage-public-assets.ps1") -IncludeUnreleased   # beta shows what production holds back
 

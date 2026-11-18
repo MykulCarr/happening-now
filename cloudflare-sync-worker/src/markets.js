@@ -161,6 +161,10 @@ const INSTRUMENTS = [
 //
 // This replaced open.er-api.com, whose free tier publishes one set of rates a
 // day: correct numbers, but no way to say whether they had risen or fallen.
+//
+// A currency that stops existing stops quoting: the Bulgarian lev (BGN) went
+// when Bulgaria joined the euro on 2026-01-01 and was removed 2026-11-18.
+// `count` below `expected` in the snapshot is how that shows up.
 const CURRENCIES = [
   ["EUR", "Euro"], ["GBP", "British Pound"], ["JPY", "Japanese Yen"],
   ["CHF", "Swiss Franc"], ["CAD", "Canadian Dollar"], ["AUD", "Australian Dollar"],
@@ -169,7 +173,7 @@ const CURRENCIES = [
   ["TWD", "Taiwan Dollar"], ["MXN", "Mexican Peso"], ["BRL", "Brazilian Real"],
   ["ZAR", "South African Rand"], ["SEK", "Swedish Krona"], ["NOK", "Norwegian Krone"],
   ["DKK", "Danish Krone"], ["PLN", "Polish Zloty"], ["CZK", "Czech Koruna"],
-  ["HUF", "Hungarian Forint"], ["RON", "Romanian Leu"], ["BGN", "Bulgarian Lev"],
+  ["HUF", "Hungarian Forint"], ["RON", "Romanian Leu"],
   ["ISK", "Icelandic Krona"], ["UAH", "Ukrainian Hryvnia"], ["TRY", "Turkish Lira"],
   ["ILS", "Israeli Shekel"], ["AED", "UAE Dirham"], ["SAR", "Saudi Riyal"],
   ["QAR", "Qatari Riyal"], ["KWD", "Kuwaiti Dinar"], ["EGP", "Egyptian Pound"],

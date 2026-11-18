@@ -173,7 +173,6 @@
               <option value="clouds">Clouds</option>
               <option value="air">Air Quality</option>
             </select>
-            <button id="mapLegendBtn" class="btn" data-analytics="legend" type="button" title="Show map legend">📋</button>
           </div>
           <div class="cardBody">
             <!-- Ships gated on purpose: the Windy iframe hands a third party the
@@ -215,7 +214,7 @@
               <button id="weatherMapResetBtn" class="weatherMapResetBtn" type="button" data-analytics="map-reset" hidden>↺ Reset map</button>
             </div>
             <div class="weatherMapAttribution">
-              U.S. National Weather Service Radar
+              Map and colour scale: Windy.com
             </div>
           </div>
         </div>
@@ -263,19 +262,6 @@
     <p class="pageFooterFinePrint">Hourly and daily forecasts updated automatically • Local and national alerts displayed • Map powered by Windy.com widget</p>
     <p class="footerLinks"><a href="/about">About</a> • <a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
   </footer>
-
-  <!-- Map Legend Modal -->
-  <div id="mapLegendModal" class="modal" aria-hidden="true">
-    <div class="modalContent">
-      <div class="modalHeader">
-        <h3 id="mapLegendTitle">Map Legend</h3>
-        <button id="mapLegendClose" class="btn btn-close" type="button" title="Close legend">✕</button>
-      </div>
-      <div class="modalBody" id="mapLegendBody">
-        <!-- Legend content will be inserted here -->
-      </div>
-    </div>
-  </div>
 
   <script defer src="assets/common.js"></script>
   <script defer src="assets/common-feeds.js"></script>

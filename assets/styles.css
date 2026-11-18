@@ -2977,7 +2977,7 @@ html:has(#newsGrid) { overscroll-behavior-x: none; }
   /* Layer menu gets its own full row; the four buttons share the next. */
   .card[data-section="radar"] .weatherMapTypeSelect { flex: 1 1 100%; max-width: none; order: 1; }
   .card[data-section="radar"] .weatherCardHeadInline > .btn { order: 2; min-height: 44px; }
-  #mapRecenterBtn, #mapRingsBtn, #mapLegendBtn { flex: none; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
+  #mapRecenterBtn, #mapRingsBtn { flex: none; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
 }
 
 
@@ -3808,14 +3808,6 @@ body.stockLookupModalOpen {
 }
 
 
-#mapLegendModal {
-  display: none;
-}
-
-#mapLegendModal.isOpen {
-  display: flex;
-}
-
 @keyframes pulse {
 
   0%,
@@ -4494,47 +4486,6 @@ body.stockLookupModalOpen {
   background: var(--panel2) !important;
   border-color: var(--accent) !important;
   transform: translateX(4px);
-}
-
-.legendSection {
-  margin-bottom: 20px;
-}
-
-.legendSection h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.legendColor {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.legendLabel {
-  color: var(--text);
-}
-
-.legendMap {
-  font-size: 12px;
-  color: var(--muted);
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  margin-top: 16px;
 }
 
 .settingsTab {

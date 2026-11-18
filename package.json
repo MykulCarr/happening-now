@@ -13,6 +13,7 @@
     "test:reports": "node scripts/test-reports.mjs",
     "test:sync": "node scripts/test-sync.mjs",
     "css-compare": "node scripts/css-compare.mjs",
+    "check-real-data": "node scripts/check-real-data.mjs",
     "test:admin": "node scripts/test-admin.mjs"
   },
   "devDependencies": {

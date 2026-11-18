@@ -477,12 +477,32 @@ production and 404s every icon in local dev.
 
 ## Stock quotes
 
-**Real data or nothing.** Until 2026-11-18 the movers cards' small charts
-were random numbers and an Economic Calendar card listed five invented
-events; both looked real. The charts are now a month of real closes from
-Yahoo's spark endpoint (`markets-movers.js`, one call per 20 symbols) and
-the calendar is gone until there is a real source. Never ship placeholder
-or demo values in a visible card; show nothing instead.
+**Real data or nothing — site-wide (2026-11-18).** For seven months, from
+the first commit, three things on the live site were made up and looked
+real: the movers cards' charts (random numbers), an Economic Calendar (five
+invented events), and the weather map's legend (colours that contradicted
+Windy's own scale, and sources it never used: "satellite imagery",
+"monitoring stations", "NOAA radar"). The charts are now a month of real
+closes from Yahoo's spark endpoint (`markets-movers.js`, one call per 20
+symbols); the calendar and legend are gone, and the map credits Windy,
+whose own scale bar is the legend. Rules:
+
+- Never ship a placeholder, sample or approximated value as if it were
+  real. Show nothing, or say plainly what it is.
+- If a placeholder is unavoidable while building, put `PLACEHOLDER-DATA`
+  plus what would make it real in a comment on that line. Beta may carry
+  it; **`scripts/check-real-data.mjs` (run first by `deploy-prod.ps1`)
+  refuses to deploy** while any marker, `Math.random`, or mock / fake /
+  dummy / demo-data wording is in shipped code. A line that genuinely
+  needs one says `real-data-ok: <why>`. Don't weaken the check to get a
+  deploy through.
+- The check cannot see invented content that is not labelled — the legend
+  had no giveaway words. Any hand-typed number, legend, count or "source:"
+  claim must be checked against the real thing before it ships, and
+  re-checked when the thing it describes changes (the lev, below).
+- Currencies die: the Bulgarian lev went with Bulgaria's euro switch on
+  2026-01-01 and sat on the board as a dead symbol until 2026-11-18. The
+  snapshot's `count` below `expected` is the tell.
 
 Two different shapes, for two different problems:
 
