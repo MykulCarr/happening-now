@@ -49,6 +49,14 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   load time (the main script has not run yet), only inside handlers and
   functions. A new part goes in the page's HTML before the main script and
   in `sw.js`
+- `assets/quote-popup.js` + `quote-popup.css` — the price-and-charts pop-up
+  (2026-11-18), standalone and loaded on Markets and the Today view:
+  `App.quotePopup.open({ symbol, title, money, unit, newsUrl, pin, compact })`.
+  Watchlist rows and board tiles open it (tiles chart by the `symbol` field
+  the snapshot now carries; a tile without one still opens its news). All
+  four ranges are Yahoo v8 chart calls through `/v1/rss/raw`; a field Yahoo
+  doesn't send is left out, never filled in. Designed in a mock-up Mike
+  approved: phone bottom sheet, desktop dialog, Today view all four charts
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `assets/settings-backup.js` — backup and transfer for every browser: save a
   dated backup file, load one back, or make a **transfer link** (settings

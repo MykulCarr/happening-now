@@ -1,0 +1,124 @@
+/* The quote pop-up (assets/quote-popup.js). A bottom sheet on a phone, a
+   centred dialog from 700px up. Loaded by markets.html and widget.html. */
+
+.quotePopup {
+  --qp-bg: #163945;
+  --qp-cell: rgba(255, 255, 255, .06);
+  --qp-tabs: rgba(0, 0, 0, .25);
+  --qp-up: #34d399;
+  --qp-down: #f87171;
+  color: var(--text);
+  background: var(--qp-bg);
+  border: 1px solid var(--border);
+  padding: 0;
+  box-shadow: var(--shadow);
+  font-size: calc(15px * var(--font-multiplier, 1));
+  /* phone: a sheet along the bottom edge */
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100dvh - 48px);
+  border-radius: 22px 22px 0 0;
+  border-bottom: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+[data-theme="light"] .quotePopup { --qp-bg: #ffffff; --qp-cell: rgba(12, 49, 66, .05); --qp-tabs: rgba(12, 49, 66, .08); --qp-up: #059669; --qp-down: #dc2626; }
+[data-theme="middle"] .quotePopup { --qp-bg: #e3ece3; --qp-cell: rgba(0, 0, 0, .05); --qp-tabs: rgba(0, 0, 0, .08); --qp-up: #047857; --qp-down: #b91c1c; }
+
+.quotePopup::backdrop { background: rgba(0, 0, 0, .55); }
+html.qpOpen { overflow: hidden; }
+
+.qpBody { padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.qpBody::before { content: ""; width: 40px; height: 4px; border-radius: 2px; background: var(--border); align-self: center; }
+
+.qpHead { display: flex; align-items: flex-start; gap: 12px; }
+.qpTitleWrap { flex: 1; min-width: 0; }
+.qpTitle { margin: 0; font-size: 1.6em; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; overflow-wrap: anywhere; }
+.qpSub { font-size: .87em; color: var(--muted); }
+.qpClose {
+  flex: none; width: 44px; height: 44px; border-radius: 22px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--qp-cell); color: inherit;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.qpPriceBlock { display: flex; flex-direction: column; gap: 4px; }
+.qpPriceRow { display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+.qpPrice { font-size: 2.4em; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; }
+.qpMove { font-size: 1.05em; font-weight: 700; }
+.qpUnit, .qpStatus, .qpFromTo, .qpCredit, .qpCellLabel, .qpFacts { font-size: .8em; color: var(--muted); }
+.qpStatus { display: flex; align-items: center; gap: 6px; }
+.qpDot { flex: none; width: 8px; height: 8px; border-radius: 4px; background: var(--muted); }
+.qpDot.isOpen { background: #10b981; }
+
+.qpUp { --qp-line: var(--qp-up); }
+.qpDown { --qp-line: var(--qp-down); }
+.qpMove.qpUp, .qpMove.qpDown, .qpChange, .qpMiniPct { color: var(--qp-line); }
+
+.qpMain { display: flex; flex-direction: column; gap: 14px; }
+.qpChartCol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.qpTabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: var(--qp-tabs); }
+.qpTab {
+  height: 44px; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
+  color: var(--muted); font: inherit; font-weight: 700;
+}
+.qpTab[aria-selected="true"] { background: var(--orange); color: #fff; font-weight: 800; }
+.qpChart { display: flex; flex-direction: column; gap: 6px; min-height: 210px; }
+.qpChange { font-size: .87em; font-weight: 700; }
+.qpPlot { position: relative; height: 170px; }
+.qpSvg, .qpMiniSvg { display: block; width: 100%; height: 100%; }
+.qpArea { fill: var(--qp-line); fill-opacity: .12; }
+.qpLine { fill: none; stroke: var(--qp-line); stroke-width: 2; stroke-linejoin: round; }
+.qpHi, .qpLo {
+  position: absolute; right: 0; font-size: .73em; color: var(--muted);
+  background: var(--qp-bg); padding: 1px 5px; border-radius: 4px; opacity: .92;
+}
+.qpHi { top: 0; }
+.qpLo { bottom: 0; }
+.qpFromTo { display: flex; justify-content: space-between; gap: 8px; }
+.qpNote { color: var(--muted); font-size: .87em; padding: 8px 0; }
+
+.qpDetails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.qpCell { padding: 10px 12px; border-radius: 12px; background: var(--qp-cell); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qpCellValue { font-weight: 700; overflow-wrap: anywhere; }
+.qpBar { position: relative; height: 4px; border-radius: 2px; background: var(--border); margin-top: 3px; }
+.qpBar span { position: absolute; top: -3px; width: 10px; height: 10px; margin-left: -5px; border-radius: 5px; background: var(--text); }
+
+.qpActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.qpBtn {
+  flex: 1 1 140px; min-height: 46px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--qp-cell); color: inherit;
+  font: inherit; font-size: .93em; font-weight: 700; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+a.qpBtn { color: var(--accent); }
+.qpCredit { text-align: center; }
+
+/* compact (Today view): four small charts in a 2x2 grid */
+.qpMinis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qpMini { padding: 8px 10px; border-radius: 12px; background: var(--qp-cell); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qpMiniHead { display: flex; justify-content: space-between; font-size: .8em; font-weight: 800; }
+.qpMiniSvg { height: 54px; }
+.qpFacts { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+
+@media (min-width: 700px) {
+  .quotePopup {
+    margin: auto;
+    width: min(760px, calc(100% - 32px));
+    max-height: calc(100dvh - 64px);
+    border-radius: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .quotePopup.isCompact { width: min(420px, calc(100% - 32px)); }
+  .qpBody { padding: 24px; gap: 18px; }
+  .qpBody::before { display: none; }
+  .qpMain { flex-direction: row; gap: 24px; }
+  .qpChartCol { flex: 1; }
+  .qpTabs { width: 260px; }
+  .qpTab { height: 36px; }
+  .qpPlot { height: 250px; }
+  .qpDetails { width: 228px; grid-template-columns: 1fr; align-content: start; }
+  .qpActions .qpBtn { flex: 0 0 auto; }
+  .qpActions { align-items: center; }
+  .qpCredit { text-align: left; margin-top: -8px; }
+}

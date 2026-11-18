@@ -128,6 +128,7 @@
 .wHTitle { font-size: 1rem; line-height: 1.35; font-weight: 500; }
 
 .wQuote { display: flex; align-items: baseline; gap: 10px; }
+.wQTap { cursor: pointer; }
 .wQName { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wQPrice { font-variant-numeric: tabular-nums; }
 .wQMove { min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; font-size: .85rem; }

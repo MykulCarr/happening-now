@@ -23,6 +23,8 @@ const ASSETS_TO_CACHE = [
   '/assets/markets-movers.js',
   '/assets/markets-news.js',
   '/assets/markets-calendar.js',
+  '/assets/quote-popup.js',
+  '/assets/quote-popup.css',
   '/assets/stocks.js',
   '/assets/settings-install.js',
   '/assets/settings-markets.js',

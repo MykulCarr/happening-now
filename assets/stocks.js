@@ -281,10 +281,23 @@
   // The board used to be a drag-scrollable ticker, which carried its own
   // pointer/RAF machinery and owned the click-to-open-news behaviour. The grid
   // needs neither, but the tiles are still links — this is that behaviour, kept.
+  // A tile with a symbol opens the quote pop-up (assets/quote-popup.js), whose
+  // "Headlines" button keeps the old news link. A tile the snapshot sent
+  // without a symbol still opens its news directly.
   document.addEventListener("click", (event) => {
     const tile = event.target?.closest?.(".indexItem[data-news-url]");
     if(!tile) return;
     const url = tile.dataset.newsUrl;
+    if(tile.dataset.quoteSymbol && window.App.quotePopup){
+      window.App.quotePopup.open({
+        symbol: tile.dataset.quoteSymbol,
+        title: tile.dataset.quoteName,
+        unit: tile.dataset.quoteUnit,
+        money: false,
+        newsUrl: url,
+      });
+      return;
+    }
     if(!url) return;
     const target = cfg.marketNewsOpenMode === "same-tab" ? "_self" : "_blank";
     window.open(url, target, target === "_blank" ? "noopener,noreferrer" : "");
@@ -292,8 +305,8 @@
 
   document.addEventListener("keydown", (event) => {
     if(event.key !== "Enter" && event.key !== " ") return;
-    const tile = event.target?.closest?.(".indexItem[data-news-url]");
-    if(!tile) return;
+    const tile = event.target?.closest?.(".indexItem[data-news-url], .stockItem[data-symbol]");
+    if(!tile || event.target.closest(".pinBtn")) return;
     event.preventDefault();
     tile.click();
   });
@@ -450,6 +463,7 @@
       if(!Number.isFinite(price)) return idx;
       return {
         ...idx,
+        symbol: hit.symbol || null,
         value: price,
         change: Number.isFinite(Number(hit.change)) ? Number(hit.change) : 0,
         changePercent: Number.isFinite(Number(hit.changePercent)) ? Number(hit.changePercent) : 0
@@ -561,8 +575,12 @@
     const fullName = (idx.label ? `${idx.name} — ${idx.label}` : idx.name) + (unit ? ` (${unit})` : "");
     const unitHtml = unit ? `<div class="indexUnit">${escapeHtml(unit)}</div>` : "";
 
+    const popupAttrs = idx.symbol && hasData
+      ? `data-quote-symbol="${escapeHtml(idx.symbol)}" data-quote-name="${escapeHtml(idx.name)}" data-quote-unit="${escapeHtml(unit)}" role="button" aria-label="Show ${escapeHtml(fullName)} price and charts"`
+      : `role="link" aria-label="Open ${escapeHtml(fullName)} news"`;
+
     return `
-      <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" title="${escapeHtml(fullName)}" tabindex="0" role="link" aria-label="Open ${escapeHtml(fullName)} news">
+      <div class="indexItem indexItemLink" data-news-url="${escapeHtml(newsUrl)}" title="${escapeHtml(fullName)}" tabindex="0" ${popupAttrs}>
         <div class="indexTopRow">
           <div class="indexName">${escapeHtml(idx.name)}</div>
           ${dotHtml}
@@ -596,6 +614,7 @@
         label: item.label,
         group: "currencies",
         region: "Global",
+        symbol: item.symbol || null,
         value: Number(item.price),
         change: Number.isFinite(Number(item.change)) ? Number(item.change) : null,
         changePercent: Number.isFinite(Number(item.changePercent)) ? Number(item.changePercent) : null,
@@ -854,6 +873,14 @@
     renderWatchlist(); // async, but we don't need to await
   }
 
+  // Watchlist symbols carry an exchange prefix ("NASDAQ:NVDA"). Yahoo wants the
+  // bare symbol, and names crypto pairs with a dash ("BITSTAMP:BTCUSD" -> BTC-USD).
+  function yahooSymbol(symbol) {
+    const [prefix, base] = symbol.includes(":") ? symbol.split(":") : ["", symbol];
+    if (/^(BITSTAMP|COINBASE|BINANCE)$/i.test(prefix) && /USD$/i.test(base)) return `${base.slice(0, -3)}-USD`.toUpperCase();
+    return base.toUpperCase();
+  }
+
   // ===== SORTING =====
   function sortedStocks(list, pins, mode) {
     const copy = [...list];
@@ -934,7 +961,7 @@
           const helpMsg = "Price data unavailable from current providers for this symbol.";
           
           return `
-            <div class="stockItem" data-symbol="${escapeHtml(stock.symbol)}" data-label="${escapeHtml(stock.label)}">
+            <div class="stockItem" data-symbol="${escapeHtml(stock.symbol)}" data-label="${escapeHtml(stock.label)}" role="button" tabindex="0" aria-label="Show ${escapeHtml(stock.symbol)} price and charts">
               <div class="stockItemLeft">
                 <div class="stockItemInfo">
                   <div class="stockItemSymbol">${escapeHtml(stock.symbol)}</div>
@@ -983,7 +1010,7 @@
           : `<span class="statMissing">Range unavailable</span>`;
 
         return `
-          <div class="stockItem watchlistItem" data-symbol="${escapeHtml(stock.symbol)}" data-label="${escapeHtml(stock.label)}">
+          <div class="stockItem watchlistItem" data-symbol="${escapeHtml(stock.symbol)}" data-label="${escapeHtml(stock.label)}" role="button" tabindex="0" aria-label="Show ${escapeHtml(stock.symbol)} price and charts">
             <div class="stockItemLeft">
               <div class="stockItemInfo">
                 <div class="stockItemSymbol">${escapeHtml(stock.symbol)}</div>
@@ -1024,30 +1051,21 @@
         });
       });
 
-      // Attach stock item click listeners to open stock page
+      // A row opens the quote pop-up (assets/quote-popup.js); its "More on
+      // Yahoo Finance" button replaces the row's old direct link.
       container.querySelectorAll(".stockItem").forEach(item => {
         item.addEventListener("click", (e) => {
-          if (!e.target.closest(".pinBtn")) {
-            const symbol = item.dataset.symbol;
-            const label = item.dataset.label;
-            
-            // Determine the best URL based on symbol format
-            let url;
-            
-            if (symbol.includes('BITSTAMP:') || symbol.includes('COINBASE:')) {
-              // Crypto - extract crypto symbol and use CoinMarketCap
-              const cryptoPair = symbol.split(':')[1];
-              const crypto = cryptoPair.replace('USD', '').toLowerCase();
-              url = `https://coinmarketcap.com/currencies/${crypto === 'btc' ? 'bitcoin' : crypto}/`;
-            } else {
-              // All stocks/funds - use Yahoo Finance
-              // Remove exchange prefix if present
-              const cleanSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
-              url = `https://finance.yahoo.com/quote/${cleanSymbol}`;
-            }
-            
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }
+          if (e.target.closest(".pinBtn") || !window.App.quotePopup) return;
+          const symbol = item.dataset.symbol;
+          window.App.quotePopup.open({
+            symbol: yahooSymbol(symbol),
+            title: symbol.includes(":") ? symbol.split(":")[1] : symbol,
+            money: true,
+            pin: {
+              pinned: !!pins[symbol],
+              toggle: () => { togglePin(symbol); return !!pins[symbol]; },
+            },
+          });
         });
       });
     } catch (error) {

@@ -141,12 +141,16 @@
   }
 
   // ---- stock rows (markets board + watchlist share one row layout) --------
-  const quoteRow = (name, price, pct) => {
+  // A row with a Yahoo symbol opens the compact quote pop-up (assets/quote-popup.js).
+  const quoteRow = (name, price, pct, symbol, money) => {
     const flat = Math.abs(pct) < 0.005, up = pct > 0;
     const cls = flat ? "flat" : up ? "up" : "down";
     const sign = flat ? "" : up ? "▲ " : "▼ ";
     const dec = Math.abs(price) >= 1 ? 2 : 4;
-    return `<div class="wRow wQuote"><span class="wQName">${esc(name)}</span>
+    const tap = symbol && App.quotePopup
+      ? ` data-qp-symbol="${esc(symbol)}" data-qp-title="${esc(name)}" data-qp-money="${money ? 1 : 0}" role="button" tabindex="0" aria-label="Show ${esc(name)} price and charts"`
+      : "";
+    return `<div class="wRow wQuote${tap ? " wQTap" : ""}"${tap}><span class="wQName">${esc(name)}</span>
       <span class="wQPrice">${price.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec })}</span>
       <span class="wQMove ${cls}">${sign}${Math.abs(pct).toFixed(2)}%</span></div>`;
   };
@@ -163,7 +167,7 @@
       .slice(0, count)
       .map((e) => {
         const q = byKey.get(e.key);
-        return Number.isFinite(+q.price) ? quoteRow(q.name || names.get(e.key) || e.key, +q.price, +q.changePercent || 0) : "";
+        return Number.isFinite(+q.price) ? quoteRow(q.name || names.get(e.key) || e.key, +q.price, +q.changePercent || 0, q.symbol, false) : "";
       }).join("");
   }
 
@@ -178,9 +182,18 @@
     const quotes = (await res.json()).quotes || {};
     return stocks.map((s) => {
       const q = quotes[sym(s)];
-      return q && Number.isFinite(+q.price) ? quoteRow(sym(s), +q.price, +q.changePercent || 0) : "";
+      return q && Number.isFinite(+q.price) ? quoteRow(sym(s), +q.price, +q.changePercent || 0, sym(s), true) : "";
     }).join("");
   }
+
+  document.addEventListener("click", (e) => {
+    const row = e.target.closest?.("[data-qp-symbol]");
+    if (!row || !App.quotePopup) return;
+    App.quotePopup.open({ symbol: row.dataset.qpSymbol, title: row.dataset.qpTitle, money: row.dataset.qpMoney === "1", compact: true });
+  });
+  document.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches?.("[data-qp-symbol]")) { e.preventDefault(); e.target.click(); }
+  });
 
   async function markets(count) {
     const rows = await boardRows(count);

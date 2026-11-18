@@ -24,6 +24,15 @@
 
   const ITEMS = [
     {
+      id: "quote-popup-2026-11",
+      when: () => true,
+      title: "New: charts for every stock and market",
+      text: "Tap a stock in your watchlist or any tile on the Markets board to see its price, 1-day, 1-week, 1-month and 1-year charts, and the day's range.",
+      action: "Open Markets",
+      href: "/markets",
+      tag: "new-quote-popup",
+    },
+    {
       id: "sync-2026-11",
       // Only where sync is shipped (App.cloudSync exists) and not already on.
       when: () => Boolean(App.cloudSync) && !App.cloudSync.enabled(),

@@ -300,6 +300,8 @@ export async function buildSnapshot(env) {
       key: instrument.key,
       name: instrument.name,
       group: instrument.group,
+      // The quote pop-up charts a tile by this symbol (assets/quote-popup.js).
+      symbol: instrument.yahoo,
       price: quote.price,
       change: quote.change,
       changePercent: quote.changePercent,
@@ -315,6 +317,7 @@ export async function buildSnapshot(env) {
       name: `USD/${code}`,
       label,
       group: "currencies",
+      symbol: `USD${code}=X`,
       price: quote.price,
       change: quote.change,
       changePercent: quote.changePercent,
