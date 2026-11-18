@@ -477,6 +477,13 @@ production and 404s every icon in local dev.
 
 ## Stock quotes
 
+**Real data or nothing.** Until 2026-11-18 the movers cards' small charts
+were random numbers and an Economic Calendar card listed five invented
+events; both looked real. The charts are now a month of real closes from
+Yahoo's spark endpoint (`markets-movers.js`, one call per 20 symbols) and
+the calendar is gone until there is a real source. Never ship placeholder
+or demo values in a visible card; show nothing instead.
+
 Two different shapes, for two different problems:
 
 - **The board** (`/v1/markets/snapshot`) is a fixed list, so it's one cached

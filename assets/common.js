@@ -335,9 +335,8 @@
         gainers: true,
         losers: true,
         trending: true,
-        // Off for a new visitor: the calendar is a heavy extra fetch, and the
-        // diagnostic dock is a debugging aid. Both switch on in Settings.
-        calendar: false,
+        // Off for a new visitor: the diagnostic dock is a debugging aid.
+        // It switches on in Settings.
         diagnostic: false
       }
     },

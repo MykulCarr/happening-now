@@ -34,7 +34,7 @@
   Object.defineProperty(S, "newsMode", { get: () => newsMode, set: (v) => { newsMode = v; }, configurable: true });
   const { MAJOR_NEWS_FEED_URLS, WATCHLIST_NEWS_SYMBOL_LIMIT, renderNews, stocksNewsRssQueryForSymbol } = S;
   S.parseMoverResult = parseMoverResult;
-  const { renderCalendar, renderMovers, sourceLabel } = S;
+  const { renderMovers, sourceLabel } = S;
   
   // Apply theme, density, and font size on page load
   applyThemeDensity(cfg);
@@ -1157,9 +1157,6 @@
       await renderWatchlist();
     }
     renderMovers();          // already gates gainers/losers/trending internally
-    if(!hidden("calendar")){
-      renderCalendar();
-    }
     if(!hidden("news")){
       await renderNews();
     }

@@ -203,7 +203,6 @@ html {
 [data-hide-stocks-gainers] [data-section="gainers"],
 [data-hide-stocks-losers] [data-section="losers"],
 [data-hide-stocks-trending] [data-section="trending"],
-[data-hide-stocks-calendar] [data-section="calendar"],
 [data-hide-stocks-diagnostic] [data-section="diagnostic"] {
   display: none !important;
 }
@@ -265,6 +264,15 @@ html[data-override-active] header#topbar {
 html[data-override-active] body {
   padding-top: calc(78px + var(--hn-override-height, 0px));
 }
+
+/* A link to a section (/about#backup) must stop below the fixed topbar, not
+   under it: the bar used to hide the heading, so the What's new card's
+   "See how it works" seemed to open the About page scrolled to the bottom.
+   Measured bar heights: 87px desktop, ~184px when it wraps to two rows
+   (761-980px), 78px on a phone; each gets a little room to spare. */
+html { scroll-padding-top: calc(100px + var(--hn-override-height, 0px)); }
+@media (max-width: 980px) { html { scroll-padding-top: calc(196px + var(--hn-override-height, 0px)); } }
+@media (max-width: 760px) { html { scroll-padding-top: calc(90px + var(--hn-override-height, 0px)); } }
 
 @media (max-width:760px) {
   .locationOverrideBar {
@@ -4299,83 +4307,6 @@ body.stockLookupModalOpen {
   color: #ef4444;
 }
 
-/* Economic Calendar Event */
-.calendarEvent {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  border-left: 3px solid var(--accent);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.calendarEvent:hover {
-  background: var(--hover);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.eventTime {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  min-width: 60px;
-}
-
-.eventDetails {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.eventTitle {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.eventSummary {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.5;
-  margin-top: 4px;
-}
-
-.eventCountry {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.eventImpact {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  width: fit-content;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.eventImpact.high {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.eventImpact.medium {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
-}
-
-.eventImpact.low {
-  background: var(--panel2);
-  color: var(--muted);
-}
-
 /* Location Picker — modal backdrop override (floats as card, no dark overlay) */
 #locationPickerModal {
   background: transparent;
@@ -5455,7 +5386,6 @@ body.stockLookupModalOpen {
   [data-render-mode="stable"] .newsArticle:hover,
   [data-render-mode="stable"] .stockItem:hover,
   [data-render-mode="stable"] .moverItem:hover,
-  [data-render-mode="stable"] .calendarEvent:hover,
   [data-render-mode="stable"] .marketIndexRow:hover,
   [data-render-mode="stable"] .windyFrameWrap:hover,
   [data-render-mode="stable"] .rssItem:hover,
@@ -5476,7 +5406,6 @@ body.stockLookupModalOpen {
   [data-render-mode="stable"] .newsArticle,
   [data-render-mode="stable"] .stockItem,
   [data-render-mode="stable"] .moverItem,
-  [data-render-mode="stable"] .calendarEvent,
   [data-render-mode="stable"] .marketIndexRow,
   [data-render-mode="stable"] .windyFrameWrap,
   [data-render-mode="stable"] .rssItem,

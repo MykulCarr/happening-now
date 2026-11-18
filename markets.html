@@ -90,12 +90,12 @@
   <script>
     // Mark hidden sections on <html> before paint so CSS can hide them
     // without a flash. Missing keys take the defaults from DEFAULT_CONFIG in
-    // common.js (calendar and diagnostic start off). Without them a first
-    // visit showed both cards and then hid them: the page's worst layout shift.
+    // common.js (the diagnostic dock starts off). Without it a first visit
+    // showed the dock and then hid it: a layout shift.
     (function applySectionVisibility(){
       try {
         const cfg = JSON.parse(localStorage.getItem("jas_cfg_v3") || "{}");
-        const v = { calendar: false, diagnostic: false, ...(cfg.sectionVisibility?.stocks || {}) };
+        const v = { diagnostic: false, ...(cfg.sectionVisibility?.stocks || {}) };
         const html = document.documentElement;
         for (const [key, on] of Object.entries(v)) {
           if (on === false) html.setAttribute(`data-hide-stocks-${key}`, "1");
@@ -195,15 +195,6 @@
           <div id="trendingStocks" class="stack">Loading…</div>
         </div>
       </div>
-
-      <div class="card" data-section="calendar">
-        <div class="cardHead">
-          <h2>Economic Calendar</h2>
-        </div>
-        <div class="cardBody">
-          <div id="economicCalendar" class="stack">Loading…</div>
-        </div>
-      </div>
     </section>
 
     <div class="pageDiagDock" data-section="diagnostic">
@@ -211,7 +202,7 @@
     </div>
     <details class="pageIntroDetails">
       <summary>About this page</summary>
-      <p class="pageIntro">Track the markets at a glance. The board above groups a starter set &mdash; Dow, S&amp;P 500, NASDAQ, Russell 2000, gold, bitcoin and eight world currencies &mdash; by market type, each tagged with a coloured dot for its current trading session; the tabs above the board narrow it to one group at a time. Another 135 can be switched on in Settings: US and global indices, commodities, Treasury yields, FX pairs, crypto and four dozen world currencies. Your watchlist below lists every symbol you're following, with sortable pinning and current quotes. Market News pulls headlines for your watchlist or major outlets, alongside Top Gainers, Top Losers and Trending stocks. An Economic Calendar of upcoming earnings, Federal Reserve announcements and economic data releases is available in Settings too. Configure your watchlist and which indices appear there.</p>
+      <p class="pageIntro">Track the markets at a glance. The board above groups a starter set &mdash; Dow, S&amp;P 500, NASDAQ, Russell 2000, gold, bitcoin and eight world currencies &mdash; by market type, each tagged with a coloured dot for its current trading session; the tabs above the board narrow it to one group at a time. Another 135 can be switched on in Settings: US and global indices, commodities, Treasury yields, FX pairs, crypto and four dozen world currencies. Your watchlist below lists every symbol you're following, with sortable pinning and current quotes. Market News pulls headlines for your watchlist or major outlets, alongside Top Gainers, Top Losers and Trending stocks. Configure your watchlist and which indices appear there.</p>
     </details>
   </main>
 
