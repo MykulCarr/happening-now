@@ -827,3 +827,36 @@ closed and the missing recentre pin; a full site analysis after the rest.
 and tries sync on beta in Firefox and on his phone; then launch C (five
 steps) and deploy production. Then the weather-map bug, which is the only
 open item that is a defect rather than an idea.
+
+## 2026-11-18 — Sync launched, Economic Calendar, price charts, widget 1.4
+
+Shipped to production today:
+
+- **Settings sync** (privacy wording approved by Mike; he tried it, "worked nicely").
+- **Economic Calendar** from BEA's iCalendar and the Fed's FOMC page. BLS is left
+  out because it refuses honest clients and we don't disguise the User-Agent.
+- **Data Sources page** reworded to say truthfully how feeds are fetched.
+- **Price-and-charts pop-up** (`assets/quote-popup.js` + `.css`), built from a
+  mock-up Mike approved. Tap a watchlist row or a board tile for the price,
+  1D/1W/1M/1Y charts, previous close, day and 52-week range, and volume. It is a
+  bottom sheet on a phone and a dialog on desktop, and the Today view shows all
+  four charts at once. The snapshot now carries each tile's Yahoo `symbol`;
+  a board tile's news link moved into a "Headlines" button.
+- **Widget app 1.4**: each large-widget watchlist row opens
+  `/widget?w=quote&s=SYM` (the compact card drawn inline) in the reader screen.
+- **Cloudflare rate limit** on `/v1/rss/raw` (60 per 10s per IP, block 10s).
+  The free plan's single slot held an unused "Leaked credential check" rule;
+  Mike replaced it. Verified: a 200-request burst got 80 blocked with 429.
+
+Decisions and lessons:
+- Chart points are spaced evenly by bar, not by clock time; clock spacing drew
+  nights and weekends as long flat lines.
+- Port 8080 is held by another project's server on OEMMEO. Test pop-ups on 8092
+  with the CDP rig answering `/v1` calls itself (scratchpad `qp-shot.mjs`).
+- Production deploys need Mike's explicit OK each time; the classifier blocked one
+  that he had not approved yet.
+
+Next: Mike installs 1.4 on the phone. Android package registration (YOUR-TURN)
+waits on his Play account approval; then he pastes the snippet into
+`android-widget/app/src/main/assets/adi-registration.properties` and Claude
+builds the proof APK.
