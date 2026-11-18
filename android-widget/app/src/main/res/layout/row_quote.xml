@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One watchlist line: symbol, price, move. -->
+<!-- One watchlist line: symbol, price, move. A tap opens that stock's quote card. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"

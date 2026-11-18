@@ -122,3 +122,8 @@ a.qpBtn { color: var(--accent); }
   .qpActions { align-items: center; }
   .qpCredit { text-align: left; margin-top: -8px; }
 }
+
+/* inline: the card drawn on a page of its own (the Android app's quote screen) */
+.quotePopup.isInline { margin: 0 auto; width: 100%; max-width: 480px; max-height: none; border-radius: 18px; border-bottom: 1px solid var(--border); box-shadow: none; overflow: visible; }
+.quotePopup.isInline .qpBody { padding-top: 16px; }
+.quotePopup.isInline .qpBody::before { display: none; }

@@ -69,6 +69,15 @@ object Render {
     // The phone's own clock app: found by asking who shows alarms, then opened
     // the way its icon would open it (asking for the alarm screen directly
     // needs a permission; this does not).
+    // A watchlist row: that stock's price and 1D/1W/1M/1Y charts, the site's
+    // compact quote card (/widget?w=quote) shown in the reader screen, so Back
+    // returns to the home screen. Each symbol's link makes its own PendingIntent.
+    private fun openQuote(c: Context, sym: String): PendingIntent {
+        val url = "${Fetch.SITE}/widget?w=quote&s=${Uri.encode(sym)}"
+        return PendingIntent.getActivity(c, 0, Intent(c, ReaderActivity::class.java).setData(Uri.parse(url))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), FLAGS)
+    }
+
     private fun openClock(c: Context): PendingIntent {
         val clockApp = c.packageManager.resolveActivity(Intent(AlarmClock.ACTION_SHOW_ALARMS), 0)?.activityInfo?.packageName
         val intent = clockApp?.let { c.packageManager.getLaunchIntentForPackage(it) } ?: Intent(AlarmClock.ACTION_SHOW_ALARMS)
@@ -367,6 +376,7 @@ object Render {
             row.setTextViewText(R.id.price, String.format(Locale.US, "%,.2f", q.optDouble("price")))
             row.setTextViewText(R.id.move, (if (flat) "" else if (pct > 0) "▲ " else "▼ ") + String.format(Locale.US, "%.2f%%", Math.abs(pct)))
             row.setTextColor(R.id.move, c.getColor(if (flat) R.color.muted else if (pct > 0) R.color.up else R.color.down))
+            row.setOnClickPendingIntent(R.id.row, openQuote(c, q.optString("sym")))
             v.addView(R.id.quotes, row)
         }
         v.setOnClickPendingIntent(R.id.quotes, open(c, "${Fetch.SITE}/markets")) // the rows; the header folds

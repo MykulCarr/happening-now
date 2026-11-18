@@ -404,6 +404,18 @@
 
   // ---- boot ---------------------------------------------------------------
   const name = params.get("w") || "weather";
+  // ?w=quote&s=NVDA: one stock's compact quote card as a page, which the
+  // Android widget app opens in its reader when a watchlist row is tapped.
+  if (name === "quote") {
+    const symbol = String(params.get("s") || "").toUpperCase();
+    if (!/^[A-Z0-9.^=-]{1,20}$/.test(symbol) || !App.quotePopup) {
+      root.innerHTML = noticeCard(new Notice(`No stock given. <a href="/markets" target="_top">Open Markets</a>.`));
+      return;
+    }
+    root.innerHTML = `<div class="wQuoteCard"></div>`;
+    App.quotePopup.open({ symbol, title: symbol, money: params.get("m") !== "0", compact: true, into: root.firstElementChild });
+    return;
+  }
   if (name !== "all" && !SINGLE[name]) {
     root.innerHTML = noticeCard(new Notice(`Unknown widget “${esc(name)}”. Try <a href="?w=all">?w=all</a>.`));
     return;

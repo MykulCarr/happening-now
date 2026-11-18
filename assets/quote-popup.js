@@ -193,7 +193,7 @@
     return dialog;
   }
 
-  function headHtml(opts, meta, fmt) {
+  function headHtml(opts, meta) {
     const name = meta ? [meta.longName || meta.shortName, meta.fullExchangeName, opts.money !== false ? meta.currency : ""].filter(Boolean).join(" · ") : "";
     return `
       <div class="qpHead">
@@ -201,9 +201,9 @@
           <h2 class="qpTitle">${esc(opts.title)}</h2>
           ${name ? `<div class="qpSub">${esc(name)}</div>` : ""}
         </div>
-        <button type="button" class="qpClose" data-qp-close aria-label="Close">
+        ${opts.into ? "" : `<button type="button" class="qpClose" data-qp-close aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
+        </button>`}
       </div>`;
   }
 
@@ -301,13 +301,17 @@
 
   async function open(opts) {
     if (!opts?.symbol) return;
-    const d = ensureDialog();
+    // `into`: draw on the page itself instead of a dialog (the Android widget
+    // app's quote screen, /widget?w=quote). Compact layout only.
+    const d = opts.into || ensureDialog();
     const my = ++token;
     current = { opts, range: DEFAULT_RANGE, token: my, fmt: null, prevClose: null };
+    d.classList.add("quotePopup");
     d.classList.toggle("isCompact", !!opts.compact);
+    d.classList.toggle("isInline", !!opts.into);
     d.setAttribute("aria-label", `${opts.title} details`);
     d.innerHTML = `<div class="qpBody">${headHtml(opts)}<div class="qpNote">Loading prices…</div></div>`;
-    if (!d.open) {
+    if (!opts.into && !d.open) {
       d.showModal();
       document.documentElement.classList.add("qpOpen");
       if (window === window.top && !history.state?.hnQuotePopup) history.pushState({ hnQuotePopup: true }, "");

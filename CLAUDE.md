@@ -57,6 +57,9 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   four ranges are Yahoo v8 chart calls through `/v1/rss/raw`; a field Yahoo
   doesn't send is left out, never filled in. Designed in a mock-up Mike
   approved: phone bottom sheet, desktop dialog, Today view all four charts
+  `into: element` draws the compact card on a page instead of a dialog:
+  `/widget?w=quote&s=NVDA`, which the Android widget app (1.4+) opens in its
+  reader screen when a watchlist row is tapped (`openQuote` in `Render.kt`)
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `assets/settings-backup.js` — backup and transfer for every browser: save a
   dated backup file, load one back, or make a **transfer link** (settings
