@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
   '/assets/widget-link.js',
   '/assets/news.js',
   '/assets/news-swipe.js',
+  '/assets/weather-alerts-ticker.js',
   '/assets/weather-map.js',
   '/assets/weather.js',
   '/assets/stocks.js',
