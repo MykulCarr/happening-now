@@ -6,7 +6,7 @@ write freely.
 
 updated: 2026-11-18
 health: ok
-next: Mike OKs the production deploy of widget app 1.4 (tap a watchlist row on the large widget for its charts) plus the /widget?w=quote page it opens; then he installs the update on his phone and tries it
+next: Mike installs widget app 1.4 on his phone from happening-now.net/android and taps a watchlist row on the large widget (live since 2026-11-18)
 blocked:
 capabilities: public news/weather/stocks aggregation at happening-now.net, per-symbol price charts (1D/1W/1M/1Y) from Yahoo through the site proxy, Cloudflare Pages and Workers hosting, installable PWA, RSS proxy with last-good caching, curated 409-feed local and topic news catalog, privacy-first usage analytics with daily visitor hash (reference for site-analytics), admin dashboard for Cloudflare analytics, Today view at /widget?w=all, Android home-screen widget app distributed at /android (android-widget/), settings backup and transfer links for any browser, end-to-end encrypted settings sync
 
