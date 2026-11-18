@@ -34,6 +34,15 @@
       tag: "new-sync",
     },
     {
+      id: "econ-calendar-2026-11",
+      when: () => !App.isSectionHidden?.("stocks", "econCalendar"),
+      title: "New: Economic Calendar",
+      text: "The Markets page now shows the next GDP, inflation and trade releases and the Fed's rate decisions, straight from the agencies' own schedules.",
+      action: "Open Markets",
+      href: "/markets",
+      tag: "new-econ-calendar",
+    },
+    {
       id: "backup-2026-11",
       when: () => true,
       title: "New: back up and move your settings",

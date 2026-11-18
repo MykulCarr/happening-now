@@ -195,6 +195,15 @@
           <div id="trendingStocks" class="stack">Loading…</div>
         </div>
       </div>
+
+      <div class="card" data-section="econCalendar">
+        <div class="cardHead">
+          <h2>Economic Calendar</h2>
+        </div>
+        <div class="cardBody">
+          <div id="economicCalendar" class="stack">Loading…</div>
+        </div>
+      </div>
     </section>
 
     <div class="pageDiagDock" data-section="diagnostic">
@@ -202,13 +211,13 @@
     </div>
     <details class="pageIntroDetails">
       <summary>About this page</summary>
-      <p class="pageIntro">Track the markets at a glance. The board above groups a starter set &mdash; Dow, S&amp;P 500, NASDAQ, Russell 2000, gold, bitcoin and eight world currencies &mdash; by market type, each tagged with a coloured dot for its current trading session; the tabs above the board narrow it to one group at a time. More than 130 others can be switched on in Settings: US and global indices, commodities, Treasury yields, FX pairs, crypto and four dozen world currencies. Your watchlist below lists every symbol you're following, with sortable pinning and current quotes. Market News pulls headlines for your watchlist or major outlets, alongside Top Gainers, Top Losers and Trending stocks. Configure your watchlist and which indices appear there.</p>
+      <p class="pageIntro">Track the markets at a glance. The board above groups a starter set &mdash; Dow, S&amp;P 500, NASDAQ, Russell 2000, gold, bitcoin and eight world currencies &mdash; by market type, each tagged with a coloured dot for its current trading session; the tabs above the board narrow it to one group at a time. More than 130 others can be switched on in Settings: US and global indices, commodities, Treasury yields, FX pairs, crypto and four dozen world currencies. Your watchlist below lists every symbol you're following, with sortable pinning and current quotes. Market News pulls headlines for your watchlist or major outlets, alongside Top Gainers, Top Losers and Trending stocks. The Economic Calendar lists the next GDP, personal income (PCE inflation) and trade releases from the BEA, and the Fed's rate decisions, taken from each agency's published schedule. Configure your watchlist and which indices appear there.</p>
     </details>
   </main>
 
   <footer class="page-footer">
-    <p>📈 Stock prices: Google Finance embeds • News headlines: Google News RSS feeds • Symbol pinning stored locally in browser</p>
-    <p class="pageFooterFinePrint">Market data updates in real-time • Pin your favorite stocks for quick access • Sort by symbol, label, or pinned status</p>
+    <p>📈 Quotes and charts: Yahoo Finance, through this site's server • Headlines: Yahoo Finance per symbol, MarketWatch and CNBC • Calendar: BEA and the Federal Reserve</p>
+    <p class="pageFooterFinePrint">Quotes refresh every few minutes and may be delayed • Your watchlist and pins are stored only in this browser</p>
     <p class="footerLinks"><a href="/about">About</a> • <a href="/privacy">Privacy</a> • <a href="/terms">Terms</a> • <a href="/sources">Data Sources</a> • <a href="/feedback">Feedback</a></p>
   </footer>
 
@@ -221,6 +230,7 @@
   <script defer src="assets/infobar.js"></script>
   <script defer src="assets/markets-movers.js"></script>
   <script defer src="assets/markets-news.js"></script>
+  <script defer src="assets/markets-calendar.js"></script>
   <script defer src="assets/stocks.js"></script>
   <script defer src="assets/top-feeds.js"></script>
   <script defer src="assets/widget-link.js"></script>

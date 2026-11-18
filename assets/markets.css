@@ -411,3 +411,25 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+/* Economic Calendar (markets-calendar.js). Each row is a link to the
+   agency's schedule, so it is a full-width tap target. */
+.econEvent {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  min-height: 44px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.econEvent:hover .econWhat { text-decoration: underline; }
+.econWhen { font-weight: 700; font-size: calc(13px * var(--font-multiplier, 1)); }
+.econTime, .econNote {
+  display: block;
+  font-weight: 400;
+  font-size: calc(12px * var(--font-multiplier, 1));
+  color: var(--muted);
+}
+.econWhat { font-size: calc(14px * var(--font-multiplier, 1)); line-height: 1.35; }
+.econFoot { margin-top: 8px; }

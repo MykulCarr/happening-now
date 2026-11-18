@@ -335,6 +335,9 @@
         gainers: true,
         losers: true,
         trending: true,
+        // A new key, not the old "calendar": that one was saved as false in
+        // most configs, and the made-up card it hid is gone.
+        econCalendar: true,
         // Off for a new visitor: the diagnostic dock is a debugging aid.
         // It switches on in Settings.
         diagnostic: false

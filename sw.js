@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
   '/assets/weather.js',
   '/assets/markets-movers.js',
   '/assets/markets-news.js',
+  '/assets/markets-calendar.js',
   '/assets/stocks.js',
   '/assets/settings-install.js',
   '/assets/settings-markets.js',

@@ -12,6 +12,7 @@
     "test:reminders": "node scripts/test-reminders.mjs",
     "test:reports": "node scripts/test-reports.mjs",
     "test:sync": "node scripts/test-sync.mjs",
+    "test:calendar": "node scripts/test-calendar.mjs",
     "css-compare": "node scripts/css-compare.mjs",
     "check-real-data": "node scripts/check-real-data.mjs",
     "test:admin": "node scripts/test-admin.mjs"

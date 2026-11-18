@@ -36,7 +36,10 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
 - **Page scripts split by feature (2026-11-17).** `settings.js` +
   `settings-install.js`, `settings-markets.js`, `settings-stock-lookup.js`;
   `weather.js` + `weather-map.js`, `weather-alerts-ticker.js`; `stocks.js` +
-  `markets-movers.js`, `markets-news.js`. Each part is an IIFE loaded **just
+  `markets-movers.js`, `markets-news.js` (`markets-calendar.js` is
+  standalone and shares nothing; its data is `/v1/markets/calendar`,
+  `cloudflare-sync-worker/src/calendar.mjs`, which reads BEA's iCalendar and
+  parses the Fed's FOMC page — `npm run test:calendar`). Each part is an IIFE loaded **just
   before** its main script and shares state through one object,
   `window.App.settingsPage` / `weatherPage` / `marketsPage` (called `S`): the
   main script puts its helpers there, exposes changing variables through

@@ -203,6 +203,7 @@ html {
 [data-hide-stocks-gainers] [data-section="gainers"],
 [data-hide-stocks-losers] [data-section="losers"],
 [data-hide-stocks-trending] [data-section="trending"],
+[data-hide-stocks-econCalendar] [data-section="econCalendar"],
 [data-hide-stocks-diagnostic] [data-section="diagnostic"] {
   display: none !important;
 }

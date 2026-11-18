@@ -1,6 +1,7 @@
 import { runCurationSweep } from "./curate.js";
 import { runReminders } from "./reminders.mjs";
 import { getMarketSnapshot } from "./markets.js";
+import { getEconomicCalendar } from "./calendar.mjs";
 import { getQuotes, parseSymbols } from "./quotes.js";
 import { fetchFavicon } from "./favicon.js";
 import { handleReport, handlePulse } from "./reports.mjs";
@@ -521,6 +522,12 @@ export default {
 
     if (url.pathname === "/v1/markets/snapshot") {
       return jsonResponse(await getMarketSnapshot(env, ctx), 200, request, env);
+    }
+
+    if (url.pathname === "/v1/markets/calendar") {
+      const res = jsonResponse(await getEconomicCalendar(), 200, request, env);
+      res.headers.set("Cache-Control", "public, max-age=3600");
+      return res;
     }
 
     if (url.pathname === "/v1/stocks/quotes") {
