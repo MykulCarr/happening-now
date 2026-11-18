@@ -20,6 +20,8 @@ const ASSETS_TO_CACHE = [
   '/assets/weather-alerts-ticker.js',
   '/assets/weather-map.js',
   '/assets/weather.js',
+  '/assets/markets-movers.js',
+  '/assets/markets-news.js',
   '/assets/stocks.js',
   '/assets/settings-install.js',
   '/assets/settings-markets.js',
