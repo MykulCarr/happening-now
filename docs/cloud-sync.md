@@ -1,8 +1,8 @@
 # Settings sync by sync code
 
-Status: **launch steps 2-4 done 2026-11-18** (wording approved by Mike, the
-`$unreleased` gate removed, `sw.js` caches the script). Steps 1 and 5, the
-production table and the deploy, go together. Written 2026-11-16.
+Status: **launched 2026-11-18** (wording approved by Mike, the
+`$unreleased` gate removed, `sw.js` caches the script, then steps 1 and 5, the
+production table and the deploy, done the same day. Written 2026-11-16.
 
 ## What it is for
 
