@@ -17,7 +17,17 @@ runbook and an ops monitoring checklist in `docs/`. Treat changes accordingly.
   (saved settings and past counts depend on them)
 - `settings.html` — source picker / preferences; marked `noindex`, not in sitemap
 - `sources.html`, `privacy.html`, `terms.html` — public info + legal
-- `assets/` — all JS and `styles.css`. `common*.js` is shared; the rest is per-page
+- `assets/` — all JS and CSS. `common*.js` is shared; the rest is per-page.
+  **Stylesheets (split 2026-11-17):** `styles.css` holds everything shared;
+  `news.css`, `weather.css`, `markets.css` and `settings.css` hold rules only
+  that page can use, and each page links its own right after `styles.css`. A
+  rule moved only where no other page or script names its classes and no
+  later shared rule styles the same elements (moving a rule to a page file
+  puts it after every shared rule, which changes who wins). When unsure, put
+  it in `styles.css`. After moving rules between files, run
+  `node scripts/css-compare.mjs` (dev server on 8091): it compares every
+  element's computed style on all 12 pages, 3 themes, 5 widths against the
+  last commit and must report no differences
 - `assets/settings-sync.js` — optional "sync settings to a file" extra (see below)
 - `assets/settings-backup.js` — backup and transfer for every browser: save a
   dated backup file, load one back, or make a **transfer link** (settings

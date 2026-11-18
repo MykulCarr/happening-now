@@ -1,0 +1,413 @@
+/* markets.css: styles used only by markets.html, loaded after styles.css.
+   Split out of styles.css on 2026-11-17. A rule lives here only if no other
+   page or script can show what it styles; anything shared stays in
+   styles.css. Moving a rule between the two files changes the cascade order,
+   so re-run the computed-style comparison when you do (see CLAUDE.md). */
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+}
+
+
+@media (max-width:980px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid2 > [data-section="watchlist"] { min-height: var(--reserve-watchlist, 0); }
+.grid2 > [data-section="news"] { min-height: var(--reserve-news, 0); }
+
+/* ===== STOCKS PAGE STYLES ===== */
+
+/* Market Indices Bar */
+.marketIndicesLabel {
+  margin: 0 0 12px;
+  font-size: calc(16px * var(--font-multiplier, 1));
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.marketGroupLabel {
+  margin: 0 0 8px;
+  font-size: calc(12px * var(--font-multiplier, 1));
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted, var(--text));
+  opacity: 0.75;
+}
+
+.marketGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+
+@media (min-width: 640px) {
+  .marketGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+
+
+@media (min-width: 900px) {
+  .marketGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+
+
+@media (min-width: 1200px) {
+  .marketGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+
+/* Currencies publish once a day and carry no change figure; this is the label
+   that stands in for it, so the row keeps its height and the tile its shape. */
+.indexChangeMuted {
+  font-weight: 600;
+  opacity: 0.6;
+  font-size: calc(11px * var(--font-multiplier, 1));
+}
+
+.indexItem {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .03);
+}
+
+.indexItemLink {
+  position: relative;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.indexItemLink::after {
+  content: "↗";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateY(1px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.indexItemLink:hover,
+.indexItemLink:focus-visible {
+  border-color: rgba(198, 111, 28, .55);
+  background: rgba(198, 111, 28, .14);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.indexItemLink:hover::after,
+.indexItemLink:focus-visible::after {
+  opacity: .95;
+  transform: translateY(0);
+}
+
+.indexTopRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  /* Leave room for the hover arrow so a long name never slides under it. */
+  padding-right: 14px;
+}
+
+.indexName {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Value and change share a line; the change sits right so the eye can run
+   down either column. */
+.indexBottomRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+
+@media (max-width:980px) {
+
+  .indexItem {
+    min-width: 0;
+    padding: 7px 8px;
+  }
+}
+
+
+.indexValue {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.indexUnit {
+  font-size: 10px;
+  color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stockItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stockItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stockItemSymbol {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.stockItemName {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stockItemStats {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+.statLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.statLow {
+  color: #ef4444;
+}
+
+.statHigh {
+  color: #10b981;
+}
+
+.statSep {
+  opacity: 0.5;
+}
+
+.stockSparkline {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+
+@media (max-width:720px) {
+  .watchlistItem {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .watchlistItem .stockItemLeft {
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .watchlistItem .stockItemRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .watchlistItem .stockItemPrice {
+    align-items: flex-start;
+  }
+
+  .watchlistItem .stockItemName {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+}
+
+
+
+@media (max-width:480px) {
+  .watchlistItem {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .watchlistItem .stockItemLeft {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .watchlistItem .stockItemSymbol {
+    font-size: 14px;
+  }
+
+  .watchlistItem .stockItemName {
+    font-size: 11px;
+  }
+
+  .watchlistItem .stockItemStats {
+    font-size: 10px;
+    gap: 3px;
+  }
+}
+
+
+.stockItemRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stockItemPrice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.stockPrice {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.newsContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.newsTitle {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.newsMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.newsSource {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sourceFavicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.newsTime {
+  opacity: 0.8;
+}
+
+/* Last Updated Timestamp */
+.lastUpdated {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stocksCardHeadRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stocksCardHeadActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stocksLastUpdated {
+  margin-right: 8px;
+}
+
+.stocksScopeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+/* Match News widget height to Watchlist and make scrollable */
+#stocksNews {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#stocksBody {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

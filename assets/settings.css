@@ -1,0 +1,657 @@
+/* settings.css: styles used only by settings.html, loaded after styles.css.
+   Split out of styles.css on 2026-11-17. A rule lives here only if no other
+   page or script can show what it styles; anything shared stays in
+   styles.css. Moving a rule between the two files changes the cascade order,
+   so re-run the computed-style comparison when you do (see CLAUDE.md). */
+
+.usageGuideIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .08);
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  flex: 0 0 18px;
+}
+
+.stockEditorStack {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stockEditorToolbar,
+.newsEditorToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Stock lookup modal */
+.stockLookupModal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.stockLookupModal[hidden] {
+  display: none;
+}
+
+.stockLookupModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  backdrop-filter: blur(2px);
+}
+
+.stockLookupModalSheet {
+  position: relative;
+  z-index: 1;
+  width: min(680px, 96vw);
+  max-height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 18px;
+  background: var(--panel, #1e1b3a);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+  overflow: hidden;
+}
+
+.stockLookupModalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  flex-shrink: 0;
+}
+
+.stockLookupModalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stockLookupModalBody {
+  overflow-y: auto;
+  padding: 16px 18px 20px;
+  flex: 1 1 auto;
+}
+
+.stockLookupPanel {
+  display: grid;
+  gap: 10px;
+}
+
+.stockLookupForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.stockLookupAssignRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.stockLookupAssignLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .82);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.stockLookupResults {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.stockOrderBadge {
+  grid-area: badge;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .08);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3px;
+  opacity: .95;
+}
+
+.stockEditorFields {
+  grid-area: fields;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+
+@media (max-width:1320px) {
+  .stockEditorStack {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+
+@media (max-width:980px) {
+  .stockLookupForm {
+    grid-template-columns: 1fr;
+  }
+
+  .stockLookupAssignRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .stockEditorStack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+
+@media (max-width:720px) {
+  .stockEditorStack {
+    grid-template-columns: 1fr;
+  }
+
+  .stockOrderBadge {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+}
+
+
+.settLocRefreshRow {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.settLocCurrentDisplay {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* Settings Enhancements */
+.settingsTabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  overflow-x: auto;
+}
+
+.settingsTabsWrap {
+  margin-bottom: 20px;
+}
+
+.settingsUnitSuffix {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settingsActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hintMt8 {
+  margin-top: 8px;
+}
+
+.hintMt10 {
+  margin-top: 10px;
+}
+
+.hintMt12 {
+  margin-top: 12px;
+}
+
+.installContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.installAppBtnIcon {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.installStatusPanel {
+  display: none;
+  padding: 12px;
+  background: var(--panel2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+}
+
+.installStatusIcon {
+  font-size: 16px;
+  margin-right: 6px;
+}
+
+.installModalHidden {
+  display: none;
+}
+
+.installModalContent {
+  max-width: 520px;
+}
+
+.installModalTitle {
+  margin: 0;
+  font-size: 18px;
+}
+
+.installModalBody {
+  padding: 20px;
+}
+
+.installModalWhy {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--panel2);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.installModalWhyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.installModalWhyList {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.installModalTip {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(198, 111, 28, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+}
+
+.installModalTipText {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.installModalTipStrong {
+  color: var(--text);
+}
+
+.systemPanelCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+@media (max-width: 1100px) {
+  .systemPanelRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+
+
+@media (max-width: 800px) {
+  .systemPanelRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.installGuideNote {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.installGuideSub {
+  margin-top: 10px;
+}
+
+.weatherPanelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.weatherPanelGrid>.collapsibleSection {
+  margin-bottom: 0;
+}
+
+/* 2-column: Location on left, stacked panels on right */
+.weatherPanelLocation {
+  grid-column: 1;
+}
+
+.weatherPanelRight {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weatherPanelRight>.collapsibleSection {
+  margin-bottom: 0;
+}
+
+.toggleInput {
+  appearance: none;
+  width: 44px;
+  height: 24px;
+  background: var(--panel2);
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.toggleInput::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: var(--text);
+  border-radius: 50%;
+  transition: left 0.3s ease;
+}
+
+.toggleInput:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggleInput:checked::after {
+  left: 22px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.checkboxLabel:hover {
+  background: var(--panel2);
+  border-color: var(--accent);
+}
+
+.checkboxLabel input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.checkboxLabel span {
+  flex: 1;
+}
+
+.marketIndexToggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "check text"
+    "drag  text";
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: start;
+}
+
+.marketIndexToggle input[type="checkbox"] {
+  grid-area: check;
+  margin-top: 2px;
+}
+
+.marketIndicesControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.marketIndicesSortLabel {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.marketIndicesSortCurrent {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: -2px;
+}
+
+.marketIndexText {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.marketIndexName {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.marketIndexMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.marketMetaType,
+.marketMetaRegion {
+  display: block;
+}
+
+
+@media (max-width: 980px) {
+
+  .weatherPanelGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .weatherPanelLocation {
+    grid-column: auto;
+  }
+
+  .weatherPanelRight {
+    grid-column: auto;
+    flex-direction: column;
+  }
+
+  .marketIndicesSelector {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .marketIndexToggle {
+    column-gap: 8px;
+    row-gap: 2px;
+  }
+
+  .marketIndexName {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .marketIndexMeta {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .marketDragHandle {
+    font-size: 16px;
+  }
+}
+
+
+.marketDragHandle {
+  grid-area: drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  align-self: start;
+  width: auto;
+  padding: 2px 4px;
+  color: var(--muted);
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.settingRowGroup {
+  display: grid;
+  gap: 8px;
+}
+
+
+@media (max-width: 980px) {
+
+  .marketIndicesControls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .marketIndicesSortLabel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: left;
+  }
+}
+
+
+.settingLabel {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.settingHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* ── Source search results (settings → Local / Regional cards) ─────────────
+   Populated by setupScopedSourceManager when the custom row is used as a
+   search box rather than a pasted RSS URL. */
+
+/* ── News category picker (settings) ──────────────────────────────────────
+   One row per topic in data/topic-sources.json, clustered into groups
+   (data-driven via each topic's "group" field). Chips sit side by side and
+   wrap within a group, rather than one full-width row each: there are 17
+   categories, and a column of them pushed everything else on the News tab
+   off the screen. */
+.topicGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.topicGroupLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+}
+
+.topicGroupRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topicEmoji { font-size: 18px; line-height: 1; }
+
+.topicText { display: flex; flex-direction: column; min-width: 0; }
+
+.topicTitle { font-weight: 700; }
+
+.topicMeta {
+  color: var(--muted);
+  font-size: calc(11px * var(--font-multiplier, 1));
+  font-weight: 600;
+}
+.topicOrderName { flex: 1; font-weight: 600; }

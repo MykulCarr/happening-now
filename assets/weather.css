@@ -1,0 +1,597 @@
+/* weather.css: styles used only by weather.html, loaded after styles.css.
+   Split out of styles.css on 2026-11-17. A rule lives here only if no other
+   page or script can show what it styles; anything shared stays in
+   styles.css. Moving a rule between the two files changes the cascade order,
+   so re-run the computed-style comparison when you do (see CLAUDE.md). */
+
+/* Weather grid layout for HAPPENING NOW */
+.weatherGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+.weatherGrid .col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap)
+}
+
+.weatherGrid .leftCol {
+  min-width: 280px
+}
+
+.weatherGrid .rightCol {
+  min-width: 360px
+}
+
+.alertsBar .alertsTickerTrack {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: max-content;
+  will-change: transform;
+}
+
+.alertsBar .alertsTickerGroup {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+}
+
+.alertsBar .alertItem {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
+}
+
+.alertsBar .alertItem.alertToneA {
+  color: #ffffff;
+}
+
+.alertsBar .alertItem.alertToneB {
+  color: #fcd34d;
+}
+
+[data-tone="light"] .alertsBar .alertItem.alertToneA {
+  color: #0f172a;
+}
+
+[data-tone="light"] .alertsBar .alertItem.alertToneB {
+  color: #9a3412;
+}
+
+.alertsBar .alertSep {
+  color: rgba(255, 255, 255, 0.42);
+  margin: 0 10px;
+  font-weight: 700;
+}
+
+
+@media (max-width:980px) {
+  .weatherGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.rssMeta {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 6px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  line-height: 1.4;
+}
+
+#weatherHourly,
+#weatherDaily,
+#weatherAlerts,
+#weatherNews {
+  min-height: 220px;
+}
+
+.weatherMapFrame {
+  border: 0;
+  min-height: 400px;
+  width: 100%;
+  display: block;
+}
+
+.weatherMapAttribution {
+  background: #222;
+  border-radius: 6px;
+  padding: 0.5rem;
+  text-align: center;
+  color: #888;
+  font-size: 11px;
+  margin-top: 0.5rem;
+}
+
+.weatherHourlyCardBody {
+  overflow-x: auto;
+  min-height: 160px;
+}
+
+.weatherAlertsBody {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.weatherNewsActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* Third-party embed gate. The wrap ships with .isGated (see weather.html), so
+   the Windy iframe stays unloaded — and the loading skeleton stays hidden —
+   until the viewer asks for it. */
+.weatherMapConsent {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  background: var(--card-bg);
+}
+
+.weatherMapWrap.isGated .weatherMapConsent {
+  display: flex;
+}
+
+/* Gated: no skeleton shimmering behind the prompt, nothing to load yet. */
+.weatherMapWrap.isGated .weatherMapPlaceholder {
+  display: none;
+}
+
+.weatherMapConsentIcon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.weatherMapConsentText {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.weatherMapConsentRemember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px; /* the whole label is the tap target, not just the 16px box */
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  /* Keeps the label itself an easy tap target next to the checkbox. */
+  min-height: 32px;
+}
+
+.weatherMapConsentRemember input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.weatherGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+
+@media (max-width:980px) {
+  .weatherGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* --- Weather Page New Layout --- */
+
+/* Restore previous weatherGrid and card layout */
+.weatherGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+
+@media (max-width:980px) {
+  .weatherGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.weatherCurrent {
+  grid-row: span 2;
+}
+
+
+@media (max-width:980px) {
+  .weatherCurrent {
+    grid-row: auto;
+  }
+}
+
+
+/* Current Conditions Widget Styles */
+.current-top-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.weather-icon-temp {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.current-location {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  flex: 0 1 auto;
+  min-height: 100%;
+}
+
+.currentMainIcon {
+  font-size: 54px;
+}
+
+.currentSummaryText {
+  font-size: 14px;
+}
+
+.currentTempValue {
+  font-size: 32px;
+}
+
+.currentRangeText {
+  font-size: 13px;
+}
+
+#currentLocationText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.currentLocationHint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+.current-stats-unified {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 16px;
+  align-items: center;
+}
+
+/* Desktop order: FEELS LIKE, WIND, HUMIDITY, PRECIP / SUNRISE, SUNSET, DAYLIGHT, MOON */
+.current-stats-unified>div:nth-child(1) {
+  order: 1;
+}
+
+/* FEELS LIKE */
+.current-stats-unified>div:nth-child(2) {
+  order: 3;
+}
+
+/* HUMIDITY */
+.current-stats-unified>div:nth-child(3) {
+  order: 2;
+}
+
+/* WIND */
+.current-stats-unified>div:nth-child(4) {
+  order: 4;
+}
+
+/* PRECIP */
+.current-stats-unified>div:nth-child(5) {
+  order: 5;
+}
+
+/* SUNRISE */
+.current-stats-unified>div:nth-child(6) {
+  order: 7;
+}
+
+/* DAYLIGHT */
+.current-stats-unified>div:nth-child(7) {
+  order: 6;
+}
+
+/* SUNSET */
+.current-stats-unified>div:nth-child(8) {
+  order: 8;
+}
+
+
+/* MOON */
+
+/* Mobile responsive layout for Current Conditions */
+@media (max-width:760px) {
+  .current-top-grid {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .weather-icon-temp {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .currentIconBlock {
+    gap: 4px !important;
+  }
+
+  .currentMainIcon {
+    font-size: 40px;
+  }
+
+  .currentSummaryText {
+    font-size: 12px;
+  }
+
+  .currentTempValue {
+    font-size: 26px;
+  }
+
+  .currentRangeText {
+    font-size: 12px;
+  }
+
+  .current-location {
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    flex: 0 1 auto;
+  }
+
+  #currentLocationText {
+    min-height: 42px;
+    font-size: 15px !important;
+    padding: 7px 10px !important;
+    max-width: 170px;
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .currentLocationHint {
+    font-size: 10px;
+  }
+
+  .current-stats-unified {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 12px;
+  }
+
+  /* Reset order in mobile to follow HTML order */
+  .current-stats-unified>div {
+    order: initial;
+  }
+}
+
+
+#weatherNews {
+  min-height: 200px;
+}
+
+.alertIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f87171;
+  animation: pulse 2s infinite;
+  margin-left: auto;
+}
+
+.wxTableWrap {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: auto;
+  background: rgba(255, 255, 255, .05);
+  max-height: 42vh;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+}
+
+.wxHourlyWrap {
+  /* tall enough for 12 data rows + header (~37px/row) before scrolling */
+  height: 481px;
+  max-height: 481px;
+}
+
+.wxDailyWrap.isExpanded {
+  max-height: none;
+}
+
+.wxTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.wxTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, .25);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.wxTable thead th+th {
+  border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.wxTable td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+  vertical-align: middle;
+  transition: background 0.2s ease;
+  text-align: center;
+}
+
+.wxTable td+td {
+  border-left: 1px solid rgba(255, 255, 255, .10);
+}
+
+.wxTable td.wxT {
+  text-align: left;
+}
+
+.wxTable th.wxDateCol,
+.wxTable td.wxDateCol {
+  text-align: center;
+}
+
+.wxTable tbody tr:hover {
+  background: rgba(255, 255, 255, .10);
+}
+
+.wxTable tbody tr:nth-child(2n) {
+  background: rgba(255, 255, 255, .05);
+}
+
+.wxT {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.wxIconCol,
+.wxI {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+  text-align: center;
+}
+
+.wxIcon {
+  display: inline-block;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.wxN {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.wxGust {
+  color: #60a5fa;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+
+@media (max-width:980px) {
+  .wxTableWrap {
+    max-height: none;
+  }
+
+  .wxHourlyWrap {
+    height: 455px;
+    max-height: 455px;
+  }
+}
+
+
+
+@media (max-width:760px) {
+  .wxTable {
+    font-size: 12px;
+  }
+
+  .wxIcon {
+    font-size: 15px;
+  }
+
+  .wxTable thead th,
+  .wxTable td {
+    padding: 8px 10px;
+  }
+
+  /* Hide Wind column on mobile for both hourly and daily */
+  .hourlyWind,
+  .dailyWind,
+  .wxTable th.hourlyWind,
+  .wxTable th.dailyWind {
+    display: none !important;
+  }
+
+  .wxTable th.hourlyHumidity,
+  .wxTable td.hourlyHumidity,
+  .wxTable th.dailyPrecip,
+  .wxTable td.dailyPrecip {
+    display: none !important;
+  }
+}
+
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--padCard);
+  border-bottom: 1px solid var(--border);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+}

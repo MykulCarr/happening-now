@@ -279,6 +279,7 @@ html[data-override-active] body {
   }
 }
 
+
 /* Local/regional news source picker modal */
 /* Note: no backdrop-filter:blur. The news critical-ticker animates
    continuously (60fps rAF) behind this overlay; a 4px blur would have
@@ -616,6 +617,7 @@ h2 {
     justify-content: flex-start;
   }
 }
+
 
 header#topbar {
   position: fixed;
@@ -1132,28 +1134,6 @@ header#topbar .pageHeadActions {
   min-width: 0;
 }
 
-/* Weather grid layout for HAPPENING NOW */
-.weatherGrid {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: var(--gap);
-  align-items: start;
-}
-
-.weatherGrid .col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap)
-}
-
-.weatherGrid .leftCol {
-  min-width: 280px
-}
-
-.weatherGrid .rightCol {
-  min-width: 360px
-}
-
 /* Alerts bar (top of weather page) */
 .alertsBar {
   /* No horizontal bleed. This used to be width: calc(100% + 20px) with
@@ -1195,51 +1175,6 @@ header#topbar .pageHeadActions {
 .alertsBar .alertsTickerViewport.isDragging {
   cursor: grabbing;
   touch-action: none;
-}
-
-.alertsBar .alertsTickerTrack {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  width: max-content;
-  will-change: transform;
-}
-
-.alertsBar .alertsTickerGroup {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  white-space: nowrap;
-}
-
-.alertsBar .alertItem {
-  display: inline-flex;
-  align-items: center;
-  font-weight: 800;
-  letter-spacing: 0.1px;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
-}
-
-.alertsBar .alertItem.alertToneA {
-  color: #ffffff;
-}
-
-.alertsBar .alertItem.alertToneB {
-  color: #fcd34d;
-}
-
-[data-tone="light"] .alertsBar .alertItem.alertToneA {
-  color: #0f172a;
-}
-
-[data-tone="light"] .alertsBar .alertItem.alertToneB {
-  color: #9a3412;
-}
-
-.alertsBar .alertSep {
-  color: rgba(255, 255, 255, 0.42);
-  margin: 0 10px;
-  font-weight: 700;
 }
 
 .localAlertBadge {
@@ -1331,10 +1266,8 @@ header#topbar .pageHeadActions {
 }
 
 @media (max-width:980px) {
-  .weatherGrid {
-    grid-template-columns: 1fr;
-  }
 }
+
 
 .weatherWidget.tempHot {
   background: linear-gradient(135deg, rgba(239, 68, 68, .15), rgba(248, 113, 113, .08)) !important;
@@ -1976,6 +1909,7 @@ header#topbar>.infoBar .infoBarRight {
   }
 }
 
+
 @media (max-width:760px) {
   body {
     padding-top: 70px;
@@ -2398,6 +2332,7 @@ header#topbar>.infoBar .infoBarRight {
   }
 }
 
+
 .weatherWidget:hover,
 .weatherWidget:focus {
   background: rgba(255, 255, 255, .12) !important;
@@ -2568,6 +2503,7 @@ header#topbar>.infoBar .infoBarRight {
   }
 }
 
+
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -2590,6 +2526,7 @@ header#topbar>.infoBar .infoBarRight {
   }
 }
 
+
 @media (max-width:720px) {
   .grid {
     grid-template-columns: repeat(1, 1fr);
@@ -2600,17 +2537,10 @@ header#topbar>.infoBar .infoBarRight {
   }
 }
 
-.grid2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--gap);
-}
 
 @media (max-width:980px) {
-  .grid2 {
-    grid-template-columns: 1fr;
-  }
 }
+
 
 .card {
   border: 1px solid var(--border);
@@ -2863,12 +2793,6 @@ details.chip>.alertChipBody a {
   opacity: .75;
 }
 
-.rssList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .rssItem {
   display: block;
   padding: var(--padItem) 14px;
@@ -2927,38 +2851,6 @@ details.chip>.alertChipBody a {
   margin-top: 8px;
 }
 
-.rssItemDate {
-  font-size: calc(11px * var(--font-multiplier, 1));
-  color: var(--muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.rssItemDesc {
-  font-size: calc(13px * var(--font-multiplier, 1));
-  color: var(--text);
-  font-weight: 400;
-  line-height: 1.5;
-  opacity: 0.85;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.rssMeta {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 500;
-  margin-top: 6px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  line-height: 1.4;
-}
-
 .criticalNewsBar {
   margin: 0 0 5px;
   overflow: hidden;
@@ -2975,8 +2867,6 @@ details.chip>.alertChipBody a {
 /* Stocks: space held for the board and first row of cards while they load
    (set in stocks.html's head, released by stocks.js after the first render). */
 [data-section="indices"] { min-height: var(--reserve-indices, 0); }
-.grid2 > [data-section="watchlist"] { min-height: var(--reserve-watchlist, 0); }
-.grid2 > [data-section="news"] { min-height: var(--reserve-news, 0); }
 
 /* News grid: held at --newsGridReserve (index.html's head) only until the
    first render finishes, then news.js drops it so the grid sizes to content.
@@ -2987,7 +2877,9 @@ details.chip>.alertChipBody a {
 /* Headlines fade in rather than pop when they replace the skeletons. */
 #newsGrid .rssItem { animation: hnFadeIn .2s ease-out both; }
 @keyframes hnFadeIn { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { #newsGrid .rssItem { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #newsGrid .rssItem { animation: none; } 
+}
+
 
 /* Swiping between categories (news-swipe.js): the new category slides in
    from the side it was pulled from. Short, and only a nudge of distance, so
@@ -3000,12 +2892,9 @@ html:has(#newsGrid) { overscroll-behavior-x: none; }
 #newsGrid.swipeFromRight { animation: hnSwipeIn .22s ease-out; --swipeFrom: 32px; }
 #newsGrid.swipeFromLeft { animation: hnSwipeIn .22s ease-out; --swipeFrom: -32px; }
 @keyframes hnSwipeIn { from { opacity: 0; transform: translateX(var(--swipeFrom)); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { #newsGrid.swipeFromRight, #newsGrid.swipeFromLeft { animation: none; } }
-/* The cards follow a sideways drag (news-swipe.js). pan-y tells the browser
-   vertical scrolling is its job and a sideways drag is ours, so a drag that
-   starts sideways doesn't also scroll the page. The tab row and ticker are
-   their own scrollers and keep scrolling sideways as before. */
-html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
+@media (prefers-reduced-motion: reduce) { #newsGrid.swipeFromRight, #newsGrid.swipeFromLeft { animation: none; } 
+}
+
 /* The name of the category being pulled in, at the edge it comes from. */
 .swipeHint {
   position: fixed; top: 50%; z-index: 60; transform: translateY(-50%);
@@ -3026,26 +2915,12 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   min-height: 260px;
 }
 
-#weatherHourly,
-#weatherDaily,
-#weatherAlerts,
-#weatherNews {
-  min-height: 220px;
-}
-
 .weatherMapWrap {
   position: relative;
   overflow: hidden;
   min-height: 400px;
   border-radius: 8px;
   background: #111;
-}
-
-.weatherMapFrame {
-  border: 0;
-  min-height: 400px;
-  width: 100%;
-  display: block;
 }
 
 /* Distance rings over the Windy frame (weather.js, drawMapRings). White on a
@@ -3072,16 +2947,6 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
 .weatherMapResetBtn[hidden] { display: none; }
 #mapRingsBtn.isOn { border-color: var(--accent); color: var(--accent); }
 
-.weatherMapAttribution {
-  background: #222;
-  border-radius: 6px;
-  padding: 0.5rem;
-  text-align: center;
-  color: #888;
-  font-size: 11px;
-  margin-top: 0.5rem;
-}
-
 .weatherCardHeadInline {
   display: flex;
   align-items: center;
@@ -3107,22 +2972,6 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   #mapRecenterBtn, #mapRingsBtn, #mapLegendBtn { flex: none; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
 }
 
-.weatherHourlyCardBody {
-  overflow-x: auto;
-  min-height: 160px;
-}
-
-.weatherAlertsBody {
-  max-height: 420px;
-  overflow: auto;
-}
-
-.weatherNewsActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
 
 .pageFooterFinePrint {
   margin-top: 8px;
@@ -3147,45 +2996,6 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
   display: none;
 }
 
-/* Third-party embed gate. The wrap ships with .isGated (see weather.html), so
-   the Windy iframe stays unloaded — and the loading skeleton stays hidden —
-   until the viewer asks for it. */
-.weatherMapConsent {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px;
-  text-align: center;
-  background: var(--card-bg);
-}
-
-.weatherMapWrap.isGated .weatherMapConsent {
-  display: flex;
-}
-
-/* Gated: no skeleton shimmering behind the prompt, nothing to load yet. */
-.weatherMapWrap.isGated .weatherMapPlaceholder {
-  display: none;
-}
-
-.weatherMapConsentIcon {
-  font-size: 30px;
-  line-height: 1;
-}
-
-.weatherMapConsentText {
-  margin: 0;
-  max-width: 42ch;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 .weatherMapLoadBtn {
   background: var(--accent);
   border-color: var(--accent);
@@ -3199,24 +3009,6 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
 .weatherMapLoadBtn:hover {
   background: var(--accentHover);
   border-color: var(--accentHover);
-}
-
-.weatherMapConsentRemember {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px; /* the whole label is the tap target, not just the 16px box */
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-  /* Keeps the label itself an easy tap target next to the checkbox. */
-  min-height: 32px;
-}
-
-.weatherMapConsentRemember input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--accent);
 }
 
 .criticalTickerEmpty {
@@ -3342,7 +3134,6 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
 [data-tone="light"] .criticalNewsBar .criticalBadge.world { color: #92400e; background: rgba(217, 119, 6, .12); }
 [data-tone="light"] .criticalNewsBar .criticalBadge.local { color: #047857; background: rgba(16, 185, 129, .12); }
 [data-tone="light"] .criticalNewsBar .criticalBadge.regional { color: #9a3412; background: rgba(198, 111, 28, .12); }
-[data-tone="light"] .criticalNewsBar .criticalTickerSep { color: rgba(0, 0, 0, .3); }
 
 /* Wraps because the topic tabs make this row open-ended — four static scopes
    plus one per enabled topic. Without wrapping the overflow runs off the LEFT
@@ -3408,17 +3199,9 @@ html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
    they fit; `safe` keeps the first button reachable when they don't. Tabs
    get a finger-sized hit area. */
 @media (max-width:720px) {
-  .tickerScopeBar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: flex-start;
-    justify-content: safe center;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .tickerScopeBar::-webkit-scrollbar { display: none; }
   .tickerScopeBtn { flex: none; padding: 7px 8px; }
 }
+
 
 .skeleton {
   border: 1px solid var(--border);
@@ -3571,6 +3354,7 @@ select.input optgroup,
   }
 }
 
+
 .usageGuide {
   margin: 0 0 10px;
   border: 1px solid var(--border);
@@ -3616,21 +3400,6 @@ select.input optgroup,
   background: rgba(255, 255, 255, .03);
 }
 
-.usageGuideIcon {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .22);
-  background: rgba(255, 255, 255, .08);
-  font-size: 11px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  flex: 0 0 18px;
-}
-
 .newsSourceCategory {
   display: inline-flex;
   align-self: flex-start;
@@ -3646,74 +3415,9 @@ select.input optgroup,
   text-transform: uppercase;
 }
 
-.stockEditorStack {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.stockEditorToolbar,
-.newsEditorToolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
 .stockAddTriggerBtn,
 .newsAddTriggerBtn {
   font-weight: 700;
-}
-
-/* Stock lookup modal */
-.stockLookupModal {
-  position: fixed;
-  inset: 0;
-  z-index: 900;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 80px;
-}
-
-.stockLookupModal[hidden] {
-  display: none;
-}
-
-.stockLookupModalBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, .55);
-  backdrop-filter: blur(2px);
-}
-
-.stockLookupModalSheet {
-  position: relative;
-  z-index: 1;
-  width: min(680px, 96vw);
-  max-height: calc(100vh - 110px);
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(255, 255, 255, .14);
-  border-radius: 18px;
-  background: var(--panel, #1e1b3a);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
-  overflow: hidden;
-}
-
-.stockLookupModalHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, .09);
-  flex-shrink: 0;
-}
-
-.stockLookupModalTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
 }
 
 .stockLookupModalClose {
@@ -3733,44 +3437,12 @@ select.input optgroup,
   background: rgba(255, 255, 255, .08);
 }
 
-.stockLookupModalBody {
-  overflow-y: auto;
-  padding: 16px 18px 20px;
-  flex: 1 1 auto;
-}
-
 body.stockLookupModalOpen {
   overflow: hidden;
 }
 
-.stockLookupPanel {
-  display: grid;
-  gap: 10px;
-}
-
-.stockLookupForm {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-}
-
 .stockLookupBtn {
   min-width: 150px;
-}
-
-.stockLookupAssignRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-}
-
-.stockLookupAssignLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, .82);
-  letter-spacing: .04em;
-  text-transform: uppercase;
 }
 
 .stockAssignTarget {
@@ -3793,12 +3465,6 @@ body.stockLookupModalOpen {
 
 .stockLookupStatus.is-error {
   color: #fca5a5;
-}
-
-.stockLookupResults {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 8px;
 }
 
 .stockLookupCard {
@@ -3873,30 +3539,6 @@ body.stockLookupModalOpen {
 
 .stockEditorRow::after {
   bottom: 3px;
-}
-
-.stockOrderBadge {
-  grid-area: badge;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .18);
-  background: rgba(255, 255, 255, .08);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 3px;
-  opacity: .95;
-}
-
-.stockEditorFields {
-  grid-area: fields;
-  display: grid;
-  gap: 8px;
-  min-width: 0;
 }
 
 .stockEditorRow .input {
@@ -4017,49 +3659,28 @@ body.stockLookupModalOpen {
 }
 
 @media (max-width:1320px) {
-  .stockEditorStack {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
+
 @media (max-width:980px) {
-  .stockLookupForm {
-    grid-template-columns: 1fr;
-  }
 
   .stockLookupBtn {
     width: 100%;
   }
-
-  .stockLookupAssignRow {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .stockEditorStack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
+
 @media (max-width:720px) {
-  .stockEditorStack {
-    grid-template-columns: 1fr;
-  }
 
   .stockEditorSymbolInput {
     width: min(160px, 100%);
-  }
-
-  .stockOrderBadge {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
   }
 
   .addNewsCardBtn {
     min-height: 70px;
   }
 }
+
 
 .iconBtn {
   width: 38px;
@@ -4133,44 +3754,17 @@ body.stockLookupModalOpen {
   box-shadow: 0 2px 8px rgba(198, 111, 28, .2);
 }
 
-.weatherGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--gap);
-  align-items: start;
+@media (max-width:980px) {
 }
+
 
 @media (max-width:980px) {
-  .weatherGrid {
-    grid-template-columns: 1fr;
-  }
 }
 
-/* --- Weather Page New Layout --- */
-
-/* Restore previous weatherGrid and card layout */
-.weatherGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--gap);
-  align-items: start;
-}
 
 @media (max-width:980px) {
-  .weatherGrid {
-    grid-template-columns: 1fr;
-  }
 }
 
-.weatherCurrent {
-  grid-row: span 2;
-}
-
-@media (max-width:980px) {
-  .weatherCurrent {
-    grid-row: auto;
-  }
-}
 
 /* No-location empty state (weather page) */
 .weatherNoLocPrompt {
@@ -4199,199 +3793,12 @@ body.stockLookupModalOpen {
   font-weight: 700;
 }
 
-/* Current Conditions Widget Styles */
-.current-top-grid {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: stretch;
-}
-
-.weather-icon-temp {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.current-location {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  flex: 0 1 auto;
-  min-height: 100%;
-}
-
-.currentMainIcon {
-  font-size: 54px;
-}
-
-.currentSummaryText {
-  font-size: 14px;
-}
-
-.currentTempValue {
-  font-size: 32px;
-}
-
-.currentRangeText {
-  font-size: 13px;
-}
-
-#currentLocationText {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 56px;
-  font-size: 22px;
-  white-space: nowrap;
-}
-
-.currentLocationHint {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  text-align: center;
-  opacity: 0.9;
-  line-height: 1.2;
-}
-
-.current-stats-unified {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px 16px;
-  align-items: center;
-}
-
-/* Desktop order: FEELS LIKE, WIND, HUMIDITY, PRECIP / SUNRISE, SUNSET, DAYLIGHT, MOON */
-.current-stats-unified>div:nth-child(1) {
-  order: 1;
-}
-
-/* FEELS LIKE */
-.current-stats-unified>div:nth-child(2) {
-  order: 3;
-}
-
-/* HUMIDITY */
-.current-stats-unified>div:nth-child(3) {
-  order: 2;
-}
-
-/* WIND */
-.current-stats-unified>div:nth-child(4) {
-  order: 4;
-}
-
-/* PRECIP */
-.current-stats-unified>div:nth-child(5) {
-  order: 5;
-}
-
-/* SUNRISE */
-.current-stats-unified>div:nth-child(6) {
-  order: 7;
-}
-
-/* DAYLIGHT */
-.current-stats-unified>div:nth-child(7) {
-  order: 6;
-}
-
-/* SUNSET */
-.current-stats-unified>div:nth-child(8) {
-  order: 8;
-}
-
 /* MOON */
 
 /* Mobile responsive layout for Current Conditions */
 @media (max-width:760px) {
-  .current-top-grid {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .weather-icon-temp {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .currentIconBlock {
-    gap: 4px !important;
-  }
-
-  .currentMainIcon {
-    font-size: 40px;
-  }
-
-  .currentSummaryText {
-    font-size: 12px;
-  }
-
-  .currentTempValue {
-    font-size: 26px;
-  }
-
-  .currentRangeText {
-    font-size: 12px;
-  }
-
-  .current-location {
-    width: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-    flex: 0 1 auto;
-  }
-
-  #currentLocationText {
-    min-height: 42px;
-    font-size: 15px !important;
-    padding: 7px 10px !important;
-    max-width: 170px;
-    white-space: normal;
-    line-height: 1.15;
-  }
-
-  .currentLocationHint {
-    font-size: 10px;
-  }
-
-  .current-stats-unified {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px 12px;
-  }
-
-  /* Reset order in mobile to follow HTML order */
-  .current-stats-unified>div {
-    order: initial;
-  }
 }
 
-#weatherNews {
-  min-height: 200px;
-}
-
-.alertIndicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #f87171;
-  animation: pulse 2s infinite;
-  margin-left: auto;
-}
 
 #mapLegendModal {
   display: none;
@@ -4413,157 +3820,15 @@ body.stockLookupModalOpen {
   }
 }
 
-.wxTableWrap {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: auto;
-  background: rgba(255, 255, 255, .05);
-  max-height: 42vh;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
-}
-
-.wxHourlyWrap {
-  /* tall enough for 12 data rows + header (~37px/row) before scrolling */
-  height: 481px;
-  max-height: 481px;
-}
-
-.wxDailyWrap.isExpanded {
-  max-height: none;
-}
-
-.wxTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  line-height: 1.4;
-}
-
-.wxTable thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: rgba(0, 0, 0, .25);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  text-align: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-}
-
-.wxTable thead th+th {
-  border-left: 1px solid rgba(255, 255, 255, .12);
-}
-
-.wxTable td {
-  padding: 9px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, .12);
-  vertical-align: middle;
-  transition: background 0.2s ease;
-  text-align: center;
-}
-
-.wxTable td+td {
-  border-left: 1px solid rgba(255, 255, 255, .10);
-}
-
-.wxTable td.wxT {
-  text-align: left;
-}
-
-.wxTable th.wxDateCol,
-.wxTable td.wxDateCol {
-  text-align: center;
-}
-
-.wxTable tbody tr:hover {
-  background: rgba(255, 255, 255, .10);
-}
-
-.wxTable tbody tr:nth-child(2n) {
-  background: rgba(255, 255, 255, .05);
-}
-
-.wxT {
-  white-space: nowrap;
-  font-weight: 600;
-}
-
-.wxIconCol,
-.wxI {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
-  padding-left: 6px !important;
-  padding-right: 6px !important;
-  text-align: center;
-}
-
-.wxIcon {
-  display: inline-block;
-  font-size: 17px;
-  line-height: 1;
-}
-
-.wxN {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-
-.wxGust {
-  color: #60a5fa;
-  font-weight: 500;
-  font-size: 11px;
-}
-
 @media (max-width:980px) {
-  .wxTableWrap {
-    max-height: none;
-  }
-
-  .wxHourlyWrap {
-    height: 455px;
-    max-height: 455px;
-  }
 
   /* ~35px/row on mobile */
 }
 
+
 @media (max-width:760px) {
-  .wxTable {
-    font-size: 12px;
-  }
-
-  .wxIcon {
-    font-size: 15px;
-  }
-
-  .wxTable thead th,
-  .wxTable td {
-    padding: 8px 10px;
-  }
-
-  /* Hide Wind column on mobile for both hourly and daily */
-  .hourlyWind,
-  .dailyWind,
-  .wxTable th.hourlyWind,
-  .wxTable th.dailyWind {
-    display: none !important;
-  }
-
-  .wxTable th.hourlyHumidity,
-  .wxTable td.hourlyHumidity,
-  .wxTable th.dailyPrecip,
-  .wxTable td.dailyPrecip {
-    display: none !important;
-  }
 }
+
 
 @media (max-width:720px) {
   .weatherWidget {
@@ -4595,16 +3860,6 @@ body.stockLookupModalOpen {
   }
 }
 
-/* ===== STOCKS PAGE STYLES ===== */
-
-/* Market Indices Bar */
-.marketIndicesLabel {
-  margin: 0 0 12px;
-  font-size: calc(16px * var(--font-multiplier, 1));
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.2px;
-}
 
 .marketIndices {
   --ticker-distance: 1200px;
@@ -4656,116 +3911,17 @@ body.stockLookupModalOpen {
   margin-bottom: 0;
 }
 
-.marketGroupLabel {
-  margin: 0 0 8px;
-  font-size: calc(12px * var(--font-multiplier, 1));
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--muted, var(--text));
-  opacity: 0.75;
-}
-
-.marketGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
 @media (min-width: 640px) {
-  .marketGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
 
 @media (min-width: 900px) {
-  .marketGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
 
 @media (min-width: 1200px) {
-  .marketGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
-/* Currencies publish once a day and carry no change figure; this is the label
-   that stands in for it, so the row keeps its height and the tile its shape. */
-.indexChangeMuted {
-  font-weight: 600;
-  opacity: 0.6;
-  font-size: calc(11px * var(--font-multiplier, 1));
-}
-
-.indexItem {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  min-width: 0;
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .03);
-}
-
-.indexItemLink {
-  position: relative;
-  cursor: pointer;
-  transition: transform .2s ease, border-color .2s ease, background .2s ease;
-}
-
-.indexItemLink::after {
-  content: "↗";
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  font-size: 11px;
-  color: var(--muted);
-  opacity: 0;
-  transform: translateY(1px);
-  transition: opacity .2s ease, transform .2s ease;
-}
-
-.indexItemLink:hover,
-.indexItemLink:focus-visible {
-  border-color: rgba(198, 111, 28, .55);
-  background: rgba(198, 111, 28, .14);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-.indexItemLink:hover::after,
-.indexItemLink:focus-visible::after {
-  opacity: .95;
-  transform: translateY(0);
-}
-
-.indexTopRow {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  /* Leave room for the hover arrow so a long name never slides under it. */
-  padding-right: 14px;
-}
-
-.indexName {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Value and change share a line; the change sits right so the eye can run
-   down either column. */
-.indexBottomRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-  min-width: 0;
-}
 
 /* Replaces the OPEN/CLOSED text pill. Colours carry the same meaning; the
    words move to aria-label and title so nothing is lost to a screen reader. */
@@ -4789,31 +3945,8 @@ body.stockLookupModalOpen {
   .marketIndices {
     padding: 12px 14px;
   }
-
-  .indexItem {
-    min-width: 0;
-    padding: 7px 8px;
-  }
 }
 
-.indexValue {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.indexUnit {
-  font-size: 10px;
-  color: var(--muted);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .indexChange {
   font-size: 11px;
@@ -5005,73 +4138,9 @@ body.stockLookupModalOpen {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stockItemLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.stockItemInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.stockItemSymbol {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-}
-
-.stockItemName {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stockItemStats {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-  opacity: 0.9;
-}
-
-.statLabel {
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.statLow {
-  color: #ef4444;
-}
-
-.statHigh {
-  color: #10b981;
-}
-
-.statSep {
-  opacity: 0.5;
-}
-
 .statMissing {
   color: var(--muted);
   opacity: 0.9;
-}
-
-.stockSparkline {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
 }
 
 .watchSparkline {
@@ -5112,34 +4181,6 @@ body.stockLookupModalOpen {
 }
 
 @media (max-width:720px) {
-  .watchlistItem {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .watchlistItem .stockItemLeft {
-    width: 100%;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .watchlistItem .stockItemRight {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .watchlistItem .stockItemPrice {
-    align-items: flex-start;
-  }
-
-  .watchlistItem .stockItemName {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    line-height: 1.25;
-  }
 
   .watchSparkline {
     width: 100%;
@@ -5150,32 +4191,8 @@ body.stockLookupModalOpen {
   }
 }
 
+
 @media (max-width:480px) {
-  .watchlistItem {
-    padding: 12px;
-    gap: 8px;
-  }
-
-  .watchlistItem .stockItemLeft {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .watchlistItem .stockItemSymbol {
-    font-size: 14px;
-  }
-
-  .watchlistItem .stockItemName {
-    font-size: 11px;
-  }
-
-  .watchlistItem .stockItemStats {
-    font-size: 10px;
-    gap: 3px;
-  }
 
   .watchSparkline {
     width: auto;
@@ -5195,24 +4212,6 @@ body.stockLookupModalOpen {
   }
 }
 
-.stockItemRight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stockItemPrice {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.stockPrice {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-}
 
 .stockChange {
   font-size: 12px;
@@ -5284,86 +4283,10 @@ body.stockLookupModalOpen {
   transform: translateY(-1px);
 }
 
-.newsContent {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.newsTitle {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.newsMeta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.newsSource {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sourceFavicon {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-}
-
-.newsTime {
-  opacity: 0.8;
-}
-
-/* Last Updated Timestamp */
-.lastUpdated {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.stocksCardHeadRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.stocksCardHeadActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stocksLastUpdated {
-  margin-right: 8px;
-}
-
 .stocksSortSelect {
   max-width: 160px;
   font-size: 13px;
   padding: 6px 10px;
-}
-
-.stocksScopeLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.5px;
 }
 
 /* Mover Item (Gainers/Losers/Trending) */
@@ -5451,19 +4374,6 @@ body.stockLookupModalOpen {
 .eventImpact.low {
   background: var(--panel2);
   color: var(--muted);
-}
-
-/* Match News widget height to Watchlist and make scrollable */
-#stocksNews {
-  max-height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-#stocksBody {
-  max-height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 /* Location Picker — modal backdrop override (floats as card, no dark overlay) */
@@ -5568,18 +4478,6 @@ body.stockLookupModalOpen {
   justify-content: center;
 }
 
-.settLocRefreshRow {
-  margin-top: 10px;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-}
-
-.settLocCurrentDisplay {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
 /* Modal Styles */
 .modal {
   position: fixed;
@@ -5604,19 +4502,6 @@ body.stockLookupModalOpen {
   overflow-y: auto;
   box-shadow: var(--shadow);
   color: var(--text);
-}
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--padCard);
-  border-bottom: 1px solid var(--border);
-}
-
-.modalHeader h3 {
-  margin: 0;
-  font-size: 18px;
 }
 
 .modalHead {
@@ -5721,18 +4606,6 @@ body.stockLookupModalOpen {
   margin-top: 16px;
 }
 
-/* Settings Enhancements */
-.settingsTabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 14px;
-  padding: 8px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
-  overflow-x: auto;
-}
-
 .settingsTab {
   padding: 10px 15px;
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -5779,19 +4652,10 @@ body.stockLookupModalOpen {
   line-height: 1.5;
 }
 
-.settingsTabsWrap {
-  margin-bottom: 20px;
-}
-
 .settingsInlineUnitRow {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.settingsUnitSuffix {
-  color: var(--muted);
-  font-size: 12px;
 }
 
 .settingsInput70 {
@@ -5833,113 +4697,11 @@ body.stockLookupModalOpen {
   width: 160px;
 }
 
-.settingsActionRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.hintMt8 {
-  margin-top: 8px;
-}
-
-.hintMt10 {
-  margin-top: 10px;
-}
-
-.hintMt12 {
-  margin-top: 12px;
-}
-
-.installContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-start;
-}
-
 .installAppBtnProminent {
   font-size: 16px;
   font-weight: 700;
   padding: 14px 24px;
   border-width: 2px;
-}
-
-.installAppBtnIcon {
-  font-size: 20px;
-  margin-right: 8px;
-}
-
-.installStatusPanel {
-  display: none;
-  padding: 12px;
-  background: var(--panel2);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  color: var(--accent);
-}
-
-.installStatusIcon {
-  font-size: 16px;
-  margin-right: 6px;
-}
-
-.installModalHidden {
-  display: none;
-}
-
-.installModalContent {
-  max-width: 520px;
-}
-
-.installModalTitle {
-  margin: 0;
-  font-size: 18px;
-}
-
-.installModalBody {
-  padding: 20px;
-}
-
-.installModalWhy {
-  margin-bottom: 16px;
-  padding: 12px;
-  background: var(--panel2);
-  border-radius: 8px;
-  border-left: 3px solid var(--accent);
-}
-
-.installModalWhyTitle {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.installModalWhyList {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.installModalTip {
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(198, 111, 28, 0.1);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-}
-
-.installModalTipText {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.installModalTipStrong {
-  color: var(--text);
 }
 
 /* Three cards across: Install and Import/Export stack in column one so they
@@ -5957,16 +4719,7 @@ body.stockLookupModalOpen {
   margin-bottom: 0;
 }
 
-.systemPanelCol {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 @media (max-width: 1100px) {
-  .systemPanelRow {
-    grid-template-columns: 1fr 1fr;
-  }
 
   /* Two columns leaves an odd card out, and that card is Reset. Let it run
      the full width rather than sit orphaned in a leftover cell. */
@@ -5975,11 +4728,10 @@ body.stockLookupModalOpen {
   }
 }
 
+
 @media (max-width: 800px) {
-  .systemPanelRow {
-    grid-template-columns: 1fr;
-  }
 }
+
 
 .installBrowserGuide {
   margin-top: 14px;
@@ -6020,17 +4772,6 @@ body.stockLookupModalOpen {
 
 .installGuideSteps strong {
   color: var(--text);
-}
-
-.installGuideNote {
-  margin: 8px 0 0 0;
-  font-size: 11px;
-  color: var(--muted);
-  font-style: italic;
-}
-
-.installGuideSub {
-  margin-top: 10px;
 }
 
 .installGuideLinkBtn {
@@ -6157,34 +4898,8 @@ body.stockLookupModalOpen {
   }
 }
 
+
 .generalPanelRow>.collapsibleSection {
-  margin-bottom: 0;
-}
-
-.weatherPanelGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  align-items: start;
-}
-
-.weatherPanelGrid>.collapsibleSection {
-  margin-bottom: 0;
-}
-
-/* 2-column: Location on left, stacked panels on right */
-.weatherPanelLocation {
-  grid-column: 1;
-}
-
-.weatherPanelRight {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.weatherPanelRight>.collapsibleSection {
   margin-bottom: 0;
 }
 
@@ -6205,40 +4920,6 @@ body.stockLookupModalOpen {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.toggleInput {
-  appearance: none;
-  width: 44px;
-  height: 24px;
-  background: var(--panel2);
-  border-radius: 12px;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.toggleInput::after {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background: var(--text);
-  border-radius: 50%;
-  transition: left 0.3s ease;
-}
-
-.toggleInput:checked {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.toggleInput:checked::after {
-  left: 22px;
 }
 
 .buttonGroup {
@@ -6274,38 +4955,6 @@ body.stockLookupModalOpen {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.checkboxLabel:hover {
-  background: var(--panel2);
-  border-color: var(--accent);
-}
-
-.checkboxLabel input[type="checkbox"] {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-}
-
-.checkboxLabel span {
-  flex: 1;
 }
 
 .marketIndicesList {
@@ -6475,23 +5124,6 @@ body.stockLookupModalOpen {
   opacity: 0.7;
 }
 
-.marketIndexToggle {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    "check text"
-    "drag  text";
-  column-gap: 10px;
-  row-gap: 4px;
-  align-items: start;
-}
-
-.marketIndexToggle input[type="checkbox"] {
-  grid-area: check;
-  margin-top: 2px;
-}
-
 .marketIndicesSelector {
   display: grid;
   justify-items: stretch;
@@ -6511,61 +5143,11 @@ body.stockLookupModalOpen {
   text-align: center;
 }
 
-.marketIndicesControls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .marketIndicesSort {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.marketIndicesSortLabel {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.marketIndicesSortCurrent {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: -2px;
-}
-
-.marketIndexText {
-  grid-area: text;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.marketIndexName {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.marketIndexMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-  line-height: 1.15;
-}
-
-.marketMetaType,
-.marketMetaRegion {
-  display: block;
 }
 
 .settingRow.marketStripSettingRow {
@@ -6592,19 +5174,6 @@ body.stockLookupModalOpen {
 
 @media (max-width: 980px) {
 
-  .weatherPanelGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .weatherPanelLocation {
-    grid-column: auto;
-  }
-
-  .weatherPanelRight {
-    grid-column: auto;
-    flex-direction: column;
-  }
-
   .settingRowPair {
     grid-template-columns: 1fr;
     gap: 0;
@@ -6625,11 +5194,6 @@ body.stockLookupModalOpen {
 
   .settingRow.marketStripSettingRow {
     grid-template-columns: 1fr;
-  }
-
-  .marketIndicesSelector {
-    width: 100%;
-    margin-left: 0;
   }
 
   .marketIndexRow {
@@ -6675,50 +5239,8 @@ body.stockLookupModalOpen {
     padding: 5px;
     border-radius: 8px;
   }
-
-  .marketIndexToggle {
-    column-gap: 8px;
-    row-gap: 2px;
-  }
-
-  .marketIndexName {
-    font-size: 11px;
-    line-height: 1.15;
-  }
-
-  .marketIndexMeta {
-    font-size: 10px;
-    line-height: 1.1;
-  }
-
-  .marketDragHandle {
-    font-size: 16px;
-  }
 }
 
-.marketDragHandle {
-  grid-area: drag;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  justify-self: center;
-  align-self: start;
-  width: auto;
-  padding: 2px 4px;
-  color: var(--muted);
-  font-weight: 800;
-  letter-spacing: 1px;
-  font-size: 18px;
-  line-height: 1;
-  cursor: grab;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.settingRowGroup {
-  display: grid;
-  gap: 8px;
-}
 
 .settingRowPair {
   display: grid;
@@ -6774,12 +5296,6 @@ body.stockLookupModalOpen {
     padding-right: 12px;
   }
 
-  .marketIndicesControls {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-  }
-
   .marketIndicesSort {
     position: relative;
     display: grid;
@@ -6792,17 +5308,11 @@ body.stockLookupModalOpen {
     padding-top: 28px;
   }
 
-  .marketIndicesSortLabel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    text-align: left;
-  }
-
   .marketIndicesSort .marketSortBtn {
     width: 132px;
   }
 }
+
 
 .settingRow {
   display: flex;
@@ -6830,20 +5340,6 @@ body.stockLookupModalOpen {
 .settingRow>.settingsInlineUnitRow,
 .settingRow>.settingsInlineRangeRow {
   flex: 0 0 auto;
-}
-
-.settingLabel {
-  font-size: 14px;
-  color: var(--text);
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.settingHint {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.78);
-  margin-top: 5px;
-  line-height: 1.5;
 }
 
 .settingsTabContent .input,
@@ -6897,6 +5393,7 @@ body.stockLookupModalOpen {
     width: 100%;
   }
 }
+
 
 .resetButton {
   margin-top: 12px;
@@ -6991,6 +5488,7 @@ body.stockLookupModalOpen {
     transition-timing-function: ease !important;
   }
 }
+
 
 /* ── First-run welcome modal ─────────────────────────────────────────────── */
 .hnWelcomeModal {
@@ -7160,41 +5658,11 @@ body.stockLookupModalOpen {
   .coverageList { columns: 2; }
 }
 
+
 @media (max-width: 560px) {
   .coverageList { columns: 1; }
 }
 
-/* ── Source search results (settings → Local / Regional cards) ─────────────
-   Populated by setupScopedSourceManager when the custom row is used as a
-   search box rather than a pasted RSS URL. */
-
-/* ── News category picker (settings) ──────────────────────────────────────
-   One row per topic in data/topic-sources.json, clustered into groups
-   (data-driven via each topic's "group" field). Chips sit side by side and
-   wrap within a group, rather than one full-width row each: there are 17
-   categories, and a column of them pushed everything else on the News tab
-   off the screen. */
-.topicGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 10px;
-}
-
-.topicGroupLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 6px;
-}
-
-.topicGroupRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 
 .topicRow {
   display: flex;
@@ -7212,18 +5680,6 @@ body.stockLookupModalOpen {
 .topicRow.isOn {
   border-color: var(--accent, #e08a3c);
   background: rgba(224, 138, 60, .10);
-}
-
-.topicEmoji { font-size: 18px; line-height: 1; }
-
-.topicText { display: flex; flex-direction: column; min-width: 0; }
-
-.topicTitle { font-weight: 700; }
-
-.topicMeta {
-  color: var(--muted);
-  font-size: calc(11px * var(--font-multiplier, 1));
-  font-weight: 600;
 }
 
 /* ── Inline comic strips ──────────────────────────────────────────────────
@@ -7261,7 +5717,6 @@ body.stockLookupModalOpen {
 
 .topicOrder { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .topicOrder li { display: flex; align-items: center; gap: 8px; }
-.topicOrderName { flex: 1; font-weight: 600; }
 .topicOrder button { min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border, #8884); background: transparent; color: inherit; cursor: pointer; }
 .topicOrder button:disabled { opacity: .3; cursor: default; }
 
@@ -7281,6 +5736,7 @@ body.stockLookupModalOpen {
     font-size: 16px !important;
   }
 }
+
 button, select, .btn, a.btn { touch-action: manipulation; }
 
 /* "Update phone widget" bar — appears only on a phone paired with the Android
@@ -7316,7 +5772,9 @@ button, select, .btn, a.btn { touch-action: manipulation; }
 .widgetAnnounceActions .btn { min-height: 44px; }
 .widgetAnnounceActions a.btn { background: var(--orange); border-color: var(--orange); color: #fff; text-decoration: none; }
 @keyframes widgetAnnounceIn { from { opacity: 0; transform: translateY(16px); } }
-@media (prefers-reduced-motion: reduce) { .widgetAnnounce { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .widgetAnnounce { animation: none; } 
+}
+
 
 /* Long-form pages (About, the Android widget page): keep lines a readable
    length on wide screens instead of running the full width of the window. */

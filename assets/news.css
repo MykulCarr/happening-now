@@ -1,0 +1,55 @@
+/* news.css: styles used only by index.html, loaded after styles.css.
+   Split out of styles.css on 2026-11-17. A rule lives here only if no other
+   page or script can show what it styles; anything shared stays in
+   styles.css. Moving a rule between the two files changes the cascade order,
+   so re-run the computed-style comparison when you do (see CLAUDE.md). */
+
+.rssList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rssItemDate {
+  font-size: calc(11px * var(--font-multiplier, 1));
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rssItemDesc {
+  font-size: calc(13px * var(--font-multiplier, 1));
+  color: var(--text);
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 8px;
+}
+/* The cards follow a sideways drag (news-swipe.js). pan-y tells the browser
+   vertical scrolling is its job and a sideways drag is ours, so a drag that
+   starts sideways doesn't also scroll the page. The tab row and ticker are
+   their own scrollers and keep scrolling sideways as before. */
+html:has(#newsGrid) body { touch-action: pan-y pinch-zoom; }
+[data-tone="light"] .criticalNewsBar .criticalTickerSep { color: rgba(0, 0, 0, .3); }
+
+
+/* On phones the categories are one swipeable row rather than four wrapped
+   ones: pinned, four rows would take a quarter of the screen. Centred when
+   they fit; `safe` keeps the first button reachable when they don't. Tabs
+   get a finger-sized hit area. */
+@media (max-width:720px) {
+  .tickerScopeBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    justify-content: safe center;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tickerScopeBar::-webkit-scrollbar { display: none; }
+}

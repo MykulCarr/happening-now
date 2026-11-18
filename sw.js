@@ -31,7 +31,11 @@ const ASSETS_TO_CACHE = [
   '/assets/whats-new.js',
   '/assets/topbar.js',
   '/assets/infobar.js',
-  '/assets/styles.css'
+  '/assets/styles.css',
+  '/assets/news.css',
+  '/assets/weather.css',
+  '/assets/markets.css',
+  '/assets/settings.css'
 ];
 
 // Install event - cache assets
