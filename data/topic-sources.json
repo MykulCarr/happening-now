@@ -764,7 +764,7 @@
         },
         {
           "name": "The Debrief",
-          "rss": "https://thedebrief.org/feed/",
+          "rss": "https://thedebrief.org/rss/THEDEBRIEF/full",
           "site": "https://thedebrief.org",
           "type": "paper"
         }
