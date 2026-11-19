@@ -860,3 +860,12 @@ Next: Mike installs 1.4 on the phone. Android package registration (YOUR-TURN)
 waits on his Play account approval; then he pastes the snippet into
 `android-widget/app/src/main/assets/adi-registration.properties` and Claude
 builds the proof APK.
+
+**Later the same day — Android developer verification done.** Play account
+approved; `net.happeningnow.widget` registered (Play Console > Android
+developer verification, URL `.../android-developer-verification/packages/<pkg>`;
+the Play Console menus never name it, the help-centre walkthrough video does).
+Registering created a Draft Play app plus three Google-held keys (A1, 7A, BA),
+already Verified; ignore the Draft's publishing checklist. Our release key
+(SHA-256 B6:4A:BE…) went in with **Add key** and showed Verified at once, so no
+`adi-registration.properties` or proof APK was needed.
