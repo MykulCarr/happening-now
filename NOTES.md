@@ -869,3 +869,21 @@ Registering created a Draft Play app plus three Google-held keys (A1, 7A, BA),
 already Verified; ignore the Draft's publishing checklist. Our release key
 (SHA-256 B6:4A:BE…) went in with **Add key** and showed Verified at once, so no
 `adi-registration.properties` or proof APK was needed.
+
+## 2026-11-18/19 — Feed check, catalog fixes live
+
+`check-feeds` over 482 feeds: no place left without news. Of 6 "dead" and 1
+stale, a slow re-probe cleared 3 (both Jacksonville feeds 429'd during the
+fast first pass, Egypt Independent was transient). Fixed and deployed to
+production (live verified): The Debrief moved to `/rss/THEDEBRIEF/full`;
+Dawn (blocks Worker IPs, no cached copy) replaced by The Express Tribune;
+Little White Lies (403 to every client) and Patch Green Bay (silent since
+2026-09-25) dropped. Readers who saved Dawn keep an empty slot; saved lists
+are never rewritten.
+
+Lesson: the full sweep now takes over 10 minutes, and its first pass trips
+the 60-per-10s rate limit added to `/v1/rss/raw` the same day. A 429 in the
+report is a lead, not a death; re-probe slowly before acting.
+
+Pick up next: nothing open. Watch for real-world reports on the widget app,
+price pop-up and sync; re-run `npm run check-feeds` in a few weeks.
