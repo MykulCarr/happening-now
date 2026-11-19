@@ -3173,12 +3173,6 @@
         },
         "entries": [
           {
-            "name": "Patch Green Bay",
-            "rss": "https://patch.com/feeds/wisconsin/green-bay",
-            "site": "https://patch.com/wisconsin/green-bay",
-            "type": "community"
-          },
-          {
             "name": "WFRV / We Are Green Bay (CBS)",
             "rss": "https://www.wearegreenbay.com/feed/",
             "site": "https://www.wearegreenbay.com",
