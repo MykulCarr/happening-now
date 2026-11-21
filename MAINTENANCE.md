@@ -44,5 +44,5 @@ done by hand, so they have no `auto:`.
 - dep: BEA iCalendar and the Fed's FOMC page | why: the Economic Calendar on Markets
 - dep: site-analytics project (analytics.happening-now.net) | why: anonymous usage counts; owned by another project
 - dep: GA4 tag inline on every page | why: Google-side analytics and Search Console link
-- dep: Android release signing key (not in the repo; two copies only) | why: without it no update to the widget app can install over the old one
+- dep: Android release signing key, C:/Users/mwcdo/.android-keys/happening-now-widget.jks, alias hnwidget, SHA-256 B6:4A:BE… (not in the repo; two copies only; location and password in git-ignored android-widget/keystore.properties) | why: without it no update to the widget app can install over the old one | expires: 2054-04-02
 - dep: Node, esbuild and wrangler on OEMMEO | why: deploy-prod.ps1 and deploy-beta.ps1
