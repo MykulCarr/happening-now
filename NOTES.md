@@ -887,3 +887,17 @@ report is a lead, not a death; re-probe slowly before acting.
 
 Pick up next: nothing open. Watch for real-world reports on the widget app,
 price pop-up and sync; re-run `npm run check-feeds` in a few weeks.
+
+## 2026-11-21 — MAINTENANCE.md
+
+Added `MAINTENANCE.md` (the dashboard's to-do). Automated checks: source
+integrity via the daily digest cron, security.txt expiry via reminders.mjs,
+plus a live endpoint sweep and all six Worker test suites (all green today).
+By-hand ops check-ins have no `last:` because none was ever recorded.
+Expiries found: domain 2027-04-09 (Cloudflare Registrar, via public RDAP),
+security.txt 2027-11-21, Android signing key 2054-04-02 (fingerprint matches
+the registered one). Wrangler's OAuth login cannot read the registrar or API
+tokens, so domain auto-renew and the CF_ANALYTICS_TOKEN expiry are checked
+by Mike in the dashboard.
+
+Pick up next: first by-hand weekly check-in; re-run check-feeds mid-December.
