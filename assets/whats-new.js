@@ -9,10 +9,14 @@
 //   - a brand-new visitor sees none: everything is new to them, and the About
 //     page is where a first-timer learns the site;
 //   - each item has a `when`, so nobody is told about something they cannot
-//     use (the Android widget on a laptop) or already use.
+//     use (the Android widget on a laptop) or already use;
+//   - each item has a `live` date (the day it reached production) and stops
+//     being offered 14 days later: after two weeks it is no longer new, and
+//     the About page's "What's new" list keeps it for anyone who looks.
 //
-// To announce something: add it to the TOP of ITEMS with a new id, and give
-// the About page a matching entry under "What's new".
+// To announce something: add it to the TOP of ITEMS with a new id and the
+// date it goes live, and give the About page a matching entry under
+// "What's new".
 //
 // What has been shown is remembered in hn_whatsnew_v1, outside cfg like the
 // other per-browser keys.
@@ -25,6 +29,7 @@
   const ITEMS = [
     {
       id: "quote-popup-2026-11",
+      live: "2026-11-18",
       when: () => true,
       title: "New: charts for every stock and market",
       text: "Tap a stock in your watchlist or any tile on the Markets board to see its price, 1-day, 1-week, 1-month and 1-year charts, and the day's range.",
@@ -34,6 +39,7 @@
     },
     {
       id: "sync-2026-11",
+      live: "2026-11-18",
       // Only where sync is shipped (App.cloudSync exists) and not already on.
       when: () => Boolean(App.cloudSync) && !App.cloudSync.enabled(),
       title: "New: your settings on every device",
@@ -44,6 +50,7 @@
     },
     {
       id: "econ-calendar-2026-11",
+      live: "2026-11-18",
       when: () => !App.isSectionHidden?.("stocks", "econCalendar"),
       title: "New: Economic Calendar",
       text: "The Markets page now shows the next GDP, inflation and trade releases and the Fed's rate decisions, straight from the agencies' own schedules.",
@@ -53,6 +60,7 @@
     },
     {
       id: "backup-2026-11",
+      live: "2026-11-16",
       when: () => true,
       title: "New: back up and move your settings",
       text: "Save your settings to a file, or carry them to another browser with a link. It works in every browser, Firefox and Safari included.",
@@ -62,6 +70,7 @@
     },
     {
       id: "widget-2026-11",
+      live: "2026-11-15",
       // Android only (nobody else can install it), where the app is published,
       // and not for someone who already has a widget paired.
       when: async () => /Android/i.test(navigator.userAgent) && !App.widgetLink?.paired() && Boolean(await App.widgetLink?.published()),
@@ -76,6 +85,10 @@
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; } };
   const write = (seen, last = 0) => { try { localStorage.setItem(KEY, JSON.stringify({ seen, last })); return true; } catch { return false; } };
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const NEW_FOR_MS = 14 * DAY_MS;
+  // A missing or unreadable date counts as expired, so a typo hides a card
+  // rather than leaving it up forever.
+  const stillNew = (item) => Date.now() - Date.parse(item.live) < NEW_FOR_MS;
 
   // Read before anything writes (the same test settings-sync.js uses): no
   // stored settings means a brand-new browser.
@@ -100,7 +113,7 @@
 
   async function pick() {
     for (const item of ITEMS) {
-      if (seen.includes(item.id)) continue;
+      if (seen.includes(item.id) || !stillNew(item)) continue;
       try { if (await item.when()) return item; } catch { /* treat as "does not apply" */ }
     }
     return null;
