@@ -307,7 +307,7 @@
 
   const sendCard = () => `
     <section class="wCard">
-      <a class="wSend" aria-disabled="true">Preparing your settings…</a>
+      <a class="wSend" aria-disabled="true" data-analytics="widget-send-today">Preparing your settings…</a>
       <span class="wSub">Hands your location, news categories and watchlist to the widget app on this phone. Nothing is sent to a server.</span>
     </section>`;
 
@@ -320,7 +320,7 @@
       if (!version) return;
       offerApp = true;
       root.querySelector("[data-part]")?.parentElement.insertAdjacentHTML("beforeend",
-        `<a class="wMeta wAppLink" href="/android" target="_top">Put this on your home screen: get the Android widget →</a>`);
+        `<a class="wMeta wAppLink" href="/android" target="_top" data-analytics="widget-get-today">Put this on your home screen: get the Android widget →</a>`);
     });
   }
 
@@ -420,6 +420,15 @@
     root.innerHTML = noticeCard(new Notice(`Unknown widget “${esc(name)}”. Try <a href="?w=all">?w=all</a>.`));
     return;
   }
+  // Usage counts, added here rather than in widget.html because the quote
+  // card above is shown inside the Android app, and the privacy policy says
+  // the app has no analytics. Every other widget view is the website.
+  const counter = document.createElement("script");
+  counter.defer = true;
+  counter.src = "https://analytics.happening-now.net/analytics.js";
+  counter.dataset.site = "happening-now";
+  counter.dataset.page = name === "all" ? "today" : `widget-${name}`.slice(0, 24);
+  document.head.appendChild(counter);
   // Cards fade in on first paint only; the 10-minute refresh swaps silently.
   run().finally(() => setTimeout(() => root.classList.add("wSettled"), 400));
   setInterval(run, Math.max(2, +App.cfg.weatherRefreshMinutes || 10) * 60_000);

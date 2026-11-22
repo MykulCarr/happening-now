@@ -110,7 +110,7 @@
     if (!bar) {
       bar = document.createElement("div");
       bar.className = "widgetLinkBar";
-      bar.innerHTML = `<span>Your settings changed.</span><a>Update phone widget</a><button type="button" aria-label="Dismiss">✕</button>`;
+      bar.innerHTML = `<span>Your settings changed.</span><a data-analytics="widget-update">Update phone widget</a><button type="button" aria-label="Dismiss" data-analytics="widget-update-dismiss">✕</button>`;
       bar.querySelector("button").onclick = hideBar;
       document.body.appendChild(bar);
     }

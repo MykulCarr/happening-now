@@ -334,7 +334,12 @@ visitor hash). It is not ours to edit from here; its numbers are on
 - any outbound link → its hostname only.
 
 Names must be tokens (`a-z0-9-`, ≤24 chars, letter first) or they are
-silently skipped. Dropped in the switch: the Settings watchlist add/remove
+silently skipped. **`widget.html` is the exception to the script tag**:
+`widget.js` adds the collector itself (page `today` for `w=all`,
+`widget-<name>` otherwise) and skips `w=quote`, because the Android app shows
+that card in its own reader screen and the privacy policy says the app has
+no analytics. Don't move it into the HTML. Widget taps are `widget-*`
+(`widget-update`, `widget-send-today`, ...). Dropped in the switch: the Settings watchlist add/remove
 count (it came from `hn:config-saved`, which the collector can't hear). The
 old history was exported to `backups/` (git-ignored, OEMMEO only) before the
 `usage`/`visitors`/`salts` tables were retired; the tables are still in D1,
