@@ -6,7 +6,7 @@ write freely.
 
 updated: 2026-11-21
 health: ok
-next: deploy the widget tap tags (beta, then prod) and check site-analytics shows today / widget-* taps; do the first by-hand weekly check-in in MAINTENANCE.md, watch for real-world reports on the widget app, price pop-up and sync, re-run check-feeds mid-December
+next: widget tap tags are live (2026-11-21); confirm site-analytics shows page today and widget-* taps; do the first by-hand weekly check-in in MAINTENANCE.md, watch for real-world reports on the widget app, price pop-up and sync, re-run check-feeds mid-December
 blocked:
 capabilities: public news/weather/stocks aggregation at happening-now.net, per-symbol price charts (1D/1W/1M/1Y) from Yahoo through the site proxy, Cloudflare Pages and Workers hosting, installable PWA, RSS proxy with last-good caching, curated 409-feed local and topic news catalog, privacy-first usage analytics with daily visitor hash (reference for site-analytics), admin dashboard for Cloudflare analytics, Today view at /widget?w=all, Android home-screen widget app distributed at /android (android-widget/), settings backup and transfer links for any browser, end-to-end encrypted settings sync
 
